@@ -1,0 +1,209 @@
+{% raw %}<h1>Wireless audio in the car: what fits, what stays wired, and which of our parts to offer first</h1>
+<p class="meta">28 Oct 2026 · Preliminary report from the owner's request of 28 Oct 2026: “Can you do a preliminary research report on topic wireless audio in a car?” It builds on the new-market idea “Automotive rear-seat / multi-zone audio” in our evidence (low-latency audio chips for rear-seat headphones) and on the report <a href="/business/reports/auto-wifi-antenna">Wi-Fi 6, 6E and 7 in cars</a>. Built from BizDev data (Skyworks and Qorvo catalogues with the AEC-Q rule, the Systems library, 4,186 public reference designs) and public web sources. “est” = our estimate. Every figure and link: <a href="/business/reports/auto-wireless-audio/background">background notes</a>.</p>
+
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>Latency decides what can go wireless.</b> Road-noise cancellation needs the sensor signal in under 2 ms and the whole loop within about 4 ms; the wired A2B bus carries audio in under 50 µs. Bluetooth needs tens of milliseconds, our own UL2X link under 9 ms. So noise cancellation, safety chimes and the main speakers stay wired (est); passenger headphones, audio sharing and add-on speakers can go wireless.</li>
+    <li><b>Bluetooth LE Audio is the link carmakers will use first.</b> It brings the LC3 codec (better than SBC at half the bit rate), several synchronised streams and Auracast (one sender, any number of headphones). Automotive LE Audio chips exist (Infineon CYW89310, NXP AW300, Qualcomm-based u-blox RUBY-W2); Barrot sells Auracast modules to Chinese carmakers. We found no carmaker announcement of Auracast in a production car.</li>
+    <li><b>Our car-side parts are automotive today:</b> QPF4239Q 2.4 GHz FEM, SKYA21040 switch + LNA, QPQ2254Q 2.4 GHz BAW against LTE bands 40/41, SKY5A2108 and QPC8019Q antenna switches, Si5332-AM clocks and the ACT4751 12 V buck. They attach to any Bluetooth or Wi-Fi audio hub, whatever link wins.</li>
+    <li><b>Our differentiator is consumer grade.</b> SKY76360/76361 (UL2X, 2.4 GHz: up to 8 uncompressed channels, under 9 ms, clients in sync to 1 µs) and SKY76303 (5 GHz, 5 clients, under 20 ms) are built for exactly wireless speakers and headsets, but run at 0–70 °C. Headphones are accessories and can use them as they are; the car-side hub needs an automotive version.</li>
+    <li><b>Gaps:</b> a Bluetooth LE Audio chip, an automotive audio SoC, an audio codec, speaker-level class-D amplifiers and an automotive crystal oscillator. Answer: front ends first, then test demand for an automotive UL2X; no full audio system (est, low confidence).</li>
+  </ol>
+</section>
+
+<h2>1. Adjacent products and technologies</h2>
+<h3>Where wireless audio fits in the car</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Use</th><th scope="col">What it needs</th><th scope="col">Wireless?</th><th scope="col">Evidence</th></tr></thead>
+  <tbody>
+    <tr><td>Rear-seat headphones for screens</td><td>Lip-sync with video (tens of ms), several headphones, battery life</td><td><span class="pill have">yes</span></td><td>Ford Expedition and Lincoln Navigator list Bluetooth headphones for their rear-seat system (accessory pages, snippet); many older systems use infrared</td></tr>
+    <tr><td>Audio sharing: each passenger their own stream, own earbuds</td><td>Several streams or one broadcast (Auracast), works with phones and earbuds</td><td><span class="pill have">yes</span></td><td>Barrot supplies Auracast modules and stacks to carmakers (Bluetooth SIG interview, 2024); no carmaker announcement found</td></tr>
+    <tr><td>Removable or add-on speakers</td><td>Charging dock, Bluetooth or Wi-Fi</td><td><span class="pill have">yes</span></td><td>Rivian Camp Speaker: Bluetooth, docks and charges in the console (Rivian support page, snippet)</td></tr>
+    <tr><td>Hands-free calls, in-car communication</td><td>Microphones next to each seat, echo cancelling, low delay</td><td><span class="pill part">mostly wired</span></td><td>Microphones are fixed in the headliner; a wireless link adds delay and a battery (est)</td></tr>
+    <tr><td>Personal sound zones, headrest speakers</td><td>Speaker arrays with tightly timed signals</td><td><span class="pill part">wired today</span></td><td>Bose UltraNearfield headrest speakers in production (Nissan Kicks); ADI sound zones with door speakers (snippets)</td></tr>
+    <tr><td>Main speakers and subwoofer, to cut harness weight</td><td>Speaker power (tens to hundreds of watts), sync between speakers</td><td><span class="pill part">concept</span></td><td>A wireless speaker still needs a power wire; A2B already cuts harness weight by up to 75 % on one twisted pair (ADI, snippet)</td></tr>
+    <tr><td>Active and road-noise cancellation</td><td>Sensor to processor under 2 ms; loop within about 4 ms</td><td><span class="pill none">no</span></td><td>Molex RNC sensors over A2B, under 2 ms; Hyundai RANC computes in about 2 ms (snippets)</td></tr>
+    <tr><td>Safety chimes and warnings</td><td>Must always sound; often a functional-safety requirement</td><td><span class="pill none">no (est)</span></td><td>Not enough data on an ASIL for chimes; a patent routes chimes through the infotainment path and checks them with a return path</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Links compared</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Link</th><th scope="col">Band</th><th scope="col">Latency</th><th scope="col">Quality, channels</th><th scope="col">In cars</th><th scope="col">Ours</th></tr></thead>
+  <tbody>
+    <tr><td>Bluetooth Classic (A2DP, hands-free)</td><td>2.4 GHz</td><td>about 100–200 ms (est)</td><td>SBC/AAC, one stream per link</td><td>Every head unit; Bluetooth in about 87 % of new cars (SIG/ABI forecast, snippet)</td><td>FEMs only (SKY66xxx consumer, QPF4239Q automotive)</td></tr>
+    <tr><td>Bluetooth LE Audio (LC3, Auracast)</td><td>2.4 GHz; 5/6 GHz in work</td><td>about 20–40 ms (est)</td><td>LC3 beats SBC at 50 % lower bit rate; several synchronised streams; broadcast to any number</td><td>Automotive chips available (Infineon, NXP, u-blox/Qualcomm); first Chinese cabin designs (Barrot)</td><td>FEMs only; no LE Audio chip</td></tr>
+    <tr><td>Wi-Fi audio (Wi-Fi 6/7)</td><td>2.4 / 5 / 6 GHz</td><td>depends on stack; Wi-Fi 7 adds low-latency features (paper)</td><td>High rate, many speakers</td><td>Used for projection and video, not found for speakers in cars</td><td>2.4 GHz FEM automotive; 5/6 GHz automotive PA is a gap (see Wi-Fi report)</td></tr>
+    <tr><td>Proprietary: Skyworks UL2X (SKY76360/76361)</td><td>2.4 GHz</td><td>under 9 ms, fixed; clients in sync to 1 µs</td><td>Up to 8 uncompressed channels, 40 kHz audio bandwidth, 24-bit/96 kHz I2S</td><td>Not found in cars</td><td>Ours, 0–70 °C</td></tr>
+    <tr><td>Proprietary: Skyworks SKY76303</td><td>5.15–5.25 and 5.725–5.825 GHz</td><td>under 20 ms, fixed</td><td>24-bit, 117 dB link; up to 5 receivers</td><td>Not found in cars</td><td>Ours, 0–70 °C</td></tr>
+    <tr><td>WiSA (home theatre)</td><td>5 GHz</td><td>5.2 ms (older), 20 ms (WiSA E)</td><td>8 channels, 24-bit</td><td>Not found in cars</td><td>—</td></tr>
+    <tr><td>UWB audio (SPARK)</td><td>6–9.5 GHz</td><td>7 ms or less (vendor)</td><td>Stereo plus microphone return</td><td>Not found in cars; same band as UWB keys</td><td>Our UWB chips (DW3300Q, QPF5100Q) do ranging, not audio</td></tr>
+    <tr><td>Wired: A2B</td><td>cable</td><td>under 50 µs, fixed</td><td>Many channels, power on the same pair</td><td>Standard for microphones, noise cancellation and amplifiers</td><td>— (one supplier, ADI)</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Bluetooth latency figures are typical values for the link and codec (est); the real value depends on the stack and buffers. UWB for audio is real in consumer headsets, not in cars; in the car UWB is busy with keys and child presence (see <a href="/business/reports/auto-uwb-cpd">UWB child presence</a>).</p>
+
+<h3>Requirements</h3>
+<ul>
+  <li><b>Latency:</b> lip-sync with a screen needs tens of milliseconds (est); noise cancellation needs about 2 ms transport (Molex, snippet). Only wired buses meet the second.</li>
+  <li><b>Quality and codec:</b> LC3 for Bluetooth; uncompressed 24-bit for UL2X and SKY76303; A2B carries uncompressed audio.</li>
+  <li><b>Coexistence:</b> 2.4 GHz carries Bluetooth audio, Bluetooth keys, Wi-Fi 2.4 and the phone's own links, next to LTE bands 40/41; a BAW filter (QPQ2254Q) and good receive linearity help. UWB sits at 6.5–8 GHz and does not crowd 2.4 GHz, but channel 5 overlaps 6 GHz Wi-Fi.</li>
+  <li><b>Power:</b> headphones run on batteries; our UL2X client is “ultra-low-power”, and LC3 saves bit rate. Our chargers (ACT2861) are not automotive, which is fine inside an accessory.</li>
+  <li><b>Functional safety:</b> chimes and warnings must sound even if a radio fails; we keep them wired (est). Not enough data on an ASIL for the chime path.</li>
+  <li><b>Security and pairing:</b> LE Audio links are encrypted and an Auracast broadcast can carry a code, so a car can keep its stream to its own passengers (est).</li>
+</ul>
+
+<h3>A wireless audio link in the car, with our parts</h3>
+<figure class="wa-fig" style="margin:.6rem 0">
+<style>
+  .wa-fig svg { width: 100%; max-width: 760px; height: auto; display: block; }
+  .wa-fig .box { fill: var(--pico-card-background-color, #fff); stroke: var(--pico-muted-border-color, #cfc8e0); }
+  .wa-fig .ours { fill: var(--chip-bg, #e6f3f4); stroke: var(--pico-primary, #0b6b74); }
+  .wa-fig .cons { fill: var(--pico-mark-background-color, #fff4e8); stroke: #a15c00; stroke-dasharray: 4 3; }
+  .wa-fig .gap { fill: none; stroke: #a3302a; stroke-dasharray: 2 3; }
+  .wa-fig text { fill: var(--pico-color, #23304a); font-size: 11px; font-family: inherit; }
+  .wa-fig .h { font-weight: 700; font-size: 12px; }
+  .wa-fig .m { fill: var(--pico-muted-color, #6b7486); font-size: 10px; }
+  .wa-fig .ln { stroke: var(--pico-primary, #0b6b74); stroke-width: 1.6; fill: none; }
+</style>
+<svg viewBox="0 0 760 330" role="img" aria-labelledby="wa-t wa-d">
+  <title id="wa-t">Wireless audio link in the car</title>
+  <desc id="wa-d">Head unit or zone hub with our 2.4 GHz front end, filter, switch, clock and buck, sending Bluetooth LE Audio, Wi-Fi or UL2X to headphones and to a speaker node.</desc>
+  <rect class="box" x="8" y="8" width="268" height="300" rx="10"/>
+  <text class="h" x="20" y="28">Hub: head unit / audio zone</text>
+  <rect class="box" x="20" y="38" width="244" height="34" rx="6"/>
+  <text x="28" y="54">SoC + Bluetooth / Wi-Fi combo</text><text class="m" x="28" y="66">customer's part (Qualcomm, NXP, Infineon)</text>
+  <rect class="ours" x="20" y="80" width="118" height="34" rx="6"/>
+  <text x="28" y="96">2.4 GHz FEM</text><text class="m" x="28" y="108">QPF4239Q</text>
+  <rect class="ours" x="146" y="80" width="118" height="34" rx="6"/>
+  <text x="154" y="96">Switch + LNA</text><text class="m" x="154" y="108">SKYA21040</text>
+  <rect class="ours" x="20" y="122" width="118" height="34" rx="6"/>
+  <text x="28" y="138">BAW vs LTE 40/41</text><text class="m" x="28" y="150">QPQ2254Q</text>
+  <rect class="ours" x="146" y="122" width="118" height="34" rx="6"/>
+  <text x="154" y="138">Antenna switch</text><text class="m" x="154" y="150">SKY5A2108, QPC8019Q</text>
+  <rect class="ours" x="20" y="164" width="118" height="34" rx="6"/>
+  <text x="28" y="180">Clock</text><text class="m" x="28" y="192">Si5332-AM</text>
+  <rect class="ours" x="146" y="164" width="118" height="34" rx="6"/>
+  <text x="154" y="180">12 V buck</text><text class="m" x="154" y="192">ACT4751</text>
+  <rect class="cons" x="20" y="206" width="244" height="34" rx="6"/>
+  <text x="28" y="222">Low-latency hub radio (UL2X arbiter)</text><text class="m" x="28" y="234">SKY76360, consumer: needs AEC-Q100</text>
+  <rect class="gap" x="20" y="248" width="244" height="50" rx="6"/>
+  <text x="28" y="266">Codec, wired bus (A2B), noise</text><text x="28" y="280">cancellation, chimes: stay wired</text><text class="m" x="28" y="292">not ours</text>
+
+  <path class="ln" d="M276 110 C 340 110, 400 80, 470 80"/>
+  <path class="ln" d="M276 223 C 340 223, 400 240, 470 240"/>
+  <text x="300" y="64">Bluetooth LE Audio / Auracast</text><text class="m" x="300" y="76">≈20–40 ms (est)</text>
+  <text x="300" y="196">UL2X 2.4 GHz, &lt; 9 ms</text><text class="m" x="300" y="208">or SKY76303 at 5 GHz, &lt; 20 ms</text>
+  <text class="m" x="300" y="140">Wi-Fi 5/6 GHz: video and</text><text class="m" x="300" y="152">projection, not speakers yet</text>
+
+  <rect class="box" x="470" y="8" width="282" height="150" rx="10"/>
+  <text class="h" x="482" y="28">Node: passenger headphones</text>
+  <rect class="cons" x="482" y="38" width="128" height="34" rx="6"/>
+  <text x="490" y="54">Audio link SoC</text><text class="m" x="490" y="66">SKY76361 (consumer)</text>
+  <rect class="cons" x="616" y="38" width="128" height="34" rx="6"/>
+  <text x="624" y="54">Bluetooth FEM</text><text class="m" x="624" y="66">SKY66407-11, QM42655</text>
+  <rect class="cons" x="482" y="80" width="128" height="34" rx="6"/>
+  <text x="490" y="96">Amplifier</text><text class="m" x="490" y="108">SKY76206 (phone class)</text>
+  <rect class="cons" x="616" y="80" width="128" height="34" rx="6"/>
+  <text x="624" y="96">Charger</text><text class="m" x="624" y="108">ACT2861</text>
+  <rect class="gap" x="482" y="122" width="262" height="28" rx="6"/>
+  <text x="490" y="140">LE Audio SoC, codec, MEMS mic: gap</text>
+
+  <rect class="box" x="470" y="172" width="282" height="136" rx="10"/>
+  <text class="h" x="482" y="192">Node: add-on speaker / subwoofer</text>
+  <rect class="cons" x="482" y="202" width="128" height="34" rx="6"/>
+  <text x="490" y="218">Audio link RX</text><text class="m" x="490" y="230">SKY76303 / SKY76361</text>
+  <rect class="ours" x="616" y="202" width="128" height="34" rx="6"/>
+  <text x="624" y="218">12 V buck</text><text class="m" x="624" y="230">ACT4751</text>
+  <rect class="gap" x="482" y="244" width="262" height="28" rx="6"/>
+  <text x="490" y="262">Speaker class-D amplifier: gap</text>
+  <text class="m" x="482" y="292">A power wire is still needed: only the signal goes wireless.</text>
+
+  <rect class="ours" x="8" y="314" width="12" height="10"/><text class="m" x="24" y="323">ours, automotive</text>
+  <rect class="cons" x="130" y="314" width="12" height="10"/><text class="m" x="146" y="323">ours, consumer or not automotive</text>
+  <rect class="gap" x="330" y="314" width="12" height="10"/><text class="m" x="346" y="323">gap or not ours</text>
+</svg>
+<figcaption class="small">Hub → radio → node. Teal: ours and automotive (AEC-Q by the site's rule). Orange dashed: ours, consumer grade (fine inside a headphone; the hub needs an automotive version). Red dotted: gap or a part that stays wired.</figcaption>
+</figure>
+
+<h3>Depth check: our best part per block</h3>
+<p>Best automotive part first, else a non-automotive option, else “nothing that fits” with the reason. “AEC-Q” = automotive grade by the site's rule (stated grade, AEC-Q in the text, or the Qorvo “…Q” suffix).</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">Ours, automotive</th><th scope="col">Ours, not automotive</th><th scope="col">Cover</th></tr></thead>
+  <tbody>
+    <tr><th scope="rowgroup" colspan="4">Hub: head unit, rear-seat unit or audio zone controller</th></tr>
+    <tr><td>Bluetooth / Wi-Fi combo SoC</td><td>none</td><td>none (QPG6200L is BLE / 802.15.4 for smart home, no audio)</td><td><span class="pill none">nothing that fits</span> customer buys Qualcomm, NXP, Infineon</td></tr>
+    <tr><td>2.4 GHz front end (PA, LNA, switch)</td><td><a href="/find?q=QPF4239Q">QPF4239Q</a> FEM (2.402–2.481 GHz, 14.5 dBm), <a href="/find?q=SKYA21040">SKYA21040</a> switch + LNA</td><td>SKY55208-11 (Wi-Fi 7 + Bluetooth), SKY66118-11 (+20 dBm Bluetooth)</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>5 GHz path (Wi-Fi audio, SKY76303, future Bluetooth at 5/6 GHz)</td><td><a href="/find?q=SKYA21041">SKYA21041</a> switch + LNA; QPF4554Q; <a href="/find?q=SKY5A1006">SKY5A1006</a> filter (Preview)</td><td>SKY85509-11, QPF4507 FEMs</td><td><span class="pill part">no PA</span></td></tr>
+    <tr><td>Coexistence filter 2.4 GHz vs LTE 40/41</td><td><a href="/find?q=QPQ2254Q">QPQ2254Q</a> BAW; QPQ1040Q (band 40), QPQ1041Q (band 41)</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Antenna switch</td><td><a href="/find?q=SKY5A2108">SKY5A2108</a>, <a href="/find?q=QPC8019Q">QPC8019Q</a>, SKYA21003</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Low-latency hub radio (proprietary)</td><td>none</td><td>SKY76360-22 (UL2X arbiter, 0–70 °C), SKY76303-21 (5 GHz, 0–70 °C)</td><td><span class="pill part">needs AEC-Q</span></td></tr>
+    <tr><td>Audio DSP, codec</td><td>Si479xx tuners with audio system (radio audio only)</td><td>—</td><td><span class="pill none">nothing that fits</span> no general audio DSP or codec</td></tr>
+    <tr><td>Clock and audio sync</td><td><a href="/find?q=Si5332A-AM1">Si5332-AM</a> generators, Si5335x-AM buffers</td><td>Si510/511 oscillators (−40 to 85 °C)</td><td><span class="pill have">yes</span> audio-rate frequencies: Not enough data</td></tr>
+    <tr><td>12 V power</td><td><a href="/find?q=ACT4751MQI101">ACT4751</a> 2 MHz buck</td><td>ACT4529 buck</td><td><span class="pill have">yes</span></td></tr>
+    <tr><th scope="rowgroup" colspan="4">Node: passenger headphones (an accessory: consumer grade is enough)</th></tr>
+    <tr><td>Audio link SoC</td><td>none</td><td>SKY76361-32/-52 (UL2X client, WLCSP 2.8 mm option)</td><td><span class="pill have">consumer</span> no Bluetooth LE Audio chip</td></tr>
+    <tr><td>Bluetooth FEM (range, coexistence)</td><td>QPF4239Q</td><td>SKY66407-11 (1.2 mm CSP), SKY66411/66415, QM42655</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Headphone amplifier</td><td>none</td><td>SKY76206-21 class-D (mono, phone class)</td><td><span class="pill part">partly</span></td></tr>
+    <tr><td>Battery charger, PMIC</td><td>none</td><td>ACT2861 buck-boost charger; ACT81460 PMIC (discontinued)</td><td><span class="pill part">partly</span></td></tr>
+    <tr><td>Microphone (calls, talk-back)</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span> we make no MEMS microphones</td></tr>
+    <tr><td>Crystal / oscillator</td><td>none (0 of 43 crystal oscillators AEC-Q)</td><td>Si510/511</td><td><span class="pill part">partly</span></td></tr>
+    <tr><th scope="rowgroup" colspan="4">Node: add-on speaker or wireless subwoofer in the car (car side: automotive needed)</th></tr>
+    <tr><td>Audio link receiver</td><td>none</td><td>SKY76303-21, SKY76361</td><td><span class="pill part">needs AEC-Q</span></td></tr>
+    <tr><td>Speaker amplifier (10–100 W)</td><td>none</td><td>Si824x isolated class-D gate drivers (pro audio, not for 12 V cars)</td><td><span class="pill none">nothing that fits</span> no automotive class-D</td></tr>
+    <tr><td>Power from 12 V</td><td>ACT4751</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">In the site's data: 3 of 89 Wi-Fi FEMs are AEC-Q (QPF4239Q is the only 2.4 GHz one); 0 of 2 Bluetooth FEMs and 0 of 5 wireless audio SoCs are AEC-Q; 0 of 2 audio amplifiers; 15 of 133 clock generators and 4 of 54 clock buffers are AEC-Q. Public reference designs: 8 of 4,186 carry wireless audio (TI wireless subwoofer, PurePath headset, Bluetooth hands-free; Renesas instrument cluster with Bluetooth audio, the only automotive one); 16 automotive audio designs (class-D amplifiers, eCall, I2S over coax) are all wired.</p>
+<p class="rpt-thread"><b>For the decision:</b> On the car side we fill the front end, filter, switch, clock and power blocks with automotive parts today; our real audio differentiator, the UL2X link, is consumer grade and only fits the headphone side as it is.</p>
+
+<h2>2. Gaps and new technology</h2>
+<ol class="opps">
+  <li><b>An automotive low-latency audio link (UL2X, AEC-Q100 Grade 3).</b> SKY76360/76361 already give what wireless rear speakers and multi-headphone systems need: fixed latency under 9 ms, up to 8 uncompressed channels and clients in sync to 1 µs, with an ultra-low-latency data link (about 1 ms) that also fits game controllers in the cabin. Bluetooth cannot match the sync and latency; WiSA and UWB audio are not in cars. But it is proprietary: a passenger's own earbuds will not receive it.
+    <p class="ev"><span class="pill part">consumer part exists</span> · evidence: Skyworks SKY76360/76361 and SKY76303 product summaries; no car programme found · reuse: same dies, qualification and an automotive package (est).</p></li>
+  <li><b>An automotive Bluetooth LE Audio front end, and later 5/6 GHz Bluetooth.</b> Combo chips have the PA and LNA on board (Infineon CYW89310: “integrated on-chip PAs, LNAs”), so an external FEM sells only for range, coexistence or several antennas. The Bluetooth SIG is defining LE operation in the 5 and 6 GHz bands and a higher-rate PHY up to about 8 Mbps; that would bring Bluetooth audio onto the same 5/6 GHz front ends as Wi-Fi, where our automotive PA is a gap (Wi-Fi report, gap 1).
+    <p class="ev"><span class="pill part">2.4 GHz yes, 5/6 GHz no PA</span> · evidence: Bluetooth 2025 Market Update, technology roadmap; Infineon CYW89310 page.</p></li>
+  <li><b>A Bluetooth LE Audio / Auracast chip.</b> We have none; Qualcomm, NXP, Infineon, Realtek and Barrot do. Building one is a new SoC in a crowded market (est): not recommended.
+    <p class="ev"><span class="pill none">gap, not recommended</span> · evidence: NXP AW300 and Infineon CYW89xxx listings (snippets and page).</p></li>
+  <li><b>Speaker-level automotive class-D amplifier and audio codec.</b> Needed for any wireless speaker node, and already a gap in the <a href="/business/reports/radio-auto-fit">car radio report</a>. TI, NXP, ST and ADI sell them with their buses.
+    <p class="ev"><span class="pill none">gap</span> · 16 automotive audio reference designs, all with other vendors' amplifiers or codecs.</p></li>
+  <li><b>Audio-rate references from the automotive clock tree.</b> Zones and wireless speakers play in sync only from one shared clock; Si5332-AM is automotive, but audio-rate outputs (24.576 MHz family) are not in our data. A question for the <a href="/business/reports/auto-clock-tree">automotive clock tree case</a>.
+    <p class="ev"><span class="pill part">Not enough data</span> · our estimate of the need.</p></li>
+</ol>
+<p class="rpt-thread"><b>For the decision:</b> Gap 1 is the only one where we would bring something new to the car; gaps 2 and 5 are add-ons to parts we have; gaps 3 and 4 are better left to partners.</p>
+
+<h2>3. Where else we see opportunities</h2>
+<ul>
+  <li><b>Buses, coaches and trains:</b> Auracast lets every passenger listen to the guide or the film on their own earbuds; the hub is a fixed Bluetooth transmitter with a front end and filters (est). The SIG expects 2.5 million public Auracast locations by 2030.</li>
+  <li><b>Motorcycles and helmets:</b> named by Barrot as a next Auracast field (“smart riding”); consumer or industrial grade, so today's Bluetooth FEMs and the UL2X client fit as they are (est).</li>
+  <li><b>In-cabin gaming:</b> the UL2X data link of about 1 ms suits game controllers for screens in parked EVs (est; no carmaker evidence found).</li>
+  <li><b>Musician gear, conference and venue systems:</b> covered in our new-market evidence; the owner rated them low volume (26 Oct 2026).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> These are consumer or industrial sockets for parts we already sell; none needs an automotive part first.</p>
+
+<h2>4. Market trend and who is doing it</h2>
+<ul>
+  <li><b>Volume:</b> Bluetooth in about 87 % of new cars, 109 M vehicle units forecast for 2024 (Bluetooth SIG / ABI, snippet, low). About 99 M automotive Wi-Fi devices in 2026 (IDC via Wi-Fi Alliance, med, from the Wi-Fi report). 3 billion LE Audio devices a year by 2028, nearly all new phones (Bluetooth SIG 2024 forecast, med).</li>
+  <li><b>Value:</b> automotive Bluetooth market estimates disagree eightfold (about $1.3 B to $11.2 B for 2025, analyst snippets), so none is used. Rear-seat wireless headphones and wireless car speakers: Not Enough Data.</li>
+  <li><b>Chip vendors:</b> Qualcomm (automotive Wi-Fi 7 QCA6797AQ; the u-blox RUBY-W2 module on it lists LE Audio and Bluetooth 5.4), NXP (AW300 Bluetooth with LE Audio and Auracast, AEC-Q100 Grade 2/3; AW693 and 88Q9098 Wi-Fi + Bluetooth, snippets), Infineon (CYW89310 Bluetooth 5.4/6.0 with LE Audio unicast and Auracast, −40 to 85 °C; CYW89570/89550/89530 Wi-Fi 6/6E + Bluetooth; CYW89829 named for LE Audio rear-seat entertainment), Barrot (Auracast modules for Chinese carmakers), Realtek and Nordic (no automotive LE Audio part found). ADI owns the wired A2B bus.</li>
+  <li><b>Carmakers and Tier-1s:</b> Bluetooth headphones for rear-seat systems at Ford and Lincoln (accessory pages); Rivian's Bluetooth Camp Speaker; Bose headrest speakers in production; Harman, Bose and ADI work on sound zones. No Auracast production car found (search, 28 Oct 2026).</li>
+  <li><b>Trend:</b> from infrared to Bluetooth headphones; LE Audio follows the phones; Bluetooth moves to 5/6 GHz and higher rates; wired A2B and Ethernet keep noise cancellation, microphones and amplifiers.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Volume is large but sits inside combo chips with the amplifier on board; the open sockets for us are the front end around them and, if a carmaker asks for it, a low-latency link the combo chips cannot match.</p>
+
+<h2>Risks</h2>
+<ul>
+  <li>Carmakers may stay with Bluetooth only: phones and earbuds speak Bluetooth, and a proprietary link needs our receiver in every headphone.</li>
+  <li>On-chip PAs and LNAs in combo chips leave few sockets for an external 2.4 GHz FEM.</li>
+  <li>Our audio SoCs are 0–70 °C; automotive qualification takes 12–36 months (trade press) and may need a redesign.</li>
+  <li>Demand evidence is thin: no Auracast car, no wireless main speakers in production, no unit counts for rear-seat headphones.</li>
+  <li>Qorvo data is incomplete where only qorvo.com lists the parts (not requested); molex.com and sparkmicro.com could not be read, so their figures are snippets.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Start with the automotive front ends that attach anyway, and spend on an automotive audio link only after a Tier-1 asks for it.</p>
+
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
+<h2>Sources</h2>
+<p class="small">Skyworks SKY76303-21, SKY76360-22 and SKY76361-32/-52 product summaries (read 28 Oct 2026); Bluetooth SIG: LE Audio page, 2025 Market Update and its technology roadmap, Barrot interview on Auracast in car cabins (read 28 Oct 2026); Infineon CYW89310 product page (read 28 Oct 2026); u-blox RUBY-W2 product summary (cached from 20 Oct 2026); search snippets for Molex and ADI noise cancellation, A2B, Rivian, Ford and Lincoln, Bose, NXP, SPARK UWB, WiSA and market estimates; BizDev catalogue, Systems library, new-market evidence and reference designs. Full list with confidence: <a href="/business/reports/auto-wireless-audio/background">background notes</a>.</p>
+{% endraw %}

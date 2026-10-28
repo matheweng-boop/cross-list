@@ -32,7 +32,7 @@
     <td class="small">{{ r.source_category }}{{ ' › ' ~ r.source_sub.split(' > ')[-1] if r.source_sub }}</td><td class="small">{{ r.package }}</td>
     <td class="small"><span class="life life-{{ r.lifecycle }}">{{ life_label[r.lifecycle] }}</span></td>
     <td class="small"><span class="qual q-{{ r.qualification }}">{{ qual_label[r.qualification] }}</span></td>
-    <td class="small">{% if r.datasheet %}<a href="{{ r.datasheet }}" target="_blank" rel="noopener">datasheet ↗</a><br>{% endif %}{% set tr = tech_reviews_for(r.mpn) %}{% if tr %}<a href="/reviews/{{ tr[0].slug }}">technology review</a>{% else %}<a class="muted" href="/reviews?part={{ r.mpn|urlencode }}#request">request a review</a>{% endif %}</td></tr>
+    <td class="small">{% if r.datasheet %}<a href="{{ r.datasheet }}" target="_blank" rel="noopener">datasheet ↗</a><br>{% endif %}{% set tr = tech_reviews_for(r.mpn) %}{% if tr %}<a href="/reviews/{{ tr[0].slug }}">part knowledge</a>{% else %}<a class="muted" href="/reviews?part={{ r.mpn|urlencode }}#request">request a review</a>{% endif %}</td></tr>
   {% endfor %}
 </table></div>
 {% endif %}

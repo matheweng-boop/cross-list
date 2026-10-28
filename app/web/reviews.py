@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.services import how_it_works as hw
 from app.services import reviews as rv
 from app.services import vocab
 from app.web.routes import templates
@@ -16,6 +17,13 @@ router = APIRouter()
 templates.env.globals["tech_reviews_for"] = rv.for_part
 templates.env.globals["tech_reviews_fn"] = rv.for_function
 templates.env.globals["tech_reviews_app"] = rv.for_application
+# Part knowledge › How it works links (owner, 28 Oct 2026) on the browse page, part pages, reviews and library topics
+templates.env.globals["how_for_sub"] = hw.for_sub
+templates.env.globals["how_for_part"] = hw.for_part
+templates.env.globals["how_for_review"] = hw.for_review
+templates.env.globals["how_for_topic"] = hw.for_topic
+templates.env.globals["how_groups"] = hw.groups
+templates.env.globals["how_href"] = hw.href
 
 
 def _ctx(**kw) -> dict:
@@ -70,6 +78,29 @@ def review_request_status(rid: int, status: str = Form(...), review: str = Form(
     except ValueError:
         raise HTTPException(400, "Unknown status or review") from None
     return RedirectResponse(f"/reviews#rq-{rid}", status_code=303)
+
+
+@router.get("/part-knowledge", include_in_schema=False)
+def part_knowledge_alias():
+    """Owner, 28 Oct 2026: "Part reviews" is now "Part knowledge"; the pages stay at /reviews, so old links work."""
+    return RedirectResponse("/reviews", status_code=307)
+
+
+@router.get("/reviews/how", include_in_schema=False)
+def how_index():
+    return RedirectResponse("/reviews#how", status_code=307)
+
+
+@router.get("/reviews/how/{gid}", response_class=HTMLResponse)
+def how_group(request: Request, gid: str, session: Session = Depends(get_session)):
+    """Part knowledge › How it works for one product group: the part itself, its key values, the app-note details and
+    our Skyworks / Qorvo parts; applications only as links."""
+    g = hw.group(gid)
+    if g is None:
+        raise HTTPException(404, "No such product group")
+    ctx = _ctx(g=g, table=hw.parts_table(session, g), used_in=hw.used_in(g), reviews=hw.reviews_of(g),
+               spec_link=hw.spec_link, groups=hw.groups())  # fmt: skip
+    return templates.TemplateResponse(request, "reviews/how.html", ctx)
 
 
 @router.get("/reviews/{slug}", response_class=HTMLResponse)

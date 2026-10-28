@@ -42,6 +42,7 @@
   <script>try { if (matchMedia("(max-width: 900px)").matches) document.querySelector(".filters-toggle").open = false; } catch (e) {}</script>
 
   <section class="browse-results" aria-live="polite">
+    {% from "reviews/_how.html" import how_card %}{{ how_card(how_for_sub(sub, cat)) }}
     <div class="browse-head">
       <p><b>{{ '{:,}'.format(res.total) }}</b> product{{ '' if res.total == 1 else 's' }}{% if res.total != res.all %} <span class="muted">of {{ '{:,}'.format(res.all) }}</span>{% endif %}</p>
       {% set active = [] %}{% for k, v in params.items() if v %}{% set _ = active.append((k, v)) %}{% endfor %}

@@ -11,7 +11,7 @@
       <span class="rp-meta small">Idea · {{ t.first|date('short') }}{% if t.last != t.first %} – {{ t.last|date('short') }}{% endif %}</span>
       <b class="rp-title"><a href="/business/evidence/{{ fn }}">{{ fn_label(fn) }}: lifetime demand seen</a></b>
       <span>{{ fn_label(fn) }}: <b>{{ demand_fmt(t.volume) }}</b> lifetime demand over {{ t.n }} request{{ 's' if t.n != 1 }}</span>
-      <span class="small">Parts: {% for p, v in t.parts.items() %}<a href="/find?q={{ p|urlencode }}">{{ p }}</a> {{ demand_fmt(v) }}{{ ', ' if not loop.last }}{% endfor %} · <a href="/reviews#requested">Part reviews</a>
+      <span class="small">Parts: {% for p, v in t.parts.items() %}<a href="/find?q={{ p|urlencode }}">{{ p }}</a> {{ demand_fmt(v) }}{{ ', ' if not loop.last }}{% endfor %} · <a href="/reviews#requested">Part knowledge</a>
         {%- set sc = dm.scores.get(fn) if dm.scoring else none %}{% if sc and sc.with_seen is not none %} · score with demand seen <b>{{ sc.with_seen }}</b> (shared {{ sc.score }}){% endif %}</span>
     </div></div>
   {% endfor %}</div>

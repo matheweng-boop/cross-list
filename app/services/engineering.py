@@ -41,8 +41,17 @@ NOTES = {
     "uwb_signal_path": ("UWB signal path: pulse fidelity, group delay ripple and linearity",
                         "Why the TX/RX chain must keep the 500 MHz pulse intact, and how to pick the LNA, PA, switch "
                         "and filter for flat group delay and low compression."),
+    # owner, 28 Oct 2026: error propagation for isolated current sensing and timing across digital isolators
+    "error_budget": ("Error propagation and uncertainty bands",
+                     "How offset, gain error, nonlinearity, drift and timing errors add up: worst case or RSS, "
+                     "typical or limit, and the band over temperature (Skyworks AN1270, AN1359)."),
+    # owner, 28 Oct 2026: GNSS in general, with four interactive visuals on /visuals
+    "gnss_how_it_works": ("GNSS: how satellite positioning works",
+                          "Pseudoranges and four satellites, geometry (DOP), the band plan of every constellation, "
+                          "error sources and corrections (SBAS, RTK, PPP), and the caveats."),
 }
-ALIASES = {"skew_ns": "pwd_ns", "peak_sink_a": "peak_source_a"}
+ALIASES = {"skew_ns": "pwd_ns", "peak_sink_a": "peak_source_a", "offset_uv": "error_budget",
+           "gain_error_pct": "error_budget"}
 
 
 @dataclass

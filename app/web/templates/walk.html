@@ -18,7 +18,7 @@
 <h1>{{ part.mpn }} <small class="muted">· walk-through</small></h1>
 <p class="subtitle muted">{{ part.manufacturer.name|vendor }} · {{ w.label }}. From the competitor part to what we sell and build: each step uses data from the rest of the site. What a step lacks goes to Site feedback for the next review{% if added %} ({{ added }} new item{{ 's' if added != 1 }} just now){% endif %}.</p>
 
-{% set trs = tech_reviews_for(part.mpn) %}{% for x in tech_reviews_fn(w.fn) if x not in trs %}{% set _ = trs.append(x) %}{% endfor %}{{ review_list(trs, 'Technology reviews for this part or its function') }}
+{% set trs = tech_reviews_for(part.mpn) %}{% for x in tech_reviews_fn(w.fn) if x not in trs %}{% set _ = trs.append(x) %}{% endfor %}{{ review_list(trs, 'Part knowledge for this part or its function') }}
 <ol class="walk-nav">{% for n, title in steps.items() %}{% set k = w.gaps|selectattr(0, 'eq', n)|list|length %}
   <li{% if n > upto %} class="walk-later"{% endif %}>{% if n <= upto %}<a href="#step-{{ n }}">{% endif %}<span class="walk-n">{{ n }}</span> {{ title }}{% if k %} <small class="walk-miss" title="data missing">{{ k }} missing</small>{% endif %}{% if n <= upto %}</a>{% endif %}</li>{% endfor %}</ol>
 {{ next(upto) }}

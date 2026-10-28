@@ -161,6 +161,30 @@ hex:
   try: "Click single bits and watch the hex digits change, then type a register value from a datasheet and see what each field means."
   why: "Datasheets set up chips through register maps written in hex, so this helps when reading configuration tables and customer questions."
 
+gnssbands:
+  shows: "Where the satellite navigation signals of GPS, Galileo, BeiDou, GLONASS, QZSS and NavIC sit on the frequency scale, and which transmitters sit right next to them."
+  read: "Each row is one constellation and each coloured bar one of its bands, so bars at the same place mean a shared centre frequency; the orange bars near the axis are the nearby or harmful transmitters, such as the second harmonic of LTE Band 13 / 14 that lands on L1."
+  try: "Highlight one constellation, then switch to the wide view to see the car's own LTE, Wi-Fi and V2X radios next to the GNSS bands."
+  why: "Every interferer next to a GNSS band is a filter, rejection or linearity requirement for the LNA and filter parts we sell."
+
+gnsstri:
+  shows: "How a receiver turns satellite range measurements into a position, and why its cheap clock makes every range wrong by the same amount."
+  read: "Each satellite draws a dashed circle at its measured range; when the receiver clock is off, the circles do not meet, and the blue circles show them after the solved clock error is removed."
+  try: "Move the clock error with only two satellites and watch the estimate drift, then use three or four and see it stay on the true position."
+  why: "This is why a receiver needs one satellite more than the dimensions it solves, and why weak signals that drop satellites hurt the fix."
+
+gnssdop:
+  shows: "How the spread of satellites across the sky turns the same range error into a small or a large position error (dilution of precision)."
+  read: "The circle is the sky seen from above with north up; purple dots are satellites and the orange ellipse is the likely position error, stretched where the geometry is weak."
+  try: "Narrow the spread as in a street between tall buildings and watch the error grow across the street, then add satellites from other constellations."
+  why: "Receiving more constellations and bands with a good front end gives more satellites to choose from, which keeps the geometry good in towns."
+
+gnssiono:
+  shows: "How much the ionosphere delays the signal at each frequency, and how measuring on two frequencies removes that delay."
+  read: "The curve falls with the square of the frequency, so L5 is delayed more than L1; the two marked points are the delays the receiver sees on each band, and the boxes show what is left after combining them."
+  try: "Raise the electron content as on a stormy day and compare L1 + L5 with L1 + L2 for the noise penalty."
+  why: "This is the main reason cars and phones move from L1-only to L1 + L5 front ends, which needs a second LNA path and a diplexer."
+
 rf-bands:
   shows: "Where each radio band (cellular, GNSS, Wi-Fi, satellite, radar and others) sits on the frequency scale, and which of our parts cover it."
   read: "The horizontal position is the frequency, on a scale where each step is ten times higher; each bar is one band and its row tells the group. The red row marks where two or more bands overlap, the spots that need filters. Click a band to see what it is, the front-end parts it calls for, and our parts that cover it."

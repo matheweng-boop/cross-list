@@ -1,0 +1,30 @@
+<svg viewBox="0 0 720 300" role="img" aria-labelledby="hw-motor-t" class="hw-svg" font-family="inherit" font-size="13">
+  <title id="hw-motor-t">Motor drive chain: MCU and PWM, gate drivers with bootstrap, three half-bridges, motor, shunt and current-sense amplifier back to the ADC</title>
+  <style>.hw-svg .b{fill:var(--pico-card-background-color,#fff);stroke:currentColor;stroke-width:1.4}.hw-svg .s{fill:none;stroke:currentColor;stroke-width:1.4}.hw-svg .a{fill:none;stroke:#0b6b74;stroke-width:2;marker-end:url(#hw-m-ar)}.hw-svg .f{fill:none;stroke:#c2410c;stroke-width:2;stroke-dasharray:5 4;marker-end:url(#hw-m-ar2)}.hw-svg text{fill:currentColor}.hw-svg .m{font-size:11px;opacity:.8}.hw-svg .chip{fill:none;stroke:#1f5fa8;stroke-width:2;stroke-dasharray:8 5}</style>
+  <defs><marker id="hw-m-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0b6b74"/></marker>
+  <marker id="hw-m-ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c2410c"/></marker></defs>
+  <rect class="chip" x="8" y="20" width="368" height="250" rx="10"/><text x="18" y="38" class="m">Motor controller SoC (e.g. PAC55xx): everything inside the dashed box</text>
+  <rect class="b" x="24" y="60" width="110" height="70" rx="6"/><text x="79" y="88" text-anchor="middle">MCU</text><text x="79" y="106" text-anchor="middle" class="m">6-step or FOC</text><text x="79" y="120" text-anchor="middle" class="m">PWM timers, ADC</text>
+  <rect class="b" x="24" y="170" width="110" height="60" rx="6"/><text x="79" y="196" text-anchor="middle">Power manager</text><text x="79" y="214" text-anchor="middle" class="m">buck, charge pump, LDOs</text>
+  <rect class="b" x="200" y="60" width="150" height="70" rx="6"/><text x="275" y="86" text-anchor="middle">Gate drivers ×6</text><text x="275" y="104" text-anchor="middle" class="m">10-12 V, 0.06-2 A peak</text><text x="275" y="118" text-anchor="middle" class="m">dead time, UVLO</text>
+  <rect class="b" x="200" y="170" width="150" height="60" rx="6"/><text x="275" y="194" text-anchor="middle">Current-sense amp</text><text x="275" y="212" text-anchor="middle" class="m">+ protection comparator</text>
+  <path class="a" d="M134 95H198"/><text x="166" y="88" text-anchor="middle" class="m">PWM</text>
+  <path class="a" d="M134 200H198" transform="rotate(180 166 200)"/>
+  <path class="a" d="M79 168V132"/>
+  <g transform="translate(420 40)">
+    <text x="0" y="0" class="m">Three half-bridges (external MOSFETs)</text>
+    <g class="s"><path d="M10 20V210M90 20V210M170 20V210"/></g>
+    <g><rect class="b" x="0" y="40" width="20" height="40"/><rect class="b" x="80" y="40" width="20" height="40"/><rect class="b" x="160" y="40" width="20" height="40"/>
+       <rect class="b" x="0" y="130" width="20" height="40"/><rect class="b" x="80" y="130" width="20" height="40"/><rect class="b" x="160" y="130" width="20" height="40"/></g>
+    <text x="196" y="64" class="m">high side</text><text x="196" y="154" class="m">low side</text>
+    <text x="-6" y="16" class="m">+V bus</text>
+    <rect class="b" x="0" y="210" width="180" height="14" rx="3"/><text x="90" y="245" text-anchor="middle" class="m">shunt resistor(s)</text>
+    <circle class="b" cx="250" cy="105" r="28"/><text x="250" y="110" text-anchor="middle">M</text>
+    <path class="s" d="M20 105H222M100 100H224M180 110H222"/>
+    <text x="226" y="150" class="m">3 windings</text>
+    <rect class="b" x="-36" y="60" width="16" height="22" rx="2"/><text x="-28" y="100" text-anchor="middle" class="m">Cboot</text>
+  </g>
+  <path class="a" d="M350 95H418"/><text x="384" y="88" text-anchor="middle" class="m">gates</text>
+  <path class="f" d="M510 262C460 280 380 250 352 214"/><text x="440" y="286" text-anchor="middle" class="m">shunt voltage → ADC → control loop, over-current trip</text>
+</svg>
+<figcaption>Drawn by us. The dashed box is what an integrated controller holds; with a separate gate driver the MCU and power manager are other chips.</figcaption>

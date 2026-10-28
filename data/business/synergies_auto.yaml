@@ -117,6 +117,10 @@ pairs:
   "crystal_oscillator + uwb_soc":
     reason: "Every UWB anchor runs its UWB IC (the Qorvo part in this pair) from a reference crystal (38.4 MHz in the public module designs); the Skyworks oscillator is that clock, and its accuracy sets the ranging timestamps."
     source: "Library diagram: Smart car access (UWB anchors + BLE + NFC, CCC digital key), block UWB reference clock to the UWB anchors (after the Murata Type 2AB and Type 2BP module block diagrams)"
+  "crystal_oscillator + rf_switch":
+    reason: "In the cabin UWB anchor the Qorvo antenna switch feeds the UWB chip that the Skyworks crystal oscillator clocks; the two meet only through that chip."
+    source: "Library diagram: UWB radar in the car - child presence, intrusion and kick / gesture sensing, block Antenna switch and band-pass filter to UWB SoC (after the Infineon AIROC UWB and ST64UWB pages)"
+    weak: true
   "crystal_oscillator + pmic":
     reason: "In the in-cabin radar module the Qorvo PMIC supplies the radar front end that the Skyworks oscillator clocks; a supply link only."
     source: "Library diagram: Automotive in-cabin 60 GHz radar module (System power supply to Radar front end and processing)"

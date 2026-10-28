@@ -8,9 +8,9 @@ designs:
     title: "Type 2AB UWB + Bluetooth LE combo module (Qorvo QM33120W + Nordic nRF52840)"
     url: "https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band/qorvo"
     vendor: Murata
-    applications: [UWB anchor and tag, Indoor positioning, Wireless connectivity]
+    applications: [UWB anchors and tags, Indoor positioning, Wireless connectivity]
     markets: [RF & connectivity, Consumer & personal electronics]
-    summary: "IEEE 802.15.4z (BPRF) UWB + Bluetooth 5.2 module. Block diagram: UWB transceiver QM33120W with its DC-DC, a 38.4 MHz crystal and a band-pass filter on each of two UWB antenna ports; nRF52840 BLE MCU with 32 MHz and 32 kHz crystals; 3-axis motion sensor; USB / UART / SPI / I2C host interfaces. Hardware design guide, EVB schematic and reference antenna are public."
+    summary: "IEEE 802.15.4z (BPRF) UWB (channels 5 and 9, 6.5 / 8 GHz) + Bluetooth 5.2 module. Block diagram: UWB transceiver QM33120W with its DC-DC, a 38.4 MHz crystal and a band-pass filter on each of two UWB antenna ports; nRF52840 BLE MCU with 32 MHz and 32 kHz crystals; 3-axis motion sensor; USB / UART / SPI / I2C host interfaces. Hardware design guide, EVB schematic and reference antenna are public."
     parts: [QM33120W, nRF52840]
     functions: [uwb_soc, ble_soc, crystal_oscillator, filter_saw_baw, pol_buck]
     documents:
@@ -21,9 +21,32 @@ designs:
     title: "Type 2BP UWB module (NXP Trimension SR150)"
     url: "https://www.murata.com/products/connectivitymodule/ultra-wide-band/nxp/type2bp"
     vendor: Murata
-    applications: [UWB anchor and tag, Angle of arrival, Wireless connectivity, IoT devices]
+    applications: [UWB anchors and tags, Angle of arrival, Wireless connectivity, IoT devices]
     markets: [RF & connectivity, Consumer & personal electronics]
-    summary: "Ultra-small UWB module with NXP SR150, clock, filters and peripheral components; channels 5 and 9, SPI, three antennas for 3D or 2D angle of arrival; internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals, power and crystal calibration support; FiRa certified."
+    summary: "Ultra-small UWB module with NXP SR150, clock, filters and peripheral components; channels 5 and 9 (6.5 / 8 GHz), SPI, three antennas for 3D or 2D angle of arrival; internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals, power and crystal calibration support; FiRa certified."
     parts: [SR150]
     functions: [uwb_soc, crystal_oscillator, filter_saw_baw]
     documents: {}
+  # added 28 Oct 2026 (UWB "Used in" and block diagrams): robots.txt read first, one request at a time, >= 10 s apart
+  - id: LBUA0ZZ2HQ
+    title: "Type 2HQ UWB module with radar presence detection (NXP Trimension SR250)"
+    url: "https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band/nxp/type2hq"
+    vendor: Murata
+    applications: [UWB radio, UWB anchors and tags, Angle of arrival, Radar presence detection, Positioning, Wireless connectivity]
+    markets: [RF & connectivity, Consumer & personal electronics]
+    summary: "Ultra-small UWB module (5.9 x 5.7 mm) on NXP SR250, channels 5 and 9 (6240-8240 MHz), two-way and one-way ranging, 2D / 3D angle of arrival and on-chip radar presence detection. Block diagram: four UWB antenna ports (two TX/RX, two RX-only), each through its own band-pass filter; 38.4 MHz reference crystal and 32 kHz sleep crystal; on-chip DC-DC with an external inductor; SPI to the host, I2C to a secure element, UART and GPIO. The MobileKnowledge RTLS 2.0 kit uses it in its anchors."
+    parts: [SR250]
+    functions: [uwb_soc, filter_saw_baw, crystal_oscillator, antenna]
+    documents:
+      block_diagram: "https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/nxp/img-type2hq-blockdiagram.ashx?la=en&cvid=20240911050146000000"
+  - id: LBUA2ZZ2DK
+    title: "Type 2DK UWB + Bluetooth LE tag module (NXP Trimension SR040 + QN9090)"
+    url: "https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band/nxp/type2dk"
+    vendor: Murata
+    applications: [UWB radio, UWB anchors and tags, Asset tracking, Positioning, Wireless connectivity, IoT devices]
+    markets: [RF & connectivity, Consumer & personal electronics]
+    summary: "All-in-one UWB + Bluetooth LE combo module for coin-cell tags and trackers: SR040 UWB (channels 5 and 9, 6250-8250 MHz, two-way and one-way ranging) and QN9090 BLE MCU with on-board UWB and BLE antennas; internal 55.2 MHz (UWB), 32 MHz (BLE) and 32.768 kHz crystals. The evaluation kit adds an accelerometer, coin-cell holder and USB-UART; the MobileKnowledge RTLS 2.0 kit uses it in its tags."
+    parts: [SR040, QN9090]
+    functions: [uwb_soc, ble_soc, crystal_oscillator, antenna, env_sensor]
+    documents:
+      other: ["https://www.murata.com/-/media/webrenewal/products/connectivitymodule/ultra-wide-band/nxp/mtd-apn-082-a-type2dk-evk-product-brief.ashx?la=en&cvid=20250516024225000000"]

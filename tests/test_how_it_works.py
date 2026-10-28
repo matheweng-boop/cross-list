@@ -189,3 +189,61 @@ def test_gnss_visual_maths():
     out = json.loads(subprocess.run([node, "-e", code], capture_output=True, text=True, check=True).stdout)
     assert abs(out["d"] - 0.1624) < 1e-3 and abs(out["n"] - 2.588) < 1e-2 and abs(out["h"] - 1) < 1e-9
     assert abs(out["sol"]["x"] - 55) < 1e-6 and abs(out["sol"]["b"] - 6) < 1e-6
+
+
+# ---- UWB "Used in" (owner, 28 Oct 2026: "expand the UWB 'used in' cases, also ... more block diagrams") -----------
+UWB_AREAS = ("Automotive", "Phones and wearables", "Smart home", "Industrial", "Healthcare", "Retail", "Sports",
+             "Drones", "Access control")  # fmt: skip
+
+
+def test_uwb_used_in_covers_the_application_range_with_sources():
+    rows = hw.used_in(hw.group("uwb"))
+    assert len(rows) >= 10
+    assert set(UWB_AREAS) <= {u["area"] for u in rows}
+    for u in rows:
+        assert u["href"].startswith(("/business/applications/", "/library/")), u
+        assert u["src"] and u["src_url"].startswith("https://") and "qorvo.com" not in u["src_url"], u
+    labels = " ".join(u["label"] for u in rows).lower()
+    for case in ("digital key", "child presence", "kick", "item tags", "door lock", "rtls", "agv", "worker safety",
+                 "patient", "vital-sign", "payment", "indoor navigation", "player tracking", "drone", "access"):
+        assert case in labels, case
+    assert [a for a, _ in hw.used_in_areas(hw.group("uwb"))] == list(UWB_AREAS)
+
+
+def test_uwb_used_in_links_render_and_stay_out_of_the_part_page(client):
+    html = client.get("/reviews/how/uwb").text
+    for u in hw.used_in(hw.group("uwb")):
+        page = client.get(u["href"])
+        assert page.status_code == 200 and "<h1" in page.text, u
+        assert f'href="{u["href"]}"' in html and u["src_url"] in html
+    for area in UWB_AREAS:
+        assert f'<h3 class="hw-area">{area}</h3>' in html
+    # the part page only links the applications (owner's rule): their notes are not retold here
+    assert "landing stations" not in html and "foot-traffic" not in html
+
+
+def test_uwb_page_says_where_it_is_seen_in_public_block_diagrams(client):
+    s = hw.seen_in(hw.group("uwb"))
+    assert s["n"] >= 10 and [f["fn"] for f in s["fns"]] == ["uwb_soc", "uwb_fem"]
+    html = client.get("/reviews/how/uwb").text
+    assert f'Seen in <a href="/reference-designs?fn=uwb_soc">{s["n"]} public block diagrams</a>' in html
+    listed = client.get("/reference-designs?fn=uwb_soc").text
+    assert "LBUA0ZZ2HQ" in listed and "AIROC-UWB-TSL100" in listed
+    assert hw.seen_in({"id": "x"}) is None
+
+
+def test_uwb_emerging_car_uses_are_tagged_and_sourced(client):
+    rows = [u for u in hw.used_in(hw.group("uwb")) if u["emerging"]]
+    assert len(rows) >= 4 and all(u["area"] == "Automotive" for u in rows)
+    for u in rows:
+        assert u["why"] and u["src"] and u["src_url"].startswith("https://") and "nxp.com" not in u["src_url"], u
+    labels = " ".join(u["label"] for u in rows).lower()
+    for case in ("seatbelt", "intrusion", "valet", "parking garage", "ride sharing"):
+        assert case in labels, case
+    html = client.get("/reviews/how/uwb").text
+    assert html.count('<span class="emerging-tag"') == len(rows)
+    # the tag also shows on the application entries they link to
+    for href in {u["href"] for u in rows}:
+        page = client.get(href).text
+        assert page.count('class="emerging-tag"') == 1, href
+    assert 'class="emerging-tag"' not in client.get(hw.used_in(hw.group("uwb"))[1]["href"]).text

@@ -98,7 +98,8 @@ def how_group(request: Request, gid: str, session: Session = Depends(get_session
     g = hw.group(gid)
     if g is None:
         raise HTTPException(404, "No such product group")
-    ctx = _ctx(g=g, table=hw.parts_table(session, g), used_in=hw.used_in(g), reviews=hw.reviews_of(g),
+    ctx = _ctx(g=g, table=hw.parts_table(session, g), used_in=hw.used_in(g), used_areas=hw.used_in_areas(g),
+               seen_in=hw.seen_in(g), reviews=hw.reviews_of(g),
                spec_link=hw.spec_link, groups=hw.groups())  # fmt: skip
     return templates.TemplateResponse(request, "reviews/how.html", ctx)
 

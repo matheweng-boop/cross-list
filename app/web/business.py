@@ -102,6 +102,9 @@ def application(request: Request, i: int, co: str = "combined", session: Session
     if app is None:
         raise HTTPException(404, "Application not found")
     c.update(app=app, m=op.metrics(app.positions, c["asp"]), groups=op.by_group(app, c["asp"]))
+    from app.services import how_it_works
+
+    c["emerging"] = how_it_works.app_emerging(i)  # owner, 28 Oct 2026: emerging uses are tagged
     return templates.TemplateResponse(request, "business/application.html", c)
 
 

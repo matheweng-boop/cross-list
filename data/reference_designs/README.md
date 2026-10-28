@@ -1,6 +1,6 @@
 # Reference designs from manufacturers' public sites
 
-One file per source (`ti.yaml`, `infineon.yaml`, `renesas.yaml`, `rohm.yaml`, `skyworks.yaml`, `murata.yaml`; the application lists that fed the block diagrams are in `data/blocks/research/`). Collected from
+One file per source (`ti.yaml`, `infineon.yaml`, `renesas.yaml`, `rohm.yaml`, `skyworks.yaml`, `murata.yaml`, `uwb_public.yaml` (UWB diagrams from several publishers); the application lists that fed the block diagrams are in `data/blocks/research/`). Collected from
 public pages only (robots.txt respected, one request at a time, at least 1 s apart, no log-in, no forms). Sites that
 block automated access (Analog Devices, ST, NXP, onsemi, Microchip, Toshiba, Nexperia, Qorvo) are skipped.
 Design files are not downloaded: their public links are recorded.

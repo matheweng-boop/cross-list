@@ -107,15 +107,49 @@ def used_in(g: dict) -> list[dict]:
     apps, out = _apps(), []
     for u in g.get("used_in") or []:
         if u.get("href"):
-            out.append({"label": u["label"], "href": u["href"], "kind": "Research report"})
+            row = {"label": u["label"], "href": u["href"], "kind": "Research report"}
         elif u.get("topic"):
             ok = library.topic(u["topic"]) is not None
-            out.append({"label": u["label"], "href": f"/library/{u['topic']}" if ok else "", "kind": "Systems library"})
+            row = {"label": u["label"], "href": f"/library/{u['topic']}" if ok else "", "kind": "Systems library"}
         else:
             i = next((i for i, t in enumerate(apps) if t["name"].startswith(u["app"])), None)
-            out.append({"label": u["label"], "href": f"/business/applications/{i}" if i is not None else "",
-                        "kind": "Application"})  # fmt: skip
+            row = {"label": u["label"], "href": f"/business/applications/{i}" if i is not None else "",
+                   "kind": "Application"}  # fmt: skip
+        # optional: the area the case belongs to (groups the list) and the public source that shows UWB used there
+        # status "emerging" (owner, 28 Oct 2026: "Do 'emerging'"): evaluation, research or proposal stage, with a why
+        out.append({**row, "area": u.get("area", ""), "src": u.get("src", ""), "src_url": u.get("src_url", ""),
+                    "emerging": u.get("status") == "emerging", "why": u.get("why", "")})  # fmt: skip
     return out
+
+
+def used_in_areas(g: dict) -> list[tuple[str, list[dict]]]:
+    """The "Used in" links grouped by area, in the order the areas first appear (one unnamed group if none)."""
+    areas: dict[str, list[dict]] = {}
+    for u in used_in(g):
+        areas.setdefault(u["area"], []).append(u)
+    return list(areas.items())
+
+
+def app_emerging(i: int) -> str:
+    """The "why emerging" line of an application diagram (templates + background, as indexed on the pages), or ""."""
+    apps = _apps()
+    return str(apps[i].get("emerging") or "") if 0 <= i < len(apps) else ""
+
+
+def seen_in(g: dict) -> dict | None:
+    """How many public block diagrams / reference designs (data/reference_designs) contain the group's functions:
+    {n: designs with any of them, fns: [{fn, label, n, href}]}; None when the group names no functions."""
+    fns = g.get("seen_in") or []
+    if not fns:
+        return None
+    from app.services import blocks, refmatch
+
+    by_fn = refmatch.index()["by_fn"]
+    cat = blocks.catalogue()["functions"]
+    keys = {k for f in fns for k in by_fn.get(f, ())}
+    rows = [{"fn": f, "label": (cat.get(f) or {}).get("label", f), "n": len(by_fn.get(f, ())),
+             "href": f"/reference-designs?fn={f}"} for f in fns]  # fmt: skip
+    return {"n": len(keys), "fns": rows}
 
 
 def reviews_of(g: dict) -> list[dict]:
@@ -240,6 +274,12 @@ def parts_table(session: Session, g: dict) -> dict:
 
 
 # ---- checks (tests) -------------------------------------------------------------------------------------------------
+def _function_ids() -> set[str]:
+    from app.services import blocks
+
+    return set(blocks.catalogue()["functions"])
+
+
 def problems() -> list[str]:
     """Keys that point nowhere or sections that are empty."""
     from app.services import products
@@ -257,6 +297,12 @@ def problems() -> list[str]:
                 if s.get("note") and not spec_link(s["note"])]  # fmt: skip
         bad += [f"{gid}: review {s}" for s in g.get("reviews") or [] if rv.get(s) is None]
         bad += [f"{gid}: used in {u['label']}" for u in used_in(g) if not u["href"]]
+        bad += [f"{gid}: used-in source {u['label']}" for u in used_in(g)
+                if u["src"] and not (u["src_url"].startswith("https://") or u["src_url"].startswith("/"))]  # fmt: skip
+        bad += [f"{gid}: emerging without source or why {u['label']}" for u in used_in(g)
+                if u["emerging"] and not (u["src_url"] and u["why"])]  # fmt: skip
+        cat = _function_ids()
+        bad += [f"{gid}: seen_in function {f}" for f in g.get("seen_in") or [] if f not in cat]
         bad += [f"{gid}: app note without ref/page/url {a.get('text', '')[:40]}" for a in g.get("appnotes") or []
                 if not (a.get("ref") and a.get("page") and a.get("url"))]  # fmt: skip
         if len((g.get("gist") or "").split()) > 25:

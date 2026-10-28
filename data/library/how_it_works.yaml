@@ -274,12 +274,39 @@ groups:
       - "No Skyworks or Qorvo filter made for UWB channel 9 in our catalogue; SKY5A1008 (6 GHz Wi-Fi filter that protects UWB) is still Preview."
       - "SKY13298-360LF (UWB switch, 3-8 GHz) is last-time-buy and is left out."
       - "No 802.15.4ab part of ours yet."
+      - "None of the public UWB block diagrams found so far draws a separate UWB front end (LNA, PA or switch): the modules put band-pass filters and the crystal next to the chip, so the front-end socket shows up only in long-range anchor designs (est)."
+      - "Infineon's TSL100 lists UWB channels 8, 9, 10 and 12 (up to about 9.7 GHz); our UWB switches and front ends stop at 8.3 GHz (SKY5A2108, QM14068) or 9 GHz (QM14070) (est)."
+    # owner, 28 Oct 2026: "expand the UWB 'used in' cases" - each case a link into Systems & applications, with the
+    # public source that shows UWB used there; area groups the list on the page
     used_in:
-      - {label: "Phone-as-a-key car access (automotive UWB)", topic: auto_uwb}
-      - {label: "Smart car access (UWB anchors + BLE + NFC)", app: "Smart car access (UWB anchors"}
-      - {label: "UWB + BLE module for anchors and tags", app: "UWB + Bluetooth LE module for anchors and tags"}
-      - {label: "Smartphone peripheral sockets (UWB)", app: "Smartphone peripheral sockets"}
-      - {label: "Smartwatch with UWB", app: "5G RedCap smartwatch"}
+      - {area: Automotive, label: "Digital key / phone-as-a-key (CCC)", topic: auto_uwb, src: "Car Connectivity Consortium: Digital Key", src_url: "https://carconnectivity.org/digital-key/"}
+      - {area: Automotive, label: "UWB anchors in doors, pillars and roof", app: "Smart car access (UWB anchors", src: "Infineon: smart car access block diagram (UWB and BLE anchors)", src_url: "https://www.infineon.com/application/automotive-car-access"}
+      - {area: Automotive, label: "Child presence detection (UWB radar)", app: "UWB radar in the car", src: "Infineon: AIROC UWB automotive (CPD, intrusion, in-cabin sensing)", src_url: "https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions"}
+      - {area: Automotive, label: "Kick sensing and gesture to open the trunk (UWB radar)", app: "UWB radar in the car", src: "ST blog: ST64UWB radar mode (gesture to open the trunk)", src_url: "https://blog.st.com/st64uwb/"}
+      # emerging (owner, 28 Oct 2026: "Do 'emerging'"): shown with a tag; each needs a public source and a why
+      - {area: Automotive, status: emerging, why: "Radar mode of the new 802.15.4ab chips, sampling in 2026", label: "Seat occupancy and seatbelt reminder (UWB radar)", app: "UWB radar in the car", src: "ST blog: ST64UWB radar checks that passengers wear their seat belts", src_url: "https://blog.st.com/st64uwb/"}
+      - {area: Automotive, status: emerging, why: "Offered by sensor and chip makers, not yet a standard car feature; replacing ultrasonic sensors is not stated in the sources read", label: "Intrusion alarm and in-cabin presence (UWB radar)", app: "UWB radar in the car", src: "Novelda: one UWB sensor for CPD, seat occupancy, intrusion and vital signs", src_url: "https://novelda.com/ultra-wideband-child-presence-sensor/"}
+      - {area: Automotive, status: emerging, why: "FiRa use case (proposal stage)", label: "Automated valet parking: UWB guides the car to its spot", app: "UWB between the car and its surroundings", src: "FiRa: Smart Cities and Mobility (driverless valet parking and pick-up)", src_url: "https://www.firaconsortium.org/discover/use-cases/smart-cities-mobility"}
+      - {area: Automotive, status: emerging, why: "FiRa use cases (proposal stage)", label: "Parking garage access and paying from the car", app: "UWB between the car and its surroundings", src: "FiRa: parking garage access control; in-vehicle payment (Smart Retail)", src_url: "https://www.firaconsortium.org/discover/use-cases/smart-cities-mobility"}
+      - {area: Automotive, status: emerging, why: "FiRa use cases (proposal stage)", label: "Ride sharing and robotaxi: find the car, identify the rider when boarding", app: "UWB between the car and its surroundings", src: "FiRa: ride sharing (precise positioning) and rider identification", src_url: "https://www.firaconsortium.org/discover/use-cases/smart-cities-mobility"}
+      - {area: Phones and wearables, label: "Precise finding in phones", app: "Mobile Wi-Fi 7 + Bluetooth + UWB connectivity", src: "Android: UWB stack in phones", src_url: "https://source.android.com/docs/core/connect/uwb"}
+      - {area: Phones and wearables, label: "UWB socket next to NFC and Wi-Fi in a phone", app: "Smartphone peripheral sockets", src: "NXP smartphone application page", src_url: "https://www.nxp.com/applications/SMARTPHONE"}
+      - {area: Phones and wearables, label: "Smartwatch with UWB", app: "5G RedCap smartwatch", src: "Qualcomm Snapdragon Wear Elite product brief", src_url: "https://docs.qualcomm.com/doc/87-97359-1/87-97359-1_REV_C_Snapdragon_Wear_Elite_Platform_Product_Brief.pdf"}
+      - {area: Phones and wearables, label: "Item tags (find my keys or bag)", app: "UWB + Bluetooth LE module for anchors and tags", src: "Apple AirTag (Precision Finding with UWB)", src_url: "https://www.apple.com/airtag/"}
+      - {area: Smart home, label: "Smart door lock that opens hands-free", app: "Smart door lock with UWB", src: "Infineon: smart door lock block diagram (UWB SoC)", src_url: "https://www.infineon.com/applications/smart-home-building/home-building-automation/smart-door-lock"}
+      - {area: Smart home, label: "Presence sensing in rooms and laptops (UWB radar)", app: "UWB radar presence and vital-sign sensor", src: "Novelda: UWB human presence sensor", src_url: "https://novelda.com/"}
+      - {area: Industrial, label: "RTLS and asset tracking in factories and warehouses", app: "UWB real-time locating system", src: "Kinexon: UWB tracking in industry", src_url: "https://kinexon.com/resources/uwb-technology"}
+      - {area: Industrial, label: "AGV / AMR and robot navigation", app: "UWB positioning for mobile robots and drones", src: "MobileKnowledge: MK UWB Kit Robotics", src_url: "https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/"}
+      - {area: Industrial, label: "Worker safety and anti-collision zones", app: "UWB real-time locating system", src: "Kinexon: worker safety monitoring with UWB", src_url: "https://kinexon.com/resources/uwb-technology"}
+      - {area: Healthcare, label: "Patient and equipment tracking in hospitals", app: "UWB real-time locating system", src: "FiRa: Smart Building and Industrial use cases (patient tracking)", src_url: "https://www.firaconsortium.org/discover/use-cases/smart-building-industrial"}
+      - {area: Healthcare, label: "Vital-sign radar (breathing and heartbeat)", app: "UWB radar presence and vital-sign sensor", src: "Novelda: UWB CPD and vital signs sensor", src_url: "https://novelda.com/ultra-wideband-child-presence-sensor/"}
+      - {area: Retail, label: "Tap-free payment at the point of sale (FiRa)", app: "Tap-free payment and store access with UWB", src: "FiRa: Smart Retail use cases", src_url: "https://www.firaconsortium.org/discover/use-cases/smart-retail"}
+      - {area: Retail, label: "Indoor navigation in shops, airports and venues", app: "UWB real-time locating system", src: "MobileKnowledge: MK UWB Kit RTLS 2.0 (DL-TDoA navigation)", src_url: "https://www.themobileknowledge.com/product/mk-uwb-kit-rtls-2-0/"}
+      - {area: Sports, label: "Player tracking in arenas", app: "Sports player tracking with UWB", src: "KINEXON PERFORM LPS (UWB player tracking)", src_url: "https://kinexon-sports.com/products/perform-lps/"}
+      - {area: Drones, label: "Drone positioning and landing where GPS is missing", app: "UWB positioning for mobile robots and drones", src: "arXiv 2003.04380: UWB system for UAVs in GNSS-denied places", src_url: "https://arxiv.org/abs/2003.04380"}
+      - {area: Access control, label: "Hands-free access to offices and homes", app: "Smart door lock with UWB", src: "FiRa: physical and residential access control", src_url: "https://www.firaconsortium.org/discover/use-cases/smart-building-industrial"}
+    # the public block diagrams (data/reference_designs) that contain these functions: "Seen in N" on the page
+    seen_in: [uwb_soc, uwb_fem]
     reviews: [qorvo-dw3000-uwb]
     sources:
       - {title: "Part review: Qorvo DW3000 UWB (DW3000 datasheet v1.3, public copy)", publisher: "BizDev", url: "/reviews/qorvo-dw3000-uwb", kind: ours}
@@ -290,6 +317,20 @@ groups:
       - {title: "IEEE 802.15.4z-2020: Enhanced UWB PHYs and associated ranging techniques (standard page)", publisher: "IEEE Standards Association", url: "https://standards.ieee.org/ieee/802.15.4z/10230/", kind: fetched}
       - {title: "CCC Digital Key overview", publisher: "Car Connectivity Consortium", url: "https://carconnectivity.org/digital-key/", kind: cached}
       - {title: "Coexistence Document for IEEE 802.15.4ab (P802.15-23-0452-07-04ab)", publisher: "IEEE 802.15 WG", url: "https://mentor.ieee.org/802.15/dcn/23/15-23-0452-07-04ab-coexistence-assessment-document.pdf", kind: cached}
+      - {title: "Public UWB block diagrams and module designs (Murata, Infineon, MobileKnowledge, Android, arXiv)", publisher: "BizDev reference designs", url: "/reference-designs?fn=uwb_soc", kind: ours}
+      - {title: "AIROC UWB TSL100 product brief (block diagram) and automotive / consumer-industrial UWB pages", publisher: "Infineon", url: "https://www.infineon.com/assets/row/public/documents/30/45/tsl100-product-brief-v1.7.pdf", kind: fetched}
+      - {title: "Smart door lock and smart car access application block diagrams", publisher: "Infineon", url: "https://www.infineon.com/applications/smart-home-building/home-building-automation/smart-door-lock", kind: fetched}
+      - {title: "Type 2HQ (SR250) module block diagram; Type 2DK (SR040 + QN9090) tag module", publisher: "Murata", url: "https://www.murata.com/en-global/products/connectivitymodule/ultra-wide-band/nxp/type2hq", kind: fetched}
+      - {title: "UWB use cases: Smart Retail, Smart Building and Industrial, Smart Home and Consumer", publisher: "FiRa Consortium", url: "https://www.firaconsortium.org/discover/use-cases", kind: fetched}
+      - {title: "MK UWB Kit Robotics and MK UWB Kit RTLS 2.0", publisher: "MobileKnowledge", url: "https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/", kind: fetched}
+      - {title: "Ultra-Wideband (UWB) tracking: technologies, sensors, use cases", publisher: "Kinexon", url: "https://kinexon.com/resources/uwb-technology", kind: fetched}
+      - {title: "UWB CPD & Vital Signs Sensor; UWB presence sensor", publisher: "Novelda", url: "https://novelda.com/ultra-wideband-child-presence-sensor/", kind: fetched}
+      - {title: "ST64UWB, the first 802.15.4ab device with narrowband assistance and radar mode", publisher: "STMicroelectronics blog", url: "https://blog.st.com/st64uwb/", kind: cached}
+      - {title: "Ultra Wideband (UWB) stack architecture", publisher: "Android Open Source Project", url: "https://source.android.com/docs/core/connect/uwb", kind: fetched}
+      - {title: "AirTag: Precision Finding with Ultra Wideband", publisher: "Apple", url: "https://www.apple.com/airtag/", kind: fetched}
+      - {title: "UWB-based system for UAV localization in GNSS-denied environments (arXiv 2003.04380)", publisher: "Queralta et al.", url: "https://arxiv.org/abs/2003.04380", kind: fetched}
+      - {title: "KINEXON PERFORM LPS: real-time UWB indoor player tracking", publisher: "KINEXON Sports", url: "https://kinexon-sports.com/products/perform-lps/", kind: fetched}
+      - {title: "UWB use cases: Smart Cities and Mobility (parking garage access, driverless valet parking, ride sharing, rider identification)", publisher: "FiRa Consortium", url: "https://www.firaconsortium.org/discover/use-cases/smart-cities-mobility", kind: fetched}
 
   - id: isolator
     title: "Capacitive digital isolators"

@@ -230,3 +230,20 @@ def test_uwb_page_says_where_it_is_seen_in_public_block_diagrams(client):
     listed = client.get("/reference-designs?fn=uwb_soc").text
     assert "LBUA0ZZ2HQ" in listed and "AIROC-UWB-TSL100" in listed
     assert hw.seen_in({"id": "x"}) is None
+
+
+def test_uwb_emerging_car_uses_are_tagged_and_sourced(client):
+    rows = [u for u in hw.used_in(hw.group("uwb")) if u["emerging"]]
+    assert len(rows) >= 4 and all(u["area"] == "Automotive" for u in rows)
+    for u in rows:
+        assert u["why"] and u["src"] and u["src_url"].startswith("https://") and "nxp.com" not in u["src_url"], u
+    labels = " ".join(u["label"] for u in rows).lower()
+    for case in ("seatbelt", "intrusion", "valet", "parking garage", "ride sharing"):
+        assert case in labels, case
+    html = client.get("/reviews/how/uwb").text
+    assert html.count('<span class="emerging-tag"') == len(rows)
+    # the tag also shows on the application entries they link to
+    for href in {u["href"] for u in rows}:
+        page = client.get(href).text
+        assert page.count('class="emerging-tag"') == 1, href
+    assert 'class="emerging-tag"' not in client.get(hw.used_in(hw.group("uwb"))[1]["href"]).text

@@ -15528,6 +15528,7 @@
 # sources named in its note; linked from Part knowledge > UWB (data/library/how_it_works.yaml, used_in).
 - name: UWB radar in the car - child presence, intrusion and kick / gesture sensing (UWB SoC in radar mode on the interior and rear anchors) (after Infineon AIROC UWB and ST)
   category: Automotive systems
+  emerging: "Seat occupancy, seatbelt reminder and intrusion / in-cabin presence by UWB radar are emerging: they use the radar mode of 802.15.4ab chips sampling in 2026 (ST-ST64UWB) and stand-alone UWB sensors (NOVELDA-CPD)."
   note: "After Infineon public material: IFX-UWB-AUTO (AIROC UWB automotive page: one UWB chip does CCC Digital Key ranging and radar sensing, for NCAP child presence detection, kick sensing, intrusion detection and in-cabin sensing) and ST-ST64UWB (ST blog: the 802.15.4ab radar mode detects a baby left in the car, checks seat belts and recognises a hand gesture to open the trunk with one chip). NOVELDA-CPD shows the same idea as a stand-alone UWB sensor (child presence, seat occupancy, intrusion, driver vital signs). The radar reuses the digital-key anchors, so the RF path is the same as for ranging: antenna, optional switch, filter, UWB SoC and its crystal. Our parts that fit: QM35825 and DW3300Q (UWB), SKY5A2108 (antenna switch, AEC-Q100), QM14068 (LNA, automotive grade not stated)."
   sources:
   - {doc: IFX-UWB-AUTO, title: 'Infineon AIROC Automotive Ultra-Wideband solutions (TSL100): CCC digital key, key fobs, child presence detection, kick sensing, intrusion detection', url: 'https://www.infineon.com/products/wireless-connectivity/airoc-uwb/airoc-automotive-ultra-wide-band-solutions'}
@@ -15660,3 +15661,24 @@
   - [tag, anchor, 'UWB (TDoA)']
   - [anchor, sync, timestamps]
   - [sync, server, Ethernet]
+
+- name: UWB between the car and its surroundings - parking garage gate, driverless valet parking, ride sharing pick-up, paying from the car (after FiRa)
+  category: Automotive systems
+  emerging: "FiRa use cases, proposal stage: no production system named in the sources read."
+  note: "After FiRa public material: FIRA-MOBILITY (Smart Cities and Mobility use cases: a garage gate opens when a UWB device with the right credential is in the car; UWB guides a driverless car to and from its valet parking spot; a ride-sharing customer finds the car precisely with the phone, and riders are identified hands-free when boarding) and FIRA-RETAIL (in-vehicle payment for fuel, parking, take-out and curbside services from the dashboard). The car's UWB anchors (as for the digital key) range to anchors in the garage, the valet system or the payment point, and to the passenger's phone. Drawn by us from these descriptions; no vendor block diagram found. Our parts that fit: DW3300Q (automotive UWB), QM35825, SKY5A2108 (antenna switch, AEC-Q100), QM14068 (LNA for long-range anchors, est)."
+  sources:
+  - {doc: FIRA-MOBILITY, title: 'FiRa Consortium: UWB use cases, Smart Cities and Mobility (parking garage access, driverless valet parking, ride sharing, rider identification)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-cities-mobility'}
+  - {doc: FIRA-RETAIL, title: 'FiRa Consortium: UWB use cases, Smart Retail (in-vehicle payment)', url: 'https://www.firaconsortium.org/discover/use-cases/smart-retail'}
+  groups:
+  - {id: phone, label: 'Passenger or driver phone (UWB + BLE)', col: 0, row: 0, blocks: [external_block]}
+  - {id: anchors, label: 'Car UWB anchors (as for the digital key)', col: 1, row: 0, blocks: [uwb_soc, antenna, rf_switch, crystal_oscillator]}
+  - {id: ble, label: 'BLE wake-up and control', col: 1, row: 1, blocks: [ble_soc]}
+  - {id: ecu, label: 'Access ECU / zone controller with secure element', col: 2, row: 0, blocks: [mcu, secure_element, can_transceiver]}
+  - {id: infra, label: 'Garage gate, valet-parking or payment-point anchors', col: 3, row: 0, blocks: [uwb_soc, antenna]}
+  - {id: backend, label: 'Parking, ride-sharing or payment service', col: 3, row: 1, blocks: [external_block]}
+  links:
+  - [phone, anchors, 'UWB: find the car, rider identification']
+  - [ble, anchors, wake-up]
+  - [anchors, ecu, CAN-FD]
+  - [anchors, infra, 'UWB: gate access, valet guidance, payment']
+  - [infra, backend, '']

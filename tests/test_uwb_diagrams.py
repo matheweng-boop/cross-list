@@ -25,6 +25,7 @@ NEW_APPS = {  # name prefix -> (system, sub-system)
     "UWB positioning for mobile robots and drones": ("industrial", "motion"),
     "Tap-free payment and store access with UWB": ("consumer", "computing"),
     "Sports player tracking with UWB": ("consumer", "wearables-xr"),
+    "UWB between the car and its surroundings": ("automotive", "car-access"),
 }
 BLOCKED = ("qorvo.com", "nxp.com", "www.qualcomm.com", "mouser", "digikey", "archive.org")
 

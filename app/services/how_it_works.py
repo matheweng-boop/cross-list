@@ -116,7 +116,9 @@ def used_in(g: dict) -> list[dict]:
             row = {"label": u["label"], "href": f"/business/applications/{i}" if i is not None else "",
                    "kind": "Application"}  # fmt: skip
         # optional: the area the case belongs to (groups the list) and the public source that shows UWB used there
-        out.append({**row, "area": u.get("area", ""), "src": u.get("src", ""), "src_url": u.get("src_url", "")})
+        # status "emerging" (owner, 28 Oct 2026: "Do 'emerging'"): evaluation, research or proposal stage, with a why
+        out.append({**row, "area": u.get("area", ""), "src": u.get("src", ""), "src_url": u.get("src_url", ""),
+                    "emerging": u.get("status") == "emerging", "why": u.get("why", "")})  # fmt: skip
     return out
 
 
@@ -126,6 +128,12 @@ def used_in_areas(g: dict) -> list[tuple[str, list[dict]]]:
     for u in used_in(g):
         areas.setdefault(u["area"], []).append(u)
     return list(areas.items())
+
+
+def app_emerging(i: int) -> str:
+    """The "why emerging" line of an application diagram (templates + background, as indexed on the pages), or ""."""
+    apps = _apps()
+    return str(apps[i].get("emerging") or "") if 0 <= i < len(apps) else ""
 
 
 def seen_in(g: dict) -> dict | None:
@@ -291,6 +299,8 @@ def problems() -> list[str]:
         bad += [f"{gid}: used in {u['label']}" for u in used_in(g) if not u["href"]]
         bad += [f"{gid}: used-in source {u['label']}" for u in used_in(g)
                 if u["src"] and not (u["src_url"].startswith("https://") or u["src_url"].startswith("/"))]  # fmt: skip
+        bad += [f"{gid}: emerging without source or why {u['label']}" for u in used_in(g)
+                if u["emerging"] and not (u["src_url"] and u["why"])]  # fmt: skip
         cat = _function_ids()
         bad += [f"{gid}: seen_in function {f}" for f in g.get("seen_in") or [] if f not in cat]
         bad += [f"{gid}: app note without ref/page/url {a.get('text', '')[:40]}" for a in g.get("appnotes") or []

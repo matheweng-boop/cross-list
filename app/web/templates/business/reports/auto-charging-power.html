@@ -1,0 +1,206 @@
+{% raw %}<h1>Charging in and around the car: USB-C power delivery, DC-DC, BMS and chargers, and what the Qorvo power ICs would need</h1>
+<p class="meta">28 Oct 2026 · Preliminary report from the owner's three comments of 28 Oct 2026: (a) “Full charging solutions using Qorvo Power Management ICs - also thinking outside of the box for BMS and Car chargers? What would it take to close this gap?” (b) “DCDC with USB C for Automotive?” (c) “Making own PD Controller as a new product?” Built from BizDev data (Qorvo and Skyworks catalogues with the AEC-Q rule, the path-to-product data, 4,195 public reference designs, the <a href="/reviews/qorvo-act88321-pmic">ACT88321 review</a>) and public web sources. It builds on <a href="/business/reports/auto-hv-hot-swap">hot-swap at 400 V and 800 V</a> and the case <a href="/business/reports/iso-current-sense-charging">isolated current sensing for EV charging</a>. “est” = our estimate. Every figure and link: <a href="/business/reports/auto-charging-power/background">background notes</a>.</p>
+
+{% endraw %}{% include "business/_bottom_line.html" %}{% raw %}
+<section class="brief" aria-label="Summary">
+  <p class="label">In brief</p>
+  <ol>
+    <li><b>(b) DC-DC with USB-C for cars: yes, as a buck-boost (est, med).</b> A car USB-C port needs a 4-switch buck-boost, because the 12 V battery sags to about 6 V in a cold crank and rises to 16 V and above, while the port must give 5–20 V (3.3–21 V with PPS). Qorvo has one automotive PD-ready part, the ACT4751M buck (4.5–40 V in, 4 A, written to supply a USB PD controller). A buck cannot make 20 V from 12 V, so from a 12 V battery it reaches about 9 V × 3 A = 27 W per port (est); 60–100 W needs a buck-boost we do not have in automotive grade.</li>
+    <li><b>The market has gone to one chip per port.</b> TI TPS25762-Q1 / TPS25772-Q1 (PD + 65 W buck-boost, Grade 1), Infineon EZ-PD CCG7D / CCG7S (PD 3.1 + buck-boost controller, up to 100 W per port), Richtek RTQ7880, MPS MPQ5031-AEC1, ADI MAX25432; Weltrend sells automotive-grade PD controllers (WT6617F, WT6633Q), Microchip the UCS4002 port protector. Our data hold 37 automotive USB-C reference designs; none uses our parts.</li>
+    <li><b>(c) Our own PD controller: no, not as a standalone product (est, med).</b> It needs a certified PD 3.1 stack and firmware, a CC PHY, VBUS and VCONN switches, short-to-battery protection and AEC-Q100, in a market with at least eight automotive suppliers and consumer controllers listed at a few cents. Partner first; license a PD engine later for a one-chip ACT buck-boost.</li>
+    <li><b>(a) Full charging solutions: we already hold the isolation side (est, low).</b> Automotive Skyworks isolated gate drivers (Si8239x, Si828x), isolators (Si86xx), isolated power (Si88xx), isolated current and voltage sensing (Si89xx) and the Si875x contactor driver fit BMS, on-board chargers and charging stations. Gaps: a BMS cell-monitor AFE with ISO 26262 (Qorvo's PAC25140 is a 10–20-cell BMS SoC, not automotive), OBC controllers and SiC / GaN power stages (UnitedSiC went to onsemi in January 2025).</li>
+    <li><b>Closing the gap:</b> build the automotive buck-boost (medium effort, est) and a 48 V BMS from PAC2514x (medium); partner for the PD controller, the BMS AFE with ASIL D and SiC; do not build OBC controllers or power FETs. Sell the isolation set now through the current-sense case.</li>
+  </ol>
+</section>
+
+<h2>1. Adjacent products and technologies</h2>
+<h3>(b) A USB-C port in the car: the blocks and what they must survive</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">What it does</th><th scope="col">Car requirement</th></tr></thead>
+  <tbody>
+    <tr><td>Input protection</td><td>Reverse-battery FET (ideal diode), TVS, input filter</td><td>Load dump and transients (ISO 7637-2, ISO 16750-2), reverse battery; the Infineon and TI kits are built to these</td></tr>
+    <tr><td>DC-DC (4-switch buck-boost)</td><td>12 V battery to 5–20 V (3.3–21 V in 20 mV steps with PPS); cable-drop compensation</td><td>Cold crank to about 6 V, 16 V and more in normal running (est); 60–100 W+ per port; 300–450 kHz or 2 MHz to stay out of the AM band; spread spectrum; CISPR 25 Class 5</td></tr>
+    <tr><td>USB PD controller</td><td>Type-C detection, PD messages over the CC wire, power contracts (fixed, PPS; EPR 28/36/48 V up to 240 W), legacy charging (BC 1.2, QC, Apple)</td><td>USB-IF certification; automotive temperature; firmware updates; power sharing between ports</td></tr>
+    <tr><td>Port switches and protection</td><td>VBUS power switch, VCONN for e-marked cables, discharge</td><td>Short-to-battery on VBUS, CC, D+ and D−; ESD on the connector (IEC 61000-4-2)</td></tr>
+    <tr><td>Thermal and power management</td><td>Derating with temperature and supply</td><td>Ports sit in consoles and seat backs at high ambient; both TI parts derate by supply voltage and temperature</td></tr>
+    <tr><td>Data path (optional)</td><td>USB hub, DisplayPort alt mode, redriver</td><td>Head units; TI PMP31344 adds DisplayPort at 140 W</td></tr>
+  </tbody>
+</table></div>
+<p class="small">From the TI TPS25762-Q1 / TPS25772-Q1 and Infineon CCG7D pages read for this report and the reference designs in our data. The 6 V crank and 16 V running values are typical 12 V figures (est); the exact profile is the carmaker's.</p>
+
+<h3>Who supplies automotive USB-C PD controllers and DC-DC</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Supplier</th><th scope="col">Parts</th><th scope="col">What is in the chip</th><th scope="col">Source</th></tr></thead>
+  <tbody>
+    <tr><td>TI</td><td>TPS25762-Q1 (1 port), TPS25772-Q1 (2 ports)</td><td>PD with PPS + integrated 4-switch buck-boost, up to 65 W; 5.5–18 V in (40 V max); 3.3–21 V out; short to VBAT and GND; Grade 1, wettable-flank QFN</td><td>ti.com product pages (read)</td></tr>
+    <tr><td>Infineon (Cypress EZ-PD)</td><td>CCG7D (2 ports), CCG7S (1 port, also with FETs)</td><td>PD 3.1 and PPS, buck-boost controller(s), Arm Cortex-M0, 100 mW VCONN, QC / AFC / BC 1.2; up to 100 W per port</td><td>infineon.com product page (read); CCG7S datasheet AEC-Q100 Grade 2 (snippet)</td></tr>
+    <tr><td>Richtek</td><td>RTQ7880, RTQ7880A, RTQ7882</td><td>PD + buck-boost controller in one chip, AEC-Q100 Grade 2, 12 mV PPS steps, up to 100 W</td><td>Richtek brochure (snippet; the PDF link returned 404)</td></tr>
+    <tr><td>MPS</td><td>MPQ5031-AEC1 with MPQ4247-class buck-boost</td><td>PD controller up to 100 W with PPS, QFN-20 with wettable flanks</td><td>snippet (monolithicpower.com showed a bot check; stopped)</td></tr>
+    <tr><td>Analog Devices (Maxim)</td><td>MAX25432 (MAX25430 not for new designs)</td><td>100 W PPS buck-boost port controller</td><td>snippet (analog.com not requested)</td></tr>
+    <tr><td>Microchip</td><td>UCS4002, MCP22301 / MCP22350, MCP19061 kit</td><td>Port protector with VCONN FETs and short-to-battery (AEC-Q100); separate PD controllers and buck-boost</td><td>snippet (microchip.com returned 403; stopped)</td></tr>
+    <tr><td>Weltrend</td><td>WT6617F, WT6633Q (automotive grade); WT6690B (PD 3.2 EPR 48 V, 2 ports)</td><td>PD controller with MCU; external DC-DC</td><td>weltrend.com.tw product list (read)</td></tr>
+    <tr><td>STMicroelectronics</td><td>STPD01 programmable buck + STM32G0 (UCPD); STUSB4710</td><td>Dual-port 120 W kit; no automotive grade found</td><td>snippet</td></tr>
+    <tr><td>Renesas</td><td>RAA489000 buck-boost + RL78/F14 MCU (100 W in-car charger design)</td><td>PD in the MCU firmware; RAA489300 is not automotive</td><td>our reference designs; snippet</td></tr>
+  </tbody>
+</table></div>
+
+<h3>A car USB-C port, with our parts</h3>
+<figure class="cp-fig" style="margin:.6rem 0">
+<style>
+  .cp-fig svg { width: 100%; max-width: 760px; height: auto; display: block; }
+  .cp-fig .box { fill: var(--pico-card-background-color, #fff); stroke: var(--pico-muted-border-color, #cfc8e0); }
+  .cp-fig .ours { fill: var(--chip-bg, #e6f3f4); stroke: var(--pico-primary, #0b6b74); }
+  .cp-fig .cons { fill: var(--pico-mark-background-color, #fff4e8); stroke: #a15c00; stroke-dasharray: 4 3; }
+  .cp-fig .gap { fill: none; stroke: #a3302a; stroke-dasharray: 2 3; }
+  .cp-fig text { fill: var(--pico-color, #23304a); font-size: 11px; font-family: inherit; }
+  .cp-fig .h { font-weight: 700; font-size: 12px; }
+  .cp-fig .m { fill: var(--pico-muted-color, #6b7486); font-size: 10px; }
+  .cp-fig .ln { stroke: var(--pico-primary, #0b6b74); stroke-width: 1.6; fill: none; }
+</style>
+<svg viewBox="0 0 760 250" role="img" aria-labelledby="cp-t cp-d">
+  <title id="cp-t">Car USB-C charging port</title>
+  <desc id="cp-d">12 V battery, input protection, buck-boost DC-DC, USB PD controller and port switches to the USB-C socket; our automotive ACT4751M buck, consumer PD bucks and buck-boost, and the gaps.</desc>
+  <rect class="box" x="8" y="70" width="88" height="60" rx="8"/>
+  <text class="h" x="18" y="94">12 V battery</text><text class="m" x="18" y="110">6–16 V+, load</text><text class="m" x="18" y="122">dump, crank</text>
+  <rect class="gap" x="112" y="70" width="110" height="60" rx="8"/>
+  <text class="h" x="120" y="92">Protection</text><text class="m" x="120" y="108">ideal diode, TVS,</text><text class="m" x="120" y="120">filter: gap</text>
+  <rect class="ours" x="238" y="20" width="160" height="50" rx="8"/>
+  <text class="h" x="246" y="40">Buck (ours, AEC-Q)</text><text class="m" x="246" y="56">ACT4751M: up to ~27 W from 12 V</text>
+  <rect class="cons" x="238" y="80" width="160" height="50" rx="8"/>
+  <text class="h" x="246" y="100">Buck-boost</text><text class="m" x="246" y="116">ACT5101 / ACT5102: consumer</text>
+  <rect class="gap" x="238" y="140" width="160" height="50" rx="8"/>
+  <text class="h" x="246" y="160">Automotive buck-boost</text><text class="m" x="246" y="176">60–100 W: gap (to build)</text>
+  <rect class="gap" x="414" y="70" width="140" height="60" rx="8"/>
+  <text class="h" x="422" y="92">USB PD controller</text><text class="m" x="422" y="108">PD 3.1, PPS, CC PHY:</text><text class="m" x="422" y="120">gap (partner)</text>
+  <rect class="gap" x="570" y="70" width="104" height="60" rx="8"/>
+  <text class="h" x="578" y="92">Port switches</text><text class="m" x="578" y="108">VBUS, VCONN,</text><text class="m" x="578" y="120">short-to-battery</text>
+  <rect class="box" x="690" y="80" width="62" height="40" rx="8"/>
+  <text class="h" x="700" y="104">USB-C</text>
+  <path class="ln" d="M96 100 H112 M222 100 H238 M222 100 V45 H238 M222 100 V165 H238 M398 45 H406 V100 H414 M398 105 H414 M398 165 H406 V100 M554 100 H570 M674 100 H690"/>
+  <text class="m" x="8" y="214">Teal: ours and automotive (AEC-Q by the site's rule). Orange dashed: ours, consumer grade (ACT4751 / ACT4752 also carry PD 3.0 PPS output control).</text>
+  <text class="m" x="8" y="230">Red dotted: gap. Leaders put the PD controller, the buck-boost and the port protection in one chip (TPS25772-Q1, CCG7D, RTQ7880).</text>
+</svg>
+<figcaption class="small">12 V battery → protection → buck-boost DC-DC → USB PD controller → port. The 27 W ceiling of a buck at 12 V is our estimate (9 V × 3 A).</figcaption>
+</figure>
+
+<h3>Depth check: our best part per block</h3>
+<p>Best automotive part first, else a non-automotive option, else “nothing that fits” with the reason. “AEC-Q” = automotive grade by the site's rule. Part knowledge pages: <a href="/reviews/how/gatedriver">isolated gate drivers</a>, <a href="/reviews/how/currentsense">isolated current sensing</a>, <a href="/reviews/how/isolator">capacitive digital isolators</a>.</p>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Block</th><th scope="col">Ours, automotive</th><th scope="col">Ours, not automotive</th><th scope="col">Cover</th></tr></thead>
+  <tbody>
+    <tr><th scope="rowgroup" colspan="4">(b) Car USB-C port</th></tr>
+    <tr><td>Input protection (ideal diode, TVS)</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span> TI LM74700-Q1 in the TI designs</td></tr>
+    <tr><td>Buck DC-DC, PD-ready</td><td><a href="/find?q=ACT4751MQI101">ACT4751M</a> (4.5–40 V, 4 A, 450–2250 kHz, bias rails for a PD controller); ACT4529M (6–36 V, 3 A, Quick Charge 2.0, AEC-Q100)</td><td>ACT4751QI102 (no new designs), ACT4752QI101-T (PD 3.0 PPS, 40 V, 4 A); ACT4533A/B (CC/CV, 10–40 V)</td><td><span class="pill part">up to ~27 W at 12 V (est)</span></td></tr>
+    <tr><td>Buck-boost DC-DC 60–100 W</td><td>none</td><td>ACT5101 / ACT5102 (4–23 V, 3 A, 4 integrated FETs)</td><td><span class="pill none">gap</span> needs 40 V, AEC-Q100, load dump, EMI</td></tr>
+    <tr><td>USB PD controller (PD 3.1, PPS, EPR)</td><td>none</td><td>none in the catalogue (ACT4751 / ACT4752 carry PD 3.0 PPS output control; the protocol sits in a separate controller, est)</td><td><span class="pill none">nothing that fits</span></td></tr>
+    <tr><td>VBUS / VCONN switches, short-to-battery</td><td>none</td><td>eFuse FETs inside ACT4910 / ACT85610 PLP ICs (20–24 V, data-centre SSDs)</td><td><span class="pill none">gap</span></td></tr>
+    <tr><td>Accessory battery charger (in a device, not in the car)</td><td>none</td><td><a href="/find?q=ACT2861QI501">ACT2861</a> (30 V, 5 A buck-boost charger with OTG, 2–5 cells)</td><td><span class="pill have">consumer</span> fine in an accessory</td></tr>
+    <tr><th scope="rowgroup" colspan="4">(a) 12 V / 48 V BMS</th></tr>
+    <tr><td>Cell monitor AFE, balancing, ISO 26262</td><td>none</td><td>PAC25140 / PAC25141N (10–20-cell BMS SoC with Arm MCU, balancing, CAN; 145 V); PAC22140 discontinued</td><td><span class="pill part">needs AEC-Q and ASIL</span></td></tr>
+    <tr><td>Isolated communication (BMS to vehicle CAN)</td><td>Si86xx isolators (762 of 926 AEC-Q); Si88xx with isolated power (92 of 92)</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Pack current sensing</td><td>Si8921 / Si8922 isolated amplifiers, Si894x modulators (30 of 60 AEC-Q)</td><td>—</td><td><span class="pill have">yes</span> (high-voltage packs)</td></tr>
+    <tr><td>Contactor and pre-charge drive</td><td><a href="/find?q=Si8751AB-AS">Si8751 / Si8752</a> isolated FET drivers</td><td>—</td><td><span class="pill part">2.5 kVrms only</span> see hot-swap report</td></tr>
+    <tr><td>Disconnect / power FETs</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span> SiC FETs sold to onsemi</td></tr>
+    <tr><th scope="rowgroup" colspan="4">(a) On-board charger 11 / 22 kW and DC-DC 800 V → 12 / 48 V</th></tr>
+    <tr><td>PFC and LLC / DAB control</td><td>none</td><td>none (ACT43950 400 V CC regulator, discontinued)</td><td><span class="pill none">nothing that fits</span> customer's MCU or DSP</td></tr>
+    <tr><td>Isolated gate drivers (SiC)</td><td>Si8239x (150 of 150 AEC-Q), Si828x with desat and fault feedback, Si823Hx, Si82Bx / Si82Fx</td><td>—</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Isolated voltage and current sensing</td><td>Si8921 / Si8922, Si8931 / Si8932, Si894x</td><td>—</td><td><span class="pill have">yes</span> CMTI 50 kV/µs below SiC needs (case)</td></tr>
+    <tr><td>Isolated bias supply</td><td>Si88xx isolators with dc-dc</td><td>—</td><td><span class="pill have">yes</span> (low power)</td></tr>
+    <tr><td>SiC / GaN power stage</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span> not pursued</td></tr>
+    <tr><td>Auxiliary 12 V rails</td><td>ACT4751M</td><td>ACT41000 (22–24 V in)</td><td><span class="pill have">yes</span></td></tr>
+    <tr><th scope="rowgroup" colspan="4">(a) Charging stations (wallbox, DC fast charger)</th></tr>
+    <tr><td>Isolation, gate drive, sensing</td><td>same Skyworks set (automotive grade also serves industrial)</td><td>Si83xx isolated smart switches (relays), Si86 industrial isolators</td><td><span class="pill have">yes</span></td></tr>
+    <tr><td>Controller, PFC, power stage</td><td>none</td><td>none</td><td><span class="pill none">nothing that fits</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">In the site's data: 4 of 151 Qorvo power-management and motor parts are AEC-Q by the site's rule (ACT4751MQI101, two ACT4529M codes, the discontinued ACT4530M), 0 of 62 PMICs, 0 of 13 battery chargers, 0 of 3 battery monitors, 0 of 2 buck-boosts. Skyworks: 954 of 1,122 gate drivers, 762 of 926 isolators, 30 of 60 isolated amplifiers, all 92 isolated dc-dc and 4 of 10 isolated switch drivers. Public reference designs: 135 USB-C / PD designs (37 automotive, none with our parts); 163 BMS designs (52 automotive); 83 on-board charger designs (74 automotive); 121 charging-station designs (56 automotive). Counts are keyword matches over titles and summaries (est). ACT4725 and an “ActiveQC” brand are not in our data (Not Enough Data); the Active-Semi brand in the catalogue is “ActiveCharge” on ACT4529M.</p>
+<p class="rpt-thread"><b>For the decision:</b> For a car USB-C port we own one automotive buck and nothing else; the buck-boost is the block nearest to our portfolio and the one that decides whether we reach 60–100 W.</p>
+
+<h2>2. Gaps and new technology</h2>
+<h3>(c) Our own USB-C PD controller: what it would take</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Needed</th><th scope="col">What it is</th><th scope="col">Ours today</th><th scope="col">Effort (est)</th></tr></thead>
+  <tbody>
+    <tr><td>PD 3.1 / 3.2 protocol stack and policy engine</td><td>Firmware for Type-C states, PD messages, PPS, EPR (28 / 36 / 48 V, up to 240 W), legacy charging (BC 1.2, QC, Apple), field updates</td><td>Active-Semi shipped PD 3.0 PPS buck products (ACT4751, ACT4752) and QC 2.0 (ACT4529); whether a stack exists in-house: Not Enough Data</td><td>long</td></tr>
+    <tr><td>USB-IF certification</td><td>Compliance testing, Integrators List (TID), adopters and trademark agreements; per port configuration and per revision</td><td>none known</td><td>medium, repeated each revision</td></tr>
+    <tr><td>CC PHY and analog</td><td>BMC transceiver on CC, Rp / Rd, VCONN supply, ADCs for VBUS and current</td><td>mixed-signal blocks in ACT PMICs (ADC, I2C, protection), est</td><td>medium</td></tr>
+    <tr><td>VBUS / VCONN switches and protection</td><td>Gate driver for the VBUS NFET, OVP, OCP, short-to-battery on VBUS, CC, D+ and D−</td><td>eFuse FETs inside ACT4910 / ACT85610</td><td>medium</td></tr>
+    <tr><td>MCU core</td><td>Most leaders use an Arm Cortex-M0 with flash (Infineon CCG7D: 48 MHz, 128 KB)</td><td>Arm MCUs inside PAC motor and BMS SoCs</td><td>short (reuse)</td></tr>
+    <tr><td>Automotive qualification</td><td>AEC-Q100 Grade 1 or 2, PPAP, wettable flanks, CISPR 25 with the DC-DC</td><td>done once for ACT4751M</td><td>medium</td></tr>
+    <tr><td>Functional safety</td><td>Not needed for a charging port (no ASIL claimed by TI or Infineon for these parts)</td><td>—</td><td>none</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><b>Market structure:</b> crowded. At least eight suppliers sell automotive PD controllers or one-chip ports (TI, Infineon, Richtek, MPS, ADI, Microchip, Weltrend, and Renesas with an MCU design); in consumer chargers, Chinese controllers are listed at a few cents on trade sites (snippet, low). Average selling price of a standalone automotive PD controller: Not Enough Data; we expect it to be low and falling (est).</li>
+  <li><b>Where value sits:</b> in the one-chip port (PD + buck-boost + protection), where the power stage carries the watts and the EMI work, and in the system (power sharing between ports, thermal derating). A standalone PD controller is the commodity half (est).</li>
+  <li><b>Build vs buy vs partner (est):</b> build alone: long, certification-heavy, low price; buy: a small PD-controller company would bring the stack and USB-IF experience, but adds little beyond the controller; partner: pair our automotive buck-boost with a partner's certified automotive PD controller in a joint reference design, as Microchip and Renesas do with two chips. Recommended: partner now, license a PD engine into the ACT buck-boost later, if the first wins hold.</li>
+  <li><b>Our assets:</b> Active-Semi's PD-ready buck line (ACT4751 / ACT4752 with PD 3.0 PPS output control, ACT4529 with QC 2.0, ACT4751M automotive), ACT power stages with integrated FETs (ACT5101 / ACT5102 buck-boost, ACT2861 charger), Arm MCUs and mixed-signal blocks in PAC SoCs. Skyworks isolation matters only on the 48 V and high-voltage side, not for a 12 V USB port.</li>
+</ul>
+<p class="ev"><span class="pill part">variant</span> · path data: usb_pd_controller = variant, medium effort, “build - extend ACT475x”; they list the same missing pieces: CC / PD 3.1 engine and firmware, USB-IF certification, sink-side controller.</p>
+
+<h3>Other gaps in the car USB-C chain</h3>
+<ol class="opps">
+  <li><b>An automotive 4-switch buck-boost, 100 W class.</b> From ACT5101 / ACT5102 (consumer, 4–23 V) and ACT4751M (automotive, 40 V): a 40 V input, 3.3–21 V output, PPS-grade 20 mV / 50 mA steps, spread spectrum, AEC-Q100 Grade 1. TI and Richtek show it can sit next to the PD logic in one die.
+    <p class="ev"><span class="pill part">variant</span> · path: pre_regulator = variant, medium effort, “build - Qorvo ACT power line” (missing: 40 V automotive buck-boost, AEC-Q100 + load dump, low-EMI spread spectrum).</p></li>
+  <li><b>Port protection (short-to-battery on VBUS, CC, D+, D−).</b> A small analog part next to any PD controller; Microchip sells it alone (UCS4002).
+    <p class="ev"><span class="pill part">variant</span> · from the PLP eFuse silicon (path: efuse_hotswap = variant, short effort).</p></li>
+  <li><b>Input protection (ideal diode, reverse battery).</b> Commodity; leave to partners.
+    <p class="ev"><span class="pill none">gap, not recommended</span> · path: reverse_polarity has no catalogue match.</p></li>
+</ol>
+<p class="rpt-thread"><b>For the decision:</b> The buck-boost is ours to build; the PD controller is better bought in through a partner, because its cost is in certification and firmware, not in silicon we already have.</p>
+
+<h2>3. Where else we see opportunities</h2>
+<h3>(a) “Full charging solutions”: BMS, on-board chargers and charging stations</h3>
+<ul>
+  <li><b>12 V and 48 V BMS.</b> Lithium 12 V batteries and 48 V mild-hybrid and zonal packs need cell monitoring (4 cells at 12 V, about 13–14 at 48 V, est), balancing, a disconnect switch and isolated or galvanically separated communication. TI's BQ79616-Q1 family (16S, ASIL D, ±1.5 mV) has a standalone 48 V monitor (BQ75614-Q1). Qorvo's PAC25140 / PAC25141N (10–20 cells, Arm MCU, CAN, 145 V) is the nearest asset, built for e-bikes and tools (est), not automotive. Our isolators and Si89xx sensing fit the high-voltage pack (BMU to vehicle, pack current); contactor and pre-charge drive is the <a href="/business/reports/auto-hv-hot-swap">hot-swap report</a>.</li>
+  <li><b>On-board chargers 11 / 22 kW and the 800 V → 12 / 48 V DC-DC.</b> Three-phase or totem-pole PFC plus a CLLC or DAB stage on 1200 V SiC (Wolfspeed and ST designs, snippets); controlled by an MCU or DSP. We supply the isolated gate drivers (Si8239x, Si828x with desat), isolators, isolated bias (Si88xx) and isolated voltage and current sensing (Si89xx, see the <a href="/business/reports/iso-current-sense-charging">current-sense case</a>). Not ours: the controller, the power switches, magnetics.</li>
+  <li><b>EV charging stations (wallbox, DC fast charger).</b> The same isolation, drive and sensing set, industrial or automotive grade; at 1000–1500 V DC the <a href="/business/reports/hv-extra-wide-isolation">extra-wide isolation case</a> applies.</li>
+  <li><b>Outside the car:</b> e-bikes and power tools (PAC25140, ACT2861), power banks (ACT28xx, mostly discontinued), USB-C chargers and docks (ACT4752, ACT5101). Consumer grade is enough there.</li>
+</ul>
+<h3>What Qorvo's power line plus Skyworks isolation covers today, and what it would take to close each gap</h3>
+<div class="wrap"><table class="small">
+  <thead><tr><th scope="col">Gap</th><th scope="col">Route</th><th scope="col">Effort (est)</th><th scope="col">Path data</th></tr></thead>
+  <tbody>
+    <tr><td>Automotive buck-boost for USB-C (100 W)</td><td><b>Build</b> from ACT5101 / ACT4751M</td><td>medium</td><td>pre_regulator: variant</td></tr>
+    <tr><td>USB PD controller</td><td><b>Partner</b> now; license a PD engine later</td><td>medium (path) to long (own stack)</td><td>usb_pd_controller: variant</td></tr>
+    <tr><td>Port protection, eFuse</td><td><b>Build</b> from PLP eFuse silicon</td><td>short</td><td>efuse_hotswap: variant</td></tr>
+    <tr><td>48 V BMS monitor (automotive)</td><td><b>Build</b> from PAC25140 / PAC25141N; add AEC-Q100</td><td>medium</td><td>battery_protector: variant</td></tr>
+    <tr><td>High-voltage BMS AFE with ASIL D</td><td><b>Partner</b> (TI, ADI, NXP, Infineon lead)</td><td>long</td><td>Not in path data</td></tr>
+    <tr><td>800 V auxiliary flyback</td><td><b>Build</b> with Skyworks isolation</td><td>medium</td><td>hv_flyback: new_design</td></tr>
+    <tr><td>PFC / LLC / DAB controller for OBC</td><td><b>Do not pursue</b> (customer's MCU or DSP)</td><td>medium, crowded</td><td>acdc_controller: new_design, low priority</td></tr>
+    <tr><td>SiC / GaN power stage</td><td><b>Partner</b> (onsemi owns UnitedSiC since Jan 2025)</td><td>long</td><td>power_fets: not_pursue</td></tr>
+    <tr><td>Isolated gate drivers, isolators, sensing, isolated power</td><td><b>Sell now</b>; reinforced and higher CMTI versions in the cases</td><td>short</td><td>isolated_dcdc: exists</td></tr>
+  </tbody>
+</table></div>
+<p class="rpt-thread"><b>For the decision:</b> “Full charging solutions” are within reach on the isolation side today; on the power side only the 12 V and 48 V pieces are ours to build, while BMS AFEs with ASIL D, OBC controllers and SiC need partners.</p>
+
+<h2>4. Market trend and who is doing it</h2>
+<ul>
+  <li><b>Trend:</b> USB-A to USB-C, 15–27 W to 60–100 W per port, two to six ports per car (rear seats, head units), PD 3.1 with PPS; 140 W and DisplayPort in head units (TI PMP31344); EPR at 28–48 V and 240 W is defined by USB-IF but not yet seen in car ports (search, Not Enough Data).</li>
+  <li><b>Integration:</b> from PD controller + buck-boost + protector (Microchip, Renesas, MPS) to one chip per one or two ports (TI, Infineon, Richtek).</li>
+  <li><b>Value:</b> automotive USB-C and USB PD market estimates disagree more than tenfold (about $16 M to $3.2 B for 2025, analyst snippets), so none is used. Ports per car: Not Enough Data.</li>
+  <li><b>Charging chain:</b> OBCs move to 11–22 kW, bidirectional, on 1200 V SiC; BMS AFEs to ASIL D with redundant measurement; 48 V zonal power adds packs and DC-DC in every car (est).</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> The port market rewards one-chip integration; a buck-boost we build plus a partner's PD controller is a second-source story, not a lead, until we can integrate.</p>
+
+<h2>Answers to the three questions</h2>
+<ul>
+  <li><b>(b) DC-DC with USB-C for automotive?</b> Yes, as a buck-boost (conf med). ACT4751M proves the automotive 40 V buck; an automotive 4-switch buck-boost at 100 W is the missing block. Next: ask the power BU for its feasibility.</li>
+  <li><b>(c) Our own PD controller as a new product?</b> No, not standalone (conf med). Crowded, low price, long certification and firmware work; partner now and license a PD engine for a one-chip version later if the buck-boost wins. Whether Active-Semi's PD firmware still exists: Not Enough Data.</li>
+  <li><b>(a) Full charging solutions, BMS and car chargers: what would it take?</b> (conf low) Sell the Skyworks isolation set now; build a 48 V BMS monitor from PAC2514x and the 800 V auxiliary flyback (medium, est); partner for the high-voltage BMS AFE, OBC control and SiC. A full charger from our parts alone is not reachable without SiC and controllers.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> One build (the buck-boost), one partnership (PD controller) and one sell-now set (isolation, drive, sensing) answer the three comments.</p>
+
+<h2>Risks</h2>
+<ul>
+  <li>One-chip ports (TI, Infineon, Richtek) may leave no socket for a separate buck-boost, even as a second source.</li>
+  <li>A partner PD controller makes our part depend on another firm's firmware and certification timing.</li>
+  <li>The ACT line is consumer- and data-centre-focused; only ACT4751M and ACT4529M are automotive today, so qualification is a new effort for each block.</li>
+  <li>Thin data: Qorvo's own pages are not read (rules); MPS, Microchip, ADI and NXP figures are snippets; market sizes disagree; Active-Semi PD firmware status unknown.</li>
+</ul>
+<p class="rpt-thread"><b>For the decision:</b> Test the buck-boost with the BU and one Tier-1 before any money goes to a PD controller.</p>
+
+{% endraw %}{% include "business/_steps_end.html" %}{% raw %}
+<h2>Sources</h2>
+<p class="small">TI TPS25762-Q1, TPS25772-Q1 and BQ79616-Q1 product pages; Infineon EZ-PD CCG7D product page; USB-IF USB Charger (USB Power Delivery) page; Weltrend USB PD controller list (all read 28 Oct 2026); search snippets for Richtek, MPS, ADI, Microchip, ST, Renesas, market estimates, consumer controller prices, OBC topologies and the onsemi acquisition; BizDev catalogues, path data, reference designs and the ACT88321 review. Full list with confidence: <a href="/business/reports/auto-charging-power/background">background notes</a>.</p>
+{% endraw %}

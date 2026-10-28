@@ -1,0 +1,56 @@
+{% raw %}<h1>48 V motor control in the car: background notes</h1>
+<p class="meta">28 Oct 2026. Every figure with its source and confidence (high = primary document read; med = trade press or a vendor page read; low = search snippet). “est” = our estimate, with its basis. Public data only: robots.txt read first, GET only, one request at a time, at least 10 s per host (5 s for ti.com), each page once; a host is stopped at the first 403, 429 or bot check and hosts stopped in earlier runs were not requested. Never requested: any qorvo.com host, nxp.com, analog.com, distributors and archives.</p>
+
+<h2>1. Public sources read for this report</h2>
+<ul class="small rp-src">
+<li>1.1 · Sensorless trapezoidal BLDC control: the back-EMF of the non-fed phase crosses zero once in each non-fed 60° sector (section 4.3); in efficient control the zero crossings are displaced 30° from the commutation instants, so the controller waits 30° after each zero crossing (section 4.5); a few samples after each commutation are discarded because of dV/dt glitches (section 4.4) · TI SPRABQ7A, Sensorless Trapezoidal Control of BLDC Motors (Jul 2013, rev. Sep 2015), read 28 Oct 2026 · high — <a href="https://www.ti.com/lit/an/sprabq7a/sprabq7a.pdf" rel="noopener" target="_blank">www.ti.com/lit/an/sprabq7a/sprabq7a.pdf</a></li>
+<li>1.2 · DRV8363-Q1: three-phase half-bridge gate driver for 48 V automotive BLDC; 8 to 85 V operating range; AEC-Q100, −40 to 125 °C ambient; 15-level peak gate current up to 1000 / 2000 mA (source / sink); 50 mA average gate current drives 400 nC MOSFETs at 20 kHz; trickle charge pump for 100 % duty; low-side current-sense amplifier with 1 mV offset; VQFN-48 7 × 7 mm · TI product page, read 28 Oct 2026 · high — <a href="https://www.ti.com/product/DRV8363-Q1" rel="noopener" target="_blank">www.ti.com/product/DRV8363-Q1</a></li>
+<li>1.3 · TLE9140EQW: MOTIX 3-phase gate driver; scale 24 V / 48 V applications with the MOTIX MCU (TLE987x / TLE989x); supply 8 to 60 V, 75 V absolute maximum, high-voltage robustness up to 110 V; about 230 nC per MOSFET up to 20 kHz; BEMF comparator; SPI; AEC-Q100; ISO 26262 ASIL B; junction up to 175 °C; TS-DSO-32; applications: windshield wiper, automotive electric pumps and fans, 48 V HVAC control module, light electric vehicles · Infineon product page, read 28 Oct 2026 · high — <a href="https://www.infineon.com/part/TLE9140EQW" rel="noopener" target="_blank">www.infineon.com/part/TLE9140EQW</a></li>
+<li>1.4 · AMT49100 / AMT49101: N-channel MOSFET drivers for 3-phase bridges in 48 V automotive applications; AEC-Q100 qualified; full operation to 80 V; three (AMT49100) or two (AMT49101) current-sense amplifiers; designed to ISO 26262; targets steer-by-wire, electric power steering, electrohydraulic, electromechanical, 2-wheeler powertrain · Allegro product page, read 28 Oct 2026 · high — <a href="https://www.allegromicro.com/en/products/motor-drivers/brushless-dc-drivers/bldc-drivers/amt49100-amt49101" rel="noopener" target="_blank">www.allegromicro.com/…/amt49100-amt49101</a> (the first URL tried answered with a redirect, which was not followed; the target URL was then read once)</li>
+<li>1.5 · Elmos 48 V BLDC motor controllers E523.06 / E523.52 for water pumps, cooling fans and electric turbochargers; VBAT 9 to 72 V (E523.52); embedded 48 MHz 16-bit µC with 32 k flash; MOSFET gate driver with diagnostics; 12-bit 1 MS/s ADC · Elmos BLDC motor control flyer, read 28 Oct 2026 · high — <a href="https://www.elmos.com/fileadmin/elmos-website/products/motor-control/bldc_motor/elmos-bldc-motor-control-flyer.pdf" rel="noopener" target="_blank">www.elmos.com/…/elmos-bldc-motor-control-flyer.pdf</a></li>
+<li>1.6 · ACT72350 launch: a 160 V 3-phase gate driver “for automotive and industrial applications”; 25 to 160 V input; replaces up to 40 discrete components; configurable analog front end; built-in power manager with buck and LDOs that can supply the host MCU; SOI technology; programmable delay, current sensing, BEMF feedback, “features suited for safety-critical systems”; 9 × 9 mm 57-pin QFN; pairs with popular MCUs; no AEC-Q grade named · Electronics For You, 7 Apr 2025, read 28 Oct 2026 · med (trade press) — <a href="https://www.electronicsforu.com/news/3-phase-gate-driver-for-bldc-motor-control" rel="noopener" target="_blank">www.electronicsforu.com/news/3-phase-gate-driver-for-bldc-motor-control</a></li>
+<li>1.7 · TIDA-00281: 48 V automotive, 1 kW, 30 A BLDC drive; only the motor runs from 48 V, the control electronics from 12 V, isolated from the 48 V side; isolated CAN · TI TIDUAY9 p.1, p.6, already in the Systems library (not fetched again) · high — <a href="https://www.ti.com/lit/pdf/tiduay9" rel="noopener" target="_blank">www.ti.com/lit/pdf/tiduay9</a></li>
+</ul>
+
+<h2>2. Search snippets (not fetched)</h2>
+<ul class="small rp-src">
+<li>2.1 · Tesla Cybertruck runs its low-voltage net at 48 V: four times the voltage cuts the current for the same power, allowing thinner wiring; reported cuts of 70–77 % in some wiring and about half the copper (secondary sources, not Tesla figures); 48 V needs stronger connectors against arcing (Motor1) · e-vehicleinfo, Motor1, TechRadar (snippets) · low — <a href="https://www.motor1.com/features/704878/tesla-cybertruck-48-volts/" rel="noopener" target="_blank">www.motor1.com/…/tesla-cybertruck-48-volts/</a></li>
+<li>2.2 · Infineon MOTIX TLE988x (2-phase) and TLE989x (3-phase, 60 MHz Cortex-M3, CAN FD) single-chip motor controllers, AEC-Q100, for body, comfort and thermal management at 12 V; the TLE9140EQW gate driver scales them to 24 / 48 V · elektroniknet, eeNews Europe, MarkLines (snippets) · low — <a href="https://www.marklines.com/en/news/292636" rel="noopener" target="_blank">www.marklines.com/en/news/292636</a></li>
+<li>2.3 · ST L9908: gate driver unit for 6 N-channel FETs in automotive applications up to 48 V batteries; motor supply 4.5 to 75 V; motor pins −14 to 95 V; AEC-Q100 and ASIL D · ST product and campaign pages (snippets; www.st.com robots.txt gave a connection error on 28 Oct 2026, so st.com was not read) · low — <a href="https://www.st.com/en/automotive-analog-and-power/l9908.html" rel="noopener" target="_blank">www.st.com/en/automotive-analog-and-power/l9908.html</a></li>
+<li>2.4 · NXP GD3000 3-phase gate driver: 6 to 58 V with 75 V transient protection, covers 12 and 48 V systems, desaturation and phase-fault detection, charge pump; MC33937 pre-driver AEC-Q100 Grade 1, 6 to 58 V extended range (8 to 40 V fully specified), cooling fan and water pump among its uses · NXP Japan page and third-party datasheet listings (snippets; nxp.com not requested) · low</li>
+<li>2.5 · Melexis MLX81350: three-core LIN motor driver for EV air-conditioning flaps and vents, up to 5 W (0.5 A) per motor, 5.5 to 28 V, sensorless FOC, AEC-Q100 · Melexis news, 6 Nov 2025 (snippet; melexis.com stopped in an earlier run) · low</li>
+<li>2.6 · ACT72350 product listings: applications power tools, garden tools, drones, e-bikes, e-vehicles and light HEV; −40 to 125 °C; the data sheet calls it ideal for 48 V to 120 V battery applications; no AEC-Q100 or automotive part number found · search summary of Qorvo, trade-press and distributor pages (not requested) · low</li>
+<li>2.7 · Qorvo's automotive Body &amp; Mechanical Controls page lists “Lift Gates &amp; Seat Adjustments” and features PAC5250 and PAC5527 there; no AEC-Q statement found for any PAC part · search result summary of qorvo.com pages (not requested) · low</li>
+<li>2.8 · ST AN1946: sensorless BLDC motor control and BEMF sampling methods with the ST7MC (four ways to sample the floating phase's back-EMF during the PWM cycle; trapezoidal drive only) · third-party copies of the ST note (snippets; st.com not read) · low</li>
+<li>2.9 · Infineon AP16173: Sensorless Control of BLDC Motor using XE164F Microcontroller (V1.0, 2010), with a back-EMF measurement section · document listing (snippet; title and contents only) · low</li>
+</ul>
+
+<h2>3. Our estimates (est)</h2>
+<ul class="small">
+<li>48 V net ranges (about 36–52 V normal, overvoltage near 60 V, transients to about 70 V): as commonly quoted from VDA 320 / LV 148; the standards were not read.</li>
+<li>Actuator power ranges and safety levels in the first table: typical values from the vendor application lists (1.3, 1.4, 1.5) and our judgement; no OEM document read.</li>
+<li>Current at 12 V vs 48 V: P / V (1 kW / 12 V ≈ 83 A, / 48 V ≈ 21 A).</li>
+<li>Qualification path and the 105 °C limit of PAC5527 for Grade 1: from the PAC5527 review (datasheet Rev 1.2, distributor-hosted copy) and the AEC-Q100 grade definitions.</li>
+<li>A 48 V-only 100 V-class die as a smaller, cheaper option: our judgement from the Elmos one-chip part.</li>
+<li>Data-centre 48 V fans and pumps: from the 48 V rack bus in the Systems library (48 V intermediate bus converter diagram).</li>
+</ul>
+
+<h2>4. BizDev data behind the tables</h2>
+<ul class="small">
+<li>Parts and grades: catalogue functions as the site groups them (blocks.catalog_parts) with the AEC-Q rule (app/services/autograde.py). Motor controllers 40 (0 AEC-Q; ACT72350, PAC52xx, PAC55xx); three_phase_gate_driver, half_bridge_driver, lin_transceiver, can_transceiver, mcu, power_fets: 0 parts of ours; wide-input bucks 20 (4 AEC-Q: ACT4529MYH, ACT4530MYH, ACT4751MQI101; ACT4751 4.5–40 V input); digital isolators 1,018 (854 AEC-Q); isolated DC-DC 92 (92 AEC-Q); isolated amplifiers 60 (30 AEC-Q). Isolated gate drivers in data/real: Si823x 154 (73 AEC-Q), further Skyworks gate drivers 1,015 (872 AEC-Q).</li>
+<li>Catalogue rows used: ACT72350 (5.2–160 V, 160 V buck, high side 3 × 180 V / 2 A, low side 3 × 20 V / 2 A, UART/SPI, 57-pin); PAC5532AQX (25–160 V, 160 V buck, 3 + 3 × 2 A, 150 MHz Cortex-M4F, CAN, I2C, USART); PAC5527QM (6–48 V, charge pump, Cortex-M4F, CAN); PAC5523QM / PAC5524QF (5.2–72 V); automotive field empty for all.</li>
+<li>Systems library: TI TIDA-00281 48 V BLDC drive; the new diagrams of 28 Oct 2026 (48 V pump and fan drive, 48 V HVAC blower and A/C compressor, seat adjustment and comfort actuators) with ACT72350 in the drive block; Infineon smart power closure.</li>
+<li>Search of the repository for the owner's Qorvo seat-adjustment application note: data/appnotes.jsonl (no “seat”), var/appnotes (40 files, none), var/text and var/pages (no seat-adjustment note), the local uploads table (empty) and var/uploads (empty). The note was uploaded to the live site's library and is read there by the next run.</li>
+</ul>
+
+<h2>5. Requests made for this report</h2>
+<ul class="small">
+<li>www.ti.com: 3 (robots.txt; SPRABQ7A; DRV8363-Q1 page)</li>
+<li>www.infineon.com: 2 (robots.txt; TLE9140EQW page)</li>
+<li>www.allegromicro.com: 3 (robots.txt; product URL answered 301, not followed; the target URL)</li>
+<li>www.elmos.com: 2 (robots.txt; BLDC flyer)</li>
+<li>www.electronicsforu.com: 2 (robots.txt; ACT72350 launch article)</li>
+<li>www.st.com: 1 (robots.txt, connection error; nothing else requested)</li>
+<li>Not requested: any qorvo.com host, nxp.com, analog.com, melexis.com (stopped earlier) and distributors (rules). 11 web searches for the snippets in section 2.</li>
+</ul>
+{% endraw %}

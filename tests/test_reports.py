@@ -245,7 +245,7 @@ def test_request_is_stored_once_and_the_button_is_replaced(client, session):
 def test_request_in_requests_tab_overview_and_inbox(client, session):
     slug = _slug()
     _ask(client, slug)
-    page = client.get("/manage/requests").text
+    page = html.unescape(client.get("/manage/requests").text)  # titles may hold an apostrophe (&#39;)
     assert "Idea expansion</span>" in page and rp.report(slug)["title"] in page and "Focus on robotics" in page
     idea = client.get("/manage/requests?kind=idea").text
     assert 'class="fchip on" href="/manage/requests?kind=idea"' in idea and "Idea expansions <small>1</small>" in idea

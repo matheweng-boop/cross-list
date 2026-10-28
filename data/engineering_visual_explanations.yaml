@@ -194,10 +194,10 @@ bootstrap:
   why: "Every motor drive and many power supplies use this circuit, and the bootstrap sizing rule shown (Cboot at least 10 × Qg / VGS) is the one from TI SLUA887A quoted on the Part knowledge page for gate drivers."
 
 bldc:
-  shows: "A three-phase inverter driving a brushless (BLDC) motor, in 6-step commutation where two phases carry current at a time, or in FOC where all three carry sine currents."
-  read: "Blue, orange and green dots are the currents in phases A, B and C, purple the DC bus current; the dashed purple arrow is the stator field and the red and blue bar the rotor magnet it pulls round."
-  try: "Step through the six states and watch the field jump 60 degrees each time, then press Switch to FOC and compare the torque line below: rippled in 6-step, flat in FOC."
-  why: "Our motor controllers and gate drivers do exactly this switching, and FOC also needs accurate isolated current sensing, which we sell too."
+  shows: "A three-phase inverter driving a brushless (BLDC) motor, in 6-step commutation where two phases carry current at a time, or in FOC where all three carry sine currents, with the back-EMF each winding makes as the rotor turns."
+  read: "Blue, orange and green dots are the currents in phases A, B and C, purple the DC bus current; the dashed purple arrow is the stator field and the red and blue bar the rotor magnet. In the back-EMF row the thin dashed lines are the three phases (flat-topped in 6-step, sine in FOC), the solid red line is the phase that floats in each step, the red ticks mark its zero crossings and the teal dashed lines the commutations, 30 degrees later. Sources: TI SPRABQ7A (Sensorless Trapezoidal Control of BLDC Motors, sections 4.3 and 4.5: the back-EMF crosses zero once in the non-fed 60 degree sector and the commutation follows 30 degrees after it), ST AN1946 (sensorless BLDC control and back-EMF sampling methods) and Infineon AP16173 (sensorless control of a BLDC motor)."
+  try: "Step through the six states and watch the floating phase cross zero halfway through each step, press Switch to FOC and compare the torque line, then raise the speed and see the back-EMF approach the 48 V bus and the current fall."
+  why: "Our motor controllers (PAC parts, ACT72350) do exactly this switching and sense the back-EMF for sensorless drives; at 48 V the back-EMF and the bus margin decide the voltage class of the gate driver and the transistors."
 
 buck:
   shows: "A buck converter stepping 12 V down: one current loop while the high-side switch is on and another, freewheeling loop through the low side while it is off."

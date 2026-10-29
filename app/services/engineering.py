@@ -41,6 +41,10 @@ NOTES = {
     "uwb_signal_path": ("UWB signal path: pulse fidelity, group delay ripple and linearity",
                         "Why the TX/RX chain must keep the 500 MHz pulse intact, and how to pick the LNA, PA, switch "
                         "and filter for flat group delay and low compression."),
+    # owner, 28 Oct 2026: "UWB-WiFi Channel 5/6 issues and overlap decision matrix into the knowledge base"
+    "uwb_wifi_coexistence": ("UWB and Wi-Fi: channels 5, 6 and 9 vs 5/6 GHz Wi-Fi, overlap and a decision matrix",
+                             "Where UWB channels overlap 6 GHz Wi-Fi and V2X, what goes wrong (interference, desense, "
+                             "blocking), the mitigations and which channel to pick per situation and region."),
     # owner, 28 Oct 2026: error propagation for isolated current sensing and timing across digital isolators
     "error_budget": ("Error propagation and uncertainty bands",
                      "How offset, gain error, nonlinearity, drift and timing errors add up: worst case or RSS, "

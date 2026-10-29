@@ -3046,6 +3046,7 @@
     source: automotive application
 - name: Smart car access (UWB anchors + BLE + NFC, CCC digital key) (NXP)
   category: Automotive systems
+  knowledge: [anchors_tags]  # owner, 28 Oct 2026 (comment c): anchors vs tags
   note: 'From NXP public material: NXP_CAR_ACCESS, NXP_NCJ29D5_PAGE, NXP_NCJ29D5FS, NXP_NCX3321_PAGE. Reference clock (added 26 Oct 2026, owner): every UWB IC runs from its own reference crystal; the public module reference designs MURATA-2AB-DS (Qorvo QM33120W with a 38.4 MHz crystal) and MURATA-2BP (NXP SR150 with internal 38.4 MHz system clock and 32.768 kHz sleep clock crystals) show it next to the UWB IC. The automotive anchor IC''s own clock frequency is not in the NXP public pages.'
   sources:
   - {doc: NXP_CAR_ACCESS, title: 'NXP Smart Car Access application page (4 diagrams: vehicle, key fob, phone, smart card)', url: 'https://www.nxp.com/applications/SMART-CAR-ACCESS'}
@@ -14973,6 +14974,8 @@
 
 - name: Interior radar for child presence detection (60 GHz radar + MCU on CAN, with optional 3D ToF camera and microphone modules) (after Infineon)
   category: Automotive systems
+  # owner, 28 Oct 2026 (comments a, d, e on this page): data/library/app_knowledge.yaml
+  knowledge: [cpd_regulation, cpd_vs_ranging, qpf5100q_pairing]
   note: "After Infineon public material: IFX-APP-ICMS (In-cabin monitoring system block diagram: radar module with PMIC, two LDOs, MCU, 60 GHz radar and CAN transceiver; camera module with MOSFET, load guard, PMIC, VCSEL driver, VCSEL, ToF imager and SerDes; other sensing modules with PMIC, LDO, MCU and MEMS microphone; external processing in the ADAS / AD or cockpit domain controller). The figure draws no connecting lines; the links follow the module grouping. A UWB alternative uses the in-cabin UWB anchors as a radar (NXP Smart car access diagram)."
   sources:
   - {doc: IFX-APP-ICMS, title: 'Infineon In-cabin monitoring system (ICMS) application page - block diagram (radar, camera and other sensing modules)', url: 'https://www.infineon.com/applications/automotive/adas-autonomous-driving/in-cabin-monitoring'}
@@ -15528,6 +15531,7 @@
 # sources named in its note; linked from Part knowledge > UWB (data/library/how_it_works.yaml, used_in).
 - name: UWB radar in the car - child presence, intrusion and kick / gesture sensing (UWB SoC in radar mode on the interior and rear anchors) (after Infineon AIROC UWB and ST)
   category: Automotive systems
+  knowledge: [cpd_vs_ranging, cpd_regulation, anchors_tags, qpf5100q_pairing]
   emerging: "Seat occupancy, seatbelt reminder and intrusion / in-cabin presence by UWB radar are emerging: they use the radar mode of 802.15.4ab chips sampling in 2026 (ST-ST64UWB) and stand-alone UWB sensors (NOVELDA-CPD)."
   note: "After Infineon public material: IFX-UWB-AUTO (AIROC UWB automotive page: one UWB chip does CCC Digital Key ranging and radar sensing, for NCAP child presence detection, kick sensing, intrusion detection and in-cabin sensing) and ST-ST64UWB (ST blog: the 802.15.4ab radar mode detects a baby left in the car, checks seat belts and recognises a hand gesture to open the trunk with one chip). NOVELDA-CPD shows the same idea as a stand-alone UWB sensor (child presence, seat occupancy, intrusion, driver vital signs). The radar reuses the digital-key anchors, so the RF path is the same as for ranging: antenna, optional switch, filter, UWB SoC and its crystal. Our parts that fit: QM35825 and DW3300Q (UWB), SKY5A2108 (antenna switch, AEC-Q100), QM14068 (LNA, automotive grade not stated)."
   sources:
@@ -15682,3 +15686,92 @@
   - [anchors, ecu, CAN-FD]
   - [anchors, infra, 'UWB: gate access, valet guidance, payment']
   - [infra, backend, '']
+
+# Owner, 28 Oct 2026 ("ACT72350 Automotive Block Diagram applications"): the automotive 48 V uses of the ACT72350
+# 160 V three-phase gate driver with buck (data/catalog/qorvo_parts.yaml: 5.2-160 V, 160 V buck, 3 high-side drivers
+# 180 V / 2 A, 3 low-side 20 V / 2 A, UART / SPI, no MCU, automotive grade not stated). Drawn by us from the TI 48 V
+# BLDC reference design, the TI automotive pump page and the Infineon TLE9140EQW application list; the ACT72350 sits
+# in the gate-drive block. Non-safety-critical comfort and thermal loads only (report auto-48v-motor-control).
+- name: Automotive 48 V coolant pump, oil pump and cooling fan drive with an integrated 160 V gate driver (after TI TIDA-00281 and Infineon)
+  category: Automotive systems
+  emerging: "48 V pumps and fans are in production in mild hybrids and the first 48 V low-voltage EVs; an ACT72350 design in a car is not known: its automotive grade is not stated in our data."
+  note: "Drawn by us. The motor runs from 48 V; protection and the bulk capacitors come first, a 160 V three-phase gate driver with its own buck (ACT72350 class: 25-160 V, 2 A gate drive, current-sense and back-EMF front end) drives six 80-100 V MOSFETs and powers the MCU. TIDUAY9 p.1: 48 V, 1 kW, 30 A; Infineon lists 'Automotive electric pumps & fans' and '48 V HVAC control module' as uses of its 48 V gate driver TLE9140EQW. Sensorless 6-step or FOC, LIN or CAN to the thermal-management ECU. Our parts: ACT72350 or PAC5532AQX (gate driver + MCU, 160 V) in the drive block, both without a stated AEC-Q grade; no automotive MOSFETs, LIN / CAN or MCU of ours."
+  sources:
+  - {doc: TIDUAY9, title: TIDA-00281 Automotive 1-kW 48-V BLDC Motor Drive Reference Design, url: 'https://www.ti.com/lit/pdf/tiduay9'}
+  - {doc: TI-SOL-PUMP, title: 'Automotive electric pump / fan drive (12 V or 48 V, BLDC) - block diagram + subsystems', url: 'https://www.ti.com/solution/automotive-pump'}
+  - {doc: IFX-TLE9140EQW, title: 'Infineon MOTIX TLE9140EQW 48 V three-phase gate driver: applications (pumps and fans, 48 V HVAC module, wiper)', url: 'https://www.infineon.com/part/TLE9140EQW'}
+  groups:
+  - {id: input, label: 48 V input protection and bulk capacitors, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd, {fn: dc_link_cap, label: Bulk capacitors on 48 V}]}
+  - {id: comms, label: LIN or CAN to the thermal-management ECU, col: 0, row: 1, blocks: [lin_transceiver, can_transceiver]}
+  - {id: mcu, label: MCU (sensorless 6-step or FOC), col: 1, row: 1, blocks: [mcu, watchdog]}
+  - {id: drive, label: 'ACT72350 gate driver + buck (160 V; grade not stated)', col: 1, row: 0, blocks: [{fn: motor_controller, label: 'ACT72350: 160 V 3-phase gate driver + buck + AFE'}, {fn: three_phase_gate_driver, label: or a 48 V automotive gate driver}]}
+  - {id: bridge, label: Power stage, col: 2, row: 0, blocks: [{fn: power_fets, label: '6 MOSFETs, 80-100 V', qty: 6}, {fn: amplifier, label: Shunt current sense}]}
+  - {id: motor, label: 'Pump or fan motor (BLDC / PMSM, 0.3-1 kW)', col: 3, row: 0, blocks: [{fn: motor, label: Pump or fan BLDC motor}]}
+  - {id: temp, label: Board and motor temperature, col: 2, row: 1, blocks: [temperature_sensor]}
+  links:
+  - [input, bridge, 48 V]
+  - [input, drive, 48 V]
+  - [drive, mcu, 3.3 V / 5 V from the buck]
+  - [mcu, drive, PWM / SPI]
+  - [drive, bridge, gate drive]
+  - [bridge, motor, 3 phases]
+  - [bridge, drive, current and back-EMF]
+  - [comms, mcu, speed command]
+  - [temp, mcu, '']
+  questions:
+  - {id: load, question: Load, choices: [coolant pump, oil pump, radiator fan, battery cooling pump]}
+  - {id: control, question: Control, choices: [sensorless 6-step, sensorless FOC, Hall sensors], source: TIDUAY9 p.1}
+  - {id: bus, question: Vehicle bus, choices: [LIN, CAN, PWM]}
+
+- name: Automotive 48 V HVAC blower and electric A/C compressor drive (mild hybrid or 48 V EV, integrated 160 V gate driver) (after TI TIDA-00281 and Infineon)
+  category: Automotive systems
+  emerging: "Belt-free 48 V A/C compressors and 48 V blowers exist in mild hybrids; an ACT72350 design in a car is not known and its automotive grade is not stated in our data."
+  note: "Drawn by us. The blower (a few hundred watts) and a 48 V electric A/C compressor (a few kW, est) are three-phase drives on the 48 V bus, commanded by the HVAC ECU over LIN or CAN. The compressor needs larger or parallel MOSFETs and FOC; the blower runs well on sensorless 6-step or FOC. Infineon lists '48 V HVAC control module' for its 48 V gate driver TLE9140EQW. Our parts: ACT72350 (2 A gate drive, 160 V) or PAC5532AQX in the drive block, both without a stated AEC-Q grade; the high-voltage e-compressor (400-800 V) is a separate library diagram with isolated drivers."
+  sources:
+  - {doc: TIDUAY9, title: TIDA-00281 Automotive 1-kW 48-V BLDC Motor Drive Reference Design, url: 'https://www.ti.com/lit/pdf/tiduay9'}
+  - {doc: IFX-TLE9140EQW, title: 'Infineon MOTIX TLE9140EQW 48 V three-phase gate driver: applications (pumps and fans, 48 V HVAC module, wiper)', url: 'https://www.infineon.com/part/TLE9140EQW'}
+  groups:
+  - {id: input, label: 48 V input protection, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd, dc_link_cap]}
+  - {id: hvac, label: HVAC ECU link, col: 0, row: 1, blocks: [lin_transceiver, can_transceiver]}
+  - {id: mcu, label: MCU (FOC for the compressor), col: 1, row: 1, blocks: [mcu]}
+  - {id: drive, label: 'ACT72350 gate driver + buck (160 V; grade not stated)', col: 1, row: 0, blocks: [{fn: motor_controller, label: 'ACT72350: 160 V 3-phase gate driver + buck + AFE'}]}
+  - {id: bridge, label: 'Power stage (parallel MOSFETs for the compressor)', col: 2, row: 0, blocks: [{fn: power_fets, label: '6 or 12 MOSFETs, 80-100 V'}, {fn: amplifier, label: Two or three phase shunts}]}
+  - {id: motor, label: 'Blower motor or compressor motor', col: 3, row: 0, blocks: [{fn: motor, label: Blower or compressor PMSM}]}
+  - {id: flaps, label: 'Flap actuators (12 V, LIN, often brushed or stepper)', col: 3, row: 1, blocks: [external_block]}
+  links:
+  - [input, bridge, 48 V]
+  - [input, drive, 48 V]
+  - [drive, mcu, supply]
+  - [mcu, drive, PWM / SPI]
+  - [drive, bridge, gate drive]
+  - [bridge, motor, 3 phases]
+  - [hvac, mcu, speed / cooling demand]
+  - [hvac, flaps, LIN]
+  questions:
+  - {id: load, question: Load, choices: [blower, A/C compressor, both]}
+  - {id: power, question: Motor power, choices: [under 500 W, 0.5-2 kW, 2-6 kW (compressor)]}
+
+- name: Automotive seat adjustment and comfort actuators on 12 V or 48 V (BLDC motor drives with a motor control SoC, non-safety-critical) (after Infineon)
+  category: Automotive systems
+  emerging: "Seat, window and tailgate motors are mostly brushed 12 V motors today; BLDC comfort actuators and a 48 V body net are new (est). Qorvo markets PAC parts for lift gates and seat adjustment (search snippet); no AEC-Q grade is stated in our data."
+  note: "Drawn by us, after the Infineon smart power closure diagram in this library and the owner's Qorvo seat-adjustment application note (uploaded to the live library, not in the repository). A seat module drives several motors (fore / aft, height, recline, lumbar), each with a position sensor for the memory function, commanded over LIN from the door or seat switches. Brushed motors use H-bridges; a BLDC actuator needs a three-phase drive per motor, which a motor control SoC (MCU + gate drivers + supply in one: PAC5527 class on 12 V; PAC5532 / ACT72350 + MCU on 48 V) keeps small. Not safety critical (no ASIL above QM / A, est)."
+  sources:
+  - {doc: IFX-APP-CLOSURE, title: 'Infineon Automotive smart power closure application page - block diagram', url: 'https://www.infineon.com/application/automotive-smart-power-closure'}
+  groups:
+  - {id: input, label: 12 V or 48 V input and reverse-polarity protection, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd]}
+  - {id: lin, label: LIN from the seat or door switches (memory buttons), col: 0, row: 1, blocks: [lin_transceiver]}
+  - {id: soc, label: 'Motor control SoC per motor (PAC5527 on 12 V; PAC5532 or ACT72350 + MCU on 48 V; grade not stated)', col: 1, row: 0, w: 2, blocks: [{fn: motor_controller, label: 'PAC5527 (12 V) / PAC5532 or ACT72350 (48 V)'}, mcu]}
+  - {id: bridge, label: MOSFET bridge per motor, col: 1, row: 1, blocks: [{fn: power_fets, label: '6 MOSFETs (40 V on 12 V, 80-100 V on 48 V)'}]}
+  - {id: motors, label: 'Seat motors: fore / aft, height, recline, lumbar (or window, tailgate, sunroof)', col: 3, row: 0, blocks: [{fn: motor, label: BLDC comfort actuators}]}
+  - {id: pos, label: Position sensors (memory positions, anti-pinch), col: 3, row: 1, blocks: [hall_switch]}
+  links:
+  - [input, soc, 12 V / 48 V]
+  - [input, bridge, 12 V / 48 V]
+  - [lin, soc, position commands]
+  - [soc, bridge, gate drive]
+  - [bridge, motors, 3 phases]
+  - [pos, soc, position]
+  questions:
+  - {id: board_net, question: Board net, choices: [12 V, 48 V]}
+  - {id: motor_type, question: Motor type, choices: [brushed DC (H-bridge), BLDC (3-phase)]}
+  - {id: motors, question: Motors per seat, choices: [2-4, 6-8, 10 or more (massage, lumbar)]}

@@ -38,9 +38,10 @@
   </span>
   <span class="cx-chip cx-static">Coverage {{ sum.coverage }} %</span>{% if sum.verified %}<span class="cx-chip cx-static">{{ sum.verified }} verified</span>{% endif %}
   <span class="cx-export">
-    <form method="post" action="/cross-list.xlsx" class="cx-dl"><textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea><input type="hidden" name="lights" value="" id="cx-dl-lights"><button type="submit" class="outline">Download Excel</button></form>
+    <form method="post" action="/cross-list.xlsx" class="cx-dl"><textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea><input type="hidden" name="lights" value="" id="cx-dl-lights"><input type="hidden" name="crossed" value="" id="cx-dl-crossed"><button type="submit" class="outline">Download Excel</button></form>
     <button type="button" class="outline" id="cx-copy">Copy table</button>
     <label class="cx-shown"><input type="checkbox" id="cx-only-shown"> Export shown rows</label>
+    <label class="cx-shown" title="{{ crossed_note }}"><input type="checkbox" id="cx-only-crossed"> Only crossed parts</label>
     <span id="cx-copied" class="small muted" aria-live="polite"></span>
   </span>
 </div>
@@ -58,6 +59,7 @@
   <summary>How the columns are chosen</summary>
   <p class="small">{{ how }}</p>
   <p class="small">{% for k, label in lights.items() %}<span class="cx-dot cx-{{ k }}" aria-hidden="true"></span> <b>{{ label }}</b> = {{ light_help[k] }}.{% if k == 'green' %} ✓ Verified = a person confirmed that exact pair.{% endif %} {% endfor %}</p>
+  <p class="small">{{ crossed_note }}</p>
   <p class="small">Checked on priority-1 specs only; lower-priority specs count only when a rule makes them a must:</p>
   <ul class="small">{% for fam, labels in p1_all.items() %}<li><b>{{ family_title(fam) }}</b>: {{ labels|join(', ') if labels else '(no priority list yet)' }}</li>{% endfor %}</ul>
 </details>
@@ -98,14 +100,15 @@
 </table></div>
 <table id="cx-export" hidden aria-hidden="true">
   <thead><tr>{% for h in header %}<th>{{ h }}</th>{% endfor %}</tr></thead>
-  <tbody>{% for r in rows %}{% for line in lines(r) %}<tr data-light="{{ r.light }}">{% for v in line %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}{% endfor %}</tbody>
+  <tbody>{% for r in rows %}{% for line in lines(r) %}<tr data-light="{{ r.light }}" data-crossed="{{ 1 if crossed(r) else 0 }}">{% for v in line %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}{% endfor %}</tbody>
 </table>
 <p class="cx-foot">{{ precheck }}</p>
 <script>
 (() => {
   let want = "";
   const only = document.getElementById("cx-only-shown"), dl = document.getElementById("cx-dl-lights");
-  const sync = () => { dl.value = only.checked ? want : ""; };
+  const crossed = document.getElementById("cx-only-crossed"), dlx = document.getElementById("cx-dl-crossed");
+  const sync = () => { dl.value = only.checked ? want : ""; dlx.value = crossed.checked ? "1" : ""; };
   document.querySelectorAll(".cx-chips .cx-chip").forEach(b => b.addEventListener("click", () => {
     document.querySelectorAll(".cx-chips .cx-chip").forEach(x => x.classList.toggle("on", x === b));
     want = b.dataset.light;
@@ -113,10 +116,13 @@
     sync();
   }));
   only.addEventListener("change", sync);
+  crossed.addEventListener("change", sync);
   // the same cells as the Excel download, as tab-separated text and an HTML table
-  window.cxTable = shownOnly => {
+  // crossedOnly ("Only crossed parts"): just the rows with a drop-in or functional fit
+  window.cxTable = (shownOnly, crossedOnly) => {
     const t = document.getElementById("cx-export");
-    const rows = [t.tHead.rows[0], ...[...t.tBodies[0].rows].filter(tr => !shownOnly || !want || tr.dataset.light === want)];
+    const rows = [t.tHead.rows[0], ...[...t.tBodies[0].rows].filter(tr => (!shownOnly || !want || tr.dataset.light === want)
+                                                                     && (!crossedOnly || tr.dataset.crossed === "1"))];
     const cells = tr => [...tr.cells].map(c => c.textContent.replace(/\s+/g, " ").trim());
     const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     const tsv = rows.map(tr => cells(tr).join("\t")).join("\n") + "\n";
@@ -126,7 +132,7 @@
     return {tsv, html};
   };
   document.getElementById("cx-copy").addEventListener("click", async () => {
-    const {tsv, html} = window.cxTable(only.checked), msg = document.getElementById("cx-copied");
+    const {tsv, html} = window.cxTable(only.checked, crossed.checked), msg = document.getElementById("cx-copied");
     try {
       if (window.ClipboardItem && navigator.clipboard?.write) {
         await navigator.clipboard.write([new ClipboardItem({"text/plain": new Blob([tsv], {type: "text/plain"}),

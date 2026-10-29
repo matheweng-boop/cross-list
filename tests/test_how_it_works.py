@@ -64,6 +64,9 @@ def test_listed_parts_exist_are_active_and_ours(session, hw_parts, gid):
     assert t["rows"] or t["series"], gid
     index = {r["mpn"]: r for r in products.index(session)}
     for r in t["rows"]:
+        if r.get("status"):  # listed with its status although not active (QPF5100Q, owner 28 Oct 2026)
+            assert r["mpn"] in {p["mpn"] for p in g["parts"] if p.get("status")}, r["mpn"]
+            continue
         assert r["maker"] in ("Skyworks", "Qorvo") and index[r["mpn"]]["lifecycle"] == "active", r["mpn"]
     for s in t["series"]:
         assert s["variants"] > 0 and s["maker"] in ("Skyworks", "Qorvo"), s["mpn"]

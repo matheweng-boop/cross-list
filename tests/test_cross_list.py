@@ -199,6 +199,23 @@ def test_excel_download_mirrors_the_table(client):
     assert [r[1] for r in rows[1:]] == ["SC142", "ZZZ999"]
 
 
+def test_excel_download_only_crossed_parts(client, session):
+    """"Only crossed parts" (owner, 27 Oct 2026): rows with a drop-in or functional fit; no red, no-cross or unknown."""
+    text = "SC141\nSD4100\nSC142\nZZZ999\nSR8641"
+    rows = rows_for(session, text)
+    assert [k for k, r in rows.items() if cl.crossed(r)] == ["SC141", "SD4100"]  # SR8641: ours, nothing to cross
+    r = client.post("/cross-list.xlsx", data={"parts": text, "crossed": "1"})
+    wb = load_workbook(io.BytesIO(r.content))
+    assert [v[1] for v in list(wb["Cross list"].iter_rows(values_only=True))[1:]] == ["SC141", "SD4100"]
+    summary = {x[0]: x[1] for x in wb["Summary"].iter_rows(values_only=True)}
+    assert summary["Rows exported"] == "Crossed parts only" and summary["Parts"] == 5  # the summary covers the list
+    both = client.post("/cross-list.xlsx", data={"parts": text, "crossed": "1", "lights": "red"})
+    assert list(load_workbook(io.BytesIO(both.content))["Cross list"].iter_rows(values_only=True))[1:] == []
+    page = post(client, text)
+    assert 'id="cx-only-crossed"' in page and "Only crossed parts" in page and cl.CROSSED_NOTE in page
+    assert page.count('data-crossed="1"') == 2 and page.count('data-crossed="0"') == 3
+
+
 def test_copy_table_text_has_a_header_and_one_line_per_part(session):
     entries, _ = cl.parse("SC141\nSD4100\nZZZ999\nSC141")
     lines = cl.tsv(cl.cross_list(session, entries)).splitlines()

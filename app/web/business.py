@@ -105,6 +105,9 @@ def application(request: Request, i: int, co: str = "combined", session: Session
     from app.services import how_it_works
 
     c["emerging"] = how_it_works.app_emerging(i)  # owner, 28 Oct 2026: emerging uses are tagged
+    from app.services import app_knowledge
+
+    c["knowledge"] = app_knowledge.for_app(i)  # owner, 28 Oct 2026: application knowledge explainers
     return templates.TemplateResponse(request, "business/application.html", c)
 
 

@@ -36,7 +36,8 @@ def _ctx(request: Request, text: str, session: Session, sent: int | None = None)
             "submitted": bool(text.strip()), "owner": signed_in_owner(request) is not None,
             "privacy": cl.PRIVACY_NOTE, "precheck": cl.PRECHECK_NOTE, "how": cl.HOW_NOTE, "lights": cl.LIGHTS,
             "light_help": cl.LIGHT_HELP, "accuracy": cl.accuracy(), "header": cl.EXPORT_HEADER,
-            "lines": cl.export_lines, "kinds": cl.TYPE_KIND,
+            "lines": cl.export_lines, "kinds": cl.TYPE_KIND, "crossed": cl.crossed,
+            "crossed_note": cl.CROSSED_NOTE,
             "p1": {f: cl.p1_labels(f) for f in families},
             "p1_all": {f: cl.p1_labels(f) for f in load_all_rules()}}  # fmt: skip
 
@@ -106,16 +107,21 @@ def send_lookup(request: Request, form: dict = Depends(_form), session: Session 
 
 
 @router.post("/cross-list.xlsx")
-def download(parts: str = Form(""), lights: str = Form(""), session: Session = Depends(get_session)):
-    """The table as shown: every row, or only the rows of the light chosen on the page ("Export shown rows")."""
+def download(parts: str = Form(""), lights: str = Form(""), crossed: str = Form(""),
+             session: Session = Depends(get_session)):  # fmt: skip
+    """The table as shown: every row, or only the rows of the light chosen on the page ("Export shown rows"), and,
+    with "Only crossed parts", only the rows with a drop-in or functional fit (owner, 27 Oct 2026)."""
     entries, over = cl.parse(parts[:MAX_CHARS])
     rows = cl.cross_list(session, entries)
     sm = cl.summary(rows)
     want = lights if lights in cl.LIGHTS else ""
     if want:
         rows = [r for r in rows if r.light == want]
+    if crossed == "1":
+        rows = [r for r in rows if cl.crossed(r)]
+    shown = ", ".join(x for x in (cl.LIGHTS.get(want, ""), "crossed parts" if crossed == "1" else "") if x)
     name = f"cross-list-{date.today():%Y-%m-%d}.xlsx"
-    body = export.cross_list_xlsx(rows, sm, over, cl.accuracy(), cl.LIGHTS.get(want, ""))
+    body = export.cross_list_xlsx(rows, sm, over, cl.accuracy(), shown[:1].upper() + shown[1:])
     return Response(body, media_type=XLSX, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 

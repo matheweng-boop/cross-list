@@ -747,6 +747,15 @@ def tsv(rows: list[Row]) -> str:
     return "\n".join("\t".join(clean(v) for v in line) for line in lines) + "\n"
 
 
+def crossed(r: Row) -> bool:
+    """A successful cross: the row has a drop-in or a functional fit ("Only crossed parts", owner, 27 Oct 2026)."""
+    return bool(r.drop_in or r.functional)
+
+
+CROSSED_NOTE = ("Only crossed parts: the Excel download and Copy table keep only the parts with a drop-in or a "
+                "functional fit (no red, no-cross or not-in-our-data rows).")  # fmt: skip
+
+
 def summary(rows: list[Row]) -> dict:
     n = len(rows)
     counts = {k: sum(r.light == k for r in rows) for k in LIGHTS}

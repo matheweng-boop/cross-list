@@ -173,7 +173,7 @@ def _fns() -> set[str]:
 
 def test_one_evidence_card_per_function_and_no_patent_items():
     rows = [r for r in digest.items() if r["type"] == "evidence"]
-    assert len(_fns()) == 69 and len(rows) == 69  # was 5 × 69 + 22 platforms + 7 automotive = 374 items
+    assert len(_fns()) == 70 and len(rows) == 70  # 70: +uwb_soc trend, 28 Oct
     assert {r["key"] for r in rows} == {f"evidence:{fn}" for fn in _fns()}
     for r in rows:
         assert digest.words(r["gist"]) <= digest.MAX_WORDS and 1 <= len(r["abstract"]) <= 3, r["key"]

@@ -358,6 +358,20 @@ ble_soc:
     date: 2026-10-19
     evidence: ["https://www.bluetooth.com/2025-market-update/trends/ - LE single-mode shipments to grow ~22% CAGR, driven partly by smart labels and ESL; Classic declining", "https://www.bluetooth.com/core-specification-6-feature-overview/ - Core 6.0 adds Channel Sounding", "https://www.bluetooth.com/learn-about-bluetooth/feature-enhancements/le-audio/ - LE Audio and Auracast broadcast audio"]
     note: "Primary sources confirm the claim. 'Matter over Thread devices' driver removed (not covered by the sources)."
+# owner, 28 Oct 2026 ("Driven by regulations - important", on the child-presence page): the regulation driver is marked
+# in `regulation` (app/services/scoring.py reads it as a growing market)
+uwb_soc:
+  outlook: growing
+  regulation: "Euro NCAP direct-sensing child presence detection (only direct sensing from 2025; up to 5 points from Jan 2026); ANCAP CPD since 2023"
+  drivers: ["CCC Digital Key (phone as a key) on UWB channel 9", "Euro NCAP direct-sensing child presence detection (2025/2026), which interior UWB anchors can do", "IEEE 802.15.4ab (longer range, radar mode) in 2028-2029 car programmes"]
+  note: "UWB anchors spread with the CCC digital key; Euro NCAP's direct-sensing CPD rule gives the interior anchors a second, rating-driven job. The US asks only for a rear-seat reminder (not a direct sensor). No public unit forecast was read."
+  confidence: medium
+  sources: ["GlobalAutoRegs summary of Euro NCAP CPD results (CLIV-21-07)", "Euro NCAP Safe Driving - Occupant Monitoring Protocol v1.2 (2026)", "ANCAP CPD protocol v1.2 (search snippet)", "Huf, Phone as a Key (four corner and two cabin anchors; rear one for CPD)", "CCC UWB Spectrum Regulatory Position v2025 R2"]
+  check:
+    status: unconfirmed
+    date: 2026-10-28
+    evidence: ["https://www.huf-group.com/en/news/magazine/Phone-as-a-Key-How-the-Huf-digital-car-key-works - rearmost interior UWB anchor also monitors the rear seats and trunk for CPD", "https://globalautoregs.com/documents/43460 - Euro NCAP rewards only direct-sensing CPD from 2025 (read 19 Oct 2026)"]
+    note: "Regulation driver from Euro NCAP / ANCAP ratings (not law). Euro NCAP CDN robots.txt returned 400, so the 2026 bulletin was not read; ANCAP protocol from search snippets only."
 wifi_soc:
   outlook: growing
   drivers: ["Wi-Fi 7 (320 MHz, MLO) in 6 GHz", "Wi-Fi 8 (802.11bn UHR) development, final approval planned 2028"]
@@ -404,6 +418,7 @@ v2x_transceiver:
     note: "Removed 'EU C-ITS Delegated Regulation' as a driver: the Commission page says it never entered into force. fcc.gov blocked; FCC order read via law-firm summary. 5GAA home page opened but has no roadmap content; removed. China deployments unverified."
 radar_transceiver:
   outlook: growing
+  regulation: "EU GSR2 (AEB, lane keeping) and Euro NCAP direct-sensing child presence detection (2025/2026)"
   drivers: ["EU GSR2 AEB (incl. pedestrians/cyclists) and lane keeping", "Euro NCAP direct-sensing child presence detection", "4D imaging radar", "US FMVSS 127 AEB (Sep 2029, delay proposed)"]
   note: "Safety regulation and NCAP ratings push more radars per car, plus in-cabin child-presence sensing; the US AEB rule is in litigation and DOT plans to propose a two-year delay."
   confidence: medium

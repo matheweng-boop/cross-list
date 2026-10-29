@@ -6,6 +6,10 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
 1. **Isolator data rate as priority 1 (26 Oct 2026).** A 10 Mbps deglitch code (Si86S F/H) no longer comes first
    for a 150 Mbps part; the B/E codes do (Si86S620HE / SI86S640FC are 36 ns, 10 Mbps per the datasheet ordering
    guide; 10 ns is the E/B code). Is that right?
+2. **"QPF5100Q together with QPF5001Q as a solution" (28 Oct 2026).** QPF5001Q is not in our data and no public page
+   was found; our QPF5001 is an 8-12 GHz, 12 W X-band radar front end (not automotive, not a UWB part). Which part did
+   you mean: a UWB front end such as QM14068 (LNA) / QM14070 (PA), DW3300Q, or another? The page now shows the
+   QPF5100Q + QM14068 / QM14070 / SKY5A2108 pairing as our reading (est).
 
 ## Settled (owner, 27 Oct 2026, other-family option): "We still follow the same rules for package comparisons. I simply want to make sure that when I offer the SI86 family, I also get the choice of the SI86 as family and vice versa"
 

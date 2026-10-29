@@ -34,7 +34,8 @@
 #                    matters, what it needs, where the request comes from, competitors and where we stand)
 #   learn_links      knowledge-base pages to read next: {label, href} on /library, /rf-notes, /engineering, /visuals
 #   see_also         slugs of related reports or cases (a research report and the business case built on it), shown
-#                    as "See also" links under the report's header
+#                    as "See also" links under the report's header; or {label, href} for another page of the site (a Part knowledge
+#                    page, a part review), shown the same way
 #   expanded         date the "Applications in depth" section was added for the owner's "Expand this idea" request
 #                    (section <section id="applications-in-depth"> in the body; docs/daily_update.md); marks the
 #                    request done, so the page shows "Expanded" with a link to the section
@@ -61,6 +62,214 @@
 # Thread lines: every main section of a report body ends with <p class="rpt-thread"><b>For the decision:</b> ...</p>;
 # a preliminary case has the same lines as thread: {section: text} in its case YAML (sections: reports.CASE_THREADS).
 reports:
+  - slug: auto-48v-motor-control
+    gist: "Our PAC and ACT72350 motor controllers already cover 48 V and integrate MCU and gate drive; without AEC-Q100 they cannot enter comfort actuators yet (est)."
+    abstract:
+      - "Cars move pumps, fans, blowers and comfort motors to 48 V: a quarter of the current, thinner wires; steering and brakes stay safety critical."
+      - "PAC5532 and ACT72350 reach 160 V with 2 A gate drive and current sensing; PAC5527 fits 12 V; none has a stated automotive grade."
+      - "Decide whether to qualify one 160 V part to AEC-Q100 for non-safety comfort and thermal actuators, starting with one Tier-1 socket."
+    title: "48 V motor control in the car: actuators moving from 12 V to 48 V, and where Qorvo's intelligent motor control fits"
+    kind: report
+    area: Automotive motor control
+    app_type: Automotive
+    feasibility: 1
+    feasibility_why: "The parts exist (PAC5532AQX, ACT72350 at 160 V, PAC5527 at 12 V); the step is AEC-Q100 qualification, PPAP and automotive firmware, not a new chip"
+    date: 2026-10-28
+    status: draft
+    see_also:
+      - {label: "Part knowledge: motor drivers and motor controllers", href: "/reviews/how/motor"}
+      - {label: "Part review: Qorvo PAC5527 and the PAC family", href: "/reviews/qorvo-pac5527-motor-driver"}
+    question: "48V Motor Control Applications in Cars. Actuators transitioning from 12V to 48V, Motor Control SoCs (Systems
+      library, 27 Oct 2026); Non safety critical actuator replacement using Qorvo Intelligent motor control (28 Oct 2026).
+      Should Skyworks + Qorvo offer its intelligent motor controllers for non-safety-critical 48 V car actuators?"
+    summary: >-
+      Preliminary report from the owner's comments of 27 and 28 Oct 2026. 48 V and zonal low-voltage nets (Tesla
+      Cybertruck, mild hybrids) carry the same power at a quarter of the current, so wires get thinner and pumps, fans,
+      blowers and compressors gain power. A 48 V drive needs 80-100 V MOSFETs and a gate driver rated for 60-70 V
+      transients with margin, plus an MCU and current sensing. Competitors pair a 12 V motor-control MCU with a separate
+      48 V gate driver (Infineon TLE9140EQW with MOTIX TLE989x, TI DRV8363-Q1, ST L9908, Allegro AMT49100, NXP GD3000);
+      only Elmos sells a one-chip 48 V controller (E523.52). Ours: PAC5532AQX (160 V, Cortex-M4F, CAN controller) and
+      ACT72350 (160 V gate driver with buck, no MCU) fit the voltage; PAC5527 (48 V absolute maximum) fits 12 V comfort
+      motors only. None has a stated AEC-Q grade, so the owner's angle (replace non-safety comfort and thermal actuators)
+      needs one qualified part first. Skyworks adds automotive isolation (Si86xx, Si88xx) where 12 V and 48 V meet.
+    tags: [48 V, mild hybrid, zonal architecture, BLDC, motor control SoC, gate driver, PAC5532, PAC5527, ACT72350,
+      sensorless, back-EMF, pumps and fans, HVAC blower, seat adjustment, AEC-Q100, ISO 26262]
+    sources: "BizDev catalogue with the AEC-Q rule, Part knowledge (motor drivers), PAC5527 review, Systems library diagrams;
+      13 public web requests (ti.com, infineon.com, allegromicro.com, elmos.com, electronicsforu.com; st.com did not
+      answer) and 11 web searches; no qorvo.com host requested"
+    decision: Should Skyworks + Qorvo qualify one intelligent motor controller for non-safety-critical 48 V car actuators?
+    answer:
+      text: 'Yes, as a test with one part (est). Voltage and integration already fit: PAC5532AQX and ACT72350 cover 48 V with
+        160 V ratings, and PAC5527 suits 12 V comfort motors. But no PAC or ACT part has a stated AEC-Q100 grade, so first
+        ask the motor-control BU whether one 160 V part can be qualified, then offer it for one pump, fan or seat socket.'
+      conf: low
+    needed_now:
+    - 'Motor-control BU: is any PAC55xx or ACT72350 qualified or qualifiable to AEC-Q100 (Grade 1), with PPAP, and at what cost and time?'
+    - 'One Tier-1 for thermal management or seats: which 48 V actuators are in their next platform, and does a one-chip controller save them a part?'
+    - "The owner's Qorvo seat-adjustment application note (live library upload): what it recommends, to add its details here"
+    say_externally: Cars are moving pumps, fans, blowers and comfort motors to 48 V, which needs motor drives rated well above
+      the battery voltage. Qorvo, now part of Skyworks, makes intelligent motor controllers that combine power supply,
+      microcontroller and gate drivers up to 160 V. We would like to learn which 48 V actuators you plan and what
+      qualification they need.
+    next_steps:
+    - what: Ask whether PAC5532AQX or ACT72350 can be qualified to AEC-Q100 Grade 1 with PPAP, and what an automotive variant would cost and take
+      who: Power management BU (Qorvo motor control)
+      why: Every automotive socket in this report depends on it; voltage and integration already fit, the grade does not.
+    - what: Take the 48 V pump and fan diagram and the seat adjustment diagram to one thermal-management or seat Tier-1 and ask for one non-safety socket
+      who: Our FAE with a Tier-1 thermal or seating team
+      why: A first customer for a single-chip 48 V controller shows the demand before any qualification money is spent.
+    - what: Read the owner's seat-adjustment application note from the live library uploads and add its design details to Part knowledge and this report
+      who: The daily run
+      why: The note is only on the live site; its seat-module details make the comfort-actuator case concrete.
+    bu_opener:
+      question: Cars move pumps, fans, blowers and comfort motors from 12 V to 48 V, and competitors still need two chips
+        (a 12 V motor MCU plus a 48 V gate driver). Should we qualify our 160 V intelligent motor controller (PAC5532 or
+        ACT72350) for non-safety-critical 48 V actuators, against Infineon, TI, ST, Allegro, NXP and Elmos?
+      pros:
+      - One chip with MCU, gate drivers, buck and current sensing up to 160 V; most rivals need two chips at 48 V
+      - 2 A gate drive and a charge pump or bootstrap already cover 0.3-1 kW pump and fan motors
+      - Skyworks adds automotive isolators and isolated DC-DC where 12 V and 48 V meet
+      cons:
+      - No PAC or ACT part has a stated AEC-Q100 grade or ISO 26262 process
+      - No LIN or CAN transceiver and no automotive MOSFETs of ours
+      - Infineon, TI, ST and NXP already sit in body and thermal ECUs with qualified parts
+      vs: Infineon (MOTIX), TI, STMicroelectronics, Allegro, NXP, Elmos, Melexis
+    learn:
+    - age: 5
+      text: A car has many small electric motors that pump water, blow air and move the seats. Each motor needs a little brain that tells it when to push.
+    - age: 10
+      text: Most car motors run on 12 volts today. New cars add a 48 volt battery, so the same motor needs four times less
+        current and the wires can be thinner. The chip that drives the motor must then handle the higher voltage safely.
+    - age: 15
+      text: A brushless motor needs six switches, a gate driver to turn them on, a microcontroller that decides when, and a
+        way to measure current or the voltage the spinning motor makes (back-EMF). At 48 V the switches and the driver must
+        survive 60-70 V spikes, and in a car every chip must pass the AEC-Q100 tests.
+    - age: 20
+      text: The owner asked how 48 V motor control in cars works and whether Qorvo's intelligent motor controllers could
+        replace non-safety-critical actuators. The report checks each block of a 48 V drive for our best part, compares the
+        competitors' motor-control chips and says what is missing for the car.
+    - age: 25
+      text: 'Infineon, TI, ST, Allegro and NXP sell qualified 48 V gate drivers next to a 12 V motor MCU; Elmos sells a
+        one-chip 48 V controller. Our PAC5532AQX and ACT72350 reach 160 V with 2 A gate drive and on-chip sensing, and PAC5527
+        fits 12 V; none has a stated AEC-Q grade. Gap: qualification and ISO 26262 process, not voltage.'
+    learn_links:
+    - label: 'Animated circuit: BLDC 6-step, FOC and back-EMF'
+      href: /visuals#bldc
+    - label: 'Animated circuit: gate driver, half-bridge and bootstrap'
+      href: /visuals#bootstrap
+    - label: 'Library: traction inverter isolation (ASIL D)'
+      href: /library/traction_asil_d
+
+  - slug: auto-charging-power
+    gist: "Car USB-C ports need an automotive buck-boost we lack; partner for the PD controller, and sell isolation and sensing into BMS and chargers (est)."
+    abstract:
+      - "A car USB-C port is protection, a 12 V buck-boost, a PD controller and port switches; TI, Infineon and Richtek put all of it in one chip."
+      - "We have one automotive PD-ready buck (ACT4751M) and automotive isolation, drivers and sensing for BMS and chargers; no automotive buck-boost, PD controller, BMS AFE or SiC."
+      - "Decide whether to build an automotive ACT buck-boost with a partner's certified PD controller, rather than our own PD controller."
+    title: "Charging in and around the car: USB-C power delivery, DC-DC, BMS and chargers, and what the Qorvo power ICs would need"
+    kind: report
+    area: Power & isolation
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "An automotive buck-boost and a PD-ready successor grow from Qorvo's ACT buck and buck-boost line; the PD stack, BMS AFE and SiC would be new"
+    date: 2026-10-28
+    status: draft
+    see_also: [auto-hv-hot-swap, iso-current-sense-charging, hv-extra-wide-isolation]
+    question: "(a) Full charging solutions using Qorvo Power Management ICs - also thinking outside of the box for BMS and Car
+      chargers? What would it take to close this gap? (b) DCDC with USB C for Automotive? (c) Making own PD Controller as a new
+      product?"
+    summary: >-
+      Preliminary report from the owner's three comments of 28 Oct 2026. (b) A car USB-C port is a chain: 12 V battery,
+      reverse-polarity and load-dump protection, a 4-switch buck-boost (the battery sags to about 6 V in a cold crank and
+      rises to 16 V and more, while the port must give 5–20 V, 3.3–21 V with PPS), a USB PD controller, VBUS and VCONN
+      switches and short-to-battery protection, all under CISPR 25 Class 5 EMI and 60–100 W per port in a hot console. The
+      market has moved to one chip per port or two: TI TPS25762-Q1 / TPS25772-Q1 (PD + 65 W buck-boost, Grade 1), Infineon EZ-PD
+      CCG7D / CCG7S (PD 3.1 + buck-boost controller, 100 W per port), Richtek RTQ7880, MPS MPQ5031-AEC1, ADI MAX25432,
+      Weltrend WT6617F / WT6633Q, Microchip UCS4002 protectors. Our data show 37 automotive USB-C reference designs, none with
+      our parts. Qorvo has one automotive PD-ready buck, ACT4751M (4.5–40 V, 4 A, supplies a PD controller), the
+      consumer ACT4751 / ACT4752 bucks with PD 3.0 PPS and the AEC-Q100 ACT4529M Quick Charge 2.0 buck; no automotive
+      buck-boost and no PD protocol engine. (c) Our own PD controller: not as a standalone product (est): crowded, cheap and
+      certification-heavy; partner first, then integrate a licensed PD engine into an ACT buck-boost. (a) Beyond USB, we
+      cover the isolation, gate-drive, isolated-power and sensing blocks of BMS, on-board chargers and charging stations
+      with automotive Skyworks parts; the gaps are the BMS cell-monitor AFE, OBC controllers and SiC / GaN power stages
+      (UnitedSiC went to onsemi in January 2025).
+    tags: [USB-C, USB PD, PD 3.1, EPR, PPS, car charger, rear-seat charging, buck-boost, load dump, CISPR 25, ACT4751,
+      ACT4752, ACT4529, ACT2861, ACT5101, PAC25140, TPS25772-Q1, TPS25762-Q1, CCG7D, RTQ7880, BMS, battery monitor,
+      on-board charger, OBC, wallbox, Si8239x, Si828x, Si89xx, Si875x, Si88xx]
+    sources: "BizDev Qorvo and Skyworks catalogues with the AEC-Q rule, path-to-product data, 4,195 public reference designs,
+      the ACT88321 review and the hot-swap and current-sense reports; 16 public web requests (ti.com, infineon.com, usb.org,
+      weltrend.com.tw, richtek.com; monolithicpower.com showed a bot check and microchip.com returned 403, both stopped) and
+      13 web searches"
+    decision: Should Skyworks + Qorvo build a car charging offer, an automotive USB-C buck-boost first, and should we make our
+      own USB PD controller?
+    answer:
+      text: '(b) Yes, as a DC-DC: an automotive 4-switch buck-boost successor of ACT4751M / ACT5101 that pairs with a partner''s
+        certified PD controller (est). (c) No standalone PD controller of our own; license a PD engine later for a one-chip
+        version. (a) Sell our isolation, drivers and sensing into BMS and chargers now; partner for BMS AFE, controllers and SiC.'
+      conf: low
+    needed_now:
+    - 'Power BU (Qorvo ACT line): is an automotive ACT4751M-class buck-boost (6–36 V in, 3.3–21 V out, 100 W) feasible on the existing process, and does any PD firmware from the ACT4751 / ACT4752 programme still exist?'
+    - 'One car-charger Tier-1: do they buy one-chip ports (TPS25772-Q1, CCG7D) or a separate buck-boost plus PD controller, and would they take a second source?'
+    - 'A PD controller partner (a Weltrend- or Richtek-class supplier): would they pair an automotive PD controller with our buck-boost in one reference design?'
+    say_externally: Cars now ship USB-C ports with 60 to 100 W and more per port, and battery packs and chargers need isolation,
+      gate drivers and isolated current sensing. Skyworks, with Qorvo, sells automotive isolated gate drivers, isolators,
+      isolated power and current sensing, and wide-input buck converters for USB power. We would like to learn which power
+      level, number of ports and supply partners you plan for your next charging designs.
+    next_steps:
+    - what: Ask the power BU for an automotive 4-switch buck-boost successor of ACT4751M with PPS-grade output control, and what it would take
+      who: Power BU (Qorvo ACT line)
+      why: It is the one block of a car USB-C port we are closest to; without it a 12 V car cannot get 20 V from our parts.
+    - what: Approach a PD-controller maker for a joint automotive USB-C reference design with our buck and buck-boost, instead of building our own PD controller
+      who: Partner (automotive PD controller maker) with our FAE
+      why: Certification, firmware and a low price make our own PD controller a poor bet; a partner puts our power stage into a certified port.
+    - what: Offer the Si89xx current-sense, Si8239x / Si828x gate-driver and Si88xx isolated-power set to one OBC or BMS team, through the current-sense case
+      who: Our FAE with an OBC or battery-pack Tier-1
+      why: These blocks are automotive today and are the part of "full charging solutions" we can sell without new silicon.
+      case: iso-current-sense-charging
+    bu_opener:
+      question: Car USB-C ports are moving to one chip per port (TI TPS25772-Q1, Infineon CCG7D), and BMS and on-board chargers
+        need isolation, drivers and sensing. Should Qorvo's ACT line build an automotive buck-boost that pairs with a partner's PD
+        controller, and should we sell Skyworks isolation into BMS and chargers, rather than make our own PD controller?
+      pros:
+      - ACT4751M is already automotive, 40 V and written to supply a USB PD controller
+      - Active-Semi shipped PD 3.0 PPS and Quick Charge bucks (ACT4751, ACT4752, ACT4529)
+      - Skyworks isolated gate drivers, isolators, isolated power and current sensing are AEC-Q100 today
+      cons:
+      - No automotive buck-boost and no PD protocol engine; leaders sell both in one chip
+      - PD controllers are crowded and cheap; certification and firmware are a long effort
+      - No BMS AFE with ISO 26262, no OBC controller and no SiC since the onsemi sale
+      vs: TI, Infineon, Richtek, MPS, Analog Devices, Microchip, Weltrend, STMicroelectronics, Renesas
+    learn:
+    - age: 5
+      text: Phones and tablets in a car charge from a USB-C socket. A big electric car also needs a charger and a battery guard.
+    - age: 10
+      text: The car battery gives about 12 V, but a laptop wants up to 20 V and a phone 5 or 9 V. A small converter changes the
+        voltage, and a little computer chip agrees with the phone how much power it may take.
+    - age: 15
+      text: A USB-C car port needs protection against voltage spikes, a buck-boost converter (it can step up or down), a USB
+        Power Delivery controller that talks over the CC wire, switches for VBUS and VCONN, and filters so the radio is not
+        disturbed. Electric cars add a battery management system (cell monitors, balancing, isolation), an on-board charger
+        (PFC and an isolated DC-DC) and charging stations.
+    - age: 20
+      text: The owner asked three things on 28 Oct 2026, full charging solutions with Qorvo's power ICs (also BMS and car
+        chargers), DC-DC with USB-C for cars, and our own PD controller. The report checks each block against our catalogue,
+        the path-to-product data and 4,195 public reference designs, then reads the leading parts' public pages.
+    - age: 25
+      text: TI, Infineon, Richtek, MPS, ADI and Weltrend sell automotive PD controllers, most with the buck-boost on board. We
+        have ACT4751M (automotive buck for a PD controller), consumer PD bucks and chargers, a 10–20-cell BMS SoC (PAC25140, not
+        automotive) and automotive Skyworks gate drivers, isolators, isolated power and sensing. Gaps - automotive buck-boost, PD
+        engine, BMS AFE with ASIL D, OBC controller, SiC.
+    learn_links:
+    - label: 'Visual: buck converter loops'
+      href: /visuals#buck
+    - label: 'Visual: gate driver and half-bridge'
+      href: /visuals#bootstrap
+    - label: 'Visual: isolated current sensing'
+      href: /visuals#isosense
+    - label: 'Visual: hot-swap and eFuse'
+      href: /visuals#efuse
+    - label: 'Library: traction inverter and ASIL D isolation'
+      href: /library/traction_asil_d
   - slug: auto-wireless-audio
     gist: "Wireless car audio suits headphones and add-on speakers, not the main system; start with automotive 2.4 GHz front ends, then our low-latency audio chips (est)."
     abstract:

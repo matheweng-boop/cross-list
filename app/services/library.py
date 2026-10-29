@@ -185,6 +185,7 @@ SPEC_GUIDES = {  # specification guide keys (app/services/engineering.py NOTES)
     "certifications": ("UL 1577", "VDE", "IEC 60747-17", "certification", "certifications"),
     "integrated_power": ("isolated power", "isolated bias", "isolated supply", "isolated supplies"),
     "uwb_signal_path": ("group delay", "group-delay", "pre-echo", "precursor", "pulse fidelity", "phase linearity"),
+    "uwb_wifi_coexistence": ("Wi-Fi 6E", "6 GHz Wi-Fi", "UNII-5", "U-NII-5", "UWB channel", "UWB channels"),
     "emc_eft_cispr": ("EFT", "burst", "IEC 61000-4-4", "CISPR 25", "CISPR 32", "conducted emissions",
                       "radiated emissions"),
 }  # fmt: skip
@@ -240,8 +241,9 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id
     # owner, 28 Oct 2026: animated circuits, current shown moving along the wires (static/vz/circuit.js)
     "bootstrap": ("Gate driver and half-bridge: bootstrap, dead time, Miller plateau", "/visuals#bootstrap",
                   ("bootstrap", "half-bridge", "half bridge", "dead time", "Miller plateau", "shoot-through")),
-    "bldc": ("BLDC motor: 6-step commutation and FOC", "/visuals#bldc",
-             ("BLDC", "brushless", "6-step", "six-step", "commutation", "FOC", "field-oriented control")),
+    "bldc": ("BLDC motor: 6-step commutation, FOC and back-EMF", "/visuals#bldc",
+             ("BLDC", "brushless", "6-step", "six-step", "commutation", "FOC", "field-oriented control", "back-EMF",
+              "back EMF", "sensorless", "zero crossing")),
     "buck": ("Buck converter: on loop, freewheel loop, inductor current", "/visuals#buck",
              ("buck converter", "buck converters", "freewheel", "inductor ripple", "duty cycle")),
     "efuse": ("Hot-swap / eFuse: inrush, short and trip", "/visuals#efuse",

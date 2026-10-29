@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.services import app_knowledge as ak
 from app.services import how_it_works as hw
 from app.services import reviews as rv
 from app.services import vocab
@@ -24,6 +25,8 @@ templates.env.globals["how_for_review"] = hw.for_review
 templates.env.globals["how_for_topic"] = hw.for_topic
 templates.env.globals["how_groups"] = hw.groups
 templates.env.globals["how_href"] = hw.href
+# Application knowledge explainers (owner, 28 Oct 2026) on application pages and library topics
+templates.env.globals["app_knowledge"] = ak.for_ids
 
 
 def _ctx(**kw) -> dict:

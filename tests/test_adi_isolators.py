@@ -116,3 +116,15 @@ def test_space_grade_is_never_crossed_to_a_lower_grade(session):
     for mpn in ("SI8641ET-AS", "SI8641ET-IS"):
         r = cross(ref, session.query(Part).filter_by(mpn=mpn).one(), rules)
         assert r.hard_fail and not r.categories
+
+
+def test_adgm1121_switch():
+    """adgm1121.pdf Rev. 0: DC to 18 GHz DPDT (p.1, p.3), 33 dBm max RF power (p.4); every value cites its page."""
+    d = yamlio.load((FILE.parent / "adi_switches.yaml").read_text())
+    (p,) = d["parts"]
+    assert p["mpn"] == "ADGM1121BCCZ-RL7" and p["manufacturer"] == "Analog Devices" and p["family"] == "rf_switch"
+    assert p["params"]["configuration"] == "DPDT" and p["params"]["freq_range_ghz"] == [0.0, 18.0]
+    assert p["params"]["max_input_power_dbm"] == 33.0
+    assert set(p["params"]) == set(p["param_sources"])
+    assert all(PAGE.search(v) for v in p["param_sources"].values())
+    assert d["datasheets"][0]["origin"] == "owner upload, 30 Oct 2026"

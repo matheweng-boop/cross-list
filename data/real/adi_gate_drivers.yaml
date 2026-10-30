@@ -1,0 +1,584 @@
+# Analog Devices (ADI) isolated gate drivers: ADuM4121/ADuM4121-1, ADuM4122, ADuM4136, ADuM4137, ADuM4138, ADuM4177.
+# One part per orderable code in each datasheet's ordering guide (evaluation boards left out). Vocabulary per
+# data/sources/GATE_DRIVER_DATA.md. Values only as the datasheets state them; "typ" first for performance values.
+# Peak currents: the datasheet's single "Peak Current" (IPK) row, used for both source and sink, at the VDD2 it is
+# stated at (12 V for ADuM4121/4122/4136, 15 V for ADuM4137/4138); ADuM4177: the 40 A source / 30 A sink
+# short-circuit headline (both output pins), typical conditions VDD2 = 18 V.
+# uvlo_v: the VDD2 positive-going threshold, typ (ADI states the measured threshold, not a class).
+# Not in the comparison vocabulary, so only in notes: thermal shutdown (all but ADuM4121-1), adjustable slew rate
+# (ADuM4122 SRC pin, ADuM4177 SPI), integrated isolated flyback controller (ADuM4138), built-in self tests and SPI /
+# EEPROM configuration (ADuM4137/4138/4177), isolated temperature sensing, ASC input, fault / ready outputs.
+# Lifecycle: the datasheets state no production status, so it stays unknown.
+source: Analog Devices public datasheets (Rev. as listed), uploaded by the owner on 30 Oct 2026; analog.com itself was not fetched
+manufacturers:
+- name: Analog Devices
+  role: competitor
+  website: https://www.analog.com
+packages:
+# Dimensions from the datasheets' outline drawings (nominal; span = lead tip to lead tip).
+- code: SOIC-8 IC (RI-8-1)
+  name: ADI RI-8-1 8-lead wide-body SOIC with increased creepage (SOIC_IC)
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 5.85
+  body_width_mm: 7.5
+  span_mm: 10.31
+  height_mm: 2.65
+- code: SOIC-16 W (RW-16)
+  name: ADI RW-16 16-lead wide-body SOIC (SOIC_W, JEDEC MS-013-AA)
+  pin_count: 16
+  pitch_mm: 1.27
+  body_length_mm: 10.3
+  body_width_mm: 7.5
+  span_mm: 10.33
+  height_mm: 2.65
+- code: SOIC-28 W FP (RN-28-1)
+  name: ADI RN-28-1 28-lead wide-body SOIC with finer pitch (SOIC_W_FP)
+  pin_count: 28
+  pitch_mm: 0.65
+  body_length_mm: 10.3
+  body_width_mm: 7.5
+  span_mm: 10.3
+  height_mm: 2.65
+datasheets:
+- file: ADuM4121_4121-1.pdf
+  url: https://www.analog.com/ADuM4121
+  sha256: f4c46c1ff6c4d874b741c1ca4bb8b7090c0493b378e80bf1c04de3004771f76b
+  revision: '0'
+  revision_date: '2016-10-01'
+  origin: owner upload, 30 Oct 2026
+- file: ADuM4122.pdf
+  url: https://www.analog.com/adum4122
+  sha256: 16c780effa952ad1088f30f42527939b9fe1b91cb5a7797d1add630b3add51de
+  revision: '0'
+  revision_date: '2019-02-01'
+  origin: owner upload, 30 Oct 2026
+- file: ADuM4136.pdf
+  url: http://www.analog.com/ADuM4136
+  sha256: cad8d4742ec38ac2ecd7865123432ed625767f83e1dc3eadc99d64ac33f778fb
+  revision: '0'
+  revision_date: '2016-07-01'
+  origin: owner upload, 30 Oct 2026
+- file: ADuM4137.pdf
+  url: https://www.analog.com/ADuM4137
+  sha256: 1399a31705b5545ade787a80c6a3460302e747ff79234a9085fe787c66c3258c
+  revision: A
+  revision_date: '2019-08-01'
+  origin: owner upload, 30 Oct 2026
+- file: ADuM4138.pdf
+  url: https://www.analog.com/ADuM4138
+  sha256: ce32acf678bd10c917f9c399bfb1f30e211f9faf4067e5d6ab53e7d4475ad0f6
+  revision: A
+  revision_date: '2019-08-01'
+  origin: owner upload, 30 Oct 2026
+- file: ADuM4177.pdf
+  url: https://www.analog.com/ADuM4177
+  sha256: c8eef96869e13793b4b3442383a075be06a9f11f25b3c09540036b193ce1efa7
+  revision: '0'
+  revision_date: '2023-07-01'
+  origin: owner upload, 30 Oct 2026
+pinouts:
+  adum4121: [VDD1, VI+, VI-, GND1, GND2, CLAMP, VOUT, VDD2]
+  adum4122: [VDD1, SRC, VIN+, GND1, GND2, VOUT_SRC, VOUT, VDD2]
+  adum4136: [VI+, VI-, VDD1, VSS1, RESET, FAULT, READY, VSS1, VSS2, VSS2, VOUT, VDD2, VDD2, DESAT, VSS2, GND2]
+  adum4137: [FAULT, VI-, GND1, VDD1, V5_1, VI+, DRIVER_FAULT, TEMP_OUT, UVLO_FAULT, MOSI, MISO, CS, SCLK, GND1,
+             GND2, TS2, TS1, OC2, OC1, MILLER_OUT, GATE_SENSE, VOFF_SOFT, VOUT_OFF, VOUT_ON, ASC, V5_2, GND2, VDD2]
+  adum4138: [SW, ISENSE, GND1, VDD1, V5_1, VI+, FAULT, TEMP_OUT, PGOOD, MOSI, MISO, CS, SCLK, GND1,
+             GND2, TS2, TS1, OC2, OC1, MILLER_OUT, GATE_SENSE, VOFF_SOFT, VOUT_OFF, VOUT_ON, DESAT, V5_2, GND2, VDD2]
+  adum4177: [FAULT, GND1, GND1, VDD1, VI+, DRIVER_FAULT, UVLO_FAULT, VI-, TEMP_OUT, MOSI, MISO, SCLK, CS, GND1,
+             VSS2, GND2, TS, ASC, DESAT, MILLER_DRV, VOUT_OFF2, VOUT_OFF1, VOFF_SOFT, GATE_SENSE, VOUT_ON2, VOUT_ON1,
+             VDD2, VSS2]
+parts:
+# ---------------------------------------------------------------- ADuM4121 / ADuM4121-1 (Rev. 0)
+- mpn: ADuM4121ARIZ
+  manufacturer: Analog Devices
+  family: gate_driver
+  description: 'ADuM4121: 5-kVrms isolated single-channel gate driver, internal Miller clamp, 2-A, 4.4-V UVLO (grade A), thermal shutdown, SOIC_IC-8'
+  package: SOIC-8 IC (RI-8-1)
+  pinout: adum4121
+  datasheet: ADuM4121_4121-1.pdf
+  datasheet_url: https://www.analog.com/ADuM4121
+  product_url: https://www.analog.com/ADuM4121
+  notes: >-
+    Grade A (VDD2 UVLO 4.4 V typ, minimum output voltage 4.5 V); tube. Thermal shutdown at 155 °C (p3).
+    Internal Miller clamp on the CLAMP pin, activates at 2 V on the falling edge (p1, p3).
+  lifecycle:
+    status: unknown
+    revision: '0'
+    revision_date: '2016-10-01'
+    source: 'Datasheet Rev. 0 (Oct 2016, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 2.3
+    peak_sink_a: 2.3
+    peak_current_vdd_v: 12
+    uvlo_v: 4.4
+    output_supply_v: [4.5, 35.0]
+    prop_delay_ns: 38.0
+    protection: [UVLO, Miller clamp]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 104.2
+    iq_ma: 3.6
+    rise_time_ns: 18.0
+    fall_time_ns: 18.0
+    pwd_ns: 7.0
+  param_sources:
+    isolation_rating_kvrms: ADuM4121_4121-1.pdf p.5 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: ADuM4121_4121-1.pdf p.4-5 (VDE reinforced insulation, VIORM 849 V peak; approvals pending)
+    creepage_mm: ADuM4121_4121-1.pdf p.5 (minimum external tracking 8 mm)
+    qualification: ADuM4121_4121-1.pdf p.16 (ordering guide; no automotive grade)
+    cmti_kv_us: ADuM4121_4121-1.pdf p.4 (static and dynamic CMTI min 150 kV/µs; no typ)
+    channel_config: ADuM4121_4121-1.pdf p.1 (single-channel driver)
+    input_type: ADuM4121_4121-1.pdf p.7 (VI+ noninverting, VI- inverting logic input)
+    peak_source_a: ADuM4121_4121-1.pdf p.3 (peak current IPK 2.3 A typ, VDD2 = 12 V, 4 Ω; one value for both edges)
+    peak_sink_a: ADuM4121_4121-1.pdf p.3 (peak current IPK 2.3 A typ, VDD2 = 12 V, 4 Ω; one value for both edges)
+    peak_current_vdd_v: ADuM4121_4121-1.pdf p.3 (IPK test condition VDD2 = 12 V)
+    uvlo_v: ADuM4121_4121-1.pdf p.3 (VDD2 positive-going threshold per grade A/B/C = 4.4 / 7.3 / 11.3 V typ), p.16
+    output_supply_v: ADuM4121_4121-1.pdf p.5 (recommended VDD2 to GND2)
+    prop_delay_ns: ADuM4121_4121-1.pdf p.3 (tDHL 38 ns typ, slower of tDLH/tDHL; max 53)
+    protection: ADuM4121_4121-1.pdf p.1, p.3 (UVLO on VDD1 and VDD2, internal Miller clamp)
+    temp_range_c: ADuM4121_4121-1.pdf p.5 (operating junction temperature), p.16
+    theta_ja_c_w: ADuM4121_4121-1.pdf p.6 (RI-8-1, 4-layer PCB)
+    iq_ma: ADuM4121_4121-1.pdf p.3 (IDD1 typ, VI+ high; max 5)
+    rise_time_ns: ADuM4121_4121-1.pdf p.4 (typ, 2 nF; max 26)
+    fall_time_ns: ADuM4121_4121-1.pdf p.4 (typ, 2 nF; max 26)
+    pwd_ns: ADuM4121_4121-1.pdf p.4 (typ; max 13)
+    pinout: ADuM4121_4121-1.pdf p.7
+- like: ADuM4121ARIZ
+  mpn: ADuM4121ARIZ-RL
+  notes: >-
+    Grade A (VDD2 UVLO 4.4 V typ, minimum output voltage 4.5 V); 13-inch tape and reel. Thermal shutdown at 155 °C
+    (p3). Internal Miller clamp on the CLAMP pin, activates at 2 V on the falling edge (p1, p3).
+- like: ADuM4121ARIZ
+  mpn: ADuM4121BRIZ
+  description: 'ADuM4121: 5-kVrms isolated single-channel gate driver, internal Miller clamp, 2-A, 7.3-V UVLO (grade B), thermal shutdown, SOIC_IC-8'
+  notes: >-
+    Grade B (VDD2 UVLO 7.3 V typ, minimum output voltage 7.5 V); tube. Thermal shutdown at 155 °C (p3).
+    Internal Miller clamp on the CLAMP pin, activates at 2 V on the falling edge (p1, p3).
+  params:
+    uvlo_v: 7.3
+- like: ADuM4121BRIZ
+  mpn: ADuM4121BRIZ-RL
+  notes: >-
+    Grade B (VDD2 UVLO 7.3 V typ, minimum output voltage 7.5 V); 13-inch tape and reel. Thermal shutdown at 155 °C
+    (p3). Internal Miller clamp on the CLAMP pin, activates at 2 V on the falling edge (p1, p3).
+- like: ADuM4121ARIZ
+  mpn: ADuM4121CRIZ
+  description: 'ADuM4121: 5-kVrms isolated single-channel gate driver, internal Miller clamp, 2-A, 11.3-V UVLO (grade C), thermal shutdown, SOIC_IC-8'
+  notes: >-
+    Grade C (VDD2 UVLO 11.3 V typ, minimum output voltage 11.6 V); tube. Thermal shutdown at 155 °C (p3).
+    Internal Miller clamp on the CLAMP pin, activates at 2 V on the falling edge (p1, p3).
+  params:
+    uvlo_v: 11.3
+- like: ADuM4121CRIZ
+  mpn: ADuM4121CRIZ-RL
+  notes: >-
+    Grade C (VDD2 UVLO 11.3 V typ, minimum output voltage 11.6 V); 13-inch tape and reel. Thermal shutdown at 155 °C
+    (p3). Internal Miller clamp on the CLAMP pin, activates at 2 V on the falling edge (p1, p3).
+- like: ADuM4121ARIZ
+  mpn: ADuM4121-1ARIZ
+  description: 'ADuM4121-1: 5-kVrms isolated single-channel gate driver, internal Miller clamp, 2-A, 4.4-V UVLO (grade A), no thermal shutdown, SOIC_IC-8'
+  product_url: https://www.analog.com/ADuM4121-1
+  notes: >-
+    ADuM4121-1: as ADuM4121 but without thermal shutdown (p3, ordering guide p16). Grade A (VDD2 UVLO 4.4 V typ,
+    minimum output voltage 4.5 V); tube.
+- like: ADuM4121-1ARIZ
+  mpn: ADuM4121-1ARIZ-RL
+  notes: >-
+    ADuM4121-1: as ADuM4121 but without thermal shutdown (p3, p16). Grade A (VDD2 UVLO 4.4 V typ, minimum output
+    voltage 4.5 V); 13-inch tape and reel.
+- like: ADuM4121-1ARIZ
+  mpn: ADuM4121-1BRIZ
+  description: 'ADuM4121-1: 5-kVrms isolated single-channel gate driver, internal Miller clamp, 2-A, 7.3-V UVLO (grade B), no thermal shutdown, SOIC_IC-8'
+  notes: >-
+    ADuM4121-1: as ADuM4121 but without thermal shutdown (p3, p16). Grade B (VDD2 UVLO 7.3 V typ, minimum output
+    voltage 7.5 V); tube.
+  params:
+    uvlo_v: 7.3
+- like: ADuM4121-1BRIZ
+  mpn: ADuM4121-1BRIZ-RL
+  notes: >-
+    ADuM4121-1: as ADuM4121 but without thermal shutdown (p3, p16). Grade B (VDD2 UVLO 7.3 V typ, minimum output
+    voltage 7.5 V); 13-inch tape and reel.
+- like: ADuM4121-1ARIZ
+  mpn: ADuM4121-1CRIZ
+  description: 'ADuM4121-1: 5-kVrms isolated single-channel gate driver, internal Miller clamp, 2-A, 11.3-V UVLO (grade C), no thermal shutdown, SOIC_IC-8'
+  notes: >-
+    ADuM4121-1: as ADuM4121 but without thermal shutdown (p3, p16). Grade C (VDD2 UVLO 11.3 V typ, minimum output
+    voltage 11.6 V); tube.
+  params:
+    uvlo_v: 11.3
+- like: ADuM4121-1CRIZ
+  mpn: ADuM4121-1CRIZ-RL
+  notes: >-
+    ADuM4121-1: as ADuM4121 but without thermal shutdown (p3, p16). Grade C (VDD2 UVLO 11.3 V typ, minimum output
+    voltage 11.6 V); 13-inch tape and reel.
+# ---------------------------------------------------------------- ADuM4122 (Rev. 0)
+- mpn: ADuM4122ARIZ
+  manufacturer: Analog Devices
+  family: gate_driver
+  description: 'ADuM4122: 5-kVrms isolated single-channel gate driver, adjustable slew rate (second output VOUT_SRC), 2-A, 4.4-V UVLO (grade A), SOIC_IC-8'
+  package: SOIC-8 IC (RI-8-1)
+  pinout: adum4122
+  datasheet: ADuM4122.pdf
+  datasheet_url: https://www.analog.com/adum4122
+  product_url: https://www.analog.com/adum4122
+  notes: >-
+    Grade A (VDD2 UVLO 4.4 V typ, minimum output voltage 4.5 V); tube. Two gate outputs for slew-rate control: VOUT
+    follows VIN+, VOUT_SRC follows VIN+ or goes high-Z under control of the primary-side SRC pin (p1, p8, p14).
+    Each output pin can source or sink more than 3 A into a short (3 A minimum short-circuit peak, p4, p15); IPK 2 A
+    typ in application. Thermal shutdown at 155 °C (p3).
+  lifecycle:
+    status: unknown
+    revision: '0'
+    revision_date: '2019-02-01'
+    source: 'Datasheet Rev. 0 (Feb 2019, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.0
+    qualification: industrial
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 2.0
+    peak_sink_a: 2.0
+    peak_current_vdd_v: 12
+    uvlo_v: 4.4
+    output_supply_v: [4.5, 35.0]
+    prop_delay_ns: 30.0
+    protection: [UVLO]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 81.7
+    iq_ma: 1.5
+    rise_time_ns: 17.0
+    fall_time_ns: 17.0
+    pwd_ns: 8.0
+  param_sources:
+    isolation_rating_kvrms: ADuM4122.pdf p.5 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: ADuM4122.pdf p.4-5 (VDE reinforced insulation, VIORM 849 V peak; approvals pending)
+    creepage_mm: ADuM4122.pdf p.5 (minimum external tracking 8 mm)
+    qualification: ADuM4122.pdf p.18 (ordering guide; no automotive grade)
+    cmti_kv_us: ADuM4122.pdf p.4 (static and dynamic CMTI min 150 kV/µs; no typ)
+    channel_config: ADuM4122.pdf p.1 (single device, drives one gate)
+    input_type: ADuM4122.pdf p.8 (VIN+ noninverting logic input; SRC selects the slew rate)
+    peak_source_a: ADuM4122.pdf p.4 (peak current IPK 2 A typ, VDD2 = 12 V, 5 Ω; one value for both edges)
+    peak_sink_a: ADuM4122.pdf p.4 (peak current IPK 2 A typ, VDD2 = 12 V, 5 Ω; one value for both edges)
+    peak_current_vdd_v: ADuM4122.pdf p.4 (IPK test condition VDD2 = 12 V)
+    uvlo_v: ADuM4122.pdf p.3 (VDD2 positive-going threshold per grade A/B/C = 4.4 / 7.3 / 11.3 V typ), p.15, p.18
+    output_supply_v: ADuM4122.pdf p.6 (recommended VDD2 to GND2)
+    prop_delay_ns: ADuM4122.pdf p.4 (tDHL 30 ns typ, slower of tDLH/tDHL; max 48)
+    protection: ADuM4122.pdf p.1, p.3, p.15 (UVLO on VDD1 and VDD2)
+    temp_range_c: ADuM4122.pdf p.6 (operating junction temperature), p.18
+    theta_ja_c_w: ADuM4122.pdf p.7 (RI-8-1, 4-layer PCB)
+    iq_ma: ADuM4122.pdf p.3 (IDD1 typ, VIN+ low, SRC high; max 2.5)
+    rise_time_ns: ADuM4122.pdf p.4 (tR/tF typ, 2.2 nF, 4.7 Ω; max 25)
+    fall_time_ns: ADuM4122.pdf p.4 (tR/tF typ, 2.2 nF, 4.7 Ω; max 25)
+    pwd_ns: ADuM4122.pdf p.4 (typ; max 30)
+    pinout: ADuM4122.pdf p.8
+- like: ADuM4122ARIZ
+  mpn: ADuM4122ARIZ-RL
+  notes: >-
+    Grade A (VDD2 UVLO 4.4 V typ, minimum output voltage 4.5 V); 13-inch tape and reel. Two gate outputs for
+    slew-rate control: VOUT follows VIN+, VOUT_SRC follows VIN+ or goes high-Z under control of the SRC pin (p1, p8,
+    p14). Thermal shutdown at 155 °C (p3).
+- like: ADuM4122ARIZ
+  mpn: ADuM4122BRIZ
+  description: 'ADuM4122: 5-kVrms isolated single-channel gate driver, adjustable slew rate (second output VOUT_SRC), 2-A, 7.3-V UVLO (grade B), SOIC_IC-8'
+  notes: >-
+    Grade B (VDD2 UVLO 7.3 V typ, minimum output voltage 7.5 V); tube. Two gate outputs for slew-rate control: VOUT
+    follows VIN+, VOUT_SRC follows VIN+ or goes high-Z under control of the SRC pin (p1, p8, p14). Thermal shutdown
+    at 155 °C (p3).
+  params:
+    uvlo_v: 7.3
+- like: ADuM4122BRIZ
+  mpn: ADuM4122BRIZ-RL
+  notes: >-
+    Grade B (VDD2 UVLO 7.3 V typ, minimum output voltage 7.5 V); 13-inch tape and reel. Two gate outputs for
+    slew-rate control (p1, p8, p14). Thermal shutdown at 155 °C (p3).
+- like: ADuM4122ARIZ
+  mpn: ADuM4122CRIZ
+  description: 'ADuM4122: 5-kVrms isolated single-channel gate driver, adjustable slew rate (second output VOUT_SRC), 2-A, 11.3-V UVLO (grade C), SOIC_IC-8'
+  notes: >-
+    Grade C (VDD2 UVLO 11.3 V typ, minimum output voltage 11.6 V); tube. Two gate outputs for slew-rate control: VOUT
+    follows VIN+, VOUT_SRC follows VIN+ or goes high-Z under control of the SRC pin (p1, p8, p14). Thermal shutdown
+    at 155 °C (p3).
+  params:
+    uvlo_v: 11.3
+- like: ADuM4122CRIZ
+  mpn: ADuM4122CRIZ-RL
+  notes: >-
+    Grade C (VDD2 UVLO 11.3 V typ, minimum output voltage 11.6 V); 13-inch tape and reel. Two gate outputs for
+    slew-rate control (p1, p8, p14). Thermal shutdown at 155 °C (p3).
+# ---------------------------------------------------------------- ADuM4136 (Rev. 0)
+- mpn: ADuM4136BRWZ
+  manufacturer: Analog Devices
+  family: gate_driver
+  description: 'ADuM4136: 5-kVrms isolated single-channel IGBT gate driver, desaturation protection with soft shutdown, isolated fault and ready outputs, 4-A, 12-V UVLO, SOIC_W-16'
+  package: SOIC-16 W (RW-16)
+  pinout: adum4136
+  datasheet: ADuM4136.pdf
+  datasheet_url: http://www.analog.com/ADuM4136
+  product_url: http://www.analog.com/ADuM4136
+  notes: >-
+    Tube. Unipolar or bipolar output supply (VSS2 -15 V to 0 V, p3). DESAT threshold 9.2 V typ with 537 µA internal
+    current source and 312 ns masking (p1, p3-4); FAULT and READY open-drain outputs, RESET to clear a fault (p7).
+    Thermal shutdown at 155 °C (p3). Only one ordering grade (B).
+  lifecycle:
+    status: unknown
+    revision: '0'
+    revision_date: '2016-07-01'
+    source: 'Datasheet Rev. 0 (Jul 2016, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: basic
+    creepage_mm: 7.8
+    qualification: industrial
+    cmti_kv_us: 100.0
+    channel_config: single
+    input_type: single input
+    peak_source_a: 4.61
+    peak_sink_a: 4.61
+    peak_current_vdd_v: 12
+    uvlo_v: 11.6
+    output_supply_v: [12.0, 35.0]
+    prop_delay_ns: 55.0
+    protection: [UVLO, desaturation, soft shutdown]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 75.4
+    iq_ma: 1.78
+    rise_time_ns: 16.0
+    fall_time_ns: 16.0
+  param_sources:
+    isolation_rating_kvrms: ADuM4136.pdf p.4 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: ADuM4136.pdf p.1, p.4 (VDE basic insulation, VIORM 849 V peak)
+    creepage_mm: ADuM4136.pdf p.4 (minimum external tracking 7.8 mm)
+    qualification: ADuM4136.pdf p.16 (ordering guide; no automotive grade)
+    cmti_kv_us: ADuM4136.pdf p.4 (static and dynamic CMTI min 100 kV/µs; no typ)
+    channel_config: ADuM4136.pdf p.1 (single-channel gate driver)
+    input_type: ADuM4136.pdf p.7 (VI+ positive logic, VI- negative logic input)
+    peak_source_a: ADuM4136.pdf p.3 (peak current 4.61 A typ, VDD2 = 12 V, 2 Ω; one value for both edges)
+    peak_sink_a: ADuM4136.pdf p.3 (peak current 4.61 A typ, VDD2 = 12 V, 2 Ω; one value for both edges)
+    peak_current_vdd_v: ADuM4136.pdf p.3 (peak current test condition VDD2 = 12 V)
+    uvlo_v: ADuM4136.pdf p.3 (VDD2 positive-going threshold 11.6 V typ, 12.0 V max)
+    output_supply_v: ADuM4136.pdf p.5 (recommended VDD2 - VSS2 12 V to 35 V)
+    prop_delay_ns: ADuM4136.pdf p.4 (tDHL, tDLH 55 ns typ; max 68)
+    protection: ADuM4136.pdf p.1, p.3, p.7 (UVLO on VDD1 and VDD2, DESAT detection, soft shutdown on fault)
+    temp_range_c: ADuM4136.pdf p.5 (recommended operating ambient temperature)
+    theta_ja_c_w: ADuM4136.pdf p.4 (4-layer PCB)
+    iq_ma: ADuM4136.pdf p.3 (IDD1 typ, output low; max 2.17)
+    rise_time_ns: ADuM4136.pdf p.4 (tR/tF typ, 2 nF, 3.9 Ω; max 22.9)
+    fall_time_ns: ADuM4136.pdf p.4 (tR/tF typ, 2 nF, 3.9 Ω; max 22.9)
+    pinout: ADuM4136.pdf p.7
+- like: ADuM4136BRWZ
+  mpn: ADuM4136BRWZ-RL
+  notes: >-
+    13-inch tape and reel. Unipolar or bipolar output supply (VSS2 -15 V to 0 V, p3). DESAT threshold 9.2 V typ (p3);
+    FAULT and READY open-drain outputs, RESET to clear a fault (p7). Thermal shutdown at 155 °C (p3).
+# ---------------------------------------------------------------- ADuM4137 (Rev. A)
+- mpn: ADuM4137WBRNZ
+  manufacturer: Analog Devices
+  family: gate_driver
+  description: 'ADuM4137W: Automotive 5-kVrms isolated single-channel IGBT gate driver, split-emitter overcurrent detection, Miller clamp control, soft shutdown, temperature sense, SPI, 6-A, SOIC_W_FP-28'
+  package: SOIC-28 W FP (RN-28-1)
+  pinout: adum4137
+  datasheet: ADuM4137.pdf
+  datasheet_url: https://www.analog.com/ADuM4137
+  product_url: https://www.analog.com/ADuM4137
+  notes: >-
+    Tube. Separate turn-on / turn-off outputs (VOUT_ON, VOUT_OFF) plus VOFF_SOFT for the soft shutdown and two-level
+    turn-off (p13). The Miller clamp is an output (MILLER_OUT) for an external clamp MOSFET, with GATE_SENSE input
+    (p1, p13). Split-emitter overcurrent detection on OC1/OC2, low gate voltage detection, ASC input, isolated
+    temperature sensing (TS1/TS2, TEMP_OUT), SPI with EEPROM settings, primary and secondary thermal shutdown (p1,
+    p5-6). No CMTI value in the electrical tables (only a +/-150 kV/µs absolute maximum, p11).
+  lifecycle:
+    status: unknown
+    revision: A
+    revision_date: '2019-08-01'
+    source: 'Datasheet Rev. A (Aug 2019, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.3
+    qualification: automotive
+    channel_config: single
+    input_type: single input
+    output_config: split output + Miller clamp
+    peak_source_a: 6.0
+    peak_sink_a: 6.0
+    peak_current_vdd_v: 15
+    uvlo_v: 11.57
+    output_supply_v: [12.0, 25.0]
+    prop_delay_ns: 107.0
+    protection: [UVLO, Miller clamp, overcurrent, soft shutdown]
+    temp_range_c: [-40.0, 125.0]
+    theta_ja_c_w: 62.4
+    iq_ma: 3.8
+  param_sources:
+    isolation_rating_kvrms: ADuM4137.pdf p.9 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: ADuM4137.pdf p.9-10 (VDE reinforced insulation, VIORM 849 V peak)
+    creepage_mm: ADuM4137.pdf p.9 (minimum external tracking 8.3 mm)
+    qualification: ADuM4137.pdf p.1 (AEC-Q100 qualified), p.28 (W = qualified for automotive applications)
+    channel_config: ADuM4137.pdf p.1 (single-channel gate driver)
+    input_type: ADuM4137.pdf p.13 (VI+ noninverting, VI- inverting input)
+    output_config: ADuM4137.pdf p.13 (VOUT_ON / VOUT_OFF outputs; MILLER_OUT drives an external clamp MOSFET)
+    peak_source_a: ADuM4137.pdf p.7 (peak current 6 A typ, VDD2 = 15 V, 2 Ω; one value for both edges)
+    peak_sink_a: ADuM4137.pdf p.7 (peak current 6 A typ, VDD2 = 15 V, 2 Ω; one value for both edges)
+    peak_current_vdd_v: ADuM4137.pdf p.7 (peak current test condition VDD2 = 15 V)
+    uvlo_v: ADuM4137.pdf p.5 (VDD2 positive-going threshold 11.57 V typ, 11.72 V max)
+    output_supply_v: ADuM4137.pdf p.10 (recommended VDD2 12 V to 25 V)
+    prop_delay_ns: ADuM4137.pdf p.7 (tDHL 107 ns typ, slower of tDLH/tDHL; max 137)
+    protection: ADuM4137.pdf p.1, p.5-6, p.12 (UVLO, Miller clamp control, split-emitter overcurrent detection, soft shutdown via VOFF_SOFT)
+    temp_range_c: ADuM4137.pdf p.10 (recommended operating ambient temperature), p.28
+    theta_ja_c_w: ADuM4137.pdf p.11 (RN-28-1, 4-layer PCB)
+    iq_ma: ADuM4137.pdf p.4 (IDD1 typ, VI+ = 0 V, VDD1 = 4.5 V; max 4.7)
+    pinout: ADuM4137.pdf p.13
+- like: ADuM4137WBRNZ
+  mpn: ADuM4137WBRNZ-RL
+  notes: >-
+    13-inch tape and reel. Separate turn-on / turn-off outputs plus VOFF_SOFT (p13). Miller clamp output for an
+    external clamp MOSFET (p1, p13). Split-emitter overcurrent detection, ASC input, isolated temperature sensing,
+    SPI, thermal shutdown (p1, p5-6). No CMTI value in the electrical tables (p11).
+# ---------------------------------------------------------------- ADuM4138 (Rev. A)
+- mpn: ADuM4138WBRNZ
+  manufacturer: Analog Devices
+  family: gate_driver
+  description: 'ADuM4138W: Automotive 5-kVrms isolated single-channel IGBT gate driver with isolated flyback controller, DESAT and split-emitter overcurrent detection, Miller clamp control, 6-A, SOIC_W_FP-28'
+  package: SOIC-28 W FP (RN-28-1)
+  pinout: adum4138
+  datasheet: ADuM4138.pdf
+  datasheet_url: https://www.analog.com/ADuM4138
+  product_url: https://www.analog.com/ADuM4138
+  notes: >-
+    Tube. Integrated isolated flyback controller (SW, ISENSE, PGOOD pins; 200 kHz, programmable output 16 V typ for
+    code 0111) generates the secondary supply (p1, p4, p11). Separate turn-on / turn-off outputs (VOUT_ON, VOUT_OFF)
+    plus VOFF_SOFT; Miller clamp is an output (MILLER_OUT) for an external MOSFET (p11). DESAT and split-emitter
+    overcurrent detection, low gate voltage detection, isolated temperature sensing, SPI with EEPROM, thermal shutdown
+    (p1, p5). No CMTI value in the electrical tables (only a +/-150 kV/µs absolute maximum, p10).
+  lifecycle:
+    status: unknown
+    revision: A
+    revision_date: '2019-08-01'
+    source: 'Datasheet Rev. A (Aug 2019, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.3
+    qualification: automotive
+    channel_config: single
+    input_type: single input
+    output_config: split output + Miller clamp
+    peak_source_a: 6.0
+    peak_sink_a: 6.0
+    peak_current_vdd_v: 15
+    uvlo_v: 11.6
+    output_supply_v: [12.0, 25.0]
+    prop_delay_ns: 100.0
+    protection: [UVLO, Miller clamp, desaturation, overcurrent, soft shutdown]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 62.4
+    iq_ma: 4.0
+  param_sources:
+    isolation_rating_kvrms: ADuM4138.pdf p.8 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: ADuM4138.pdf p.8-9 (VDE reinforced insulation, VIORM 849 V peak; pending)
+    creepage_mm: ADuM4138.pdf p.8 (minimum external tracking 8.3 mm)
+    qualification: ADuM4138.pdf p.1 (qualified for automotive applications), p.24 (W = qualified for automotive applications)
+    channel_config: ADuM4138.pdf p.1 (single-channel gate driver)
+    input_type: ADuM4138.pdf p.11 (VI+ noninverting input only)
+    output_config: ADuM4138.pdf p.11 (VOUT_ON / VOUT_OFF outputs; MILLER_OUT drives an external clamp MOSFET)
+    peak_source_a: ADuM4138.pdf p.6 (peak current 6 A typ, VDD2 = 15 V, 2 Ω; one value for both edges)
+    peak_sink_a: ADuM4138.pdf p.6 (peak current 6 A typ, VDD2 = 15 V, 2 Ω; one value for both edges)
+    peak_current_vdd_v: ADuM4138.pdf p.6 (peak current test condition VDD2 = 15 V)
+    uvlo_v: ADuM4138.pdf p.4 (VDD2 positive-going threshold 11.6 V typ, 11.8 V max)
+    output_supply_v: ADuM4138.pdf p.9 (recommended VDD2 12 V to 25 V)
+    prop_delay_ns: ADuM4138.pdf p.6 (tDHL 100 ns typ, slower of tDLH/tDHL; max 121)
+    protection: ADuM4138.pdf p.1, p.5-6 (UVLO, Miller clamp control, DESAT, split-emitter overcurrent detection, soft shutdown via VOFF_SOFT)
+    temp_range_c: ADuM4138.pdf p.9 (operating junction temperature), p.24
+    theta_ja_c_w: ADuM4138.pdf p.10 (RN-28-1, 4-layer PCB)
+    iq_ma: ADuM4138.pdf p.4 (IDD1 typ, VI+ = 0 V; max 5.0)
+    pinout: ADuM4138.pdf p.11
+- like: ADuM4138WBRNZ
+  mpn: ADuM4138WBRNZ-RL
+  notes: >-
+    Tape and reel (-RL). Integrated isolated flyback controller (SW, ISENSE, PGOOD; p1, p4, p11). Separate turn-on /
+    turn-off outputs plus VOFF_SOFT; Miller clamp output for an external MOSFET (p11). DESAT and split-emitter
+    overcurrent detection, temperature sensing, SPI, thermal shutdown (p1, p5). No CMTI value in the electrical
+    tables (p10).
+# ---------------------------------------------------------------- ADuM4177 (Rev. 0)
+- mpn: ADUM4177WBRNZ
+  manufacturer: Analog Devices
+  family: gate_driver
+  description: 'ADuM4177W: Automotive 5.7-kVrms isolated single-channel SiC gate driver, 40-A source / 30-A sink (short-circuit peak), SPI slew-rate control, DESAT, BISTs, SOIC_W_FP-28'
+  package: SOIC-28 W FP (RN-28-1)
+  pinout: adum4177
+  datasheet: ADuM4177.pdf
+  datasheet_url: https://www.analog.com/ADuM4177
+  product_url: https://www.analog.com/ADuM4177
+  notes: >-
+    Tube of 46. Two turn-on and two turn-off outputs (VOUT_ON1/2, VOUT_OFF1/2); the second pair can be switched by SPI
+    for slew-rate control (p1, p12). Peak drive: 40 A source / 30 A sink short-circuit typ for the two pins together
+    (20 A / 15 A per pin, 0 Ω), 10 A per pin with 1.5 Ω, 20 A typical in application (p1, p6). VDD2 UVLO is
+    programmable over SPI: 14.0 to 22.8 V typ (referred to VSS2); 20.9 V is the default code (p4). External Miller
+    clamp driver (MILLER_DRV), DESAT drain sense (7 V), ASC input, VDD2/VSS2 overvoltage and undervoltage protection,
+    isolated temperature sense, built-in self tests (BISTs) for ASIL D systems, EEPROM, thermal shutdown (p1, p5-7).
+    Peak currents are characterised, not production tested (p7).
+  lifecycle:
+    status: unknown
+    revision: '0'
+    revision_date: '2023-07-01'
+    source: 'Datasheet Rev. 0 (Jul 2023, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.7
+    isolation_class: reinforced
+    creepage_mm: 8.3
+    qualification: automotive
+    cmti_kv_us: 150.0
+    channel_config: single
+    input_type: single input
+    output_config: split output + Miller clamp
+    peak_source_a: 40.0
+    peak_sink_a: 30.0
+    peak_current_vdd_v: 18
+    uvlo_v: 20.9
+    output_supply_v: [15.0, 23.0]
+    prop_delay_ns: 108.0
+    protection: [UVLO, Miller clamp, desaturation, soft shutdown]
+    temp_range_c: [-40.0, 150.0]
+    theta_ja_c_w: 50.6
+    iq_ma: 4.2
+    rise_time_ns: 11.0
+    fall_time_ns: 11.0
+  param_sources:
+    isolation_rating_kvrms: ADuM4177.pdf p.8 (rated dielectric insulation voltage 5700 V rms, UL 1577), p.9
+    isolation_class: ADuM4177.pdf p.8-9 (DIN EN IEC 60747-17 reinforced insulation, VIORM 1500 V peak; pending)
+    creepage_mm: ADuM4177.pdf p.8 (minimum external tracking 8.3 mm)
+    qualification: ADuM4177.pdf p.1 (AEC-Q100 qualified), p.50 (W = qualified for automotive applications)
+    cmti_kv_us: ADuM4177.pdf p.7 (static and dynamic CMTI min 150 kV/µs; no typ)
+    channel_config: ADuM4177.pdf p.1 (single isolated gate driver)
+    input_type: ADuM4177.pdf p.12 (VI+ noninverting, VI- inverting input)
+    output_config: ADuM4177.pdf p.12 (VOUT_ON1/2 and VOUT_OFF1/2 outputs; MILLER_DRV drives an external clamp)
+    peak_source_a: ADuM4177.pdf p.1 (40 A source peak short-circuit, typ), p.6 (20 A per pin, 0 Ω, two pins)
+    peak_sink_a: ADuM4177.pdf p.1 (30 A sink peak short-circuit, typ), p.6 (15 A per pin, 0 Ω, two pins)
+    peak_current_vdd_v: ADuM4177.pdf p.4 (typical conditions VDD2 = 18 V, VSS2 = -5 V)
+    uvlo_v: ADuM4177.pdf p.4 (VDD2 positive-going threshold referred to VSS2, default code 101 = 20.9 V typ; SPI options 14.0 to 22.8 V)
+    output_supply_v: ADuM4177.pdf p.1 (VDD2 to VSS2 15 V to 23 V), p.9
+    prop_delay_ns: ADuM4177.pdf p.6 (tDHL, tDLH 108 ns typ, no gate load; max 140)
+    protection: ADuM4177.pdf p.1, p.4-7 (UVLO/UVP/OVP, external Miller clamp drive, DESAT, soft shutdown)
+    temp_range_c: ADuM4177.pdf p.9 (operating junction temperature), p.50
+    theta_ja_c_w: ADuM4177.pdf p.10 (RN-28-1, JEDEC 2S2P)
+    iq_ma: ADuM4177.pdf p.4 (IDD1 quiescent typ, VI+ = 0 V; max 5)
+    rise_time_ns: ADuM4177.pdf p.6 (tR/tF typ, 2.2 nF, 3.9 Ω)
+    fall_time_ns: ADuM4177.pdf p.6 (tR/tF typ, 2.2 nF, 3.9 Ω)
+    pinout: ADuM4177.pdf p.12
+- like: ADUM4177WBRNZ
+  mpn: ADUM4177WBRNZ-RL
+  notes: >-
+    Reel of 1000. Two turn-on and two turn-off outputs with SPI slew-rate control (p1, p12). 40 A source / 30 A sink
+    short-circuit peak typ (p1, p6). Programmable VDD2 UVLO, 20.9 V default (p4). External Miller clamp driver, DESAT,
+    ASC, OVP/UVP, temperature sense, BISTs, thermal shutdown (p1, p5-7).

@@ -30,7 +30,7 @@ def test_maker_and_origin():
     assert "owner upload, 30 Oct 2026" in d["source"]
     for sheet in d["datasheets"]:
         assert sheet["origin"] == "owner upload, 30 Oct 2026" and len(sheet["sha256"]) == 64
-        assert sheet["url"].startswith("https://www.analog.com/media/en/technical-documentation/data-sheets/")
+        assert re.fullmatch(r"https://www\.analog\.com/AD[uG]M\w+", sheet["url"])  # ADI's short product link
     assert {p["manufacturer"] for p in d["parts"]} == {"Analog Devices"}
 
 

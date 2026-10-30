@@ -1,0 +1,345 @@
+# Analog Devices (ADI) isolated amplifiers for voltage sensing: ADuM3195/ADuM4195 (adjustable gain: an uncommitted
+# op amp on the input side) and ADuM4195-1 (fixed gain = 1), both with single-ended analog output.
+# One part per orderable code in each datasheet's ordering guide (evaluation boards left out).
+# Side naming: ADI calls the sensing (input) side "side 2" (VDD2, GND2) and the output side "side 1". The rules'
+# vdd1_range_v / idd1_ma mean the high-side (input) supply, so they hold ADI's VDD2 / IDD2 values, and vdd2_range_v /
+# idd2_ma hold ADI's VDD1 / IDD1. Supply currents are the max values, as in skyworks_isolated_amplifiers.yaml.
+# Not in the comparison vocabulary, so only in notes: the uncommitted input op amp and the two 2.5 V references
+# (ADuM3195/4195), the SHTD shutdown input (ADuM4195-1).
+# Packages: the ADuM3195/4195 datasheet gives no outline drawing (it links to analog.com's package index, not
+# fetched), so RQ-16 and RI-16-2 dimensions are est. (JEDEC QSOP-16, and the RW-16 wide-body outline); RI-8-1 is
+# the outline drawn in the ADuM4122 datasheet (same package option as the gate drivers).
+# Lifecycle: the datasheets state no production status, so it stays unknown.
+source: Analog Devices public datasheets (Rev. as listed), uploaded by the owner on 30 Oct 2026; analog.com itself was not fetched
+manufacturers:
+- name: Analog Devices
+  role: competitor
+  website: https://www.analog.com
+packages:
+- code: QSOP-16 (RQ-16)
+  name: ADI RQ-16 16-lead QSOP (dimensions est., JEDEC MO-137; not drawn in the datasheet)
+  pin_count: 16
+  pitch_mm: 0.635
+  body_length_mm: 4.9
+  body_width_mm: 3.9
+  span_mm: 6.0
+  height_mm: 1.75
+- code: SOIC-16 IC (RI-16-2)
+  name: ADI RI-16-2 16-lead wide-body SOIC with increased creepage (dimensions est.; not drawn in the datasheet)
+  pin_count: 16
+  pitch_mm: 1.27
+  body_length_mm: 10.3
+  body_width_mm: 7.5
+  span_mm: 10.3
+  height_mm: 2.65
+- code: SOIC-8 IC (RI-8-1)
+  name: ADI RI-8-1 8-lead wide-body SOIC with increased creepage (SOIC_IC)
+  pin_count: 8
+  pitch_mm: 1.27
+  body_length_mm: 5.85
+  body_width_mm: 7.5
+  span_mm: 10.31
+  height_mm: 2.65
+datasheets:
+- file: adum3195_adum4195.pdf
+  url: https://www.analog.com/adum4195
+  sha256: e279e6c003668a03e5eb6d72817e63a724fc8126cbb8a94e2a5520ab078ef1e2
+  revision: B
+  revision_date: '2026-02-01'
+  origin: owner upload, 30 Oct 2026
+- file: adum4195-1.pdf
+  url: https://www.analog.com/ADuM4195-1
+  sha256: 356c637ba94cd9ef9f3d2417c11776bd7daa1aeeda37ad05f0151103b3e3def0
+  revision: C
+  revision_date: '2026-02-01'
+  origin: owner upload, 30 Oct 2026
+pinouts:
+  adum3195: [VDD1, GND1, NC, VREF1, NC, VOUT1, NC, GND1, GND2, VOUT2, VIN-, VIN+, VREF2, NC, GND2, VDD2]
+  adum4195_1: [VDD2, VIN, SHTD, GND2, GND1, NC, VOUT, VDD1]
+parts:
+# ---------------------------------------------------------------- ADuM3195 / ADuM4195 (Rev. B)
+- mpn: ADuM3195BRQZ
+  manufacturer: Analog Devices
+  family: isolated_amplifier
+  description: 'ADuM3195: isolated amplifier for voltage sensing, adjustable gain (input op amp), single-ended analog output, 3 kVrms, QSOP-16'
+  package: QSOP-16 (RQ-16)
+  pinout: adum3195
+  datasheet: adum3195_adum4195.pdf
+  datasheet_url: https://www.analog.com/adum3195
+  product_url: https://www.analog.com/adum3195
+  notes: >-
+    Tube of 98. The gain is set with the uncommitted input op amp (VIN+, VIN-, VOUT2); the isolated channel has gain 1
+    (p4, p11). Two 2.5 V reference outputs (VREF1, VREF2). Pins 3 and 5 are NIC (not internally connected), pin 7
+    and pin 14 NC to be tied to ground (p11). Output offset ±6 mV max at 25 °C (p4).
+  lifecycle:
+    status: unknown
+    revision: B
+    revision_date: '2026-02-01'
+    source: 'Datasheet Rev. B (Feb 2026, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 3.0
+    isolation_class: reinforced
+    creepage_mm: 3.5
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 100.0
+    sense_type: voltage
+    input_range: 0.25 to 4.3 V
+    vdd1_range_v: [4.5, 5.5]
+    vdd2_range_v: [4.5, 5.5]
+    temp_range_c: [-40.0, 125.0]
+    gain: 1 V/V
+    offset_uv: 6000.0
+    gain_error_pct: 0.5
+    bandwidth_khz: 210.0
+    snr_db: 69.0
+    idd1_ma: 7.3
+    idd2_ma: 4.9
+  param_sources:
+    isolation_rating_kvrms: adum3195_adum4195.pdf p.1, p.7 (ADuM3195 rated dielectric insulation voltage 3000 V rms, UL 1577)
+    isolation_class: adum3195_adum4195.pdf p.6, p.8 (DIN EN IEC 60747-17 reinforced insulation, VIORM 849 V peak)
+    creepage_mm: adum3195_adum4195.pdf p.7 (ADuM3195 minimum external tracking 3.5 mm)
+    output_type: adum3195_adum4195.pdf p.1 (single-ended output), p.11 (VOUT1)
+    qualification: adum3195_adum4195.pdf p.22 (ordering guide; no W suffix)
+    cmti_kv_us: adum3195_adum4195.pdf p.4 (CMTI min 100 kV/µs, typ 150)
+    sense_type: adum3195_adum4195.pdf p.1 (isolated voltage measurement)
+    input_range: adum3195_adum4195.pdf p.4 (linear output voltage range and op amp input common-mode range 0.25 V to VDD2 - 0.7 V = 4.3 V at VDD2 = 5 V)
+    vdd1_range_v: adum3195_adum4195.pdf p.5, p.7 (ADI VDD2, input side, 4.5 V to 5.5 V)
+    vdd2_range_v: adum3195_adum4195.pdf p.4, p.7 (ADI VDD1, output side, 4.5 V to 5.5 V)
+    temp_range_c: adum3195_adum4195.pdf p.7 (recommended operating ambient temperature)
+    gain: adum3195_adum4195.pdf p.4 (output gain VOUT1/VIN+ = 1, op amp in buffer configuration; adjustable with the op amp)
+    offset_uv: adum3195_adum4195.pdf p.4 (output offset voltage ±6.0 mV max at 25 °C, buffer configuration)
+    gain_error_pct: adum3195_adum4195.pdf p.4 (output gain error ±0.5 % max)
+    bandwidth_khz: adum3195_adum4195.pdf p.4 (output -3 dB bandwidth, typ)
+    snr_db: adum3195_adum4195.pdf p.4 (typ, fIN = 1 kHz, bandwidth 100 kHz)
+    idd1_ma: adum3195_adum4195.pdf p.5 (ADI IDD2, input side, max; typ 5.9)
+    idd2_ma: adum3195_adum4195.pdf p.5 (ADI IDD1, output side, max; typ 4.1)
+    pinout: adum3195_adum4195.pdf p.11
+- like: ADuM3195BRQZ
+  mpn: ADuM3195BRQZ-RL7
+  notes: >-
+    Reel of 1000. The gain is set with the uncommitted input op amp (VIN+, VIN-, VOUT2); the isolated channel has gain
+    1 (p4, p11). Two 2.5 V reference outputs. Output offset ±6 mV max at 25 °C (p4).
+- like: ADuM3195BRQZ
+  mpn: ADuM3195WBRQZ
+  description: 'ADuM3195W: Automotive isolated amplifier for voltage sensing, adjustable gain (input op amp), single-ended analog output, 3 kVrms, QSOP-16'
+  notes: >-
+    Automotive (W) grade, tube of 98. The gain is set with the uncommitted input op amp (VIN+, VIN-, VOUT2); the
+    isolated channel has gain 1 (p4, p11). Two 2.5 V reference outputs. Output offset ±6 mV max at 25 °C (p4).
+  params:
+    qualification: automotive
+  param_sources:
+    isolation_rating_kvrms: adum3195_adum4195.pdf p.1, p.7 (ADuM3195 rated dielectric insulation voltage 3000 V rms, UL 1577)
+    isolation_class: adum3195_adum4195.pdf p.6, p.8 (DIN EN IEC 60747-17 reinforced insulation, VIORM 849 V peak)
+    creepage_mm: adum3195_adum4195.pdf p.7 (ADuM3195 minimum external tracking 3.5 mm)
+    output_type: adum3195_adum4195.pdf p.1 (single-ended output), p.11 (VOUT1)
+    qualification: adum3195_adum4195.pdf p.1 (AEC-Q100 qualified), p.22 (W = qualified for automotive applications)
+    cmti_kv_us: adum3195_adum4195.pdf p.4 (CMTI min 100 kV/µs, typ 150)
+    sense_type: adum3195_adum4195.pdf p.1 (isolated voltage measurement)
+    input_range: adum3195_adum4195.pdf p.4 (linear output voltage range and op amp input common-mode range 0.25 V to VDD2 - 0.7 V = 4.3 V at VDD2 = 5 V)
+    vdd1_range_v: adum3195_adum4195.pdf p.5, p.7 (ADI VDD2, input side, 4.5 V to 5.5 V)
+    vdd2_range_v: adum3195_adum4195.pdf p.4, p.7 (ADI VDD1, output side, 4.5 V to 5.5 V)
+    temp_range_c: adum3195_adum4195.pdf p.7 (recommended operating ambient temperature)
+    gain: adum3195_adum4195.pdf p.4 (output gain VOUT1/VIN+ = 1, op amp in buffer configuration; adjustable with the op amp)
+    offset_uv: adum3195_adum4195.pdf p.4 (output offset voltage ±6.0 mV max at 25 °C, buffer configuration)
+    gain_error_pct: adum3195_adum4195.pdf p.4 (output gain error ±0.5 % max)
+    bandwidth_khz: adum3195_adum4195.pdf p.4 (output -3 dB bandwidth, typ)
+    snr_db: adum3195_adum4195.pdf p.4 (typ, fIN = 1 kHz, bandwidth 100 kHz)
+    idd1_ma: adum3195_adum4195.pdf p.5 (ADI IDD2, input side, max; typ 5.9)
+    idd2_ma: adum3195_adum4195.pdf p.5 (ADI IDD1, output side, max; typ 4.1)
+    pinout: adum3195_adum4195.pdf p.11
+- like: ADuM3195WBRQZ
+  mpn: ADuM3195WBRQZ-RL7
+  notes: >-
+    Automotive (W) grade, reel of 1000. The gain is set with the uncommitted input op amp; the isolated channel has
+    gain 1 (p4, p11). Two 2.5 V reference outputs. Output offset ±6 mV max at 25 °C (p4).
+- mpn: ADuM4195BRIZ
+  manufacturer: Analog Devices
+  family: isolated_amplifier
+  description: 'ADuM4195: isolated amplifier for voltage sensing, adjustable gain (input op amp), single-ended analog output, 5 kVrms reinforced, SOIC_IC-16'
+  package: SOIC-16 IC (RI-16-2)
+  pinout: adum3195
+  datasheet: adum3195_adum4195.pdf
+  datasheet_url: https://www.analog.com/adum4195
+  product_url: https://www.analog.com/adum4195
+  notes: >-
+    Tube of 37. The gain is set with the uncommitted input op amp (VIN+, VIN-, VOUT2); the isolated channel has gain 1
+    (p4, p11). Two 2.5 V reference outputs (VREF1, VREF2). Pins 3 and 5 are NIC (not internally connected), pin 7
+    and pin 14 NC to be tied to ground (p11). Output offset ±6 mV max at 25 °C (p4).
+  lifecycle:
+    status: unknown
+    revision: B
+    revision_date: '2026-02-01'
+    source: 'Datasheet Rev. B (Feb 2026, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.7
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 100.0
+    sense_type: voltage
+    input_range: 0.25 to 4.3 V
+    vdd1_range_v: [4.5, 5.5]
+    vdd2_range_v: [4.5, 5.5]
+    temp_range_c: [-40.0, 125.0]
+    gain: 1 V/V
+    offset_uv: 6000.0
+    gain_error_pct: 0.5
+    bandwidth_khz: 210.0
+    snr_db: 69.0
+    idd1_ma: 7.3
+    idd2_ma: 4.9
+  param_sources:
+    isolation_rating_kvrms: adum3195_adum4195.pdf p.1, p.7 (ADuM4195 rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: adum3195_adum4195.pdf p.6, p.9 (DIN EN IEC 60747-17 reinforced insulation, VIORM 1401 V peak)
+    creepage_mm: adum3195_adum4195.pdf p.7 (ADuM4195 minimum external tracking 8.7 mm)
+    output_type: adum3195_adum4195.pdf p.1 (single-ended output), p.11 (VOUT1)
+    qualification: adum3195_adum4195.pdf p.22 (ordering guide; no W suffix)
+    cmti_kv_us: adum3195_adum4195.pdf p.4 (CMTI min 100 kV/µs, typ 150)
+    sense_type: adum3195_adum4195.pdf p.1 (isolated voltage measurement)
+    input_range: adum3195_adum4195.pdf p.4 (linear output voltage range and op amp input common-mode range 0.25 V to VDD2 - 0.7 V = 4.3 V at VDD2 = 5 V)
+    vdd1_range_v: adum3195_adum4195.pdf p.5, p.7 (ADI VDD2, input side, 4.5 V to 5.5 V)
+    vdd2_range_v: adum3195_adum4195.pdf p.4, p.7 (ADI VDD1, output side, 4.5 V to 5.5 V)
+    temp_range_c: adum3195_adum4195.pdf p.7 (recommended operating ambient temperature)
+    gain: adum3195_adum4195.pdf p.4 (output gain VOUT1/VIN+ = 1, op amp in buffer configuration; adjustable with the op amp)
+    offset_uv: adum3195_adum4195.pdf p.4 (output offset voltage ±6.0 mV max at 25 °C, buffer configuration)
+    gain_error_pct: adum3195_adum4195.pdf p.4 (output gain error ±0.5 % max)
+    bandwidth_khz: adum3195_adum4195.pdf p.4 (output -3 dB bandwidth, typ)
+    snr_db: adum3195_adum4195.pdf p.4 (typ, fIN = 1 kHz, bandwidth 100 kHz)
+    idd1_ma: adum3195_adum4195.pdf p.5 (ADI IDD2, input side, max; typ 5.9)
+    idd2_ma: adum3195_adum4195.pdf p.5 (ADI IDD1, output side, max; typ 4.1)
+    pinout: adum3195_adum4195.pdf p.11
+- like: ADuM4195BRIZ
+  mpn: ADuM4195BRIZ-RL
+  notes: >-
+    Reel of 1000. The gain is set with the uncommitted input op amp (VIN+, VIN-, VOUT2); the isolated channel has gain
+    1 (p4, p11). Two 2.5 V reference outputs. Output offset ±6 mV max at 25 °C (p4).
+- like: ADuM4195BRIZ
+  mpn: ADuM4195WBRIZ
+  description: 'ADuM4195W: Automotive isolated amplifier for voltage sensing, adjustable gain (input op amp), single-ended analog output, 5 kVrms reinforced, SOIC_IC-16'
+  notes: >-
+    Automotive (W) grade, tube of 37. The gain is set with the uncommitted input op amp (VIN+, VIN-, VOUT2); the
+    isolated channel has gain 1 (p4, p11). Two 2.5 V reference outputs. Output offset ±6 mV max at 25 °C (p4).
+  params:
+    qualification: automotive
+  param_sources:
+    isolation_rating_kvrms: adum3195_adum4195.pdf p.1, p.7 (ADuM4195 rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: adum3195_adum4195.pdf p.6, p.9 (DIN EN IEC 60747-17 reinforced insulation, VIORM 1401 V peak)
+    creepage_mm: adum3195_adum4195.pdf p.7 (ADuM4195 minimum external tracking 8.7 mm)
+    output_type: adum3195_adum4195.pdf p.1 (single-ended output), p.11 (VOUT1)
+    qualification: adum3195_adum4195.pdf p.1 (AEC-Q100 qualified), p.22 (W = qualified for automotive applications)
+    cmti_kv_us: adum3195_adum4195.pdf p.4 (CMTI min 100 kV/µs, typ 150)
+    sense_type: adum3195_adum4195.pdf p.1 (isolated voltage measurement)
+    input_range: adum3195_adum4195.pdf p.4 (linear output voltage range and op amp input common-mode range 0.25 V to VDD2 - 0.7 V = 4.3 V at VDD2 = 5 V)
+    vdd1_range_v: adum3195_adum4195.pdf p.5, p.7 (ADI VDD2, input side, 4.5 V to 5.5 V)
+    vdd2_range_v: adum3195_adum4195.pdf p.4, p.7 (ADI VDD1, output side, 4.5 V to 5.5 V)
+    temp_range_c: adum3195_adum4195.pdf p.7 (recommended operating ambient temperature)
+    gain: adum3195_adum4195.pdf p.4 (output gain VOUT1/VIN+ = 1, op amp in buffer configuration; adjustable with the op amp)
+    offset_uv: adum3195_adum4195.pdf p.4 (output offset voltage ±6.0 mV max at 25 °C, buffer configuration)
+    gain_error_pct: adum3195_adum4195.pdf p.4 (output gain error ±0.5 % max)
+    bandwidth_khz: adum3195_adum4195.pdf p.4 (output -3 dB bandwidth, typ)
+    snr_db: adum3195_adum4195.pdf p.4 (typ, fIN = 1 kHz, bandwidth 100 kHz)
+    idd1_ma: adum3195_adum4195.pdf p.5 (ADI IDD2, input side, max; typ 5.9)
+    idd2_ma: adum3195_adum4195.pdf p.5 (ADI IDD1, output side, max; typ 4.1)
+    pinout: adum3195_adum4195.pdf p.11
+- like: ADuM4195WBRIZ
+  mpn: ADuM4195WBRIZ-RL
+  notes: >-
+    Automotive (W) grade, reel of 1000. The gain is set with the uncommitted input op amp; the isolated channel has
+    gain 1 (p4, p11). Two 2.5 V reference outputs. Output offset ±6 mV max at 25 °C (p4).
+# ---------------------------------------------------------------- ADuM4195-1 (Rev. C)
+- mpn: ADUM4195-1BRIZ
+  manufacturer: Analog Devices
+  family: isolated_amplifier
+  description: 'ADuM4195-1: isolated amplifier for voltage sensing, fixed gain 1, single-ended analog output, 5 kVrms reinforced, SOIC_IC-8'
+  package: SOIC-8 IC (RI-8-1)
+  pinout: adum4195_1
+  datasheet: adum4195-1.pdf
+  datasheet_url: https://www.analog.com/ADuM4195-1
+  product_url: https://www.analog.com/ADuM4195-1
+  notes: >-
+    Tube of 80. Fixed gain = 1 (buffered input VIN), wide input/output range 0.25 V to 4.3 V typ (p1, p3). SHTD
+    shutdown input, active high (p8). Output offset ±5 mV max at 25 °C (p3).
+  lifecycle:
+    status: unknown
+    revision: C
+    revision_date: '2026-02-01'
+    source: 'Datasheet Rev. C (Feb 2026, owner upload 30 Oct 2026) states no production status'
+  params:
+    isolation_rating_kvrms: 5.0
+    isolation_class: reinforced
+    creepage_mm: 8.3
+    output_type: analog, single-ended
+    qualification: industrial
+    cmti_kv_us: 100.0
+    sense_type: voltage
+    input_range: 0.25 to 4.3 V
+    vdd1_range_v: [4.5, 5.5]
+    vdd2_range_v: [4.5, 5.5]
+    temp_range_c: [-40.0, 125.0]
+    gain: 1 V/V
+    offset_uv: 5000.0
+    gain_error_pct: 0.5
+    bandwidth_khz: 210.0
+    snr_db: 69.0
+    idd1_ma: 7.3
+    idd2_ma: 4.9
+  param_sources:
+    isolation_rating_kvrms: adum4195-1.pdf p.1, p.4 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: adum4195-1.pdf p.4-5 (DIN EN IEC 60747-17 reinforced insulation, VIORM 1401 V peak)
+    creepage_mm: adum4195-1.pdf p.5 (minimum external tracking 8.3 mm)
+    output_type: adum4195-1.pdf p.1 (single-ended output), p.8 (VOUT)
+    qualification: adum4195-1.pdf p.16 (ordering guide; no W suffix)
+    cmti_kv_us: adum4195-1.pdf p.3 (CMTI min 100 kV/µs, typ 150)
+    sense_type: adum4195-1.pdf p.1 (isolated voltage measurement)
+    input_range: adum4195-1.pdf p.1 (wide input/output range 0.25 V to 4.3 V typ), p.3 (linear output range 0.25 V to VDD2 - 0.7 V)
+    vdd1_range_v: adum4195-1.pdf p.3, p.5 (ADI VDD2, input side, 4.5 V to 5.5 V)
+    vdd2_range_v: adum4195-1.pdf p.3, p.5 (ADI VDD1, output side, 4.5 V to 5.5 V)
+    temp_range_c: adum4195-1.pdf p.5 (recommended operating ambient temperature)
+    gain: adum4195-1.pdf p.1 (fixed gain = 1), p.3
+    offset_uv: adum4195-1.pdf p.3 (output offset voltage ±5.0 mV max at 25 °C)
+    gain_error_pct: adum4195-1.pdf p.3 (output gain error ±0.5 % max)
+    bandwidth_khz: adum4195-1.pdf p.3 (output -3 dB bandwidth, typ)
+    snr_db: adum4195-1.pdf p.3 (typ, fIN = 1 kHz, bandwidth 100 kHz)
+    idd1_ma: adum4195-1.pdf p.3 (ADI IDD2, input side, max; typ 5.9)
+    idd2_ma: adum4195-1.pdf p.3 (ADI IDD1, output side, max; typ 4.1)
+    pinout: adum4195-1.pdf p.8
+- like: ADUM4195-1BRIZ
+  mpn: ADUM4195-1BRIZ-R7
+  notes: >-
+    Reel of 400. Fixed gain = 1, input/output range 0.25 V to 4.3 V typ (p1, p3). SHTD shutdown input, active high
+    (p8). Output offset ±5 mV max at 25 °C (p3).
+- like: ADUM4195-1BRIZ
+  mpn: ADUM4195-1WBRIZ
+  description: 'ADuM4195-1W: Automotive isolated amplifier for voltage sensing, fixed gain 1, single-ended analog output, 5 kVrms reinforced, SOIC_IC-8'
+  notes: >-
+    Automotive (W) grade, tube of 80. Fixed gain = 1, input/output range 0.25 V to 4.3 V typ (p1, p3). SHTD shutdown
+    input, active high (p8). Output offset ±5 mV max at 25 °C (p3).
+  params:
+    qualification: automotive
+  param_sources:
+    isolation_rating_kvrms: adum4195-1.pdf p.1, p.4 (rated dielectric insulation voltage 5000 V rms, UL 1577)
+    isolation_class: adum4195-1.pdf p.4-5 (DIN EN IEC 60747-17 reinforced insulation, VIORM 1401 V peak)
+    creepage_mm: adum4195-1.pdf p.5 (minimum external tracking 8.3 mm)
+    output_type: adum4195-1.pdf p.1 (single-ended output), p.8 (VOUT)
+    qualification: adum4195-1.pdf p.1 (AEC-Q100 qualified), p.16 (W = qualified for automotive applications)
+    cmti_kv_us: adum4195-1.pdf p.3 (CMTI min 100 kV/µs, typ 150)
+    sense_type: adum4195-1.pdf p.1 (isolated voltage measurement)
+    input_range: adum4195-1.pdf p.1 (wide input/output range 0.25 V to 4.3 V typ), p.3 (linear output range 0.25 V to VDD2 - 0.7 V)
+    vdd1_range_v: adum4195-1.pdf p.3, p.5 (ADI VDD2, input side, 4.5 V to 5.5 V)
+    vdd2_range_v: adum4195-1.pdf p.3, p.5 (ADI VDD1, output side, 4.5 V to 5.5 V)
+    temp_range_c: adum4195-1.pdf p.5 (recommended operating ambient temperature)
+    gain: adum4195-1.pdf p.1 (fixed gain = 1), p.3
+    offset_uv: adum4195-1.pdf p.3 (output offset voltage ±5.0 mV max at 25 °C)
+    gain_error_pct: adum4195-1.pdf p.3 (output gain error ±0.5 % max)
+    bandwidth_khz: adum4195-1.pdf p.3 (output -3 dB bandwidth, typ)
+    snr_db: adum4195-1.pdf p.3 (typ, fIN = 1 kHz, bandwidth 100 kHz)
+    idd1_ma: adum4195-1.pdf p.3 (ADI IDD2, input side, max; typ 5.9)
+    idd2_ma: adum4195-1.pdf p.3 (ADI IDD1, output side, max; typ 4.1)
+    pinout: adum4195-1.pdf p.8
+- like: ADUM4195-1WBRIZ
+  mpn: ADUM4195-1WBRIZ-R7
+  notes: >-
+    Automotive (W) grade, reel of 400. Fixed gain = 1, input/output range 0.25 V to 4.3 V typ (p1, p3). SHTD shutdown
+    input, active high (p8). Output offset ±5 mV max at 25 °C (p3).

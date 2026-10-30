@@ -84,3 +84,35 @@ def test_adum1400_grades():
     assert p["ADuM1401WTRWZ"]["params"]["qualification"] == "automotive"
     assert p["ADuM1401WTRWZ"]["params"]["temp_range_c"] == [-40.0, 125.0]
     assert p["ADuM1400ARW"]["params"]["channel_config"] == "4/0"
+
+
+def test_space_grade_and_isopower():
+    """adum141es.pdf Rev. C p.1: QML Level V space grade (not AEC-Q100); adum6420a...pdf Rev. C p.1: isoPower, only
+    the ADuM6421AW is automotive (p.33)."""
+    p = parts()
+    es = p["ADuM141E1L703F"]["params"]
+    assert es["qualification"] == "space" and es["channel_config"] == "3/1" and "isolation_class" not in es
+    assert p["ADuM6421AWBRNZ5"]["params"]["qualification"] == "automotive"
+    assert p["ADuM6421ABRNZ5"]["params"]["qualification"] == "industrial"
+    assert {x["params"]["integrated_power"] for m, x in p.items() if m.startswith(("ADuM642", "ADuM541"))} == {
+        "isolated dc-dc"}
+    assert p["ADuM6424ABRNZ5"]["params"]["channel_config"] == "0/4"
+
+
+def test_space_grade_is_never_crossed_to_a_lower_grade(session):
+    """A space-grade reference compares as unknown against industrial and automotive parts, and qualification is a
+    must-meet: no cross at all, never an automotive "equivalent"."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+    from app.models import Part
+    from app.services.seed import load_file
+
+    root = FILE.parents[0]
+    for f in ("adi_digital_isolators.yaml", "skyworks_si86.yaml"):
+        load_file(session, root / f)
+    session.commit()
+    ref = session.query(Part).filter_by(mpn="ADuM141E1L703F").one()
+    rules = get_rules("digital_isolator")
+    for mpn in ("SI8641ET-AS", "SI8641ET-IS"):
+        r = cross(ref, session.query(Part).filter_by(mpn=mpn).one(), rules)
+        assert r.hard_fail and not r.categories

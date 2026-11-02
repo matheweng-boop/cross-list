@@ -1,0 +1,230 @@
+{% set est = '<span class="kn-est" title="BizDev\'s own reasoning, not from a source">est</span>' %}
+<link rel="stylesheet" href="/static/vz/uwb_positioning.css">
+<p class="small">Owner, 2 Nov 2026: "interactive visuals for the engineering knowledge on ultra-wideband, specifically two-way
+  ranging, time difference of arrival, lightweight time difference of arrival, and phase difference of arrival ... packed
+  into a single page". Related: <a href="/reviews/how/uwb">Part knowledge: UWB</a> · <a href="/library/auto_uwb">Systems
+  library: Automotive UWB</a> · <a href="/engineering/uwb_signal_path">UWB signal path</a> ·
+  <a href="/engineering/uwb_wifi_coexistence">UWB and Wi-Fi channels</a> · <a href="/visuals#uwb">UWB range, time of flight
+  and first path</a>. Points marked {{ est|safe }} are BizDev's own reasoning.</p>
+
+<h2 id="intro">Four ways to find a position</h2>
+<p>UWB sends pulses about 2 ns long and timestamps them very precisely. Light travels 30 cm in a nanosecond, so a good
+  timestamp is a good distance. The same radio can use those timestamps in four ways:</p>
+<div class="uwp-cards">
+  <div class="uwp-card"><h3><a href="#twr">Two-way ranging (TWR)</a></h3><p><b>How far?</b> Two devices swap messages and
+    time the round trip. Car keys, door locks, item finding.</p></div>
+  <div class="uwp-card"><h3><a href="#tdoa">Time difference of arrival (TDoA)</a></h3><p><b>Where in the building?</b> One
+    message, several synchronised anchors compare arrival times. Asset tracking, indoor navigation.</p></div>
+  <div class="uwp-card"><h3><a href="#ltdoa">Lightweight TDoA</a> {{ est|safe }}</h3><p><b>The lightest tag.</b> Our reading:
+    TDoA where the tag only sends one short blink. Not a standard name; see its section.</p></div>
+  <div class="uwp-card"><h3><a href="#pdoa">Phase difference of arrival (PDoA)</a></h3><p><b>Which direction?</b> Two
+    antennas on one receiver compare the phase. With the TWR distance, one anchor gives a position.</p></div>
+</div>
+<p class="small">Each section has a live visual: move the sliders, drag the points (or tap the plan, or Tab to a point and
+  use the arrow keys) and the numbers update. The same visuals are on <a href="/visuals#uwbtwr">Interactive visuals</a>
+  under UWB. The <a href="#compare">comparison table</a> puts the four side by side.</p>
+
+<h2 id="twr">1 · Two-way ranging (TWR)</h2>
+<p>The tag sends a <b>poll</b>. The anchor answers with a <b>response</b> after a reply time that it measures with its own
+  clock. The tag measures the whole round trip with its clock; round trip minus reply time is twice the flight time. That is
+  single-sided ranging (SS-TWR). A third message, the <b>final</b>, gives both sides a round trip and a reply time:
+  double-sided ranging (DS-TWR).</p>
+<p>Why the third message: each crystal is a few ppm off (IEEE 802.15.4a allows up to ±20 ppm). In single-sided ranging the
+  error is about c × reply time × (difference of the two crystal errors) ÷ 2: a 400 µs reply and 15 ppm between the two
+  crystals give 90 cm. The asymmetric double-sided formula<br>
+  <b>ToF = (T<sub>round1</sub>·T<sub>round2</sub> − T<sub>reply1</sub>·T<sub>reply2</sub>) / (T<sub>round1</sub> +
+  T<sub>round2</sub> + T<sub>reply1</sub> + T<sub>reply2</sub>)</b><br>
+  leaves only the distance × the average crystal error (25 µm at 10 m and 2.5 ppm), whatever the two reply times are. The
+  plain average of the two round trips cancels the clock error only when both reply times are equal.</p>
+<div class="uwp-vz" data-uwp="uwbtwr" role="region" aria-label="Two-way ranging visual"><noscript><p class="small">The live
+  visual needs JavaScript; the same equations are on this page and on Interactive visuals.</p></noscript></div>
+<div class="uwp-when">
+  <h3>When to use it</h3>
+  <ul>
+    <li><b>Something that opens or unlocks:</b> a phone or key fob ranges to the car or door. CCC Digital Key and Aliro door
+      locks use double-sided TWR, secured by the 802.15.4z STS (Samsung Research on FiRa 4.0).</li>
+    <li><b>Finding one item with a phone:</b> distance from TWR, direction from <a href="#pdoa">PDoA</a>.</li>
+    <li><b>Few tags, no fixed infrastructure:</b> any two devices can range; anchors need no synchronisation.</li>
+    <li><b>Avoid for</b> hundreds of tags at high rates or coin-cell tags that must last years: every fix costs three or four
+      messages per anchor and the tag has to receive.</li>
+  </ul>
+  <p class="small"><b>What it costs.</b> A 2-D position needs at least three anchors (one more than the dimensions). A study
+    with DWM1000 radios counted 4 messages per anchor when the tag starts (3 when the anchor starts), so 12 messages per 2-D
+    fix and about 10-12 fixes per second for one tag, because an anchor needs about 500 µs to reply (Ramesh et al.). One poll
+    answered by all anchors in turn cuts this to N + 2 messages {{ est|safe }}. The tag's receiver is on in every exchange
+    and receiving draws 72-88 mA on a DW3000 (our <a href="/reviews/qorvo-dw3000-uwb">DW3000 review</a>), so a TWR tag at
+    one fix per second lasts months on a coin cell, not years {{ est|safe }} (see the <a href="#ltdoa">lightweight TDoA</a>
+    visual). On one channel, a few hundred tags at one fix per second {{ est|safe }}.</p>
+</div>
+
+<h2 id="tdoa">2 · Time difference of arrival (TDoA)</h2>
+<p>The tag sends one short message, a <b>blink</b>. Every anchor that hears it notes the arrival time. Nobody knows when
+  the tag sent it, but the <b>difference</b> between two arrival times is known, and it puts the tag on a hyperbola: the
+  line where the distance to one anchor minus the distance to the other stays the same. Three anchors give two hyperbolas
+  that cross at the tag (2-D); four give 3-D or a spare. GPS works the same way, with satellites as anchors (see
+  <a href="/engineering/gnss_how_it_works">GNSS: how satellite positioning works</a>).</p>
+<p>The catch: the anchors' clocks must agree to a fraction of a nanosecond, because 1 ns of sync error is 30 cm of range
+  difference. Crystals drift apart quickly (two DWM1000 nodes drifted 26 ns per second in one test), so anchors are kept in
+  sync continuously, over cables or by sync messages from a reference anchor (Ramesh et al.).</p>
+<div class="uwp-side">
+  <div><h3>UL-TDoA (uplink)</h3><ul>
+    <li>The tag only sends short blinks; the anchors listen.</li>
+    <li>Very low tag power: no receiver and no maths on the tag.</li>
+    <li>One message per fix, so it scales to many tags.</li>
+    <li>Needs synchronised anchors and a backhaul (Ethernet or wireless) to a location server, which computes and knows every
+      position.</li>
+    <li>Standardised in FiRa Core 4.0 (Dec 2025): "UL-TDoA tags" tracked by "UL-TDoA anchors".</li></ul></div>
+  <div><h3>DL-TDoA (downlink)</h3><ul>
+    <li>The anchors send in turn; the tag only listens and computes its own position, like a GPS receiver.</li>
+    <li>Any number of tags: they never transmit.</li>
+    <li>Privacy: the infrastructure does not learn who is there.</li>
+    <li>The tag's receiver must be on for the anchors' messages, which costs more than a blink; the update rate is set by
+      the anchors' round (Ramesh et al.).</li>
+    <li>Used for indoor navigation of phones and robots (MobileKnowledge FiRa kit).</li></ul></div>
+</div>
+<div class="uwp-vz" data-uwp="uwbtdoa" role="region" aria-label="TDoA floor plan visual"><noscript><p class="small">The live
+  visual needs JavaScript.</p></noscript></div>
+<div class="uwp-when">
+  <h3>When to use it</h3>
+  <ul>
+    <li><b>Many tags in a fixed area</b> (UL-TDoA): pallets, tools, carts, workers, patients' equipment, players. Factories,
+      warehouses, hospitals, arenas.</li>
+    <li><b>Phones or robots that find their own way</b> without being tracked (DL-TDoA): indoor navigation in shops,
+      airports, venues.</li>
+    <li><b>Avoid</b> where nobody will install and synchronise anchors, or where only the distance to one device matters
+      (car key: use TWR).</li>
+    <li><b>Accuracy:</b> MobileKnowledge quotes 90 % of fixes within ±20 cm (UL-TDoA) and ±10 cm (DL-TDoA), one 4-anchor
+      cell per 500 m²; a DWM1000 test put 92 % within 20 cm in an 8 m room with a sync message every 100 ms (Ramesh et al.).</li>
+  </ul>
+</div>
+
+<h2 id="ltdoa">3 · Lightweight TDoA {{ est|safe }}</h2>
+<div class="uwp-finding" role="note">
+  <p><b>What we found.</b> "Lightweight TDoA" is not a defined method name in the public material we checked: the FiRa
+    Core 4.0 announcement, Samsung Research's summary of FiRa 4.0, IEEE 802.15.4ab documents found by search, three arXiv
+    papers and vendor pages. The FiRa and IEEE specifications themselves are for members or paid, so we could not check
+    their text.</p>
+  <p><b>Closest use of the word:</b> FiRa 4.0's UL-TDoA, in which a device "periodically send[s] a lightweight uplink
+    message" and the UL-TDoA anchors estimate its location; the tags stay simple, run on coin cells and need no computing
+    power for the location (Samsung Research). FiRa's own release says the design "optimizes tag simplicity and power
+    consumption".</p>
+  <p><b>Open question for the owner:</b> Which document or product used "lightweight TDoA"? With it we can replace our
+    reading below by its definition.</p>
+</div>
+<p><b>Our reading</b> {{ est|safe }}: lightweight TDoA is TDoA with the tag cut to the minimum. It wakes, sends one short
+  blink and sleeps again: no listening, no ranging, no maths. Anchors, sync and server stay as in UL-TDoA, so the hyperbolas
+  above do not change; what changes is the tag's battery, its cost and how the tags share the air. Other possible readings:
+  DL-TDoA (the tag only listens), or TDoA whose anchors synchronise over the air instead of by cable.</p>
+<div class="uwp-side">
+  <div><h3>Classic TDoA tag {{ est|safe }}</h3><ul>
+    <li>Also listens: for its time slot, commands or new settings.</li>
+    <li>Scheduled slots: no collisions, but every tag must hear the schedule.</li>
+    <li>Tag and anchors usually from one vendor's system.</li>
+    <li>Battery in our model: a few months at one fix per second, because the receiver is on in every fix.</li></ul></div>
+  <div class="uwp-light-card"><h3>Lightweight TDoA tag {{ est|safe }}</h3><ul>
+    <li>Only transmits: one short blink per fix, never listens.</li>
+    <li>Random access: no schedule to hear; with many tags some blinks collide and that fix is skipped.</li>
+    <li>Interoperable tags and anchors: FiRa 4.0 certification covers UL-TDoA.</li>
+    <li>Battery in our model: about two years at one fix per second; a simpler, cheaper tag.</li>
+    <li>Nothing can be sent back to the tag (no change of rate or settings on the fly).</li></ul></div>
+</div>
+<div class="uwp-vz" data-uwp="uwbltdoa" role="region" aria-label="Lightweight TDoA visual"><noscript><p class="small">The
+  live visual needs JavaScript.</p></noscript></div>
+<div class="uwp-when">
+  <h3>When to use it</h3>
+  <ul>
+    <li><b>Many cheap tags that only need to be found:</b> pallets, tools, containers, equipment.</li>
+    <li><b>Battery life comes first</b> and an occasional skipped update does not matter.</li>
+    <li><b>Avoid</b> when the tag must know its own position (DL-TDoA), must receive commands quickly, or needs every single
+      update (use a scheduled, two-way tag).</li>
+  </ul>
+</div>
+
+<h2 id="pdoa">4 · Phase difference of arrival (PDoA)</h2>
+<p>A receiver with two antenna ports about half a wavelength apart hears the same pulse twice. Arriving from the side, the
+  signal travels an extra d·sin θ to the far antenna, which shows as a phase difference <b>Δφ = 2π·d·sin θ / λ</b>. The chip
+  measures Δφ and works back to the angle, <b>θ = arcsin(λ·Δφ / (2π·d))</b> (Margiani et al.). The wavelength is 46.2 mm
+  on channel 5 (6489.6 MHz) and 37.5 mm on channel 9 (7987.2 MHz); half of it, 23.1 mm or 18.8 mm, is the usual spacing.</p>
+<ul>
+  <li><b>Ambiguity:</b> the phase repeats every 360°. With d above λ/2, two or more angles give the same reading, so the
+    spacing stays at or below λ/2, or a third antenna is added.</li>
+  <li><b>Accuracy falls off to the sides:</b> straight ahead the phase changes fastest with angle; towards ±90° it hardly
+    changes, so the same phase noise gives a much larger angle error. A two-antenna DW3220 node was linear within ±45°,
+    above 5° average error around ±60° and of little use beyond, with 2.4° average error in a 90° range around the centre
+    (Margiani et al.).</li>
+  <li><b>Front or back:</b> two antennas cannot tell whether the signal comes from in front or behind; the angle only holds
+    within ±90°.</li>
+  <li><b>One anchor gives a position:</b> TWR distance r plus angle θ: x = r·sin θ, y = r·cos θ. The error across the line of
+    sight is r × the angle error: 5° at 5 m is about 44 cm {{ est|safe }}.</li>
+  <li><b>Needs STS:</b> on the DW3000 the internal antenna switch for PDoA only runs on 802.15.4z packets with an STS
+    (Margiani et al.; our <a href="/reviews/qorvo-dw3000-uwb">DW3000 review</a>), which quotes PDoA ±10° and an angle of
+    about ±5°.</li>
+</ul>
+<div class="uwp-vz" data-uwp="uwbpdoa" role="region" aria-label="PDoA visual"><noscript><p class="small">The live visual
+  needs JavaScript.</p></noscript></div>
+<div class="uwp-when">
+  <h3>When to use it</h3>
+  <ul>
+    <li><b>Item finding:</b> the phone shows an arrow to the tag (distance from TWR, direction from PDoA).</li>
+    <li><b>Car access:</b> one anchor with two antennas tells which side of the car the key is on; a vendor claims fewer
+      anchors per car {{ est|safe }}.</li>
+    <li><b>Point and control:</b> pointing a phone at a lamp, speaker or door.</li>
+    <li><b>Avoid</b> for tags far off to the side (beyond about ±60°) or behind the antenna pair, unless more antennas or
+      anchors cover them; calibrate the phase offset between the two receive paths on every board.</li>
+  </ul>
+</div>
+
+<h2 id="compare">Side by side</h2>
+<div class="table-wrap"><table class="small uwp-cmp-table">
+  <thead><tr><th scope="col"></th><th scope="col">TWR (double-sided)</th><th scope="col">UL-TDoA</th><th scope="col">DL-TDoA</th><th scope="col">Lightweight TDoA {{ est|safe }}</th><th scope="col">PDoA (with TWR)</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Messages per fix</th><td>3-4 per anchor: about 12 for 2-D; N + 2 if one poll serves all anchors {{ est|safe }}</td><td>1 blink from the tag, plus the anchors' sync messages</td><td>None from the tag; one round of anchor messages serves every tag</td><td>1 short blink</td><td>One TWR exchange (2-4 messages) with one anchor</td></tr>
+    <tr><th scope="row">Tag power</th><td>Highest: transmits and receives in every exchange</td><td>Very low: transmit only</td><td>Medium: receiver on for the anchors' round</td><td>Lowest: wake-up and one short transmission</td><td>As TWR; the angle is measured by the two-antenna side</td></tr>
+    <tr><th scope="row">Number of tags</th><td>Tens to a few hundred per channel {{ est|safe }}</td><td>Hundreds to thousands, limited by blink collisions {{ est|safe }}</td><td>Unlimited</td><td>As UL-TDoA</td><td>As TWR</td></tr>
+    <tr><th scope="row">Infrastructure</th><td>Anchors, no sync needed</td><td>3+ anchors (4 for 3-D), nanosecond sync, backhaul, location server</td><td>Synchronised anchors; no backhaul needed for positions</td><td>As UL-TDoA</td><td>One anchor with 2 antennas (3 for 3-D), phase calibration</td></tr>
+    <tr><th scope="row">Accuracy (typical)</th><td>±6 cm per range after calibration, ±15 cm without (DW3110, line of sight)</td><td>90 % within ±20 cm (MobileKnowledge); 92 % within 20 cm in an 8 m room (Ramesh et al.)</td><td>90 % within ±10 cm (MobileKnowledge)</td><td>As UL-TDoA {{ est|safe }}</td><td>Angle about ±5° (DW3000), 2.4° average within ±45° (Margiani et al.); position error grows with distance</td></tr>
+    <tr><th scope="row">Privacy</th><td>Only the two devices know the distance; STS protects it</td><td>The infrastructure tracks every tag</td><td>High: only the tag knows where it is</td><td>The infrastructure tracks every tag</td><td>As TWR</td></tr>
+    <tr><th scope="row">Typical uses</th><td>Car access (CCC Digital Key), door locks (Aliro), item finding</td><td>Asset tracking, worker safety, sports, factories, hospitals</td><td>Indoor navigation for phones, robots and drones</td><td>Cheap coin-cell asset tags</td><td>Item finding (arrow on the phone), car access (which side), point and control</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="parts">Where our parts sit</h2>
+<p>All four methods run on the same UWB radio. What changes is the number of antenna ports, how often the receiver is on,
+  and the front end around the chip. The full parts table is in <a href="/reviews/how/uwb">Part knowledge: UWB</a>; the
+  front end is in <a href="/engineering/uwb_signal_path">UWB signal path</a>, channel choice in
+  <a href="/engineering/uwb_wifi_coexistence">UWB and Wi-Fi channels</a>, and the car-key equations in the
+  <a href="/visuals#uwb">UWB range and first path visual</a>.</p>
+<div class="table-wrap"><table class="small">
+  <thead><tr><th scope="col">Part (Qorvo)</th><th scope="col">Antenna ports</th><th scope="col">PDoA (two-antenna receive)</th><th scope="col">Status in our catalogue</th></tr></thead>
+  <tbody>
+    <tr><td><a href="/find?q=QM33120W">QM33120W</a></td><td>2 ("dual RF port")</td><td><b>Yes</b></td><td>Standard</td></tr>
+    <tr><td><a href="/find?q=DW3120">DW3120</a></td><td>2</td><td><b>Yes</b> (PDoA ±10°, angle about ±5°)</td><td>Discontinued</td></tr>
+    <tr><td><a href="/find?q=DW3220">DW3220</a></td><td>2 (QFN)</td><td><b>Yes</b> (the chip in the Margiani et al. study)</td><td>Discontinued</td></tr>
+    <tr><td>DW3110, DW3210, QM33110W</td><td>1</td><td>No on their own; angle needs an external antenna switch</td><td>Standard</td></tr>
+    <tr><td>DW1000</td><td>1</td><td>No (no STS: 802.15.4-2011 generation)</td><td>Standard</td></tr>
+    <tr><td>QM35825, QPF5100Q, DW3300Q</td><td colspan="2">Antenna ports not in our data</td><td>See Part knowledge: UWB</td></tr>
+  </tbody>
+</table></div>
+<ul class="small">
+  <li><b>Angle at a car anchor:</b> SKY5A2108 (Skyworks SPDT switch, 2.4-8.3 GHz, AEC-Q100 Grade 2) switches two antennas
+    for angle; terminate the unused antenna in 50 Ω (Skyworks AN1451, quoted in Part knowledge). QPC8019Q (Qorvo SPDT) covers
+    channel 5 but not the top of channel 9 {{ est|safe }}.</li>
+  <li><b>Weak links and anchors:</b> QM14068 (bypass LNA, 6.2-8.3 GHz) adds receive gain where TDoA anchors or car anchors
+    must hear distant tags; QM14070 (PA with bypass) only makes up board losses under the power limit.</li>
+  <li><b>Tags and anchors for TDoA:</b> DWM3000 (module for real-time locating systems), DWM3001C (UWB with a Bluetooth LE SoC
+    and motion sensor) and QPK3000 (RTLS module, details not in our data). A lightweight tag needs only one antenna port;
+    the anchors carry the receivers, the sync and most of the front-end content {{ est|safe }}.</li>
+</ul>
+
+<h2 id="sources">Sources</h2>
+<ol class="small">
+  <li>FiRa Consortium, <a href="https://www.firaconsortium.org/news/press-releases/2025/12/fira-consortium-unveils-fira-core-4-0-specifications-and-certification" target="_blank" rel="noopener">FiRa Consortium Unveils FiRa Core 4.0 Specifications and Certification Program</a>, 3 Dec 2025 (read 2 Nov 2026).</li>
+  <li>Samsung Research (Jieun Keum, Gyubong Oh), <a href="https://research.samsung.com/blog/FiRa-4-0-Specification-Release-and-Certification-Program-launching" target="_blank" rel="noopener">FiRa 4.0 Specification Release and Certification Program launching</a> (read 2 Nov 2026): UL-TDoA's "lightweight uplink message", DS-TWR for Aliro.</li>
+  <li>R. Ramesh et al., <a href="https://arxiv.org/abs/2008.04248" target="_blank" rel="noopener">Robust and Scalable Techniques for TWR and TDoA based localization using Ultra Wide Band Radios</a>, arXiv 2008.04248 (IISc, 2020): message counts, forward and reverse TDoA, clock drift, accuracy.</li>
+  <li>M. A. Shalaby, C. C. Cossette, J. R. Forbes, J. Le Ny, <a href="https://arxiv.org/abs/2211.00538" target="_blank" rel="noopener">Reducing Two-Way Ranging Variance by Signal-Timing Optimization</a>, arXiv 2211.00538 (IEEE TAES): single-sided bias, ±20 ppm in 802.15.4a, unbiased double-sided ranging. The asymmetric formula is from D. Neirynck, E. Luk, M. McLaughlin, "An alternative double-sided two-way ranging method" (13th Workshop on Positioning, Navigation and Communication), as cited there; that paper itself not read.</li>
+  <li>T. Margiani et al., <a href="https://arxiv.org/abs/2312.13672" target="_blank" rel="noopener">Angle of Arrival and Centimeter Distance Estimation on a Smart UWB Sensor Node</a>, arXiv 2312.13672 (IEEE Transactions on Instrumentation and Measurement, 2023): PDoA to angle, λ/2 spacing, front-back ambiguity, accuracy against angle, STS for the antenna switch.</li>
+  <li>MobileKnowledge, <a href="https://www.themobileknowledge.com/product/mk-uwb-kit-rtls-2-0/" target="_blank" rel="noopener">MK UWB Kit RTLS 2.0</a> (FiRa UL-TDoA and DL-TDoA kit; as summarised in our <a href="/reference-designs?q=MK%20UWB">reference designs</a>, collected 28 Oct 2026).</li>
+  <li>Our pages: <a href="/reviews/qorvo-dw3000-uwb">DW3000 review</a> (DW3000 datasheet v1.3: ranging ±6 cm, PDoA ±10°, receive 72-88 mA, frames about 170 µs), <a href="/reviews/how/uwb">Part knowledge: UWB</a> (ports, status, AN1451), the Qorvo catalogue rows. No Qorvo web page was requested for this note.</li>
+  <li>Equations: hyperbolic positioning, phase and wavelength are textbook background; the error formulas in the visuals are our algebra on the formulas above, checked by unit tests. Battery, airtime and capacity figures in the visuals are our model {{ est|safe }}.</li>
+</ol>
+<script src="/static/vz/uwb_positioning.js"></script>

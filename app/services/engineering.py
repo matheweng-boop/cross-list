@@ -53,6 +53,12 @@ NOTES = {
     "gnss_how_it_works": ("GNSS: how satellite positioning works",
                           "Pseudoranges and four satellites, geometry (DOP), the band plan of every constellation, "
                           "error sources and corrections (SBAS, RTK, PPP), and the caveats."),
+    # owner, 2 Nov 2026: TWR, TDoA, "lightweight TDoA" and PDoA on one page, with live visuals
+    # (static/vz/uwb_positioning.js)
+    "uwb_positioning": ("UWB positioning: two-way ranging, TDoA, lightweight TDoA and PDoA",
+                        "How UWB finds distance, position and direction: single- and double-sided ranging and the "
+                        "clock error, hyperbolas and anchor sync, the blink-only tag, phase and angle; four live "
+                        "visuals."),
 }
 ALIASES = {"skew_ns": "pwd_ns", "peak_sink_a": "peak_source_a", "offset_uv": "error_budget",
            "gain_error_pct": "error_budget"}

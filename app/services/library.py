@@ -186,6 +186,8 @@ SPEC_GUIDES = {  # specification guide keys (app/services/engineering.py NOTES)
     "integrated_power": ("isolated power", "isolated bias", "isolated supply", "isolated supplies"),
     "uwb_signal_path": ("group delay", "group-delay", "pre-echo", "precursor", "pulse fidelity", "phase linearity"),
     "uwb_wifi_coexistence": ("Wi-Fi 6E", "6 GHz Wi-Fi", "UNII-5", "U-NII-5", "UWB channel", "UWB channels"),
+    "uwb_positioning": ("TDoA", "PDoA", "time difference of arrival", "phase difference of arrival", "angle of arrival",
+                        "UL-TDoA", "DL-TDoA", "DS-TWR"),
     "emc_eft_cispr": ("EFT", "burst", "IEC 61000-4-4", "CISPR 25", "CISPR 32", "conducted emissions",
                       "radiated emissions"),
 }  # fmt: skip
@@ -238,6 +240,17 @@ VISUALS = {  # interactive visual id (app/web/static/visuals.js or static/vz/<id
                 ("DOP", "dilution of precision", "HDOP", "satellite geometry")),
     "gnssiono": ("Ionosphere: why dual frequency removes the delay", "/visuals#gnssiono",
                  ("ionosphere", "ionospheric", "dual-frequency", "dual frequency", "TEC")),
+    # owner, 2 Nov 2026: UWB positioning methods on one page (static/vz/uwb_positioning.js)
+    "uwbtwr": ("UWB two-way ranging: single- vs double-sided, clock error and cost", "/visuals#uwbtwr",
+               ("DS-TWR", "SS-TWR", "double-sided ranging", "single-sided ranging", "reply time")),
+    "uwbtdoa": ("UWB time difference of arrival (TDoA): hyperbolas, anchor sync and position spread",
+                "/visuals#uwbtdoa",
+                ("TDoA", "time difference of arrival", "UL-TDoA", "DL-TDoA", "anchor synchronisation")),
+    "uwbltdoa": ("Lightweight TDoA (our reading, est): the blink-only tag, battery and how many tags fit",
+                 "/visuals#uwbltdoa",
+                 ("lightweight TDoA", "blink-only", "UWB blink", "coin-cell tag", "coin-cell tags")),
+    "uwbpdoa": ("UWB phase difference of arrival (PDoA): angle, ambiguity and accuracy", "/visuals#uwbpdoa",
+                ("PDoA", "phase difference of arrival", "angle of arrival", "AoA")),
     # owner, 28 Oct 2026: animated circuits, current shown moving along the wires (static/vz/circuit.js)
     "bootstrap": ("Gate driver and half-bridge: bootstrap, dead time, Miller plateau", "/visuals#bootstrap",
                   ("bootstrap", "half-bridge", "half bridge", "dead time", "Miller plateau", "shoot-through")),

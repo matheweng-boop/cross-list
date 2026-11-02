@@ -158,7 +158,7 @@
       if (v.mode === "path") return pathMode({...v, bw: v.bwp, snr: v.psnr});
       return rangeMode(v);
     },
-    related: [["Link budget and range", "#link"], ["Cascaded noise figure", "#nf"], ["RF bands chart (UWB channels)", "/rf-bands"]],
+    related: [["Link budget and range", "#link"], ["Cascaded noise figure", "#nf"], ["RF bands chart (UWB channels)", "/rf-bands"], ["UWB positioning: TWR, TDoA and PDoA on one page", "/engineering/uwb_positioning"]],
   });
   // first-path controls (own keys so the modes keep separate defaults)
   const u = V[V.length - 1];

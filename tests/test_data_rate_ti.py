@@ -8,6 +8,7 @@ A/B/C/M, ISO723x and ISO724x C/M, ISO76x1 C/M). Only ISO6163 differed from the p
 high-speed channels (the table said 25; its control channels are 4 Mbps).
 """
 
+import copy
 from functools import cache
 from pathlib import Path
 
@@ -17,6 +18,7 @@ import yaml
 from app.matching.engine import cross, from_datasheet, is_estimate_source
 from app.matching.rules import get_rules
 from app.services.seed import load_file
+from app.sources import ti
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "real"
 
@@ -121,3 +123,76 @@ def test_ti_data_rate_now_decides_the_cross(loaded, part):
     r = cross(part("ISO7221MDR"), part("SI8621AB-IS"), get_rules("digital_isolator"))
     d = next(d for d in r.diffs if d.key == "data_rate_mbps")
     assert d.status == "worse" and not d.unverified and d in r.deviations
+
+
+# ---------------------------------------------------------------- a rebuild keeps them (import-ti, app/sources/ti.py)
+
+
+def _part(mpn: str, sources: dict, **params) -> dict:
+    return {"mpn": mpn, "pinout": [], "notes": None, "params": params, "param_sources": sources}
+
+
+def test_rebuild_keeps_the_datasheet_data_rate():
+    """The importer's merge step on a small fixture: a value read on a datasheet page survives a rebuild from the
+    product table; a value the rebuild reads on a page itself, or a product-table value on both sides, is the rebuild's;
+    a part new to TI's table starts from the product table, marked as such."""
+    previous = {
+        "datasheets": [{"file": "iso6163.pdf", "sha256": "a"}],
+        "parts": [
+            _part("ISO6163DWR", {"data_rate_mbps": "iso6163.pdf p.5 (data rate DR 0–50 Mbps, high-speed channels)",
+                                 "cmti_kv_us": "TI product table", "creepage_mm": "iso6163.pdf p.8"},
+                  data_rate_mbps=50.0, cmti_kv_us=50.0, creepage_mm=8.0),
+            _part("ISO7741DWR", {"data_rate_mbps": "est: iso7741.pdf contradicts itself – p.7 table 50 Mbps"},
+                  data_rate_mbps=100.0),
+        ],
+    }  # fmt: skip
+    built = {
+        "datasheets": [{"file": "iso6163.pdf", "sha256": "a"}],
+        "parts": [
+            _part("ISO6163DWR", {"data_rate_mbps": "TI product table", "cmti_kv_us": "TI product table",
+                                 "creepage_mm": "iso6163.pdf p.9"},
+                  data_rate_mbps=25.0, cmti_kv_us=100.0, creepage_mm=8.1),
+            _part("ISO7741DWR", {"data_rate_mbps": "TI product table"}, data_rate_mbps=100.0),
+            _part("ISO6164DWR", {"data_rate_mbps": "TI product table"}, data_rate_mbps=50.0),
+        ],
+    }  # fmt: skip
+    log = ti.keep_datasheet_values(built, previous)
+    got = {p["mpn"]: (p["params"], p["param_sources"]) for p in built["parts"]}
+    params, sources = got["ISO6163DWR"]
+    assert params["data_rate_mbps"] == 50.0 and sources["data_rate_mbps"].startswith("iso6163.pdf p.5")
+    assert (params["cmti_kv_us"], params["creepage_mm"], sources["creepage_mm"]) == (100.0, 8.1, "iso6163.pdf p.9")
+    assert got["ISO7741DWR"][1]["data_rate_mbps"].startswith("est: iso7741.pdf")  # a page read, marked est: kept
+    assert got["ISO6164DWR"] == ({"data_rate_mbps": 50.0}, {"data_rate_mbps": "TI product table"})
+    assert log == ["kept 2 values read from datasheet pages (2 parts) over the product table"]
+
+
+def test_rebuild_keeps_a_datasheet_pinout_and_flags_a_changed_datasheet():
+    pins = ["VCC1", "INA", "OUTB", "GND1", "GND2", "INB", "OUTA", "VCC2"]
+    previous = {"datasheets": [{"file": "iso6721.pdf", "sha256": "old"}],
+                "parts": [_part("ISO6721BDR", {"data_rate_mbps": "iso6721.pdf p.6 (data rate DR 0–50 Mbps)",
+                                               "pinout": "iso6721.pdf p.3"}, data_rate_mbps=50.0)]}  # fmt: skip
+    previous["parts"][0]["pinout"] = pins
+    built = {"datasheets": [{"file": "iso6721.pdf", "sha256": "new"}],
+             "parts": [_part("ISO6721BDR", {"data_rate_mbps": "TI product table"}, data_rate_mbps=100.0)]}  # fmt: skip
+    built["parts"][0]["notes"] = ti.NO_PINOUT  # the rebuild could not read the pin table
+    log = ti.keep_datasheet_values(built, previous)
+    p = built["parts"][0]
+    assert (p["pinout"], p["param_sources"]["pinout"], p["notes"]) == (pins, "iso6721.pdf p.3", None)
+    assert p["params"]["data_rate_mbps"] == 50.0
+    assert len(log) == 3 and all("iso6721.pdf changed since it was read" in line for line in log[1:])
+
+
+def test_a_product_table_rebuild_changes_no_ti_data_rate():
+    """Every TI isolator's data rate (the ISO774x "est" readings included) survives a rebuild that has only the product
+    table's value; the file being replaced is not changed."""
+    text = (DATA / "ti_digital_isolators.yaml").read_text()
+    previous = yaml.safe_load(text)
+    built = copy.deepcopy(previous)
+    for p in built["parts"]:
+        p["params"]["data_rate_mbps"], p["param_sources"]["data_rate_mbps"] = 999.0, "TI product table"
+    ti.keep_datasheet_values(built, previous)
+
+    def rates_of(data):
+        return [(p["params"]["data_rate_mbps"], p["param_sources"]["data_rate_mbps"]) for p in data["parts"]]
+
+    assert rates_of(built) == rates_of(previous) and previous == yaml.safe_load(text)

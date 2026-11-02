@@ -328,8 +328,9 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
 
 
 # Vendors name the same pin differently: VCCI / VDDI (input supply), VSSA / GNDA (output ground),
-# OUTA / VOA (driver output). Pin names are mapped to one spelling before comparing.
-_PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vo([a-z0-9]+)$", r"out\1"))
+# OUTA / VOA (driver output), VOUT / OUT (output). Pin names are mapped to one spelling before comparing. VOUT is read
+# before VO<x>, which would turn it into "outut" (owner, 2 Nov 2026: ADuM4121 VOUT against Si82B47 VO).
+_PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vout([a-z0-9]*)$", r"out\1"), (r"^vo([a-z0-9]+)$", r"out\1"))
 # Family-specific names for the same pin. Only within the family: gate drivers use VDDA/VDDB for the two output
 # channels, not for the input and output sides. Gate drivers: Skyworks VIA/VIB against INA/INB, and DISABLE against
 # DIS (EN is left alone: it has the opposite polarity). Isolated amplifiers: Skyworks side A/B names and TI's
@@ -351,6 +352,10 @@ _FAMILY_PIN_ALIASES = {
     ),
     # Oscillators: Skyworks CLK+ / CLK- against SiTime and others' OUT+ / OUT-.
     "timing": ((r"^clk([+-])$", r"out\1"),),
+    # Digital isolators: Analog Devices names its logic inputs VIA..VIF where Skyworks and TI use INA..INF (owner,
+    # 2 Nov 2026); its outputs VOA..VOF already read as OUTA..OUTF above. A lone VI / VO (one channel) is left alone:
+    # the Skyworks isoPower parts use VI / VO for their dc-dc converter.
+    "digital_isolator": ((r"^vi([a-z])$", r"in\1"),),
 }  # fmt: skip
 
 

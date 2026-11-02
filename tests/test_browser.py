@@ -425,6 +425,17 @@ def test_rf_bands_type_and_application_chips_change_the_chart(page):
     assert page.locator(".rbt-list").inner_text().strip()
 
 
+def pick_visual(page, vid: str):
+    """Open a visual the way a person does (owner, 2 Nov 2026): its tab, its drop-down line, then its title."""
+    link, inner = page.locator(f"#vz-nav a[data-id='{vid}']"), page.locator(f"a[data-id='{vid}']")
+    tab = page.locator("#vz-nav .vz-tp", has=inner).get_attribute("aria-labelledby")
+    page.locator(f"#{tab}").click()
+    line = page.locator("#vz-nav details.vz-sub", has=inner)
+    if line.get_attribute("open") is None:
+        line.locator("summary").click()
+    link.click()
+
+
 def test_every_visual_moves_without_errors(page):
     go(page, "/visuals")
     links = page.locator("#vz-nav a[data-id]")
@@ -432,7 +443,7 @@ def test_every_visual_moves_without_errors(page):
     assert len(ids) > 10
     stuck, total = [], 0
     for vid in ids:
-        page.locator(f"#vz-nav a[data-id='{vid}']").click()
+        pick_visual(page, vid)
         expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", vid)
         panel = page.locator("#vz-panel")
         before = panel.inner_html()
@@ -497,11 +508,79 @@ def test_frequency_visuals_draw_the_bands_as_ranges(page):
     for label in ("AM", "FM", "DAB", "GNSS", "UWB"):
         expect(chart.locator("text.vz-bl", has_text=label).first).to_be_attached()
     expect(page.locator("#vz-panel .vz-more")).to_contain_text("76–108 MHz")
-    page.locator("#vz-nav a[data-id='fmim']").click()
+    pick_visual(page, "fmim")
     for label in ("Japan", "most countries", "OIRT"):
         expect(page.locator("#vz-panel .vz-chart text.vz-bl", has_text=label).first).to_be_attached()
-    page.locator("#vz-nav a[data-id='nf']").click()
+    pick_visual(page, "nf")
     expect(page.locator("#vz-panel .vz-strip .vz-sbar").first).to_be_attached()
+
+
+def test_visuals_tabs_drop_downs_one_visual_deep_links_and_search(page):
+    """Owner, 2 Nov 2026: three tabs; under the chosen tab each sub-group is one closed line with a count; opening it
+    lists only the titles; a title shows only that visual; #id deep links open the right tab, line and visual; a
+    search box finds a visual by its title or a word."""
+    go(page, "/visuals")
+    tabs = page.locator("#vz-tabbar [role=tab]")
+    expect(tabs).to_have_count(3)
+    for i, label in enumerate(("RF & wireless", "Power & isolation", "Basics")):
+        expect(tabs.nth(i)).to_contain_text(label)
+    expect(tabs.nth(0)).to_have_attribute("aria-selected", "true")
+    rf = page.locator("#vz-tp-rf")
+    lines = ("RF links", "Receivers", "Matching and filters", "Broadcast radio", "GNSS", "UWB", "Timing")
+    expect(rf.locator("details.vz-sub > summary")).to_have_text([re.compile(rf"^{s} · \d+$") for s in lines])
+    expect(rf.locator("details.vz-sub[open]")).to_have_count(0)  # every line starts closed
+    expect(page.locator("#vz-panel .vz-hint")).to_be_visible()  # no visual until one is picked
+    radio = rf.locator("details.vz-sub").filter(has=page.locator("summary", has_text="Broadcast radio"))
+    radio.locator("summary").click()
+    titles = radio.locator(".vz-titles > *")
+    expect(titles.first).to_be_visible()
+    assert titles.count() == radio.locator(".vz-titles > a[data-id]").count()  # only titles in the list
+    radio.locator(".vz-titles a", has_text="AM vs FM").click()
+    expect(page.locator("#vz-panel h2")).to_have_count(1)  # only that visual
+    expect(page.locator("#vz-panel h2")).to_have_text("AM vs FM modulation")
+    assert page.url.endswith("#mod")
+    tabs.nth(1).click()
+    power = page.locator("#vz-tp-power")
+    expect(power).to_be_visible()
+    expect(rf).to_be_hidden()
+    expect(power.locator("details.vz-sub > summary")).to_have_text(
+        [re.compile(rf"^{s} · \d+$") for s in ("Isolation", "Power switching", "Circuits in motion")])  # fmt: skip
+    ids = power.locator("details.vz-sub").evaluate_all(
+        "ds => ds.map(d => [...d.querySelectorAll('a[data-id]')].map(a => a.dataset.id))")  # fmt: skip
+    assert ids[0] == ["cmti", "creep", "emc"] and ids[1][:4] == ["gate", "thermal", "swloss", "turnon"]
+    assert len(ids[2]) == 6
+    tabs.nth(2).click()
+    expect(page.locator("#vz-tp-basics details.vz-sub > summary")).to_have_text([re.compile(r"^Digital basics · \d+$")])
+    # deep links from other pages open the right tab, line and visual
+    for vid, tab, line in (("ip3", "rf", "Receivers"), ("creep", "power", "Isolation"),
+                           ("turnon", "power", "Power switching"), ("hex", "basics", "Digital basics")):  # fmt: skip
+        page.goto("about:blank")
+        go(page, f"/visuals#{vid}")
+        expect(page.locator(f"#vz-tab-{tab}")).to_have_attribute("aria-selected", "true")
+        expect(page.locator(f"#vz-tp-{tab} details.vz-sub[open] > summary")).to_have_text(re.compile(rf"^{line} · "))
+        expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", vid)
+        expect(page.locator("#vz-panel h2")).to_have_count(1)
+    page.evaluate("location.hash = 'nf'")  # a link inside a visual to another one switches the tab too
+    expect(page.locator("#vz-tab-rf")).to_have_attribute("aria-selected", "true")
+    expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", "nf")
+    # search by title or word
+    q, hits = page.locator("#vz-q"), page.locator("#vz-hits a[data-hit]")
+    q.fill("jitter")
+    expect(hits.first).to_have_attribute("data-hit", "jitter")
+    q.fill("VSWR")
+    expect(hits.first).to_have_attribute("data-hit", "vswr")
+    hits.first.click()
+    expect(page.locator("#vz-panel h2")).to_contain_text("VSWR")
+    expect(page.locator("#vz-tp-rf details.vz-sub[open] > summary")).to_contain_text(["Matching and filters"])
+    q.fill("clearance")  # a word from the visual's keywords, not its title; Enter opens the first hit
+    expect(hits.first).to_have_attribute("data-hit", "creep")
+    q.press("Enter")
+    expect(page.locator("#vz-panel h2")).to_have_text("Creepage against working voltage")
+    expect(page.locator("#vz-tab-power")).to_have_attribute("aria-selected", "true")
+    q.fill("zzzz")
+    expect(page.locator("#vz-hits")).to_contain_text("No visual matches")
+    q.fill("")
+    expect(page.locator("#vz-hits")).to_be_hidden()
 
 
 # --- Data management --------------------------------------------------------------------------------------------------

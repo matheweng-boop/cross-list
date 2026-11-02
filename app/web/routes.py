@@ -676,6 +676,16 @@ def visuals_page(request: Request, session: Session = Depends(get_session)):
                                       {"data": data, "explain": visuals.explanations()})  # fmt: skip
 
 
+def _visual_words() -> dict[str, list[str]]:
+    """Search words per visual for the search box on Interactive visuals (owner, 2 Nov 2026): library.VISUALS."""
+    from app.services import library
+
+    return {k: list(v[2]) for k, v in library.VISUALS.items()}
+
+
+templates.env.globals["visual_words"] = _visual_words
+
+
 @router.get("/api/visuals/rf-parts")
 def visuals_rf_parts():
     """Active Skyworks / Qorvo RF parts with gain, NF, IP3, P1dB, loss and band, for the receiver visuals."""

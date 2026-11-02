@@ -1264,11 +1264,82 @@
   // that pushes a function onto window.VZ_ADD before this file runs; it receives the helpers and adds its definitions
   for (const add of window.VZ_ADD || []) add({V, DATA, C, num, si, db, undb, log10, clamp, esc, range, BANDS, bandText, bandStrip, appBands, mhzR});
 
-  // ------------------------------------------------------------------ page
-  const groups = [...new Set(V.map(v => v.group))];
-  const nav = $("#vz-nav"), panel = $("#vz-panel");
-  nav.innerHTML = groups.map(g => `<div class="vz-g"><b>${esc(g)}</b>${V.filter(v => v.group === g).map(v => `<a href="#${v.id}" data-id="${v.id}">${esc(v.title)}</a>`).join("")}</div>`).join("")
-    + '<div class="vz-g"><b>Spectrum</b><a href="/rf-bands">RF bands chart</a></div>';  // its own page, same section
+  // ------------------------------------------------------------------ page: tabs, drop-downs and search
+  // Owner, 2 Nov 2026: three tabs (RF & wireless · Power & isolation · Basics); under the chosen tab each sub-group is
+  // one closed drop-down line with its count, listing only titles; a title shows only that visual; the search box finds
+  // a visual by its title or a word; #id deep links open the right tab, sub-group and visual. The tab and sub-group
+  // mapping is the #vz-tabs block in templates/engineering/visuals.html; the visuals themselves are not touched here.
+  const TABS = JSON.parse($("#vz-tabs").textContent), WORDS = JSON.parse($("#vz-words").textContent);
+  const byId = Object.fromEntries(V.map(v => [v.id, v]));
+  const SUBS = TABS.flatMap((t, ti) => t.subs.map((s, si) => Object.assign(s, {ti, key: `${t.key}-${si}`, v: []})));
+  const taken = new Set();
+  for (const s of SUBS) for (const id of s.ids || []) if (byId[id] && !taken.has(id)) { s.v.push(byId[id]); taken.add(id); }
+  for (const v of V) {
+    const s = taken.has(v.id) ? null : SUBS.find(x => (x.groups || []).includes(v.group));
+    if (s) { s.v.push(v); taken.add(v.id); }
+  }
+  const rest = V.filter(v => !taken.has(v.id));  // a visual no line names: kept under More, never lost
+  if (rest.length) SUBS.push(Object.assign({label: "More", ti: TABS.length - 1, key: "more", v: rest}));
+  const subOf = Object.fromEntries(SUBS.flatMap(s => s.v.map(v => [v.id, s])));
+  const nav = $("#vz-nav"), panel = $("#vz-panel"), tabbar = $("#vz-tabbar"), q = $("#vz-q"), hits = $("#vz-hits");
+  const count = ti => SUBS.filter(s => s.ti === ti).reduce((n, s) => n + s.v.length, 0);
+  tabbar.innerHTML = TABS.map((t, ti) => `<button type="button" role="tab" id="vz-tab-${t.key}" aria-controls="vz-tp-${t.key}" data-tab="${ti}">${esc(t.label)} <small>${count(ti)}</small></button>`).join("");
+  nav.innerHTML = TABS.map((t, ti) => `<div class="vz-tp" role="tabpanel" id="vz-tp-${t.key}" aria-labelledby="vz-tab-${t.key}" data-tab="${ti}" hidden>${
+    SUBS.filter(s => s.ti === ti && s.v.length).map(s => `<details class="vz-sub" data-sub="${s.key}"><summary>${esc(s.label)} <small>· ${s.v.length}</small></summary><div class="vz-titles">${
+      s.v.map(v => `<a href="#${v.id}" data-id="${v.id}">${esc(v.title)}</a>`).join("")}</div></details>`).join("")}${
+    (t.links || []).map(([l, h, d]) => `<p class="vz-also"><a href="${h}">${esc(l)}</a>${d ? ` <span class="muted">· ${esc(d)}</span>` : ""}</p>`).join("")}</div>`).join("");
+  let tab = 0;
+  function showTab(ti) {
+    tab = ti;
+    tabbar.querySelectorAll("[role=tab]").forEach(b => {
+      const on = +b.dataset.tab === ti;
+      b.setAttribute("aria-selected", on); b.classList.toggle("on", on); b.tabIndex = on ? 0 : -1;
+    });
+    nav.querySelectorAll(".vz-tp").forEach(p => { p.hidden = +p.dataset.tab !== ti; });
+  }
+  tabbar.addEventListener("click", e => { const b = e.target.closest("[role=tab]"); if (b) showTab(+b.dataset.tab); });
+  tabbar.addEventListener("keydown", e => {  // arrow keys move between the tabs
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    const ti = (tab + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length;
+    showTab(ti); tabbar.querySelector(`[data-tab="${ti}"]`).focus();
+  });
+  // search: title, lead, group, the words in library.VISUALS and the "How to read this visual" box
+  const norm = s => String(s).toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "");
+  const text = v => norm([v.title, v.lead, v.group, subOf[v.id].label, ...(WORDS[v.id] || []), ...(v.explains || []).map(x => x[0]),
+    (document.querySelector(`#vz-explain-src [data-for="${v.id}"]`) || {}).textContent].filter(Boolean).join(" "));
+  const INDEX = V.map(v => [v, text(v), norm(v.title + " " + (WORDS[v.id] || []).join(" "))]);
+  function find() {
+    const words = norm(q.value).split(/\s+/).filter(Boolean);
+    hits.hidden = !words.length;
+    if (!words.length) { hits.innerHTML = ""; return; }
+    const found = INDEX.filter(([, t]) => words.every(w => t.includes(w)))
+      .sort((a, b) => words.filter(w => b[2].includes(w)).length - words.filter(w => a[2].includes(w)).length);
+    hits.innerHTML = found.length
+      ? `<p class="muted">${found.length} visual${found.length === 1 ? "" : "s"}:</p><ul>${found.slice(0, 12).map(([v]) => `<li><a href="#${v.id}" data-hit="${v.id}">${esc(v.title)}</a> <span class="muted">${esc(TABS[subOf[v.id].ti].label)} › ${esc(subOf[v.id].label)}</span></li>`).join("")}</ul>`
+      : '<p class="muted">No visual matches. Try one word, e.g. noise, filter, gate.</p>';
+  }
+  q.addEventListener("input", find);
+  q.addEventListener("keydown", e => {
+    const first = hits.querySelector("a[data-hit]");
+    if (e.key === "Enter" && first) { e.preventDefault(); first.click(); }
+  });
+  document.addEventListener("click", e => {  // a title or a search hit: show the visual (also when it is shown already)
+    const a = e.target.closest("#vz-nav a[data-id], #vz-hits a[data-hit]");
+    if (!a) return;
+    const id = a.dataset.id || a.dataset.hit;
+    if (location.hash.slice(1) === id) { e.preventDefault(); reveal(id); }
+    setTimeout(() => {  // bring the visual into view when the list pushed it away (always on a phone)
+      const top = panel.getBoundingClientRect().top;
+      if (window.matchMedia("(max-width: 900px)").matches || top < 0 || top > window.innerHeight * 0.6) panel.scrollIntoView({block: "start"});
+    }, 0);
+  });
+  function reveal(id) {
+    const s = subOf[id];
+    if (!s) return;
+    showTab(s.ti);
+    const d = nav.querySelector(`details[data-sub="${s.key}"]`);
+    if (d) d.open = true;
+  }
   let cur = null, vals = {}, anim = null, phase = 0;
 
   const toPos = (c, x) => (c.log ? Math.round((1000 * (log10(x) - log10(c.min))) / (log10(c.max) - log10(c.min))) : x);
@@ -1361,9 +1432,14 @@
     if (r.nochart) return;
     if (r.bars) bars(svg, r.bars); else plot(svg, r.chart);
   }
-  const route = () => open((location.hash || "").slice(1) || V[0].id);
+  // #id opens the visual in its tab and sub-group; no (or an unknown) hash: the first tab, every line closed
+  const route = () => {
+    const id = (location.hash || "").slice(1);
+    if (byId[id]) { reveal(id); open(id); } else if (!cur) showTab(tab);
+  };
   window.addEventListener("hashchange", route);
   let rt;
-  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => cur && render(), 120); });
   route();
+  if (cur && window.matchMedia("(max-width: 900px)").matches) panel.scrollIntoView({block: "start"});  // a link from another page, on a phone: the visual first
 })();

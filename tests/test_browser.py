@@ -1511,3 +1511,22 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
     expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
     go(page, "/clocks/plans")
     expect(page.locator("main")).to_contain_text("Browser clock plan")
+
+
+def test_data_center_shows_cooling_and_hvac(page):
+    """Owner, 2 Nov 2026 ("Also add cooling and HVAC to data centers"): Data center opens with a Cooling and HVAC card
+    whose buttons lead to the deep dive and to its block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-cooling")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Cooling and HVAC")
+    expect(card.locator("a.sys-btn")).to_have_count(2)
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/dc_cooling")
+    expect(page.locator("main h1")).to_contain_text("Data-center cooling")
+    go(page, "/library#sys-datacenter")
+    with page.expect_navigation():
+        page.locator("#card-datacenter-cooling a.sys-btn-dg").click()
+    expect(page.locator("#sub-cooling")).to_be_in_viewport()
+    expect(page.locator("#sub-cooling + .tpl-grid a.tpl-card")).to_have_count(5)

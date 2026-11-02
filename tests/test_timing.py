@@ -81,8 +81,39 @@ def test_pcie_buffer_crosses_both_ways(session, timing):
     # not a drop-in: different package, pinout not read
     assert not r.fit.same_package and r.category != "fff"
     to_ti = _crosses(session, "Si53204-A01")
-    assert set(to_ti) == {"LMKDB1104", "LMKDB1108"}
+    assert set(to_ti) == {"LMKDB1102", "LMKDB1104", "LMKDB1108", "LMKDB1112", "LMKDB1120"}
     assert [d.key for d in to_ti["LMKDB1104"].deviations] == []  # supply is priority 2 now
+    assert [d.key for d in to_ti["LMKDB1102"].deviations] == ["outputs"]  # 2 outputs for our 4
+
+
+def test_twelve_output_pcie_buffers_and_the_20_output_gap(session, timing):
+    # timing backlog, 2 Nov 2026: Si53212 (12 outputs) against TI's LMKDB1112 (12) and LMKDB1120 (20)
+    ours = _get(session, "Si53212-A01").param_map()
+    assert ours["outputs"] == 12 and ours["pcie_gen"] == "gen6" and ours["jitter_fs"] == 20
+    assert _get(session, "Si53212-A01").package.code == "QFN-64 9x9 p0.5 EP"
+    to_ti = _crosses(session, "Si53212-A01")
+    assert [d.key for d in to_ti["LMKDB1112"].deviations] == [] and "LMKDB1104" in to_ti
+    assert [d.key for d in to_ti["LMKDB1104"].deviations] == ["outputs"]
+    assert _get(session, "LMKDB1112").param_map()["jitter_fs"] == 3.3  # its own jitter table (p28)
+    assert set(_crosses(session, "LMKDB1112")) == {"Si53212-A01", "Si53212-A02"}
+    assert _crosses(session, "LMKDB1120") == {}  # no Skyworks PCIe buffer has 20 outputs
+    assert _get(session, "LMKDB1102").param_map()["control"] == ["pin"]  # no SMBus
+
+
+def test_grades_from_the_same_datasheets(session, timing):
+    # timing backlog, 2 Nov 2026: grades B / D stop at 200 MHz (Si5332) or 350 MHz (Si534x); C / D are integer only
+    def p(mpn):
+        return _get(session, mpn).param_map()
+
+    assert p("Si5332B-GM1")["freq_range_mhz"] == [5, 200] and p("Si5332C-GM3")["freq_range_mhz"] == [5, 333.33]
+    assert p("Si5332D-AM2")["qualification"] == "automotive" and p("Si5332D-AM2")["freq_range_mhz"] == [5, 200]
+    assert p("Si5332B-GM3")["outputs"] == 12 and _get(session, "Si5332C-AM3").package.code == "QFN-48 7x7 p0.5 EP"
+    assert p("Si5341C")["freq_range_mhz"] == [0.0001, 1028] and p("Si5340D")["freq_range_mhz"] == [0.0001, 350]
+    assert p("Si5340B")["outputs"] == 4 and p("Si5341D")["outputs"] == 10
+    assert (p("Si5394")["outputs"], p("Si5392")["outputs"], p("Si5396")["outputs"]) == (4, 2, 4)
+    assert p("Si5396")["freq_range_mhz"] == [0.0001, 720] and p("Si5394")["function_type"] == "jitter_attenuator"
+    auto = _crosses(session, "Si5332D-AM2").values()
+    assert all(r.candidate.param_map()["qualification"] == "automotive" for r in auto)
 
 
 def test_function_type_keeps_kinds_apart(session, timing):

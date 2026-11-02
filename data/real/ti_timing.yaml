@@ -1,6 +1,7 @@
 # TI timing parts for timing crosses (rules/timing.yaml). First batch 2026-10-22, read from the public TI datasheets
 # listed below (www.ti.com/lit/ds/symlink, fetched 2026-10-22, robots.txt checked). Pinouts not read yet
-# (docs/timing_backlog.md).
+# (docs/timing_backlog.md). 2026-11-02: LMKDB1102, LMKDB1112 and LMKDB1120 from the same lmkdb1104.pdf copy (sha256
+# unchanged, no new download).
 source: ti.com datasheets (fetched 2026-10-22)
 manufacturers:
 - name: TI
@@ -59,6 +60,33 @@ packages:
   body_length_mm: 5.0
   body_width_mm: 5.0
   span_mm: 5.0
+  height_mm: null
+  exposed_pad: true
+- code: TI REY 20-pin VQFN 3x3
+  name: TI REY 20-pin VQFN 3 x 3 mm, 0.4 mm pitch, exposed pad (drawing REY0020B, lmkdb1104.pdf p125)
+  pin_count: 20
+  pitch_mm: 0.4
+  body_length_mm: 3.0
+  body_width_mm: 3.0
+  span_mm: 3.0
+  height_mm: null
+  exposed_pad: true
+- code: TI ZSF 64-pad LGA 5x5
+  name: TI ZSF 64-pad LGA 5 x 5 mm, 0.5 mm pitch, 0.76 mm max height, no thermal pad (drawing ZSF0064A, lmkdb1104.pdf p110)
+  pin_count: 64
+  pitch_mm: 0.5
+  body_length_mm: 5.0
+  body_width_mm: 5.0
+  span_mm: 5.0
+  height_mm: null
+  exposed_pad: false
+- code: TI NPP 80-pad TLGA 6x6
+  name: TI NPP 80-pad TLGA 6 x 6 mm, 0.5 mm pitch, 0.9 mm max height, thermal pad (drawing NPP0080A, lmkdb1104.pdf p122)
+  pin_count: 80
+  pitch_mm: 0.5
+  body_length_mm: 6.0
+  body_width_mm: 6.0
+  span_mm: 6.0
   height_mm: null
   exposed_pad: true
 datasheets:
@@ -294,3 +322,75 @@ parts:
     source: ti.com datasheet (PRODUCTION DATA)
   params:
     outputs: 8
+- mpn: LMKDB1102
+  like: LMKDB1104
+  description: 2-output PCIe Gen 1–7 LP-HCSL clock buffer, pin control only
+  package: TI REY 20-pin VQFN 3x3
+  product_url: https://www.ti.com/product/LMKDB1102
+  notes: 'Same family and datasheet as LMKDB1104 (2 outputs). Pin control only: OE1#, OE2# and ZOUT_SEL (85 or 100 Ω)
+    pins, no SMBus (Table 5-6, p20-21). Additive jitter 3 fs max for PCIe Gen 6 (p27). 20-pin VQFN 3 x 3 mm.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA; package option addendum p115, Active)
+  params:
+    outputs: 2
+    control: [pin]
+  param_sources:
+    function_type: lmkdb1104.pdf p1
+    outputs: lmkdb1104.pdf p3 (Table 4-1 device comparison, 2 outputs)
+    output_formats: lmkdb1104.pdf p1 (LP-HCSL)
+    freq_range_mhz: lmkdb1104.pdf p26 (frequency and timing characteristics, 1 to 400 MHz)
+    vdd_range_v: lmkdb1104.pdf p22 (6.3, 1.71-1.89 V or 2.97-3.6 V)
+    jitter_fs: lmkdb1104.pdf p27 (PCIe Gen 6 CC additive jitter, max 3 fs)
+    temp_range_c: lmkdb1104.pdf p22 (6.3)
+    pcie_gen: lmkdb1104.pdf p1
+    control: lmkdb1104.pdf p20-21 (Table 5-6, OE1#, OE2#, ZOUT_SEL; no SMBus pins)
+- mpn: LMKDB1112
+  like: LMKDB1104
+  description: 12-output PCIe Gen 1–7 LP-HCSL clock buffer, Intel DB1206 pin-compatible
+  package: TI ZSF 64-pad LGA 5x5
+  product_url: https://www.ti.com/product/LMKDB1112
+  notes: 'Same family and datasheet as LMKDB1104 (12 outputs, as Si53212). Pin-compatible with Intel DB1206 (p1).
+    Its own jitter table: additive jitter 3.3 fs max for PCIe Gen 6 (p28). 64-pad LGA 5 x 5 mm (Figure 5-3 p11,
+    drawing p110); the package option addendum (p116) prints 80 pins for the ZSF codes, the drawing and pin table show
+    64. 85 Ω (Z85) or 100 Ω (Z100) order codes.'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA; package option addendum p116, Active)
+  params:
+    outputs: 12
+    jitter_fs: 3.3
+  param_sources:
+    function_type: lmkdb1104.pdf p1
+    outputs: lmkdb1104.pdf p3 (Table 4-1 device comparison, 12 outputs)
+    output_formats: lmkdb1104.pdf p1 (LP-HCSL)
+    freq_range_mhz: lmkdb1104.pdf p26 (frequency and timing characteristics, 1 to 400 MHz)
+    vdd_range_v: lmkdb1104.pdf p22 (6.3, 1.71-1.89 V or 2.97-3.6 V)
+    jitter_fs: lmkdb1104.pdf p28 (jitter characteristics LMKDB1112, PCIe Gen 6 CC, max 3.3 fs)
+    temp_range_c: lmkdb1104.pdf p22 (6.3)
+    pcie_gen: lmkdb1104.pdf p1
+    control: lmkdb1104.pdf p11-13 (Table 5-3, SMBus, OE# pins, SBI)
+- mpn: LMKDB1120
+  like: LMKDB1104
+  description: 20-output PCIe Gen 1–7 LP-HCSL clock buffer, Intel DB2000QL pin-compatible
+  package: TI NPP 80-pad TLGA 6x6
+  product_url: https://www.ti.com/product/LMKDB1120
+  notes: 'Same family and datasheet as LMKDB1104 (20 outputs). Pin-compatible with Intel DB2000QL (p1). Additive jitter
+    3 fs max for PCIe Gen 6 (p27). 80-pad TLGA 6 x 6 mm with thermal pad (Figure 5-1 p4). Order codes Z85 / Z100
+    (85 / 100 Ω) and FS85 (fail-safe outputs, its own jitter table p29). More outputs than any Skyworks PCIe buffer
+    in this data (Si53212: 12).'
+  lifecycle:
+    status: active
+    source: ti.com datasheet (PRODUCTION DATA; package option addendum p116, Active)
+  params:
+    outputs: 20
+  param_sources:
+    function_type: lmkdb1104.pdf p1
+    outputs: lmkdb1104.pdf p3 (Table 4-1 device comparison, 20 outputs)
+    output_formats: lmkdb1104.pdf p1 (LP-HCSL)
+    freq_range_mhz: lmkdb1104.pdf p26 (frequency and timing characteristics, 1 to 400 MHz)
+    vdd_range_v: lmkdb1104.pdf p22 (6.3, 1.71-1.89 V or 2.97-3.6 V)
+    jitter_fs: lmkdb1104.pdf p27 (PCIe Gen 6 CC additive jitter, max 3 fs)
+    temp_range_c: lmkdb1104.pdf p22 (6.3)
+    pcie_gen: lmkdb1104.pdf p1
+    control: lmkdb1104.pdf p4-7 (Table 5-1, SMB_DATA / SMB_CLK, OE# pins, SBI)

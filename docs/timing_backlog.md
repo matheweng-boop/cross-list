@@ -25,10 +25,12 @@ instead. Pin-to-pin drop-ins are rare across vendors in timing, so pinouts come 
 
 ## Next: no new download needed (already fetched)
 
-- [ ] Skyworks · `skyworks_timing.yaml` · si532xx-datasheet.pdf · Si53212-A01/-A02 (12-output PCIe buffer, 64-QFN)
-- [ ] Skyworks · `skyworks_timing.yaml` · si5332 / si5341 / si5345 / si5395 / si5397 datasheets · the other grades
+- [x] Skyworks · `skyworks_timing.yaml` · si532xx-datasheet.pdf · Si53212-A01/-A02 (12-output PCIe buffer, 64-QFN)
+- [x] Skyworks · `skyworks_timing.yaml` · si5332 / si5341 / si5345 / si5395 / si5397 datasheets · the other grades
   (Si5332B/C/D, Si5341C/D, Si5340B/C/D: 200 / 350 MHz and integer-only variants), Si5394 / Si5392, Si5396
-- [ ] TI · `ti_timing.yaml` · lmkdb1104.pdf · LMKDB1102, LMKDB1112, LMKDB1120 (2, 12 and 20 outputs)
+  (2 Nov 2026: also Si5332B/C/D-AM from the automotive datasheet. Si5341B is obsolete in the catalogue and left out;
+  the Si5345 / Si5395 / Si5397 grade letters are not separate catalogue parts, so their base entries stay as they are)
+- [x] TI · `ti_timing.yaml` · lmkdb1104.pdf · LMKDB1102, LMKDB1112, LMKDB1120 (2, 12 and 20 outputs)
 - [ ] All first-batch parts · pinouts (pin tables are in the datasheets already fetched; only Si545, Si549 and SiT9365
   carry one now) and competitor package lead data (TI, SiTime, Renesas drawings are images: read them by hand)
 

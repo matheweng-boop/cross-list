@@ -175,88 +175,203 @@
   const V = [];
 
   // the dBm ladder's rungs in plain words (owner 23 Oct 2026: "What does BLE sensitivity mean? Or GNSS antenna? Or
-  // 1 mW? What happens if it is violated? What am I actually blocking?"). Typical values: BizDev summaries (est).
+  // 1 mW? What happens if it is violated? What am I actually blocking?"). Rungs with a range in DBM_RANGES are drawn
+  // as bands; the others (fixed definitions) stay lines at p.
   const NOTE = id => `/rf-notes#${id}`;
   const DBM_RUNGS = [
-    {p: -130, name: "GNSS signal at the antenna", short: "GNSS at antenna",
+    {p: -160, name: "GNSS receiver sensitivity",
+      what: "The weakest satellite signal a navigation receiver can still follow, or find from a cold start. It lies far below the noise: the receiver finds it by correlating with the known code for a long time.",
+      bad: "Weaker than this: no position indoors, a slow first fix (minutes instead of seconds), positions that jump. Every 1 dB of loss or noise figure in front of the GNSS LNA costs 1 dB here.",
+      parts: [["GNSS LNA SKY65723-11", "/find?q=SKY65723-11"], ["L5 LNA SKY65728-11", "/find?q=SKY65728-11"]],
+      read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["Cascaded NF visual", "#nf"]]},
+    {p: -128.5, name: "GNSS signal at the antenna",
       what: "A navigation satellite 20,000 km away arrives this weak: below the receiver's own noise. The receiver still finds it by correlating with the known code for a long time.",
-      typ: "About −125 to −130 dBm for GPS L1 in open sky; 10–20 dB weaker indoors, under trees or in a car with metal-coated glass.",
       bad: "Weaker than this, or more noise from the receiver: slow or no position fix, position jumps. Every 1 dB of loss or noise figure in front of the GNSS LNA costs 1 dB here.",
       parts: [["GNSS LNA SKY65723-11", "/find?q=SKY65723-11"], ["L5 LNA SKY65728-11", "/find?q=SKY65728-11"]],
       read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["GNSS L1 band", "/rf-bands?band=gnss_l1"], ["Cascaded NF visual", "#nf"]]},
-    {p: -114, name: "Thermal noise in 1 MHz", short: "noise 1 MHz",
+    {p: -114, name: "Thermal noise in 1 MHz",
       what: "The noise every resistor and antenna makes at room temperature: −174 dBm in each hertz of bandwidth, so −114 dBm in 1 MHz and −101 dBm in 20 MHz. No receiver can go below it; it can only add to it (its noise figure).",
-      typ: "−174 dBm/Hz + 10·log10(bandwidth in Hz).",
+      typ: "−174 dBm/Hz + 10·log10(bandwidth in Hz): a fixed value for a given bandwidth, so it stays a line.",
       ifLabel: "Why it matters", bad: "A signal must stand above this floor plus the receiver's noise figure by the SNR the modulation needs; otherwise it cannot be decoded.",
       read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["Cascaded noise figure", NOTE("cascaded_noise_figure")]]},
-    {p: -100, name: "LTE / 5G phone sensitivity", short: "",
-      what: "The weakest cellular downlink a phone must still receive at a stated data rate (3GPP calls it reference sensitivity).",
-      typ: "About −94 to −100 dBm in a 10 MHz channel, depending on the band (est; check the 3GPP edition).",
+    {p: -112, name: "FM tuner sensitivity",
+      what: "The weakest FM station a broadcast tuner still turns into clean mono audio (26 dB signal-to-noise). Tuner data sheets give it in µV EMF; into 50 Ω, dBm = dBµV − 113.",
+      bad: "Weaker: hiss, then the radio blends to mono or mutes. RDS text (station name, traffic) stops first, because it needs a stronger signal.",
+      parts: [["Si47xx AM / FM / DAB tuners", "/find?q=Si47"]],
+      read: [["FM band", "/rf-bands?band=fm"], ["FM intermodulation visual", "#fmim"]]},
+    {p: -97, name: "LTE / 5G phone sensitivity",
+      what: "The weakest cellular downlink a phone must still receive at a stated data rate (3GPP calls it reference sensitivity), here in a 10 MHz channel.",
       bad: "Below it the phone drops to a lower data rate, then loses the cell at the edge of coverage. A strong signal in a neighbouring band (a blocker) raises the effective floor: the phone is 'desensitised'.",
       parts: [["LNA SKY67151-396LF", "/find?q=SKY67151-396LF"], ["Switch SKY13489-001", "/find?q=SKY13489-001"]],
       read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["Cascaded NF visual", "#nf"]]},
-    {p: -95, name: "BLE sensitivity", short: "BLE sensitivity",
+    {p: -97, name: "BLE sensitivity",
       what: "The weakest Bluetooth Low Energy packet a receiver still decodes with few bit errors (0.1 % in the Bluetooth test).",
-      typ: "Good chips: −95 to −105 dBm at 1 Mb/s; the Bluetooth specification only asks for −70 dBm.",
       bad: "Below it packets are lost and resent, range shrinks, the connection drops. Wi-Fi or an LTE uplink next to 2.4 GHz can block it: their strong signal overloads the receiver, which then misses the weak BLE packet.",
       parts: [["2.4 GHz LNA SKY65405-21", "/find?q=SKY65405-21"], ["2.4 GHz front end SKY85203-11", "/find?q=SKY85203-11"]],
       read: [["Sensitivity and noise floor", NOTE("sensitivity_noise_floor")], ["2.4 GHz band", "/rf-bands?band=ism24"]]},
-    {p: -70, name: "Good Wi-Fi signal", short: "",
-      what: "What a laptop sees in the next room from the access point.",
-      typ: "−50 dBm close by, −70 dBm good, −80 dBm the edge for slow rates.",
-      bad: "Weaker: the link falls back to slower modulations and the throughput drops.",
+    {p: -74.5, name: "Wi-Fi sensitivity (by data rate)",
+      what: "The weakest Wi-Fi signal a receiver still decodes. It depends on the data rate: slow, robust rates are heard far weaker than fast ones. A good signal in the next room is about −70 dBm (est).",
+      bad: "Below it the link falls back to slower rates, the throughput drops, then the connection is lost.",
       parts: [["5 GHz LNA SKY65404-31", "/find?q=SKY65404-31"], ["5 GHz filter SKY85922-11", "/find?q=SKY85922-11"]],
       read: [["Wi-Fi front ends", NOTE("wifi_fem_and_triband_ap")], ["Link budget visual", "#link"]]},
-    {p: -30, name: "Strong blocker at a receiver", short: "blocker",
+    {p: -30, name: "Strong blocker at a receiver",
       what: "A strong unwanted signal next to the band, for example the phone's own transmitter or a nearby base station, as it arrives at the receiver input after the antenna isolation.",
-      typ: "−40 to −10 dBm (est), depending on how close the transmitter is and how much filtering there is.",
       ifLabel: "What you are blocking", bad: "Nothing is switched off: the weak wanted signal is drowned. The blocker compresses the LNA (its gain drops) or mixes with a second signal into an intermodulation product on the wanted channel. Fix it with filter rejection (BAW / SAW), or with higher linearity (IIP3).",
       parts: [["High-IIP3 switch SKY13414-485LF", "/find?q=SKY13414-485LF"], ["Filters (SKY85922-11)", "/find?q=SKY85922-11"]],
       read: [["Blocking and dynamic range", NOTE("dynamic_range_sfdr_blocking")], ["Blocker view (this visual)", "#dbm"]]},
-    {p: 0, name: "1 mW: the reference", short: "1 mW",
-      what: "The zero of the dBm scale: one milliwatt. A BLE transmitter sends about this; it is also a typical drive level for a mixer's local oscillator.",
+    {p: 0, name: "1 mW: the reference",
+      what: "The zero of the dBm scale: one milliwatt, by definition, so it stays a line. Many BLE transmitters send about this; it is also a typical drive level for a mixer's local oscillator.",
       typ: "0 dBm = 1 mW = 0.22 V rms into 50 Ω.",
       ifLabel: "If a receiver sees it", bad: "At an LNA input 0 dBm is huge: most LNAs compress between −20 and 0 dBm, and +10 to +20 dBm can damage them. Receivers next to transmitters use limiters or switches to protect the LNA.",
       read: [["dBm and decibels", NOTE("dbm_basics")], ["P1dB and compression", NOTE("p1db_dynamic_range")], ["Limiters", NOTE("limiters_receiver_protection")]]},
-    {p: 10, name: "IIP3 of a good LNA", short: "",
+    {p: 5, name: "BLE transmitter",
+      what: "What a Bluetooth Low Energy device sends: from a coin-cell sensor that whispers to a long-range module with a front-end module.",
+      ifLabel: "If it is exceeded", bad: "Above +20 dBm the product leaves the Bluetooth specification and the radio rules; more power also empties the battery faster.",
+      parts: [["BLE front-end module SKY66111-11", "/find?q=SKY66111-11"], ["2.4 GHz FEM SKY66112-11", "/find?q=SKY66112-11"]],
+      read: [["Link budget visual", "#link"], ["2.4 GHz band", "/rf-bands?band=ism24"]]},
+    {p: 10.9, name: "IIP3 of a good LNA",
       what: "Not a real power: the input level at which the intermodulation products of two signals would, extrapolated, be as strong as the signals. It measures linearity.",
-      typ: "LNAs −5 to +20 dBm, mixers +15 to +30 dBm, RF switches +60 to +75 dBm.",
       ifLabel: "If the signals approach it", bad: "Long before it: each 1 dB more of two blockers makes their third-order product 3 dB stronger, until it lands on the wanted channel above the noise. The part also compresses about 10 dB below IIP3.",
       parts: [["LNA SKY67021-396LF (IIP3 +22.5 dBm)", "/find?q=SKY67021-396LF"], ["Mixer SKY73090-21", "/find?q=SKY73090-21"]],
       read: [["IIP3 in plain words", NOTE("iip3_basics")], ["IP3 visual", "#ip3"], ["FM intermodulation visual", "#fmim"]]},
-    {p: 20, name: "Wi-Fi client transmitter", short: "Wi-Fi client",
-      what: "A laptop or phone sending Wi-Fi: 100 mW.",
-      typ: "+15 to +20 dBm; 2.4 GHz in Europe is limited to 20 dBm EIRP.",
+    {p: 17, name: "Wi-Fi client transmitter",
+      what: "A laptop or phone sending Wi-Fi: about 50 mW.",
       ifLabel: "If it is exceeded", bad: "Above the legal limit the product fails certification; pushed close to the PA's limit it distorts and spills into neighbouring channels (EVM and spectral mask fail).",
       parts: [["Wi-Fi front ends (SKY85…)", "/find?q=SKY85"]],
       read: [["Wi-Fi front ends", NOTE("wifi_fem_and_triband_ap")]]},
-    {p: 23, name: "Phone power amplifier", short: "Phone PA",
-      what: "Maximum output of a phone's cellular PA at the antenna (3GPP power class 3); class 2 allows +26 dBm.",
-      typ: "+23 dBm = 200 mW.",
+    {p: 23, name: "Phone transmitter (LTE / 5G)",
+      what: "What a phone sends on the cellular uplink. Power control turns it down next to the base station and up at the edge of the cell; +23 dBm (200 mW) is the usual maximum.",
       ifLabel: "If it is exceeded", bad: "Not allowed by the standard; in practice the PA's linearity limits it, because distortion breaks the adjacent-channel limits (ACLR). Next to the phone's own GNSS or Wi-Fi receivers this is the blocker.",
       parts: [["PA modules (SKY78…)", "/find?q=SKY78"]],
       read: [["PA linearisation", NOTE("pa_linearization_dpd_doherty")]]},
-    {p: 30, name: "1 W", short: "1 W",
-      what: "One watt: small-cell and repeater outputs, handheld two-way radios (about 1–5 W).",
+    {p: 30, name: "1 W",
+      what: "One watt, by definition +30 dBm, so it stays a line: small-cell and repeater outputs, handheld two-way radios (about 1–5 W).",
       typ: "+30 dBm = 1 W = 7.1 V rms into 50 Ω.", ifLabel: "Why it matters",
       bad: "At this level heat and voltage stress matter: switches need high power handling (P0.1dB), and 1 dB of loss is 200 mW of heat.",
       read: [["RF switches", NOTE("rf_switches")]]},
-    {p: 46, name: "Macro base station, 40 W", short: "Macro cell 40 W",
+    {p: 46, name: "Macro base station, 40 W",
       what: "One carrier of a macro cell site.",
-      typ: "+43 to +49 dBm per carrier (20–80 W).", ifLabel: "Why it matters",
+      ifLabel: "Why it matters",
       bad: "Efficiency and linearity of the PA decide the site's power bill; Doherty PAs and predistortion are used.",
       parts: [["Qorvo PAs (QPA…)", "/find?q=QPA"]],
       read: [["PA linearisation", NOTE("pa_linearization_dpd_doherty")]]},
-    {p: 60, name: "Radar transmitter, 1 kW peak", short: "Radar 1 kW",
-      what: "Peak pulse power of a marine or weather radar.",
-      typ: "+60 dBm (1 kW) and far more for air-traffic radar; the average power is much lower because it sends short pulses.",
+    {p: 66, name: "Radar transmitter (peak)",
+      what: "Peak pulse power of a marine or weather radar; the average power is much lower because it sends short pulses.",
       ifLabel: "Why it matters", bad: "The receiver next to it must survive its own transmitter: limiters and switches protect the LNA.",
       read: [["Radar fundamentals", NOTE("radar_fundamentals")], ["Limiters", NOTE("limiters_receiver_protection")]]},
+    {p: 70, name: "FM broadcast transmitter",
+      what: "The effective radiated power (ERP) of an FM station: transmitter power times antenna gain.",
+      ifLabel: "Why it matters", bad: "Near such a transmitter a car radio sees a very strong station: it can overload the tuner and mix with a second station into the one you listen to.",
+      read: [["FM intermodulation visual", "#fmim"], ["FM band", "/rf-bands?band=fm"]]},
   ];
+
+  // owner, 2 Nov 2026 ("BLE sensitivity is a range, not a dotted line at one value"): every rung that is really a range,
+  // as label (= the rung's name), low end, typical and high end in dBm, what moves the value within the band, points
+  // inside it and the sources [text, url]. est: no source for the band, or for the part the text marks "est".
+  const SRC = {
+    bt: "https://www.bluetooth.com/learn-about-bluetooth/key-attributes/range/",
+    cc2652: "https://www.ti.com/lit/ds/symlink/cc2652r.pdf", cc3235: "https://www.ti.com/lit/ds/symlink/cc3235s.pdf",
+    an1451: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Application-Notes/AN1451_Enabling_High_Performance_Bluetooth_207463A.pdf",
+    lte: "https://www.etsi.org/deliver/etsi_ts/136100_136199/136101/08.09.00_60/ts_136101v080900p.pdf",
+    nr: "https://www.etsi.org/deliver/etsi_ts/138100_138199/13810101/15.02.00_60/ts_13810101v150200p.pdf",
+    si4734: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4734-35-short.pdf",
+    si4730: "https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-shorts/Si4730-31-short.pdf",
+  };
+  const DBM_RANGES = [
+    {label: "GNSS receiver sensitivity", lo: -167, typ: -160, hi: -145, est: true,
+      moves: "Following a satellite already found (tracking) works 10–20 dB weaker than finding it from a cold start (acquisition). Help from the network (A-GNSS), longer integration, a low-noise LNA right at the antenna and the receiver's own noise figure move it.",
+      pts: [["tracking, high-sensitivity receiver (est)", -167], ["tracking, typical (est)", -160], ["cold-start acquisition (est)", -145]], src: []},
+    {label: "GNSS signal at the antenna", lo: -155, typ: -128.5, hi: -123,
+      moves: "The satellite's elevation (low satellites are weaker), the antenna and its gain pattern, and what is in the way: trees, buildings, a car roof or metal-coated glass take 10–30 dB (est).",
+      pts: [["indoors or in a car with metal-coated glass (est)", -155], ["minimum in open sky (GPS L1 C/A, specification)", -128.5], ["strongest in open sky (est)", -123]],
+      src: [["IS-GPS-200, the GPS interface specification: minimum received L1 C/A power −158.5 dBW (= −128.5 dBm) in open sky", ""]]},
+    {label: "FM tuner sensitivity", lo: -112, typ: -112, hi: -95,
+      moves: "What you ask for: clean mono audio needs 1.1 µV EMF (−112 dBm), RDS data about 8 µV (−95 dBm), stereo much more; and the antenna: a headphone wire instead of a matched 50 Ω antenna costs about 6 dB (2.2 µV).",
+      pts: [["mono audio, 26 dB S/N, 50 Ω antenna (1.1 µV EMF)", -112.2], ["the same with a headphone-wire antenna (2.2 µV EMF)", -106.2], ["RDS data (8 µV EMF)", -94.9]],
+      src: [["Si4734/35 data sheet: 1.1 µV EMF (50 Ω), 2.2 µV EMF (headphone antenna)", SRC.si4734], ["Si4730/31 data sheet: RDS sensitivity 8 µV EMF", SRC.si4730]]},
+    {label: "LTE / 5G phone sensitivity", lo: -101, typ: -97, hi: -94,
+      moves: "The band (the specification allows −94 dBm in LTE bands 3, 8 and 20, but asks −97 dBm in band 1), the channel width (each doubling costs 3 dB: −94 dBm in 20 MHz in band 1), four receive antennas instead of two (2–3 dB better), and the phone's own front end: switch and filter losses and the LNA's noise figure. A good phone beats the specification by a few dB (est).",
+      pts: [["a good phone, 10 MHz (est)", -101], ["5G n78, 10 MHz, four antennas (specification)", -98], ["LTE band 1, 10 MHz (specification)", -97], ["5G n1, 10 MHz, two antennas (specification)", -96.8], ["LTE bands 3, 8, 20, 10 MHz (specification)", -94]],
+      src: [["3GPP TS 36.101 (ETSI TS 136 101 V8.9.0), Table 7.3.1-1: LTE reference sensitivity", SRC.lte], ["3GPP TS 38.101-1 (ETSI TS 138 101-1 V15.2.0), Tables 7.3.2-1 and 7.3.2-2: 5G NR reference sensitivity", SRC.nr]]},
+    {label: "BLE sensitivity", lo: -105, typ: -97, hi: -70,
+      moves: "The data rate (PHY): LE Coded at 125 kb/s hears about 8 dB weaker signals than LE 1M, LE 2M about 6 dB less weak. Then the chip, its temperature and supply voltage (a few dB from −40 to +85 °C, est), and the board: the matching network, filter and antenna switch losses (typically 1–1.5 dB) come straight off.",
+      pts: [["specification minimum, LE 1M", -70], ["specification minimum, LE Coded", -82], ["typical chip, LE 2M (CC2652R)", -91], ["typical chip, LE 1M (CC2652R)", -97], ["average LE Coded chip (Bluetooth SIG)", -103], ["LE Coded 125 kb/s (CC2652R)", -105]],
+      src: [["Bluetooth SIG: the specification asks −70 to −82 dBm depending on the PHY; average LE Coded chips reach −103 dBm", SRC.bt], ["TI CC2652R data sheet (typical, 25 °C, conducted)", SRC.cc2652], ["Skyworks AN1451: matching and switches cost 1–1.5 dB", SRC.an1451]]},
+    {label: "Wi-Fi sensitivity (by data rate)", lo: -96, typ: -74.5, hi: -64,
+      moves: "The data rate above all: 1 Mb/s is heard about 20 dB weaker than 54 Mb/s. Then the channel width (40 MHz costs 3 dB), the band, the chip and the losses in front of it (front-end module, filter, switch); one data sheet adds 1 dB on channel 13.",
+      pts: [["1 Mb/s, typical chip (CC3235S)", -96], ["6 Mb/s, typical chip", -90.5], ["6 Mb/s, IEEE 802.11 minimum", -82], ["54 Mb/s, typical chip", -74.5], ["MCS7, typical chip", -71.5], ["54 Mb/s, IEEE 802.11 minimum", -65], ["MCS7, IEEE 802.11 minimum", -64]],
+      src: [["TI CC3235S data sheet, 2.4 GHz (typical, 25 °C)", SRC.cc3235], ["IEEE 802.11, minimum input sensitivity for OFDM in 20 MHz (standard, not public)", ""]]},
+    {label: "Strong blocker at a receiver", lo: -56, typ: -30, hi: -15,
+      moves: "How close the other transmitter is and how much antenna isolation and filtering sit in between. The 3GPP tests put a blocker at −56 or −44 dBm inside the phone's band and at −44, −30 or −15 dBm the further it is outside; the phone's own transmitter or a radio in the same box can be stronger still (est).",
+      pts: [["in-band blocking, close (LTE test)", -56], ["in-band blocking, further away (LTE test)", -44], ["out of band, 15–60 MHz away (LTE test)", -44], ["out of band, 60–85 MHz away (LTE test)", -30], ["out of band, further away (LTE test)", -15]],
+      src: [["3GPP TS 36.101 (ETSI TS 136 101 V8.9.0), Tables 7.6.1.1-2 and 7.6.2.1-2: blocking", SRC.lte]]},
+    {label: "BLE transmitter", lo: -20, typ: 5, hi: 20,
+      moves: "The power setting (range against battery life), the power class the product is built for, and an external front-end module: Bluetooth chips alone typically send +4 to +10 dBm, a front-end module adds up to 12 dB.",
+      pts: [["lowest in the specification", -20], ["typical chip (CC2652R maximum)", 5], ["typical chips, top end (AN1451)", 10], ["highest in the specification", 20]],
+      src: [["Bluetooth SIG: −20 dBm to +20 dBm", SRC.bt], ["Skyworks AN1451: chips 4–10 dBm, front-end modules up to +22 dBm", SRC.an1451], ["TI CC2652R data sheet: +5 dBm", SRC.cc2652]]},
+    {label: "IIP3 of a good LNA", lo: -4, typ: 10.9, hi: 21.5,
+      moves: "The design and its supply current (more current buys linearity), the gain (more gain usually means a lower input IP3), the frequency, and the bias mode many LNAs offer (high linearity or low current). RF switches sit far higher (median +56 dBm in our catalogue).",
+      pts: [["10 % of our LNAs are below", -4], ["median of our LNAs", 10.9], ["90 % of our LNAs are below", 21.5]],
+      src: [["BizDev catalogue, 2 Nov 2026: 89 Skyworks and Qorvo LNAs with an IIP3 from the data sheet or OIP3 − gain (10th to 90th percentile)", "/business/rf-coverage"]]},
+    {label: "Wi-Fi client transmitter", lo: 13, typ: 17, hi: 20,
+      moves: "The data rate: fast rates need a cleaner signal, so the transmitter backs off (+18 dBm at 1 Mb/s, +13 dBm at MCS7 on one chip); edge channels are turned down to meet emission limits; the supply (1.5 dB less below 2.8 V on that chip); and the legal limit (20 dBm EIRP at 2.4 GHz in Europe, est).",
+      pts: [["MCS7, 2.4 GHz (CC3235S)", 13], ["54 Mb/s", 14.5], ["6 Mb/s", 17.3], ["1 Mb/s", 18], ["legal limit at 2.4 GHz in Europe, EIRP (est)", 20]],
+      src: [["TI CC3235S data sheet, 2.4 GHz (typical, 25 °C)", SRC.cc3235]]},
+    {label: "Phone transmitter (LTE / 5G)", lo: -40, typ: 23, hi: 26,
+      moves: "The distance to the cell: power control turns the phone down by up to 60 dB next to the base station. Then the power class (class 3: +23 dBm ± 2 dB; class 2: +26 dBm in the 5G bands n41, n77, n78 and n79) and the signal: wide, high-order signals need back-off to stay clean.",
+      pts: [["lowest setting (specification)", -40], ["power class 3 (specification)", 23], ["power class 2, some 5G bands (specification)", 26]],
+      src: [["3GPP TS 36.101 (ETSI TS 136 101 V8.9.0), Tables 6.2.2-1 and 6.3.2.1-1: power class and minimum output power", SRC.lte], ["3GPP TS 38.101-1 (ETSI TS 138 101-1 V15.2.0), Table 6.2.1-1: power classes", SRC.nr]]},
+    {label: "Macro base station, 40 W", lo: 43, typ: 46, hi: 49, est: true,
+      moves: "The cell's size and the number of carriers and antennas: 20–80 W per carrier for a macro cell (est); small cells send far less.",
+      pts: [["20 W carrier (est)", 43], ["40 W carrier (est)", 46], ["80 W carrier (est)", 49]], src: []},
+    {label: "Radar transmitter (peak)", lo: 44, typ: 66, hi: 90, est: true,
+      moves: "The radar type: a solid-state marine radar sends about 25 W peak with long coded pulses, a magnetron boat radar 4 kW, a weather or air-traffic radar up to 1 MW (est).",
+      pts: [["solid-state marine radar (est)", 44], ["4 kW boat radar (est)", 66], ["weather and air-traffic radar (est)", 90]], src: []},
+    {label: "FM broadcast transmitter", lo: 50, typ: 70, hi: 80, est: true,
+      moves: "The station's coverage: a local station sends 100 W to 1 kW ERP, a regional one 10–100 kW (est).",
+      pts: [["local station, 100 W (est)", 50], ["regional station, 10 kW (est)", 70], ["large regional station, 100 kW (est)", 80]], src: []},
+  ];
+  const dlRange = name => DBM_RANGES.find(g => g.label === name);
+  const DL0 = -170, DL1 = 90, dlPc = x => (100 * (clamp(x, DL0, DL1) - DL0)) / (DL1 - DL0);
+  const dbmTxt = x => `${x > 0 ? "+" : x < 0 ? "−" : ""}${+Math.abs(x).toFixed(1)} dBm`;
+  const dlLink = ([l, h]) => `<a href="${h}">${esc(l)}</a>`;
+  const dlSrc = ([t, u]) => (!u ? esc(t) : /^https?:/.test(u) ? `<a href="${u}" target="_blank" rel="noopener noreferrer">${esc(t)} ↗</a>` : `<a href="${u}">${esc(t)}</a>`);
+  // distance from a power to a rung: 0 inside its band (then the nearest typical value wins), else to the band or line
+  const dlDist = (r, p) => { const g = dlRange(r.name); return g ? Math.max(0, g.lo - p, p - g.hi) + Math.abs(p - g.typ) / 100 : Math.abs(p - r.p); };
+  // the plain-words card of one rung: what it is, its range and what moves it, the points in it, our parts, sources
+  function dlBody(r) {
+    const g = dlRange(r.name);
+    return `<dl><dt>What it is</dt><dd>${r.what}</dd>${g ? `<dt>Range</dt><dd>${dbmTxt(g.lo)} to ${dbmTxt(g.hi)}, typical ${dbmTxt(g.typ)}${g.est ? ' <span class="dl-est">est</span>' : ""}</dd>
+      <dt>What moves it</dt><dd>${g.moves}</dd><dt>In the band</dt><dd><ul class="dl-pts">${g.pts.map(([l, x]) => `<li><b>${dbmTxt(x)}</b> ${esc(l)}</li>`).join("")}</ul></dd>` : `<dt>Value</dt><dd>${r.typ}</dd>`}
+      <dt>${esc(r.ifLabel || "If it is violated")}</dt><dd>${r.bad}</dd>${r.parts ? `<dt>Our parts</dt><dd>${r.parts.map(dlLink).join(" · ")}</dd>` : ""}
+      ${g ? `<dt>Source</dt><dd>${g.src.map(dlSrc).join("<br>")}${g.est ? `${g.src.length ? "<br>" : ""}BizDev estimate (est): no public source for this band yet.` : ""}</dd>` : ""}<dt>Read more</dt><dd>${r.read.map(dlLink).join(" · ")}</dd></dl>`;
+  }
+  const dlInfo = r => `<h4>${esc(r.name)}</h4>${dlBody(r)}`;
+  // the ladder: one row per range (a band from low to high, a dark tick at the typical value), the fixed definitions as
+  // lines across all rows, your power as an orange line. HTML, not SVG, so the text keeps its size on a phone.
+  function dlLadder(p, pick) {
+    const rows = DBM_RUNGS.filter(r => dlRange(r.name)).map(r => {
+      const g = dlRange(r.name), a = dlPc(g.lo), b = dlPc(g.hi), right = a + b > 110, on = r.name === pick;
+      const say = `${r.name}: ${dbmTxt(g.lo)} to ${dbmTxt(g.hi)}, typical ${dbmTxt(g.typ)}${g.est ? " (estimate)" : ""}. Show what moves it`;
+      return `<div class="dl-row"><span class="dl-lab" style="${right ? `padding-right:${(100 - b).toFixed(1)}%;text-align:right` : `padding-left:${a.toFixed(1)}%`}">${esc(r.name)} <span class="dl-r">${dbmTxt(g.lo).replace(" dBm", "")} to ${dbmTxt(g.hi)}</span>${g.est ? ' <span class="dl-est">est</span>' : ""}</span>
+        <span class="dl-tr"><button type="button" class="dl-b${g.est ? " est" : ""}${on ? " on" : ""}" data-dl="${esc(r.name)}" aria-pressed="${on}" aria-label="${esc(say)}" title="${esc(say)}" style="left:${a.toFixed(2)}%;width:${(b - a).toFixed(2)}%"><i style="left:${((100 * (g.typ - g.lo)) / Math.max(1e-9, g.hi - g.lo)).toFixed(1)}%"></i></button></span></div>`;
+    }).join("");
+    const lines = DBM_RUNGS.filter(r => !dlRange(r.name)), lab = {"Thermal noise in 1 MHz": "noise in 1 MHz", "1 mW: the reference": "1 mW", "1 W": "1 W"};
+    const ticks = [];
+    for (let x = -160; x <= 80; x += 20) ticks.push(`<span class="${x % 40 ? "mn" : ""}" style="left:${dlPc(x).toFixed(2)}%">${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x)}</span>`);
+    return `<figure class="dl"><figcaption class="small muted">Each band runs from the realistic low end to the high end; the dark tick is the typical value. Dashed bands are estimates (est). Lines are fixed definitions. Tap or hover a band to see what moves the value.</figcaption>
+      <div class="dl-plot">
+        <div class="dl-head" aria-hidden="true">${lines.map(r => `<span style="left:${dlPc(r.p).toFixed(2)}%">${esc(lab[r.name] || r.name)}</span>`).join("")}</div>
+        ${lines.map(r => `<i class="dl-ln" aria-hidden="true" style="left:${dlPc(r.p).toFixed(2)}%"></i>`).join("")}<i class="dl-ln you" aria-hidden="true" style="left:${dlPc(p).toFixed(2)}%"></i>
+        ${rows}<div class="dl-ax" aria-hidden="true">${ticks.join("")}<span class="you" style="left:${dlPc(p).toFixed(2)}%">${esc(dbmTxt(p))}</span></div></div>
+      <p class="small muted dl-axl">Power in dBm. Orange line: your slider.</p>
+      <div class="dl-info" aria-live="polite">${dlInfo(DBM_RUNGS.find(r => r.name === pick) || DBM_RUNGS[0])}</div></figure>`;
+  }
+  let dlPick = null, dlLastP = null;  // the band picked by tap or hover; moving the slider shows the nearest again
   const BLOCKER = v => v.mode === "blocker", LADDER = v => v.mode !== "blocker";
   V.push({
     id: "dbm", group: "RF links", title: "dBm: the power ladder",
-    lead: "Every RF power on one logarithmic scale, from a GNSS signal at the antenna to a radar transmitter. Switch to the blocker view to see what a strong signal next to the band does to a receiver, and what linearity fixes it.",
+    lead: "Every RF power on one logarithmic scale, from a GNSS signal at the antenna to a radar transmitter. Most rungs are ranges, not one value: each band shows the realistic low and high end and the typical value, with its source. Switch to the blocker view to see what a strong signal next to the band does to a receiver, and what linearity fixes it.",
     presetLabel: "Blocker scenarios",
     presets: [
       {label: "Car roof: V2X next to Wi-Fi", values: {mode: "blocker", f: 5.8, pw: -75, pb: -10, rej: 20, nf: 4, bw: 20, snr: 10, ia: -5, ib: 15, pt: "lna"},
@@ -270,7 +385,7 @@
     ],
     controls: [
       {k: "mode", label: "View", type: "select", options: [["ladder", "Power ladder"], ["blocker", "Strong blocker next to the band"]], value: "ladder"},
-      {k: "p", label: "Power", min: -140, max: 70, step: 1, value: 20, unit: "dBm", when: LADDER},
+      {k: "p", label: "Power", min: -170, max: 90, step: 1, value: 20, unit: "dBm", when: LADDER},
       {k: "f", label: "Frequency", min: 0.05, max: 40, value: 2.4, unit: "GHz", log: true, when: BLOCKER},
       {k: "pw", label: "Wanted signal", min: -140, max: -20, step: 1, value: -80, unit: "dBm", when: BLOCKER},
       {k: "pb", label: "Blocker at the antenna (per tone)", min: -80, max: 20, step: 1, value: -20, unit: "dBm", when: BLOCKER},
@@ -283,28 +398,40 @@
       {k: "pt", label: "Part to look for", type: "select", options: [["lna", "LNA"], ["switch", "Switch"]], value: "lna", when: BLOCKER},
     ],
     parts: true,
+    setup(el) {  // tap, hover or focus a band: the box under the ladder explains it (no re-render, so focus stays)
+      el.hidden = true;
+      const more = el.parentElement.querySelector(".vz-more");
+      const pick = b => {
+        if (!b) return;
+        dlPick = b.dataset.dl;
+        more.querySelectorAll(".dl-b").forEach(x => { const on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
+        const box = more.querySelector(".dl-info"), r = DBM_RUNGS.find(x => x.name === dlPick);
+        if (box && r) box.innerHTML = dlInfo(r);
+      };
+      more.addEventListener("click", e => pick(e.target.closest(".dl-b")));
+      more.addEventListener("focusin", e => pick(e.target.closest(".dl-b")));
+      more.addEventListener("pointerover", e => { if (e.pointerType === "mouse") pick(e.target.closest(".dl-b")); });
+    },
     compute(v) {
       if (v.mode !== "blocker") {
         const w = 1e-3 * undb(v.p), vr = Math.sqrt(w * 50);
-        const near = DBM_RUNGS.reduce((a, r) => (Math.abs(r.p - v.p) < Math.abs(a.p - v.p) ? r : a));
-        const link = ([l, h]) => `<a href="${h}">${esc(l)}</a>`;
-        const rung = r => `<details class="vz-rung${r === near ? " near" : ""}"${r === near ? " open" : ""}><summary><b class="lv">${r.p > 0 ? "+" : ""}${r.p} dBm</b><b>${esc(r.name)}</b><span class="muted">${esc(si(1e-3 * undb(r.p), "W"))}</span></summary>
-          <dl><dt>What it is</dt><dd>${r.what}</dd><dt>Typical</dt><dd>${r.typ}</dd><dt>${esc(r.ifLabel || "If it is violated")}</dt><dd>${r.bad}</dd>
-          ${r.parts ? `<dt>Our parts</dt><dd>${r.parts.map(link).join(" · ")}</dd>` : ""}<dt>Read more</dt><dd>${r.read.map(link).join(" · ")}</dd></dl></details>`;
+        if (v.p !== dlLastP) { dlPick = null; dlLastP = v.p; }
+        const near = DBM_RUNGS.reduce((a, r) => (dlDist(r, v.p) < dlDist(a, v.p) ? r : a)), pick = dlPick || near.name;
+        const inside = DBM_RANGES.filter(g => v.p >= g.lo && v.p <= g.hi).map(g => g.label);
+        const rung = r => { const g = dlRange(r.name); return `<details class="vz-rung${r === near ? " near" : ""}"><summary><b class="lv">${g ? `${dbmTxt(g.lo).replace(" dBm", "")} to ${dbmTxt(g.hi)}` : dbmTxt(r.p)}</b><b>${esc(r.name)}</b><span class="muted">${g ? `typical ${esc(dbmTxt(g.typ))}${g.est ? " (est)" : ""}` : esc(si(1e-3 * undb(r.p), "W"))}</span></summary>${dlBody(r)}</details>`; };
         return {
-          outputs: [["Power", si(w, "W")], ["dBW", `${num(v.p - 30)} dBW`], ["Voltage into 50 Ω", si(vr, "V") + " rms"], ["Nearest rung", `${near.name} (${near.p > 0 ? "+" : ""}${near.p} dBm)`]],
+          outputs: [["Power", si(w, "W")], ["dBW", `${num(v.p - 30)} dBW`], ["Voltage into 50 Ω", si(vr, "V") + " rms"],
+            ["Inside these bands", inside.length ? inside.join(" · ") : `none: nearest is ${near.name}`]],
           eq: `P<sub>dBm</sub> = 10 · log<sub>10</sub>( P / 1 mW )`,
           eqn: `${num(v.p)} dBm = 10 · log<sub>10</sub>( ${si(w, "W")} / 1 mW )`,
-          chart: {x: {min: -140, max: 70, label: "Power (dBm)"}, y: {min: 1e-18, max: 1e5, log: true, label: "Power (W)", fmt: x => si(x, "W")},
-            series: [{pts: range(-140, 70, 60).map(p => [p, 1e-3 * undb(p)])}],
-            vlines: DBM_RUNGS.filter(r => r.short).map((r, i) => ({x: r.p, label: r.short, row: i % 4, color: r === near ? C.orange : C.grey})), marks: [{x: v.p, y: w, label: `${num(v.p)} dBm = ${si(w, "W")}`}]},
-          html: `<div class="vz-terms small"><span><b>dBm</b>: power compared with 1 milliwatt, in decibels. 0 dBm = 1 mW, +10 dBm = 10 mW, +30 dBm = 1 W, −30 dBm = 1 µW. +3 dB doubles the power, +10 dB is ten times.</span>
+          nochart: true,
+          html: `${dlLadder(v.p, pick)}<div class="vz-terms small"><span><b>dBm</b>: power compared with 1 milliwatt, in decibels. 0 dBm = 1 mW, +10 dBm = 10 mW, +30 dBm = 1 W, −30 dBm = 1 µW. +3 dB doubles the power, +10 dB is ten times.</span>
             <span><b>dB</b>: a ratio (gain, loss, isolation), no unit. <b>dBc</b>: below the carrier. <b>dBi</b>: antenna gain.</span>
             <span><b>Sensitivity</b>: the weakest signal a receiver still decodes. <b>Blocker</b>: a strong unwanted signal near the band that overloads the receiver so it loses the weak wanted one.</span>
             <span><b>IIP3</b>: how strong two unwanted signals may be before the receiver makes its own interference; higher is better (<a href="/rf-notes#iip3_basics">IIP3 in plain words</a>, <a href="#ip3">IP3 visual</a>).</span>
             <span>Basics: <a href="/rf-notes#dbm_basics">dBm and decibels</a> · <a href="/rf-notes#sensitivity_noise_floor">Sensitivity and noise floor</a> · <a href="/rf-notes#dynamic_range_sfdr_blocking">Blocking</a> · <a href="https://www.minicircuits.com/appdoc/AN60-038.html" target="_blank" rel="noopener noreferrer">Mini-Circuits: amplifier terms defined ↗</a></span></div>
-            <p class="small"><b>The rungs</b> <span class="muted">(click one; the one nearest your slider is open)</span></p><div class="vz-rungs">${DBM_RUNGS.map(rung).join("")}</div>`,
-          note: "Every 10 dB is a factor of 10 in power, every 3 dB a factor of 2. A receiver handles signals 20 orders of magnitude below what the transmitter next to it sends: that is why filters, isolation and linearity matter. Switch the view to see a blocker scenario. Typical values are BizDev summaries of the standards (est); check the spec edition for a design.",
+            <p class="small"><b>All rungs as text</b> <span class="muted">(open one for its range, what moves it and the source)</span></p><div class="vz-rungs">${DBM_RUNGS.map(rung).join("")}</div>`,
+          note: "Every 10 dB is a factor of 10 in power, every 3 dB a factor of 2. A receiver handles signals 20 orders of magnitude below what the transmitter next to it sends: that is why filters, isolation and linearity matter. Each band names its source (standards and data sheets); bands marked est are BizDev estimates. Check the specification edition for a design.",
         };
       }
       // two blockers placed so that their 3rd-order product falls on the wanted channel; levels input-referred

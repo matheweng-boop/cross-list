@@ -405,6 +405,39 @@ def test_frequency_visuals_draw_the_bands_as_ranges(page):
     expect(page.locator("#vz-panel .vz-strip .vz-sbar").first).to_be_attached()
 
 
+def test_dbm_ladder_bands_explain_what_moves_them(page):
+    """Owner 2 Nov 2026 ("BLE sensitivity is a range, not a dotted line at one value"): the ladder draws each rung as a
+    band; a tap, a hover or the keyboard shows its range, what moves it and the source; the slider picks the nearest."""
+    go(page, "/visuals#dbm")
+    panel = page.locator("#vz-panel")
+    bands = panel.locator(".dl-b")
+    expect(bands).to_have_count(14)
+    expect(panel.locator(".dl-ln")).to_have_count(4)  # noise in 1 MHz, 1 mW, 1 W and the slider
+    expect(panel.locator(".vz-chartwrap")).to_be_hidden()
+    ble = panel.locator('.dl-b[data-dl="BLE sensitivity"]')
+    ble.click()
+    expect(ble).to_have_attribute("aria-pressed", "true")
+    info = panel.locator(".dl-info")
+    expect(info.locator("h4")).to_have_text("BLE sensitivity")
+    expect(info).to_contain_text("−105 dBm to −70 dBm, typical −97 dBm")
+    expect(info).to_contain_text("What moves it")
+    expect(info.locator('a[href*="bluetooth.com"]')).to_have_count(1)
+    panel.locator('.dl-b[data-dl="Radar transmitter (peak)"]').hover()
+    expect(info.locator("h4")).to_have_text("Radar transmitter (peak)")
+    expect(info).to_contain_text("BizDev estimate (est)")
+    panel.locator('.dl-b[data-dl="Wi-Fi client transmitter"]').focus()
+    page.keyboard.press("Tab")  # the keyboard moves on to the next band, which explains itself
+    expect(info.locator("h4")).to_have_text("Phone transmitter (LTE / 5G)")
+    expect(panel.locator('.dl-b[data-dl="Phone transmitter (LTE / 5G)"]')).to_be_focused()
+    slider = panel.locator('input[data-k="p"]')
+    slider.evaluate("r => { r.value = -128; r.dispatchEvent(new Event('input', {bubbles: true})); }")
+    expect(info.locator("h4")).to_have_text("GNSS signal at the antenna")
+    expect(panel.locator(".vz-kpis")).to_contain_text("GNSS signal at the antenna")
+    panel.locator('select[data-k="mode"]').select_option("blocker")
+    expect(panel.locator(".vz-chartwrap")).to_be_visible()
+    expect(panel.locator(".dl-b")).to_have_count(0)
+
+
 # --- Data management --------------------------------------------------------------------------------------------------
 def test_verify_next_answer_one_with_a_comment(page):
     go(page, "/manage/verify")

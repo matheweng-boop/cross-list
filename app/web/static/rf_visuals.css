@@ -55,3 +55,39 @@
 .vz-sf { position: absolute; top: 0; bottom: 18px; width: 2px; margin-left: -1px; background: #c2410c; }
 .vz-sax { position: relative; display: flex; justify-content: space-between; border-top: 1px solid #8a94a3; padding: 1px 4px; font-size: .7rem; height: 18px; }
 .vz-sax .vz-sfl { position: absolute; transform: translateX(-50%); color: #c2410c; font-weight: 600; background: #fcfcfd; padding: 0 3px; }
+
+/* dBm ladder as ranges (owner 2 Nov 2026): one row per rung, a band from the low to the high end with a dark tick at
+   the typical value; dashed bands are estimates; fixed definitions are lines across all rows; your power in orange */
+.dl { margin: .2rem 0 .6rem; } .dl figcaption { margin-bottom: .3rem; }
+.dl-plot { position: relative; padding: 1.2rem 0 0; background: #fcfcfd; border: 1px solid #e3e6ea; border-radius: 4px; color: #3a4450; overflow: hidden; }
+.dl-head { position: absolute; top: 0; left: 0; right: 0; height: 1.2rem; }
+.dl-head span { position: absolute; top: .15rem; transform: translateX(-50%); font-size: .66rem; color: #5b6573; white-space: nowrap; }
+.dl-ln { position: absolute; top: 1.2rem; bottom: 1.3rem; width: 0; border-left: 1.5px dashed #8a94a3; pointer-events: none; }
+.dl-ln.you { border-left: 2px solid #c2410c; z-index: 1; }
+.dl-row { position: relative; padding: 0 2px .2rem; }
+.dl-lab { position: relative; z-index: 2; display: block; font-size: .72rem; line-height: 1.05rem;
+  text-shadow: 0 0 2px #fcfcfd, 0 0 2px #fcfcfd, 0 0 3px #fcfcfd; }  /* readable across the dashed lines */
+.dl-lab .dl-r { color: #5b6573; font-variant-numeric: tabular-nums; }
+.dl-tr { position: relative; z-index: 2; display: block; height: 16px; }
+.dl-b { position: absolute; top: 0; bottom: 0; min-width: 6px; width: auto; height: auto; margin: 0; padding: 0; font: inherit; line-height: 0;
+  border: 1.5px solid #1f5fa8; border-radius: 3px; background: rgba(31, 95, 168, .25); cursor: pointer; }
+.dl-b::before { content: ""; position: absolute; inset: -5px -3px; }  /* a larger target for a finger */
+.dl-b.est { border-style: dashed; border-color: #6b7280; background: rgba(138, 148, 163, .25); }
+.dl-b.on { border-color: #c2410c; background: rgba(194, 65, 12, .28); box-shadow: 0 0 0 2px rgba(194, 65, 12, .25); }
+.dl-b i { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; background: #12315a; border-radius: 1px; }
+.dl-b:focus-visible { outline: 2px solid var(--pico-primary); outline-offset: 2px; }
+@media (pointer: coarse) { .dl-tr { height: 22px; } }
+.dl-ax { position: relative; height: 1.3rem; border-top: 1px solid #8a94a3; font-size: .66rem; color: #5b6573; }
+.dl-ax span { position: absolute; top: .15rem; transform: translateX(-50%); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dl-ax span.mn { display: none; }
+.dl-ax span.you { color: #c2410c; font-weight: 700; background: #fcfcfd; padding: 0 2px; z-index: 1; }
+@media (min-width: 700px) { .dl-ax span.mn { display: inline; } }
+.dl-axl { margin: .15rem 0 .4rem; }
+.dl-est { font-size: .64rem; font-weight: 700; color: #4b5563; border: 1px solid #c5cbd3; border-radius: .5rem; padding: 0 .3rem; white-space: nowrap; }
+.dl-info { margin: .2rem 0 .6rem; padding: .5rem .7rem; border-left: 4px solid #c2410c; background: #fff8f2; border-radius: .3rem; color: #23304a; }
+.dl-info h4 { margin: 0 0 .3rem; font-size: .95rem; color: inherit; }
+.dl-info dl { margin: .2rem 0 0; display: grid; grid-template-columns: minmax(6rem, max-content) 1fr; gap: .15rem .6rem; font-size: .88rem; }
+.dl-info dt { font-weight: 600; color: #3a4450; } .dl-info dd { margin: 0; overflow-wrap: anywhere; }
+.vz-rung dd { overflow-wrap: anywhere; }
+.dl-pts { margin: 0; padding-left: 1rem; } .dl-pts li { margin: 0; list-style: disc; } .dl-pts b { font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .dl-info dl { grid-template-columns: 1fr; } .dl-info dd { margin-bottom: .25rem; } }

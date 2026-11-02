@@ -74,9 +74,9 @@ def test_technology_fit_and_cases(client):
 
 def test_explanations_everywhere(client):
     help_ = op.explanations()
-    for page in ("overview", "applications", "markets", "attach", "explorer", "cases", "tam"):
+    for page in ("overview", "applications", "markets", "explorer", "cases", "tam"):  # attach: retired, 2 Nov 2026
         assert page in help_["pages"]
-    for path in ("/business", "/business/applications", "/business/markets", "/business/attach", "/business/gaps",
+    for path in ("/business", "/business/applications", "/business/markets", "/business/gaps",
                  "/business/technology", "/business/explorer", "/business/cases", "/business/tam"):  # fmt: skip
         assert "About this page" in client.get(path).text, path
     method = client.get("/business/method").text

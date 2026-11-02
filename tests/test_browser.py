@@ -219,6 +219,26 @@ def test_cross_sell_by_system(page):
     assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
 
 
+def test_cross_sell_start_from_a_part(page):
+    """Owner, 2 Nov 2026: By part is gone; type one of our part numbers in By system's box, see the systems that use
+    its function, pick one and find the part highlighted there. An old By part link lands on the same list."""
+    go(page, "/blocks/cross-sell")
+    expect(page.locator("nav.page-tabs a", has_text="By part")).to_have_count(0)
+    page.locator("#xs-part").fill("Si8641")
+    with page.expect_navigation():
+        page.locator("#part-box button[type=submit]").click()
+    assert "part=Si8641" in page.url
+    expect(page.locator(".xs-places .xs-sys-list li").first).to_be_visible()
+    with page.expect_navigation():
+        page.locator(".xs-sys-list li a").nth(1).click()  # the first sub-system of the first system
+    assert "sub=" in page.url and "part=" in page.url
+    expect(page.locator(".xs-note")).to_contain_text("highlighted")
+    expect(page.locator("#parts-here tr.xs-hl .xs-you").first).to_be_visible()
+    go(page, "/business/attach?fn=digital_isolator")
+    assert "/blocks/cross-sell?fn=digital_isolator" in page.url
+    expect(page.locator(".xs-sys-list")).to_be_visible()
+
+
 def test_cross_sell_system_buttons_fit_side_by_side(page, chromium, live_server):
     """The system buttons sit side by side: at 390 px three per row in three short rows, nothing sideways, the
     sub-system chips right under them."""

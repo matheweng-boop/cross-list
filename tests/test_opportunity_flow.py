@@ -34,11 +34,13 @@ def test_keep_set_aside_and_restore(client):
 
 
 def test_cross_sell_names_parts_and_bundles(client):
-    html = client.get("/business/attach").text
-    assert "Best bundles" in html
-    fn = re.search(r'<option value="([a-z0-9_]+)"', html).group(1)
-    html = client.get(f"/business/attach?fn={fn}").text
-    assert "Offer with it" in html and "New products next to it" in html
+    """By part was retired (owner, 2 Nov 2026): parts and bundles are shown per system; a function leads to the
+    systems that use it."""
+    html = client.get("/blocks/cross-sell?system=automotive&aec=0").text
+    assert "<h3>Bundles" in html and 'class="badge ln-skyworks aec-chip"' in html
+    fn = re.search(r'href="/blocks/cross-sell\?co=combined&amp;fn=([a-z0-9_]+)">Other systems with it<', html).group(1)
+    html = client.get(f"/blocks/cross-sell?fn={fn}").text
+    assert 'class="xs-sys-list"' in html and f"system=automotive&amp;fn={fn}" in html
 
 
 def test_markets_chips_and_groups(client):
@@ -102,7 +104,7 @@ def test_cross_sell_explains_each_pairing(client):
     assert w["n"] and w["rows"] and w["summary"]
     r = w["rows"][0]
     assert r["same"] or r["links"] or (r["a_blocks"] and r["b_blocks"])
-    page = client.get("/business/attach?fn=load_switch")
+    page = client.get("/blocks/cross-sell?system=automotive")  # the Bundles table of a system
     assert page.status_code == 200 and '<details class="why small"><summary>Why?</summary>' in page.text
     assert '<details class="why small" open' not in page.text  # collapsed by default
 
@@ -150,5 +152,7 @@ def test_cross_sell_is_bottom_up_per_system(client):
     assert client.get("/blocks/cross-sell?sel=automotive:car-radio&template=").status_code == 200  # "all diagrams"
     assert nav.place("/blocks/cross-sell") == ("systems", "/blocks/cross-sell")
     assert nav.place("/business/attach") == ("systems", "/blocks/cross-sell")
-    assert 'aria-current="page" class="on">By part<' in client.get("/business/attach").text
+    old = client.get("/business/attach", follow_redirects=False)  # By part retired (owner, 2 Nov 2026)
+    assert old.status_code == 307 and old.headers["location"] == "/blocks/cross-sell"
+    assert ">By part<" not in client.get("/blocks/cross-sell").text
     assert 'aria-current="page" class="on">Skyworks + Qorvo portfolio<' in client.get("/portfolio").text

@@ -173,8 +173,28 @@ def places(idx) -> list[dict]:
     return sorted((p for p in out if p["n"]), key=lambda p: -p["n"])
 
 
-def places_of_function(fn: str) -> list[dict]:
-    """The sub-systems whose diagrams use a function (Cross-sell › By part: from a part to its systems)."""
+def diagrams_of_function(fn: str) -> set[int]:
+    """The library diagrams (template indexes) that use a function."""
     from app.services import opportunity as op
 
-    return places(a.i for a in op.applications() if not a.background and any(p.fn == fn for p in a.positions))
+    return {a.i for a in op.applications() if not a.background and any(p.fn == fn for p in a.positions)}
+
+
+def places_of_function(fn: str) -> list[dict]:
+    """The sub-systems whose diagrams use a function (from a part or a function to its systems)."""
+    return places(diagrams_of_function(fn))
+
+
+def systems_of_function(fn: str) -> list[dict]:
+    """The systems whose diagrams use a function, most diagrams first, each with how many of its diagrams use it and
+    those sub-systems (places), for "Start from a part we already sell" on Cross-sell › By system (owner, 2 Nov
+    2026). A diagram in two sub-systems of one system counts once for the system."""
+    idx = diagrams_of_function(fn)
+    subs = places(idx)
+    out = []
+    for s in systems():
+        n = len(idx & {i for x in s["subsystems"] for i in x["idx"]})
+        if n:
+            out.append({"key": s["key"], "title": s["title"], "n": n,
+                        "subs": [p for p in subs if p["system"] == s["key"]]})  # fmt: skip
+    return sorted(out, key=lambda s: -s["n"])

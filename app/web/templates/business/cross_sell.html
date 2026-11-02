@@ -27,21 +27,42 @@
 </nav>
 {% if in_sel and in_sel|length > 1 %}<form method="get" action="/blocks/cross-sell" class="sys-select small xs-diagram">
   <input type="hidden" name="co" value="{{ co }}"><input type="hidden" name="system" value="{{ system }}">{% if sub %}<input type="hidden" name="sub" value="{{ sub }}">{% endif %}{% if aec_param %}<input type="hidden" name="aec" value="{{ aec_param }}">{% endif %}
+  {%- if hl %}<input type="hidden" name="{{ 'part' if hl.mpn else 'fn' }}" value="{{ hl.mpn or hl.fn }}">{% endif %}
   <label>One diagram <small class="muted">optional</small> <select name="template" onchange="this.form.submit()"><option value="">– all {{ in_sel|length }} diagrams –</option>
     {% for i in in_sel %}<option value="{{ i }}"{{ ' selected' if template == i }}>{{ names[i]|truncate(70) }}</option>{% endfor %}</select></label>
   <noscript><button type="submit" class="small-btn">Show</button></noscript>
 </form>{% endif %}
+{# "Start from a part we already sell" (owner, 2 Nov 2026): By part was retired; a part number leads to the systems that
+   use its function, and picking one highlights the part there #}
+<form method="get" action="/blocks/cross-sell" class="xs-partbox" id="part-box" role="search">
+  <input type="hidden" name="co" value="{{ co }}">
+  <label for="xs-part"><b>Start from a part we already sell</b> <small class="muted">· a Skyworks or Qorvo part number</small></label>
+  <div class="xs-partrow"><input id="xs-part" name="part" value="{{ q_part }}" placeholder="e.g. Si8641, SKY87604, QPF4239" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+    <button type="submit" class="small-btn">Show its systems</button></div>
+</form>
+{% if q_part and not found %}<p class="uc-error small" role="status">No part number starting with “{{ q_part }}” in BizDev. Check the number, or pick a system above.</p>
+{% elif found and not found.ours %}<p class="xs-note small" role="status"><b>{{ found.mpn }}</b> is a {{ found.manufacturer|vendor }} part, not one of ours. <a href="{{ cross_url }}">See its cross: our replacements</a>, then start from our part here.</p>{% endif %}
+{% if hl and not xs %}<section class="xs-places" aria-labelledby="xs-places-h">
+  <h3 id="xs-places-h">{% if hl.mpn %}{{ hl.mpn }} <small class="muted">· {{ hl.manufacturer|vendor }} · {{ hl.label }}</small>{% else %}{{ hl.label }}{% endif %}</h3>
+  {% if found and not found.exact %}<p class="small muted">Closest match for “{{ q_part }}”{% if found.others %}; also: {% for o in found.others %}<a href="{{ url(part=o) }}">{{ o }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}.</p>{% endif %}
+  {% if fn_systems %}<p class="small">{{ 'Its function (' ~ hl.label ~ ')' if hl.mpn else hl.label }} is used in {{ fn_n }} diagram{{ 's' if fn_n != 1 }} of {{ fn_systems|length }} system{{ 's' if fn_systems|length != 1 }}. Pick one to see what sells with it there:</p>
+  <ul class="xs-sys-list">{% for s in fn_systems %}<li><a href="{{ url(system=s.key, sub='', template=none) }}"><b>{{ s.title }}</b> ({{ s.n }} diagram{{ 's' if s.n != 1 }})</a>{% if s.subs %}: {% for p in s.subs %}<a href="{{ url(system=s.key, sub=p.sub, template=none) }}">{{ p.title }}</a> <span class="muted">({{ p.n }})</span>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</li>{% endfor %}</ul>
+  {% else %}<p class="small muted">{{ hl.label }} is not in any diagram of the Block diagram library yet.</p>{% endif %}
+</section>{% endif %}
 
 {% if xs %}{% set sel_q = 'system=' ~ system ~ ('&sub=' ~ sub if sub else '') %}{% set n_all = xs.apps|length %}
 <h2>{{ picked.label }} <small class="muted">· {{ n_all }} diagram{{ 's' if n_all != 1 }}</small></h2>
 {% if template is not none %}<p class="small"><a href="/blocks/new?template={{ template }}">Open the diagram</a>{% if system %} · <a href="{{ url(template=none) }}">back to all diagrams of the selection</a>{% endif %}</p>
 {% elif system and sub %}<p class="small"><a href="/blocks?system={{ system }}&amp;sub={{ sub }}#sub-{{ sub }}">See the diagrams in the Block diagram library</a></p>{% endif %}
 {{ toggle(aec, aec_base) }}
+{% if hl %}<p class="xs-note small" role="status">{% if hl_row %}<b>{{ hl.mpn or hl.label }}</b>{% if hl.mpn %} ({{ hl.manufacturer|vendor }} · {{ hl.label }}){% endif %} is used in <a href="#fn-{{ hl.fn }}">{{ hl_row.n_apps }} of {{ n_all }} diagram{{ 's' if n_all != 1 }} here</a>: {{ 'its chip and row are' if hl.mpn else 'its row is' }} highlighted below.
+  {%- else %}<b>{{ hl.mpn or hl.label }}</b>{% if hl.mpn %} ({{ hl.label }}){% endif %} is not used in these diagrams.{% endif %}
+  <a href="{{ url(system='', sub='', template=none, aec='') }}">Other systems with it</a> · <a href="{{ url(part='', fn='') }}">Clear</a></p>{% endif %}
 {% if table.rows %}{% set one = table.lines|length == 1 %}<section class="xs-lines" id="parts-here" aria-labelledby="xs-lines-h">
   <h3 id="xs-lines-h">{{ table.lines|join(' and ') }} parts here <small class="muted">· {{ table.rows|length }} function{{ 's' if table.rows|length != 1 }}, most used first</small></h3>
   <div class="table-wrap"><table class="xs-lines-table xs-compact{{ ' xs-one' if one }}">
     <thead><tr><th scope="col" class="xs-c-fn">Function</th>{% for l in table.lines %}<th scope="col" class="ln-{{ l|lower }}">{{ l }} <small class="muted">· {{ table.count[l] }} part{{ 's' if table.count[l] != 1 }} in {{ table.fns[l] }} function{{ 's' if table.fns[l] != 1 }}</small></th>{% endfor %}<th scope="col" class="xs-c-used">Used in</th></tr></thead>
-    <tbody>{% for r in table.rows %}<tr id="fn-{{ r.fn }}" class="xs-row{{ ' xs-syn' if r.pairs.values()|select|list }}">
+    <tbody>{% for r in table.rows %}<tr id="fn-{{ r.fn }}" class="xs-row{{ ' xs-syn' if r.pairs.values()|select|list }}{{ ' xs-hl' if hl and r.fn == hl.fn }}">
       <th scope="row">{{ r.label }}{% for l in table.lines %}{% for pr in r.pairs[l] %} <a class="xs-pair small" href="#pair-{{ pr.j }}" title="Synergy pair: the {{ l }} {{ r.label }} with the {{ 'Qorvo' if l == 'Skyworks' else 'Skyworks' }} {{ pr.other }}; see the card below">↓ pair with {{ pr.other }}</a>{% endfor %}{% endfor %}</th>
       {%- for l in table.lines %}<td class="ln-{{ l|lower }}" data-label="{{ l }}">{{ cell(r, l) }}</td>{% endfor %}
       <td class="xs-used">{{ r.n_apps }} of {{ n_all }} diagram{{ 's' if n_all != 1 }}</td></tr>{% endfor %}</tbody>
@@ -52,7 +73,7 @@
 {% if xs.ours %}<div class="table-wrap"><table class="striped xs-table">
   <thead><tr><th scope="col">Function</th><th scope="col">In diagrams</th><th scope="col"></th></tr></thead>
   <tbody>{% for e in xs.ours %}<tr><td>{{ e.label }}</td><td>{{ e.n_apps }} of {{ xs.apps|length }}</td>
-    <td><a class="small" href="/business/attach?co={{ co }}&amp;fn={{ e.fn|urlencode }}">What sells with it</a></td></tr>{% endfor %}</tbody>
+    <td><a class="small" href="{{ url(system='', sub='', template=none, aec='', part='', fn=e.fn) }}">Other systems with it</a></td></tr>{% endfor %}</tbody>
 </table></div>{% else %}<p class="small muted">No part of ours in these diagrams yet.</p>{% endif %}
 <h3>Bundles <small class="muted">· two of our functions in the same diagram</small></h3>
 {% if xs.n_moved %}<p class="small muted">{{ xs.n_moved }} Skyworks + Qorvo pair{{ 's are' if xs.n_moved != 1 else ' is' }} shown once, under <a href="#together">Skyworks + Qorvo together here</a>.</p>{% endif %}
@@ -73,14 +94,14 @@
   {% for a in xs.anchors %}<p><span class="anchor-badge">Anchor</span> {% if a.label %}{{ a.label }}: {% endif %}<b>{{ a.part }}</b> → <a href="/find?q={{ a.ours|urlencode }}">{{ a.ours }}</a> <span class="muted">({{ a.type }})</span> · found in <a href="/reference-designs?part={{ a.part|urlencode }}">{{ a.n }} reference design{{ 's' if a.n != 1 }}</a>
     {% if a.around %}<br><span class="muted">Designs with this anchor also use:</span> {% for f, c, lab, st in a.around %}{{ lab }} <span class="muted">({{ c }}, {{ st }})</span>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</p>{% endfor %}
 </section>{% endif %}
-<p class="small muted">{{ xs.n_gaps }} function{{ 's' if xs.n_gaps != 1 }} here {{ 'have' if xs.n_gaps != 1 else 'has' }} no part of ours: see <a href="/business/opportunities">Gaps &amp; new technology</a>. Start from one part number instead: <a href="/business/attach">Cross-sell by part</a>.</p>
+<p class="small muted">{{ xs.n_gaps }} function{{ 's' if xs.n_gaps != 1 }} here {{ 'have' if xs.n_gaps != 1 else 'has' }} no part of ours: see <a href="/business/opportunities">Gaps &amp; new technology</a>. Or start from a part we already sell: <a href="#part-box">the part box above</a>.</p>
 {% else %}
 <h2>Sell what we have <small class="muted">· across the whole library</small></h2>
 <p class="small muted">We have parts for these functions; offer them in every design that uses them. Gaps and new technology moved to <a href="/business/opportunities">Opportunities › Gaps &amp; new technology</a>.</p>
 <div class="csg-grid">{% for e in sell[:12] %}<article class="csg-card"><b>{{ e.label }}</b>
   <small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }} · {{ e.markets[:3]|join(', ') }}{% if e.markets|length > 3 %} +{{ e.markets|length - 3 }}{% endif %}</small>
   {% if e.requalify %}<small class="csg-flag">Automotive designs need it: qualify a part</small>{% endif %}
-  <small><a href="/business/attach?fn={{ e.fn|urlencode }}&amp;co={{ co }}">What sells with it</a></small></article>{% endfor %}</div>
-{% if sell|length > 12 %}<details class="csg-more small"><summary>Show {{ sell|length - 12 }} more</summary><div class="csg-grid">{% for e in sell[12:] %}<article class="csg-card"><b>{{ e.label }}</b><small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }}</small><small><a href="/business/attach?fn={{ e.fn|urlencode }}&amp;co={{ co }}">What sells with it</a></small></article>{% endfor %}</div></details>{% endif %}
+  <small><a href="{{ url(fn=e.fn, part='') }}">Systems that use it</a></small></article>{% endfor %}</div>
+{% if sell|length > 12 %}<details class="csg-more small"><summary>Show {{ sell|length - 12 }} more</summary><div class="csg-grid">{% for e in sell[12:] %}<article class="csg-card"><b>{{ e.label }}</b><small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }}</small><small><a href="{{ url(fn=e.fn, part='') }}">Systems that use it</a></small></article>{% endfor %}</div></details>{% endif %}
 {% endif %}
 {% endblock %}

@@ -38,8 +38,10 @@ def test_suggestions_ordered_with_reasons(session):
 
 
 def test_page(client):
+    """By part was retired (owner, 2 Nov 2026); an old part link lands in the part box of By system."""
     r = client.get("/business/attach?part=SKY87604&app=dcdc")
-    assert r.status_code == 200 and "Offer with it" in r.text and "SKY87604" in r.text
+    assert r.status_code == 200 and str(r.url).endswith("/blocks/cross-sell?part=SKY87604")
+    assert "SKY87604" in r.text and 'class="xs-sys-list"' in r.text and "Offer with it" not in r.text
     assert "No part number starting with" in client.get("/business/attach?part=zzzzzz").text
 
 
@@ -276,7 +278,7 @@ def test_portfolio_moved_from_products_to_cross_sell():
     desc = next(d for label, href, d in systems[2] if href == "/blocks/cross-sell")
     assert "portfolio" in desc
     tabs = next(g for g in nav.TABS if g[0][1] == "/blocks/cross-sell")
-    assert [label for label, _ in tabs] == ["By system", "By part", "Skyworks + Qorvo portfolio"]
+    assert [label for label, _ in tabs] == ["By system", "Skyworks + Qorvo portfolio"]  # By part retired, 2 Nov 2026
     st = nav.state("/portfolio")
     assert (st["section"], st["item"], st["active_tab"]) == ("systems", "/blocks/cross-sell", "/portfolio")
     assert st["crumbs"] == [("Systems & applications", "/library"), ("Cross-sell", "/blocks/cross-sell")]
@@ -308,7 +310,7 @@ def test_portfolio_page_keeps_every_section_and_shows_the_tab_row(client):
 def test_tab_links_keep_the_selected_system(client):
     html = client.get("/blocks/cross-sell?system=automotive&sub=car-radio").text
     tabs = _section(html, 'class="page-tabs"', "</nav>")
-    assert 'href="/business/attach?system=automotive&amp;sub=car-radio"' in tabs
+    assert "/business/attach" not in tabs and ">By part<" not in tabs  # retired (owner, 2 Nov 2026)
     assert 'href="/portfolio?system=automotive&amp;sub=car-radio"' in tabs
     back = _section(client.get("/portfolio?system=automotive").text, 'class="page-tabs"', "</nav>")
     assert 'href="/blocks/cross-sell?system=automotive"' in back
@@ -394,9 +396,10 @@ def test_no_together_block_when_nothing_matches(client):
     assert 'id="together"' in one_line  # one company now: an old ?co=skyworks link shows the combined view
 
 
-def test_by_part_links_a_function_to_its_systems(client):
-    html = client.get("/business/attach?fn=am_fm_tuner").text
-    assert 'href="/blocks/cross-sell?system=automotive&amp;sub=car-radio"' in html
+def test_old_function_links_land_on_the_systems_that_use_it(client):
+    r = client.get("/business/attach?fn=am_fm_tuner")
+    assert str(r.url).endswith("/blocks/cross-sell?fn=am_fm_tuner")
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio&amp;fn=am_fm_tuner"' in r.text
     places = sy.places_of_function("am_fm_tuner")
     assert places and places[0]["n"] >= places[-1]["n"]
 
@@ -413,3 +416,96 @@ def test_bundle_table_count_matches_the_diagrams_where_both_lines_supply_blocks(
     assert f"The {shown} most complementary of {total} block diagrams where both lines supply blocks" in html
     auto = sy.selection("automotive")["idx"]
     assert pf.together_in(auto)["n_both"] == sum(1 for b in pf.bundles(limit=10_000) if b["i"] in set(auto))
+
+
+# ---- "Start from a part we already sell" (owner, 2 Nov 2026) ---------------------------------------------------------
+# "Suggesting partner parts without the application is a guess": the By part tab is gone. By system has a part box: one
+# of our part numbers shows the systems and sub-systems that use its function, with diagram counts; picking one opens
+# the normal By system view with the part highlighted (its chip first and marked, its row marked, a short note).
+# Unknown and competitor part numbers are answered plainly; old /business/attach links redirect.
+
+
+def test_systems_of_a_function_count_each_diagram_once():
+    fn = "digital_isolator"
+    idx = sy.diagrams_of_function(fn)
+    out = sy.systems_of_function(fn)
+    assert out and [s["n"] for s in out] == sorted((s["n"] for s in out), reverse=True)
+    for s in out:
+        mine = idx & set(sy.selection(s["key"])["idx"])
+        assert s["n"] == len(mine) and s["subs"] and all(p["system"] == s["key"] for p in s["subs"])
+        assert max(p["n"] for p in s["subs"]) <= s["n"] <= sum(p["n"] for p in s["subs"])
+    assert {p["sub"] for s in out for p in s["subs"]} == {p["sub"] for p in sy.places_of_function(fn)}
+    assert sy.systems_of_function("no_such_function") == []
+
+
+def test_part_box_lists_the_systems_that_use_our_part(client, session):
+    html = client.get(f"{URL}?part=SKY87604").text
+    p = cs.resolve_part(session, "SKY87604")
+    box = _section(html, 'class="xs-places"', "</section>")
+    assert f"{p['mpn']} <small" in box and "Skyworks" in box and "Closest match for “SKY87604”" in box
+    systems = sy.systems_of_function("load_switch")
+    n = len(sy.diagrams_of_function("load_switch"))
+    assert f"is used in {n} diagrams of {len(systems)} systems" in box
+    listed = re.findall(r'<li><a href="/blocks/cross-sell\?co=combined&amp;system=([\w-]+)&amp;part=([^"]+)"><b>([^<]+)'
+                        r"</b> \((\d+) diagrams?\)</a>", box)  # fmt: skip
+    assert [(k, int(c)) for k, _, _, c in listed] == [(s["key"], s["n"]) for s in systems]
+    assert {unquote(m) for _, m, _, _ in listed} == {p["mpn"]}
+    first = systems[0]["subs"][0]
+    assert f"system={first['system']}&amp;sub={first['sub']}&amp;part=" in box and f"({first['n']})" in box
+    assert "Sell what we have" in html  # the rest of the page as before
+    exact = client.get(f"{URL}?part={p['mpn']}").text
+    assert "Closest match" not in exact and f"{p['mpn']} <small" in exact
+
+
+def test_picking_a_system_highlights_the_part(client, session):
+    mpn = cs.resolve_part(session, "SKY87604")["mpn"]
+    place = sy.places_of_function("load_switch")[0]
+    html = client.get(f"{URL}?system={place['system']}&sub={place['sub']}&part={mpn}&aec=0").text
+    note = _section(html, '<p class="xs-note small" role="status">', "</p>")
+    assert f"<b>{mpn}</b> (Skyworks · " in note and "its chip and row are highlighted" in note
+    assert 'href="#fn-load_switch"' in note and f"part={mpn}" in note and ">Clear</a>" in note
+    rows = {fn: (cls, row) for fn, cls, row in ROW.findall(_section(html, 'id="parts-here"', "</section>"))}
+    cls, row = rows["load_switch"]
+    assert "xs-hl" in cls and sum("xs-hl" in c for c, _ in rows.values()) == 1
+    sky = _cells(row)[0]
+    you = '<div class="xs-chips"><span class="xs-you" title="The part you started from"><a class="badge'
+    assert sky.startswith(you)
+    assert sky.count(f'href="/parts?q={mpn}"') == 1  # listed once, first
+    # the selection keeps the part: system buttons, sub-system chips, the filter toggle and the one-diagram form
+    pick = _section(html, '<nav class="xs-pick"', "</nav>")
+    assert pick.count(f"part={mpn}") == pick.count("<a ") and f'name="part" value="{mpn}"' in html
+    assert f"part={mpn}&amp;aec=1" in _section(html, 'class="chip-row aec-filter"', "</div>")
+    # a system that does not use the function says so
+    used = sy.diagrams_of_function("load_switch")
+    other = next(s for s in sy.systems() if not set(sy.selection(s["key"])["idx"]) & used)
+    none = client.get(f"{URL}?system={other['key']}&part={mpn}").text
+    assert "is not used in these diagrams" in none and "xs-hl" not in _section(none, "<main", "</main>")
+
+
+def test_part_box_answers_unknown_and_competitor_parts_plainly(client, real):
+    html = client.get(f"{URL}?part=zzzzzz").text
+    assert "No part number starting with “zzzzzz” in BizDev" in html and 'class="xs-places"' not in html
+    comp = client.get(f"{URL}?part=ISO7741").text
+    m = re.search(r'<b>(ISO7741[^<]*)</b> is a TI part, not one of ours\. '
+                  r'<a href="(/parts/\d+)">See its cross: our replacements</a>', comp)  # fmt: skip
+    assert m and client.get(m.group(2)).status_code == 200
+    assert 'class="xs-places"' not in comp and "xs-hl" not in comp
+    blank = client.get(f"{URL}?part=").text  # the box sent empty: the chooser, no message
+    assert "No part number" not in blank and "Pick a system" in blank
+
+
+def test_old_by_part_links_redirect(client):
+    for old, new in (("/business/attach", "/blocks/cross-sell"),
+                     ("/business/attach?part=Si8641&app=dcdc", "/blocks/cross-sell?part=Si8641"),
+                     ("/business/attach?fn=gate_driver&co=combined", "/blocks/cross-sell?fn=gate_driver"),
+                     ("/business/attach?part=Si8641&fn=gate_driver", "/blocks/cross-sell?part=Si8641"),
+                     ("/business/attach?system=automotive&sub=car-radio&aec=0",
+                      "/blocks/cross-sell?system=automotive&sub=car-radio&aec=0")):  # fmt: skip
+        r = client.get(old, follow_redirects=False)
+        assert r.status_code == 307 and r.headers["location"] == new, old
+    from app.services import vocab
+
+    fn = client.get("/blocks/cross-sell?fn=gate_driver").text
+    label = vocab.fn_label("gate_driver")
+    assert f'<h3 id="xs-places-h">{label}</h3>' in fn and f"{label} is used in " in fn
+    assert "No part number" not in client.get("/blocks/cross-sell?fn=no_such_function").text

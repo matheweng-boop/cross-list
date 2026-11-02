@@ -267,4 +267,5 @@ def test_gate_driver_pin_aliases():
     assert not pins_compatible("EN", "DIS", "gate_driver")  # opposite polarity
     # owner, 2 Nov 2026: Analog Devices isolator inputs VIA..VID are our INA..IND too; the gate-driver DISABLE / DIS
     # alias stays with gate drivers (isolator control pins compare by role, data/pin_roles.yaml)
-    assert pins_compatible("VIA", "INA", "digital_isolator") and not pins_compatible("DISABLE", "DIS", "digital_isolator")
+    assert pins_compatible("VIA", "INA", "digital_isolator")
+    assert not pins_compatible("DISABLE", "DIS", "digital_isolator")

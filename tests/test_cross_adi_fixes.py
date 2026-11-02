@@ -217,7 +217,7 @@ def test_isolation_shortfall_ranks_below_an_output_option_difference(session, gd
 
 
 def test_space_grade_red_row_says_why(session, iso):
-    """ADuM141ES is QML Level V space grade (adum141es.pdf p.1): we have no space-grade part, and the red row says so."""
+    """ADuM141ES is QML Level V space grade (adum141es.pdf p.1): we have no space-grade part; the red row says so."""
     row = cl.cross_list(session, cl.parse("ADuM141E1L703F")[0])[0]
     assert row.light == "red" and row.reason == "No space-grade (QML) part in our portfolio."
 

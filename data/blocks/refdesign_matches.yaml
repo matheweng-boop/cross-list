@@ -1821,48 +1821,56 @@ diagrams:
   anchors: []
 - name: EV traction inverter
   key: ev-traction-inverter
-  n: 17
+  n: 21
   designs:
   - TI:TIDA-020014.1
   - TI:TIDM-02014
   - TI:TIDM-02009
-  - TI:TIDA-01255
   - TI:TIDA-01543
+  - TI:TIDA-010947
+  - TI:TIDA-010961
+  - TI:TIDA-01255
   - ROHM:REF68004
+  - TI:TIDA-01527
   - TI:TIDA-020015
   - TI:TIDA-00794
   - TI:TIDA-00436
+  - TI:TIDA-00909
+  - TI:TIDA-00913
+  - TI:TIDA-010056
   - TI:TIDM-02017
   - TI:TIDA-00365
   - TI:TIDA-00392
   - TI:TIDA-00774
   - TI:TIDA-00893
-  - TI:TIDA-00909
-  - TI:TIDA-00913
-  - TI:TIDA-010056
+  - TI:TIDA-01629
   functions:
-    pol_ldo: 10
-    wide_vin_buck: 9
-    power_fets: 8
-    amplifier: 7
+    pol_ldo: 12
+    amplifier: 11
+    mcu: 10
+    wide_vin_buck: 10
+    power_fets: 9
     isolated_dcdc: 7
-    mcu: 7
-    temperature_sensor: 6
+    temperature_sensor: 7
     can_transceiver: 5
     digital_isolator: 5
     gate_driver: 5
+    three_phase_gate_driver: 5
     isolated_amplifier: 4
-    three_phase_gate_driver: 4
+    voltage_reference: 4
+    position_interface: 3
     supervisor: 3
     reverse_polarity: 2
+    rs485_transceiver: 2
     voltage_translator: 2
     adc: 1
     half_bridge_driver: 1
     isolated_can: 1
     pmic: 1
+    position_sensor: 1
     power_module: 1
+    touch_controller: 1
     tvs_esd: 1
-    voltage_reference: 1
   confirmed:
   - mcu
   - supervisor
@@ -1875,11 +1883,11 @@ diagrams:
   - wide_vin_buck
   - pol_ldo
   - can_transceiver
+  - position_interface
+  - amplifier
   suggested:
   - fn: power_fets
-    n: 8
-  - fn: amplifier
-    n: 7
+    n: 9
   anchors:
   - part: AMC1311
     fn: isolated_amplifier
@@ -2441,7 +2449,7 @@ diagrams:
   anchors: []
 - name: HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)
   key: hev-ev-on-board-charger-two-stage-pfc-isolated-dc-dc-ti
-  n: 34
+  n: 37
   designs:
   - TI:PMP22650.1
   - TI:TIDA-01606.1
@@ -2450,51 +2458,54 @@ diagrams:
   - TI:PMP41078.1
   - TI:PMP41139.1
   - TI:TIDA-020014.1
-  - TI:TIDA-010957.1
   - TI:TIDM-02000
   - TI:TIDM-02002
   - TI:TIDM-02009
   - TI:TIDM-BIDIR-400-12
   - TI:PMP41006.1
   - TI:TIDA-010954.1
-  - TI:TIDA-01255
+  - TI:TIDA-010957.1
   - TI:TIDA-01543
   - TI:TIDA-01604
-  - TI:TIDA-01605
-  - TI:TIDA-020019
   - TI:TIDA-03050
   - TI:TIDM-1000
+  - TI:TIDA-01255
+  - TI:TIDA-01605
+  - TI:TIDA-020018
+  - TI:TIDA-020019
   - TI:TIDA-00699
   - TI:TIDA-020015
-  - TI:TIDA-020018
   - TI:TIDM-02008
+  - TI:TIDM-1001
   - TI:PMP21553.1
   - TI:PMP21561.1
   - TI:PMP22992.1
+  - TI:PMP23461.1
   - TI:PMP31273.1
+  - TI:TIDA-010080.1
   - TI:TIDA-01179
   - TI:TIDA-01235
+  - TI:TIDA-01636
   - TI:TIDEP-01014
-  - TI:TIDM-1001
   - TI:TIDM-PSFB-DCDC
   functions:
+    mcu: 22
     isolated_dcdc: 20
-    mcu: 20
-    pol_ldo: 18
-    amplifier: 16
+    amplifier: 19
+    pol_ldo: 19
     digital_isolator: 14
     gate_driver: 13
+    power_fets: 13
     isolated_amplifier: 12
-    power_fets: 12
     current_sensor: 7
     reverse_polarity: 7
     wide_vin_buck: 7
     temperature_sensor: 6
+    acdc_controller: 5
     supervisor: 5
-    acdc_controller: 4
     isolated_can: 4
+    voltage_reference: 4
     can_transceiver: 3
-    voltage_reference: 3
     adc: 2
     pmic: 2
     clock_buffer: 1
@@ -2517,9 +2528,8 @@ diagrams:
   - pmic
   - reverse_polarity
   - adc
-  suggested:
-  - fn: amplifier
-    n: 16
+  - amplifier
+  suggested: []
   anchors:
   - part: UCC21530
     fn: gate_driver
@@ -2624,8 +2634,8 @@ diagrams:
     maker: Skyworks
     type: Functional
     designs:
-    - TI:TIDA-01255
     - TI:TIDA-01604
+    - TI:TIDA-01255
     n: 2
   - part: UCC21222
     fn: gate_driver
@@ -2800,53 +2810,55 @@ diagrams:
     n: 1
 - name: HEV/EV HV-to-LV DC/DC converter (phase-shifted full bridge, HV battery to 12 V) (TI)
   key: hev-ev-hv-to-lv-dc-dc-converter-phase-shifted-full-bridge-hv-battery-to-12-v-ti
-  n: 36
+  n: 38
   designs:
   - TI:PMP23126.1
   - TI:PMP41078.1
   - TI:PMP41139.1
   - TI:TIDA-020014.1
-  - TI:TIDA-01605
   - TI:TIDM-02009
-  - TI:TIDA-01255
   - TI:TIDA-01543
+  - TI:TIDA-01605
   - TI:TIDA-020018
   - TI:TIDM-02000
   - TI:TIDM-BIDIR-400-12
+  - TI:TIDA-01255
+  - TI:TIDA-03050
   - TI:TIDA-00699
   - TI:TIDA-020015
   - TI:TIDA-020019
-  - TI:TIDA-03050
   - TI:PMP22992.1
   - TI:PMP41133.1
   - TI:TIDA-01179
+  - TI:TIDA-01636
   - TI:TIDEP-01014
   - TI:TIDM-PSFB-DCDC
   - TI:PMP22650.1
   - TI:TIDA-010257
   - TI:TIDA-01606.1
-  - TI:TIDA-010957.1
   - TI:TIDM-02002
   - TI:PMP41006.1
   - TI:TIDA-010954.1
+  - TI:TIDA-010957.1
   - TI:TIDA-01604
-  - TI:TIDM-02008
   - TI:TIDM-1000
+  - TI:TIDM-02008
+  - TI:TIDA-010080.1
+  - TI:TIDM-1001
   - TI:PMP21553.1
   - TI:PMP21561.1
   - TI:PMP21683.1
+  - TI:PMP23461.1
   - TI:PMP31273.1
-  - TI:TIDA-010080.1
-  - TI:TIDM-1001
   functions:
+    mcu: 22
     isolated_dcdc: 20
-    mcu: 20
     pol_ldo: 20
-    amplifier: 17
+    amplifier: 19
     digital_isolator: 14
     gate_driver: 14
+    power_fets: 13
     isolated_amplifier: 12
-    power_fets: 12
     acdc_controller: 7
     current_sensor: 7
     reverse_polarity: 7
@@ -2878,9 +2890,8 @@ diagrams:
   - wide_vin_buck
   - pmic
   - reverse_polarity
-  suggested:
-  - fn: amplifier
-    n: 17
+  - amplifier
+  suggested: []
   anchors:
   - part: UCC21530
     fn: gate_driver
@@ -2888,8 +2899,8 @@ diagrams:
     maker: Skyworks
     type: Drop-in
     designs:
-    - TI:TIDA-01605
     - TI:TIDM-02009
+    - TI:TIDA-01605
     - TI:TIDM-02002
     - TI:PMP21553.1
     - TI:PMP21561.1
@@ -3162,30 +3173,33 @@ diagrams:
     n: 1
 - name: EV high-voltage battery system (wired cell supervision, BDU, BMU) (TI)
   key: ev-high-voltage-battery-system-wired-cell-supervision-bdu-bmu-ti
-  n: 6
+  n: 8
   designs:
-  - TI:TIDA-01425
   - TI:TIDA-010985
-  - TI:TIDA-01255
+  - TI:TIDA-01425
   - TI:TIDA-01513
-  - TI:TIDA-020076
   - TI:TIDA-03050
+  - TI:TIDA-01255
+  - TI:TIDA-020076
+  - TI:TIDA-010232
+  - TI:TIDM-02012
   functions:
-    pol_ldo: 5
-    amplifier: 3
+    pol_ldo: 6
+    amplifier: 5
+    can_transceiver: 3
     digital_isolator: 3
     isolated_dcdc: 3
-    can_transceiver: 2
-    isolated_switch_driver: 2
+    isolated_switch_driver: 3
+    wide_vin_buck: 3
+    isolated_amplifier: 2
+    mcu: 2
     tvs_esd: 2
-    wide_vin_buck: 2
     adc: 1
     battery_monitor: 1
     clock_generator: 1
     ethernet_phy: 1
-    isolated_amplifier: 1
+    gate_driver: 1
     load_switch: 1
-    mcu: 1
     pmic: 1
     reverse_polarity: 1
     soc: 1
@@ -3196,14 +3210,15 @@ diagrams:
   confirmed:
   - tvs_esd
   - digital_isolator
+  - isolated_amplifier
   - isolated_switch_driver
   - isolated_dcdc
+  - mcu
   - can_transceiver
+  - amplifier
   suggested:
   - fn: pol_ldo
-    n: 5
-  - fn: amplifier
-    n: 3
+    n: 6
   anchors:
   - part: AMC1301
     fn: isolated_amplifier
@@ -3212,6 +3227,14 @@ diagrams:
     type: Drop-in
     designs:
     - TI:TIDA-01513
+    n: 1
+  - part: AMC3330
+    fn: isolated_amplifier
+    ours: SI8931D-AS4
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:TIDA-010232
     n: 1
   - part: ISO7731
     fn: digital_isolator
@@ -3228,6 +3251,14 @@ diagrams:
     type: Drop-in
     designs:
     - TI:TIDA-020076
+    n: 1
+  - part: UCC21530
+    fn: gate_driver
+    ours: SI82E39BBE-AS3
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:TIDM-02012
     n: 1
 - name: Energy storage system battery (multimodule, daisy chain) - rack BMS (TI)
   key: energy-storage-system-battery-multimodule-daisy-chain-rack-bms-ti
@@ -18987,4 +19018,202 @@ diagrams:
   suggested:
   - fn: three_phase_gate_driver
     n: 4
+  anchors: []
+- name: eCall module (LTE module, GNSS front end, RF switch to a backup antenna, microphone and speaker amplifiers) (after
+    Nisshinbo)
+  key: ecall-module-lte-module-gnss-front-end-rf-switch-to-a-backup-antenna-microphone-
+  n: 4
+  designs:
+  - TI:TIDA-060048
+  - TI:PMP9768.1
+  - TI:PMP9769.1
+  - TI:TIDA-00724
+  functions:
+    audio_amp: 4
+    wide_vin_buck: 3
+    audio_codec: 2
+    power_fets: 2
+    tvs_esd: 2
+    battery_charger: 1
+    battery_monitor: 1
+    pol_ldo: 1
+    voltage_reference: 1
+  confirmed:
+  - wide_vin_buck
+  - audio_codec
+  - audio_amp
+  suggested:
+  - fn: power_fets
+    n: 2
+  - fn: tvs_esd
+    n: 2
+  anchors: []
+- name: Head-up display (picture generation with laser or LED, mirror motor, color compensation) (after Nisshinbo)
+  key: head-up-display-picture-generation-with-laser-or-led-mirror-motor-color-compensa
+  n: 4
+  designs:
+  - TI:TIDA-080004
+  - TI:PMP11136.1
+  - TI:PMP22030.1
+  - TI:TIDA-01008
+  functions:
+    pol_ldo: 4
+    wide_vin_buck: 3
+    amplifier: 2
+    load_switch: 2
+    mcu: 2
+    supervisor: 2
+    temperature_sensor: 2
+    display_driver: 1
+    env_sensor: 1
+    led_driver: 1
+    pmic: 1
+    reverse_polarity: 1
+    tvs_esd: 1
+  confirmed:
+  - pol_ldo
+  - supervisor
+  - mcu
+  - amplifier
+  suggested:
+  - fn: wide_vin_buck
+    n: 3
+  - fn: load_switch
+    n: 2
+  - fn: temperature_sensor
+    n: 2
+  anchors: []
+- name: Parking-assist camera ECU with four analog cameras (video amplifier in each camera, video isolation amplifiers at
+    the ECU input, PMIC) (after Nisshinbo)
+  key: parking-assist-camera-ecu-with-four-analog-cameras-video-amplifier-in-each-camer
+  n: 0
+  designs: []
+  functions: {}
+  confirmed: []
+  suggested: []
+  anchors: []
+- name: Electric power steering ECU (buck DC/DC and LDO with watchdog, pre-driver and 3-phase MOSFET bridge, torque sensor
+    with voltage tracker, resolver) (after Nisshinbo)
+  key: electric-power-steering-ecu-buck-dc-dc-and-ldo-with-watchdog-pre-driver-and-3-ph
+  n: 3
+  designs:
+  - TI:TIDA-00281
+  - TI:TIDA-01425
+  - TI:TIDA-03050
+  functions:
+    amplifier: 2
+    can_transceiver: 2
+    reverse_polarity: 2
+    temperature_sensor: 2
+    wide_vin_buck: 2
+    adc: 1
+    clock_generator: 1
+    digital_isolator: 1
+    efuse_hotswap: 1
+    ethernet_phy: 1
+    half_bridge_driver: 1
+    hall_switch: 1
+    load_switch: 1
+    mcu: 1
+    pmic: 1
+    pol_ldo: 1
+    power_fets: 1
+    soc: 1
+  confirmed:
+  - wide_vin_buck
+  - amplifier
+  - can_transceiver
+  suggested: []
+  anchors:
+  - part: ISO7331C
+    fn: digital_isolator
+    ours: SI8631ED-AS
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:TIDA-00281
+    n: 1
+- name: LED headlight ECU (boost / buck supply, LED string with switching driver, current and voltage sensing, leveling motors
+    with tracking supply) (after Nisshinbo)
+  key: led-headlight-ecu-boost-buck-supply-led-string-with-switching-driver-current-and
+  n: 1
+  designs:
+  - ROHM:REF68008
+  functions:
+    battery_monitor: 1
+    can_transceiver: 1
+    flash: 1
+    mcu: 1
+    pol_buck: 1
+    pol_ldo: 1
+  confirmed:
+  - pol_buck
+  - pol_ldo
+  - mcu
+  suggested: []
+  anchors: []
+- name: Acoustic vehicle alerting system (AVAS - MCU, op-amp filter, two-channel audio amplifier and speakers on LIN / CAN)
+    (after Nisshinbo)
+  key: acoustic-vehicle-alerting-system-avas-mcu-op-amp-filter-two-channel-audio-amplif
+  n: 9
+  designs:
+  - TI:TIDA-00733
+  - TI:PMP11769.1
+  - TI:TIDA-00743
+  - TI:TIDA-00874
+  - TI:PMP9484.1
+  - TI:TIDA-00573
+  - TI:TIDA-01255
+  - TI:TIDA-01425
+  - TI:TIDEP-01014
+  functions:
+    audio_amp: 6
+    pol_ldo: 5
+    wide_vin_buck: 4
+    amplifier: 3
+    audio_codec: 3
+    can_transceiver: 3
+    mcu: 3
+    clock_generator: 2
+    reverse_polarity: 2
+    digital_isolator: 1
+    ethernet_phy: 1
+    isolated_dcdc: 1
+    load_switch: 1
+    pmic: 1
+    power_fets: 1
+    soc: 1
+  confirmed:
+  - pol_ldo
+  - wide_vin_buck
+  - can_transceiver
+  - mcu
+  - amplifier
+  - audio_amp
+  suggested: []
+  anchors:
+  - part: ISO7731
+    fn: digital_isolator
+    ours: SI86S631BC-AS1
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:TIDA-01255
+    n: 1
+- name: Corner sensor ECU (corner sensors with ASIC and op-amp, buzzer driver, LIN / CAN to the navigation / IVI) (after Nisshinbo)
+  key: corner-sensor-ecu-corner-sensors-with-asic-and-op-amp-buzzer-driver-lin-can-to-t
+  n: 0
+  designs: []
+  functions: {}
+  confirmed: []
+  suggested: []
+  anchors: []
+- name: Body control module with a smart key receiver (two antennas, RF switch, SAW filter, RF receiver; switch drivers for
+    locks and lamps) (after Nisshinbo)
+  key: body-control-module-with-a-smart-key-receiver-two-antennas-rf-switch-saw-filter-
+  n: 0
+  designs: []
+  functions: {}
+  confirmed: []
+  suggested: []
   anchors: []

@@ -33,6 +33,8 @@ instead. Pin-to-pin drop-ins are rare across vendors in timing, so pinouts come 
 - [x] TI · `ti_timing.yaml` · lmkdb1104.pdf · LMKDB1102, LMKDB1112, LMKDB1120 (2, 12 and 20 outputs)
 - [ ] All first-batch parts · pinouts (pin tables are in the datasheets already fetched; only Si545, Si549 and SiT9365
   carry one now) and competitor package lead data (TI, SiTime, Renesas drawings are images: read them by hand)
+  (2 Nov 2026: Si53204 / Si53208 / Si53212 pinouts in; TI RHS, RGT and REX pitches read from the drawing text.
+  Left: the other Skyworks and all competitor pin tables, TI RGE and the SiTime / Renesas drawings)
 
 ## Skyworks families still to read (most sold first)
 

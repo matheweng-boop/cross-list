@@ -15899,3 +15899,139 @@
   - {id: holdover, question: Holdover oscillator, choices: [miniature atomic clock (±1 µs), OCXO (±22 µs)], source: 'OCP Time Card spec, Clock section'}
   - {id: role, question: Role in the network, choices: [PTP grandmaster, boundary clock, NTP server], source: 'OCP Time Card spec, General'}
   - {id: gnss_security, question: GNSS protection, choices: [holdover only, signed GNSS messages + jump detection], source: 'OCP Time Card spec, Security'}
+# ---- Data center > Cooling and HVAC (owner, 2 Nov 2026: "Also add cooling and HVAC to data centers") ----------------
+
+- name: "Data-center CRAH / CRAC air handler or chiller drive (HVAC compressor and fan drives: PFC front end, 3-phase inverters, isolated gate drivers and current sense, BACnet / Modbus RS-485 and Ethernet) (after TI)"
+  category: Enterprise & data center
+  note: "After TI public material: TI-SOL-ACOUT (air conditioner outdoor unit: AC/DC with PFC, power stage with isolated gate drivers, current and voltage sense, motor and power controller, compressor, AC / DC fan motors, expansion and four-way valves, RS-485 wired interface) and TI-SOL-HVACMOTOR (AC input, PFC, 3-phase power stage, isolation between the motor and the application controller, RS-485 Modbus / BACnet fieldbus). Drawn by us for the data-center unit: a computer-room air handler (CRAH, chilled-water coil and fans only), a computer-room air conditioner (CRAC, with its own compressor) or a chiller (large compressor, condenser fans) uses the same chain at different power. Large units run from 380-480 V three-phase and put an active or Vienna PFC in front of a 600-800 V DC link (est). Our parts: Si823x / Si828x isolated gate drivers, Si892x isolated amplifiers for phase current and DC-link voltage, Si86xx isolators and Si882xx isolated DC-DC between the hot side and the controls, Si8583x isolated RS-485, PAC5556 600 V one-chip controllers for the EC fans, Si5xx oscillators."
+  sources:
+  - {doc: TI-SOL-ACOUT, title: 'Air conditioner outdoor unit - block diagram + subsystems', url: 'https://www.ti.com/solution/air-conditioner-outdoor-unit'}
+  - {doc: TI-SOL-HVACMOTOR, title: 'HVAC motor control (AC input, PFC + 3-phase inverter) - block diagram + subsystems', url: 'https://www.ti.com/solution/hvac-motor-control'}
+  groups:
+  - {id: input, label: '3-phase AC input 380-480 V (or 230 V): fuses, EMI filter, inrush limit', col: 0, row: 0, blocks: [{fn: external_block, label: Fuses and EMI filter}, {fn: relay_driver, label: Inrush relay / soft start}, tvs_esd]}
+  - {id: pfc, label: 'PFC front end (boost, Vienna or active front end)', col: 1, row: 0, blocks: [acdc_controller, {fn: gate_driver, label: PFC switch gate drivers}, {fn: power_module, label: 'PFC switches (IGBT / SiC / GaN)'}, {fn: isolated_amplifier, label: DC-link voltage sense}]}
+  - {id: inverter, label: 'Compressor inverter (3-phase, 600-800 V DC link)', col: 2, row: 0, blocks: [{fn: gate_driver, label: 'Isolated half-bridge drivers (x3) with DESAT'}, {fn: power_module, label: IGBT / SiC module or IPM}, dc_link_cap]}
+  - {id: compressor, label: 'Compressor motor (scroll, screw or centrifugal; PMSM)', col: 3, row: 0, blocks: [{fn: motor, label: Compressor motor}]}
+  - {id: isense, label: Phase current and temperature sensing, col: 2, row: 1, blocks: [{fn: isolated_amplifier, label: Isolated shunt amplifiers / modulators}, {fn: current_sensor, label: Hall current sensor (alternative)}, temperature_sensor]}
+  - {id: fans, label: 'Evaporator / condenser fans (EC, one drive per fan)', col: 3, row: 1, blocks: [{fn: motor_controller, label: 600 V one-chip BLDC controller}, {fn: motor, label: EC fan motors}]}
+  - {id: mctrl, label: Motor and PFC controller (FOC), col: 1, row: 1, blocks: [mcu, crystal_oscillator, supervisor]}
+  - {id: iso, label: Isolation between the hot side and the controls, col: 0, row: 1, blocks: [digital_isolator, isolated_dcdc]}
+  - {id: aux, label: Auxiliary supply from the DC link, col: 0, row: 2, blocks: [{fn: acdc_controller, label: Flyback bias supply}, pol_buck, pmic, pol_ldo]}
+  - {id: unit, label: 'Unit controller: refrigerant loop, expansion valve, sensors', col: 1, row: 2, blocks: [mcu, {fn: motor_driver_brushed, label: Expansion-valve stepper driver}, {fn: env_sensor, label: Pressure and humidity sensors}, temperature_sensor]}
+  - {id: comms, label: 'Building / DCIM link: BACnet or Modbus on RS-485, Ethernet', col: 2, row: 2, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, ethernet_phy, tvs_esd]}
+  links:
+  - [input, pfc, 3-phase AC]
+  - [pfc, inverter, 600-800 V DC link]
+  - [pfc, aux, DC link]
+  - [inverter, compressor, 3 phases]
+  - [inverter, isense, phase currents]
+  - [isense, mctrl, current / temperature]
+  - [mctrl, inverter, PWM (through the isolated drivers)]
+  - [mctrl, iso, SPI / UART]
+  - [iso, unit, isolated link]
+  - [unit, fans, speed command]
+  - [unit, comms, '']
+  - [aux, mctrl, 3.3 V / 15 V]
+  questions:
+  - {id: unit, question: Unit, choices: [CRAH (chilled-water coil and fans), CRAC (own compressor), chiller, in-row cooler]}
+  - {id: supply, question: Supply, choices: [380-480 V three-phase, 230 V single-phase, 48 V DC]}
+  - {id: switches, question: Power switches, choices: [IGBT module or IPM, SiC MOSFETs, GaN (small fans)]}
+  - {id: bus, question: Building interface, choices: [BACnet MS/TP on RS-485, Modbus RTU on RS-485, BACnet/IP or Modbus TCP on Ethernet]}
+
+- name: "Liquid cooling distribution unit for AI racks (CDU: redundant pump drives, flow / pressure / temperature / leak sensing, isolated RS-485 and Ethernet, PLC) (after TI and OCP Project Deschutes)"
+  category: Enterprise & data center
+  note: "After TI public material: TI-SOL-CDU (liquid cooling distribution unit: pump and fan motor drivers with gate driver, GaN, current sense and hot-swap; valve motor driver; sensors for temperature, humidity, leakage, liquid flow, pressure and level; analog front end; main controller; signal isolation on RS-485; system controller with RS-485 / CAN / Ethernet; non-isolated AC/DC with PFC; HMI) and OCP-DESCHUTES (Google's 2 MW CDU: two pumps N+1 each with its own VFD, 380-416 V three-phase dual feeds, leak rope in three zones read by the PLC, telemetry of temperature and pressure on both sides, flow, pump speed and power, Modbus TCP over IPv4 / IPv6). Pump power ranges from about 1 kW in an in-rack CDU (est) to 37 kW per pump in the 2 MW row CDU. Our parts: Si823x / Si828x isolated gate drivers and Si892x isolated amplifiers in the pump inverters, Si8583x isolated RS-485 to the drives, Si86xx isolators, Si882xx isolated DC-DC, PAC5527 / PAC5532 for 48 V fans and small pumps, ACT88xxx PMICs, Si5xx oscillators."
+  sources:
+  - {doc: TI-SOL-CDU, title: 'Liquid cooling distribution unit (CDU) - block diagram + subsystems', url: 'https://www.ti.com/solution/liquid-cooling'}
+  - {doc: OCP-DESCHUTES, title: 'Project Deschutes: Data Center Facilities 1.0.0 (2 MW CDU specification, Google)', url: 'https://www.opencompute.org/documents/ocp-specification-deschutes-v1-0-pdf/'}
+  groups:
+  - {id: feeds, label: 'AC feeds 380-416 V three-phase (dual feed, GFCI, breakers per pump)', col: 0, row: 0, blocks: [{fn: external_block, label: Dual-feed PDU}, tvs_esd]}
+  - {id: power, label: 'Power supply: non-isolated AC/DC with PFC, DC/DC rails', col: 1, row: 0, blocks: [acdc_controller, {fn: gate_driver, label: PFC gate driver}, pol_buck, pmic, pol_ldo]}
+  - {id: pump_a, label: 'Pump drive A (VFD: 3-phase inverter)', col: 2, row: 0, blocks: [{fn: mcu, label: Motor control MCU}, {fn: gate_driver, label: Isolated gate drivers}, {fn: power_module, label: 'Inverter switches (IGBT / SiC; GaN on 48 V pumps)'}, {fn: isolated_amplifier, label: Phase current sense}, efuse_hotswap]}
+  - {id: pump_b, label: 'Pump drive B (redundant, N+1, replaceable in operation)', col: 2, row: 1, blocks: [{fn: mcu, label: Motor control MCU}, {fn: gate_driver, label: Isolated gate drivers}, {fn: power_module, label: Inverter switches}, {fn: isolated_amplifier, label: Phase current sense}]}
+  - {id: pumps, label: 'Pump motors A and B (sealless pumps)', col: 3, row: 0, blocks: [{fn: motor, label: Pump motors}]}
+  - {id: valve_fan, label: Valve and fan drives, col: 3, row: 1, blocks: [{fn: motor_driver_brushed, label: Valve stepper / solenoid driver}, {fn: motor_controller, label: DC fan BLDC drive}]}
+  - {id: sensors, label: 'Sensors: temperature, pressure, flow, level, humidity, leak rope (3 zones)', col: 0, row: 1, blocks: [temperature_sensor, {fn: env_sensor, label: Pressure and humidity sensors}, {fn: ultrasonic_afe, label: Flow meter front end}, {fn: external_block, label: Leak rope sensor cable}]}
+  - {id: afe, label: Analog front end, col: 1, row: 1, blocks: [amplifier, adc, voltage_reference]}
+  - {id: main, label: 'Main controller / PLC (pump speed, valve, alarms)', col: 1, row: 2, blocks: [mcu, crystal_oscillator, watchdog, supervisor]}
+  - {id: sigiso, label: Signal isolation to the drives (RS-485), col: 2, row: 2, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, isolated_dcdc]}
+  - {id: system, label: 'System controller: Modbus TCP / Redfish on Ethernet, RS-485 Modbus, CAN', col: 3, row: 2, blocks: [soc, ethernet_phy, {fn: rs485_transceiver, label: Isolated RS-485}, digital_isolator]}
+  - {id: hmi, label: 'HMI (display, status LEDs, touch keys)', col: 0, row: 2, blocks: [led_driver, touch_controller, display]}
+  links:
+  - [feeds, power, '']
+  - [feeds, pump_a, 3-phase AC]
+  - [feeds, pump_b, 3-phase AC]
+  - [pump_a, pumps, 3 phases]
+  - [pump_b, pumps, 3 phases]
+  - [sensors, afe, analog]
+  - [afe, main, ADC data]
+  - [main, sigiso, pump speed / status]
+  - [sigiso, pump_a, RS-485]
+  - [sigiso, pump_b, RS-485]
+  - [main, valve_fan, valve position / fan speed]
+  - [main, system, telemetry and alarms]
+  - [main, hmi, '']
+  - [power, main, 24 V / 3.3 V]
+  questions:
+  - {id: size, question: CDU size, choices: [in-rack (tens of kW), in-row (hundreds of kW), row or facility (1-2 MW)]}
+  - {id: loop, question: Secondary loop, choices: [liquid to liquid (facility water), liquid to air (fans)]}
+  - {id: pump_supply, question: Pump supply, choices: [380-480 V three-phase VFD, 48 V DC BLDC pump]}
+  - {id: link, question: Link to the facility, choices: [Modbus TCP / Redfish on Ethernet, Modbus RTU on RS-485, both]}
+
+- name: "Data-center fan wall / EC fan array (one BLDC drive per fan; mains-powered EC fans or 12 / 48 V rack fans, fan controller, power monitor, Modbus or I2C link) (after TI)"
+  category: Enterprise & data center
+  note: "After TI public material: TI-SOL-FANWALL (fan card / module / wall: M-PIC power connector, input power and monitoring with an I2C power monitor and a DC/DC buck, switching and control with buffers, logic-level and power FETs per fan, an MCU control unit) and TI-SOL-HVACMOTOR (the AC-input chain of an electronically commutated fan: rectifier, PFC, 3-phase power stage, motor controller, RS-485). Drawn by us: a fan wall is an array of identical fans, so the drive is repeated per fan; in-rack fan walls use 12 V or 48 V DC fans with the drive built into the fan, room fan walls use mains-powered EC fans with a 600 V drive inside each fan. Our parts: PAC5556 / PAC5253 (600 V) and PAC5527 / PAC5532 (48 V) one-chip BLDC controllers, Si8583x isolated RS-485 for the Modbus string, Si86xx isolators, Si5xx oscillators."
+  sources:
+  - {doc: TI-SOL-FANWALL, title: 'Fan card / module / wall - block diagram + subsystems', url: 'https://www.ti.com/solution/fan-card-module'}
+  - {doc: TI-SOL-HVACMOTOR, title: 'HVAC motor control (AC input, PFC + 3-phase inverter) - block diagram + subsystems', url: 'https://www.ti.com/solution/hvac-motor-control'}
+  groups:
+  - {id: acin, label: 'EC fan, mains-powered: rectifier and PFC (larger fans)', col: 0, row: 0, blocks: [{fn: external_block, label: EMI filter and rectifier}, acdc_controller]}
+  - {id: ecdrive, label: 'EC fan drive, one per fan (600 V)', col: 1, row: 0, blocks: [{fn: motor_controller, label: 600 V one-chip BLDC controller}, {fn: power_fets, label: 6 MOSFETs / IGBTs or an IPM}, {fn: amplifier, label: Shunt current sense}]}
+  - {id: ecfans, label: EC fan motors (outer-rotor BLDC), col: 2, row: 0, blocks: [{fn: motor, label: EC fans}]}
+  - {id: dcin, label: 'Rack fan card: input power and monitoring (12 V / 48 V, M-PIC connector)', col: 0, row: 1, blocks: [{fn: efuse_hotswap, label: Hot-swap / eFuse}, {fn: current_sensor, label: I2C power monitor}, wide_vin_buck]}
+  - {id: switching, label: 'Switching and control per DC fan (PWM buffer, power FET)', col: 1, row: 1, blocks: [{fn: voltage_translator, label: PWM / tach buffer}, power_fets, {fn: motor_controller, label: 48 V BLDC controller (drive on the card)}]}
+  - {id: dcfans, label: DC fans (12 V / 48 V BLDC with a built-in drive), col: 2, row: 1, blocks: [{fn: motor, label: DC fans}]}
+  - {id: ctrl, label: 'Fan controller (speed loop, tach, fault log)', col: 3, row: 0, blocks: [mcu, temperature_sensor, crystal_oscillator]}
+  - {id: comms, label: 'Link to the BMC or the building system: I2C / PMBus, isolated Modbus RS-485', col: 3, row: 1, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, digital_isolator, voltage_translator]}
+  links:
+  - [acin, ecdrive, DC link]
+  - [ecdrive, ecfans, 3 phases]
+  - [dcin, switching, 12 V / 48 V]
+  - [switching, dcfans, power + PWM]
+  - [dcfans, ctrl, tach]
+  - [ctrl, switching, PWM]
+  - [ctrl, ecdrive, speed command (0-10 V or Modbus)]
+  - [ctrl, comms, '']
+  - [dcin, ctrl, power data (I2C)]
+  questions:
+  - {id: fan, question: Fan type, choices: [mains-powered EC fan, 48 V DC fan, 12 V DC fan]}
+  - {id: drive, question: Where is the drive, choices: [inside each fan, on the fan card]}
+  - {id: control, question: Speed command, choices: [PWM, 0-10 V, Modbus RS-485, I2C / PMBus]}
+
+- name: "Rear-door heat exchanger with active fans (fan row, water valve, air and water temperature, dew-point guard, leak detection, Modbus / Ethernet) (after OCP)"
+  category: Enterprise & data center
+  emerging: "Passive rear doors are common; active doors with a fan row and a controller for high-density racks are newer, and OCP's Door Heat Exchanger sub-project works on interfaces and 'air-assisted liquid cooling' for Open Rack V3. No public electronics block diagram was found: drawn by us (est)."
+  note: "After OCP public material: OCP-COOLENV (Cooling Environments project: Door Heat Exchanger sub-project for rear-door heat exchangers on Open Rack V3, air-assisted liquid cooling) and OCP-DESCHUTES (rear-door heat exchangers behind each IT rack, fed from process chilled water; a drip pan with leak detection integrated with the building management system). Drawn by us (est): a fan row on the door pulls the rack exhaust through a water coil; the controller sets fan speed and the water valve from the air outlet temperature and keeps the water above the dew point. The electronics repeat the fan wall (one BLDC drive per fan) and add a valve actuator, sensors and a building link. Our parts: PAC5527 / PAC5532 (48 V) or PAC5556 (mains) one-chip fan controllers, Si8583x isolated RS-485, Si86xx isolators, Si5xx oscillators."
+  sources:
+  - {doc: OCP-COOLENV, title: 'OCP Cooling Environments project page (cold plate, CDU, door heat exchanger, immersion, heat reuse)', url: 'https://www.opencompute.org/projects/cooling-environments/'}
+  - {doc: OCP-DESCHUTES, title: 'Project Deschutes: Data Center Facilities 1.0.0 (2 MW CDU specification, Google)', url: 'https://www.opencompute.org/documents/ocp-specification-deschutes-v1-0-pdf/'}
+  groups:
+  - {id: power, label: 'Power in (AC or 48 V DC from the rack) and protection', col: 0, row: 0, blocks: [efuse_hotswap, {fn: acdc_controller, label: AC/DC (mains-fed doors)}, pol_buck]}
+  - {id: fans, label: 'Fan row on the door (N+1)', col: 1, row: 0, blocks: [{fn: motor_controller, label: BLDC drive per fan}, {fn: motor, label: Door fans}]}
+  - {id: valve, label: Water valve actuator, col: 2, row: 0, blocks: [{fn: motor_driver_brushed, label: Valve stepper driver}, {fn: dac, label: 0-10 V valve command}]}
+  - {id: sensors, label: 'Air in / out temperature, water supply / return temperature and pressure, humidity, door open', col: 0, row: 1, blocks: [temperature_sensor, {fn: env_sensor, label: Humidity and pressure sensors}, {fn: hall_switch, label: Door-open switch}]}
+  - {id: leak, label: Leak detection (drip pan rope sensor), col: 1, row: 1, blocks: [{fn: external_block, label: Leak rope sensor}, {fn: amplifier, label: Leak sense comparator}]}
+  - {id: ctrl, label: 'Door controller (fan speed and valve from the outlet temperature, dew-point guard)', col: 2, row: 1, blocks: [mcu, crystal_oscillator, watchdog]}
+  - {id: comms, label: 'Link to the building system / DCIM: Modbus RS-485, Ethernet', col: 3, row: 1, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, ethernet_phy, digital_isolator]}
+  links:
+  - [power, fans, 48 V / DC link]
+  - [power, ctrl, 3.3 V]
+  - [ctrl, fans, PWM / speed]
+  - [ctrl, valve, valve position]
+  - [sensors, ctrl, 'temperatures, pressure, humidity']
+  - [leak, ctrl, leak alarm]
+  - [ctrl, comms, alarms and telemetry]
+  questions:
+  - {id: door, question: Door type, choices: [passive (no fans), active (fan row)]}
+  - {id: supply, question: Fan supply, choices: [48 V DC from the rack, AC mains]}
+  - {id: link, question: Building link, choices: [Modbus RS-485, Modbus TCP / SNMP on Ethernet]}

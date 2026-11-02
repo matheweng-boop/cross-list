@@ -1554,3 +1554,22 @@ def test_data_center_shows_timing_sub_system_deep_dive_and_diagrams(page):
     go(page, "/blocks?system=datacenter&sub=timing#sub-timing")
     expect(page.locator("details#area-datacenter[open]")).to_have_count(1)
     expect(page.locator("main")).to_contain_text("AI / GPU server clock tree")
+
+
+def test_data_center_shows_cooling_and_hvac(page):
+    """Owner, 2 Nov 2026 ("Also add cooling and HVAC to data centers"): Data center opens with a Cooling and HVAC card
+    whose buttons lead to the deep dive and to its block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-cooling")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Cooling and HVAC")
+    expect(card.locator("a.sys-btn")).to_have_count(2)
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/dc_cooling")
+    expect(page.locator("main h1")).to_contain_text("Data-center cooling")
+    go(page, "/library#sys-datacenter")
+    with page.expect_navigation():
+        page.locator("#card-datacenter-cooling a.sys-btn-dg").click()
+    expect(page.locator("#sub-cooling")).to_be_in_viewport()
+    expect(page.locator("#sub-cooling + .tpl-grid a.tpl-card")).to_have_count(5)

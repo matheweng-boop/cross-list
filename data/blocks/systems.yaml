@@ -200,6 +200,27 @@ systems:
         topics: [dc_timing]
         links:
           - ["Clock planner", "/clocks"]
+      # owner, 2 Nov 2026: "Also add cooling and HVAC to data centers"
+      - key: cooling
+        title: "Cooling and HVAC"
+        summary: "Air handlers, chillers, fan walls and liquid cooling for AI racks."
+        elements:
+          - "CRAH / CRAC air handler"
+          - "Chiller compressor drive"
+          - "Fan wall / EC fans"
+          - "Liquid cooling CDU (pumps)"
+          - "Rear-door heat exchanger"
+          - "Leak, flow and temperature sensing"
+        diagrams:
+          - "Data-center CRAH / CRAC air handler or chiller drive (HVAC compressor and fan drives: PFC front end, 3-phase inverters, isolated gate drivers and current sense, BACnet / Modbus RS-485 and Ethernet) (after TI)"
+          - "Liquid cooling distribution unit for AI racks (CDU: redundant pump drives, flow / pressure / temperature / leak sensing, isolated RS-485 and Ethernet, PLC) (after TI and OCP Project Deschutes)"
+          - "Data-center fan wall / EC fan array (one BLDC drive per fan; mains-powered EC fans or 12 / 48 V rack fans, fan controller, power monitor, Modbus or I2C link) (after TI)"
+          - "Rear-door heat exchanger with active fans (fan row, water valve, air and water temperature, dew-point guard, leak detection, Modbus / Ethernet) (after OCP)"
+          - "HVAC motor control (AC input, PFC + 3-phase inverter) (TI)"
+        topics: [dc_cooling]
+        links:
+          - ["BLDC motor: 6-step, FOC and back-EMF", "/visuals#bldc"]
+          - ["Gate driver and half-bridge", "/visuals#bootstrap"]
   - key: drones
     title: "Drones"
     summary: "Flight control, motors and the radio links to the pilot and the network."

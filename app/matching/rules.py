@@ -179,7 +179,17 @@ def input_range_v(part, values: dict) -> list[float] | None:
     return [round(lo * scale, 6), round(hi * scale, 6)]
 
 
-DERIVE = {"gate_output_config": gate_output_config, "input_range_v": input_range_v}
+SHORT_CIRCUIT = {"desaturation", "overcurrent", "short-circuit"}
+
+
+def short_circuit_protection(part, values: dict) -> bool | None:
+    """DESAT, overcurrent or short-circuit protection, read from the protection set (None when it states none)."""
+    prot = values.get("protection")
+    return None if prot is None else bool({str(x).lower() for x in prot} & SHORT_CIRCUIT)
+
+
+DERIVE = {"gate_output_config": gate_output_config, "input_range_v": input_range_v,
+          "short_circuit_protection": short_circuit_protection}
 
 
 def parse_rules(data: dict) -> FamilyRules:

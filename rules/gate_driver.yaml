@@ -28,6 +28,10 @@ params:
   # threshold is the safer stand-in (owner, 22 Oct 2026: NSI6602A, 6 V option -> Si82E29AGC, 4 V, not the 8 V
   # Si82E29ABC): it starts up at every supply the original starts at, while a higher one may stay off. Still a
   # deviation (less undervoltage protection); it only ranks closer.
+  # Owner, 2 Nov 2026: "DESAT is a P1 feature". Read from the protection set: when the competitor has desaturation,
+  # overcurrent or short-circuit protection, a candidate without it is a priority 1 deviation (and, by `steer` below,
+  # ranks below every candidate with it, even below an isolation shortfall).
+  - {key: short_circuit_protection, label: DESAT / overcurrent protection, priority: 1, kind: bool, direction: true_better, derive: short_circuit_protection}
   - {key: uvlo_v, label: Output UVLO threshold, unit: V, priority: 1, kind: number, direction: match, tolerance: 0.06, prefer: lower}
   # --- Priority 2: for information ---
   - {key: output_supply_v, label: Output supply range, unit: V, priority: 2, kind: range}

@@ -298,14 +298,14 @@ def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
 def drop_in_key(r: CrossResult):
     """A candidate with a lower isolation rating (``downgrade``), then one without the reference's short-circuit
     protection (``steer_miss``), ranks last (owner, 2 Nov 2026)."""
-    return (getattr(r, "downgrade", False), getattr(r, "steer_miss", False), r.category != "fff", _devs(r),
+    return (getattr(r, "steer_miss", False), getattr(r, "downgrade", False), r.category != "fff", _devs(r),
             getattr(r, "shortfall", 0.0), getattr(r, "unverified_worse", 0), _worse_score(r), len(r.exceptions),
             r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
-    return (getattr(r, "downgrade", False), getattr(r, "steer_miss", False), _devs(r),
+    return (getattr(r, "steer_miss", False), getattr(r, "downgrade", False), _devs(r),
             getattr(r, "unverified_worse", 0), getattr(r, "shortfall", 0.0), p1_off, len(r.exceptions),
             not r.fit.same_package, not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
 
@@ -470,8 +470,10 @@ def comment(r: CrossResult, column: int) -> str:
     p1 = _p1(r)
     qual = next((d for d in p1 if d.key == "qualification"), None)
     order = {WORSE: 0, DIFFERENT: 0, UNKNOWN: 1, BETTER: 2, EQUAL: 3}
+    rules_ = get_rules(ref.family)
     shown = [d for d in p1 if d.key != "qualification" and d.status != UNKNOWN  # unstated: said below
-             and (d.status != EQUAL or d.ref_display != d.cand_display)]
+             and (d.status != EQUAL or d.ref_display != d.cand_display)
+             and not (d.status == BETTER and getattr(rules_.get(d.key), "kind", "") == "bool")]  # only ours
     rules = get_rules(ref.family)
     rvals, cvals = (rules.values(ref), rules.values(cand)) if any(
         p.kind == "range" and p.priority == 1 for p in rules.params) else ({}, {})  # fmt: skip

@@ -712,7 +712,7 @@ def sort_key(category: str):
             main = (devs, r.unverified_worse, not r.fit.same_pinout, short, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
-        return (r.lifecycle_risk, getattr(r, "downgrade", False), getattr(r, "steer_miss", False), main,
+        return (r.lifecycle_risk, getattr(r, "steer_miss", False), getattr(r, "downgrade", False), main,
                 r.candidate.label)
 
     return key
@@ -734,8 +734,8 @@ def rank_key(r: CrossResult):
     pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
+        getattr(r, "steer_miss", False),  # DESAT before isolation (owner, 2 Nov 2026: "DESAT is a P1 feature")
         getattr(r, "downgrade", False),
-        getattr(r, "steer_miss", False),
         r.category != "fff",
         len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation
         pkg and not r.fit.same_package,

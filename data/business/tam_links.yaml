@@ -4,6 +4,9 @@
 # after owner answers and the biweekly check). Where they differ by more than 15 %, or a key it rests on is now left
 # out (owner disagree or disqualified), the daily inbox gets a to-do under "TAM changes for reports"; the run then
 # updates the text here and in the report or case, and records the applied answer in data/business/tam_applied.yaml.
+# When the check finds a newer figure on the same page ("the source now shows $2.43 B for 2025"), quote it with its
+# year in the text, as the check prints it ("$2.43 B (2025)"), here and in the report or case: the to-do then clears
+# (tam_links.quotes_newer), while low / high / year can stay on the year the band uses (2 Nov 2026).
 #
 # Fields
 #   id      unique: <slug>.<place>
@@ -18,8 +21,8 @@
 #           content, the content-driven CAGR) are computed live from the price estimates (app/services/radio_market.py)
 #           and need no link here.
 links:
-  - {id: radio-tuner-next.market_now.2, slug: radio-tuner-next, where: "case: market_now[2]", layer: radio_content, text: "$0.89–2.31 B (2024)", low: 890000000, high: 2310000000, year: 2024, fn: am_fm_tuner, topic: auto-radio-tuner-ics, keys: [tuner-ic-mrfr, tuner-ic-datahorizzon, digital-radio-tuner-marketintelo]}
-  - {id: radio-tuner-next.background.4-13, slug: radio-tuner-next, where: "background: 4.13", layer: radio_content, text: "$2.31 B (2024) (MRFR); $0.89 B (2024) (DataHorizzon); digital radio tuner IC $1.8 B (2025) (MarketIntelo)", low: 890000000, high: 2310000000, year: 2024, fn: am_fm_tuner, topic: auto-radio-tuner-ics, keys: [tuner-ic-mrfr, tuner-ic-datahorizzon, digital-radio-tuner-marketintelo]}
+  - {id: radio-tuner-next.market_now.2, slug: radio-tuner-next, where: "case: market_now[2]", layer: radio_content, text: "$0.89–2.31 B (2024); MRFR's newer figure $2.43 B (2025)", low: 890000000, high: 2310000000, year: 2024, fn: am_fm_tuner, topic: auto-radio-tuner-ics, keys: [tuner-ic-mrfr, tuner-ic-datahorizzon, digital-radio-tuner-marketintelo]}
+  - {id: radio-tuner-next.background.4-13, slug: radio-tuner-next, where: "background: 4.13", layer: radio_content, text: "$2.31 B (2024) and $2.43 B (2025) (MRFR); $0.89 B (2024) (DataHorizzon); digital radio tuner IC $1.8 B (2025) (MarketIntelo)", low: 890000000, high: 2310000000, year: 2024, fn: am_fm_tuner, topic: auto-radio-tuner-ics, keys: [tuner-ic-mrfr, tuner-ic-datahorizzon, digital-radio-tuner-marketintelo]}
   - {id: auto-clock-tree.market_now.1, slug: auto-clock-tree, where: "case: market_now[1]", text: "$400–500 M (2024)", low: 400000000, high: 500000000, year: 2024, fn: clock_generator, keys: [auto-timing-sitime]}
   - {id: auto-clock-tree.thread.market, slug: auto-clock-tree, where: "case: thread.market", text: "Automotive timing is about $400–500 M (SiTime's view)", low: 400000000, high: 500000000, year: 2024, fn: clock_generator, keys: [auto-timing-sitime]}
   - {id: auto-clock-tree.background.sam, slug: auto-clock-tree, where: "background: SiTime automotive SAM", text: "SiTime automotive SAM $400–500 M (2024)", low: 400000000, high: 500000000, year: 2024, fn: clock_generator, keys: [auto-timing-sitime]}

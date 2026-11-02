@@ -52,6 +52,7 @@
   <tbody>{% for row in case.architecture.rows %}<tr><th scope="row">{{ row[0] }}</th>{% for c in row[1:] %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
 </table></div>{% if case.architecture.note %}<p class="small muted">{{ case.architecture.note }}</p>{% endif %}{% endif %}
 {{ thread('position') }}
+{% if case.depth %}{% include "business/_case_depth.html" %}{% endif %}
 
 <h2>2. The market today</h2>
 <div class="table-wrap"><table class="small pc-table">

@@ -2227,3 +2227,9 @@ details.qs-note { border-bottom: 1px solid var(--pico-muted-border-color); paddi
 .aq-where, .aq-q { margin: 0 0 .15rem; overflow-wrap: anywhere; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aq-hold { background: #3a2412; color: #f6c9a4; } :root:not([data-theme="light"]) .aq-form .aq-warn { color: #f4c58a; } }
 :root[data-theme="dark"] .aq-hold { background: #3a2412; color: #f6c9a4; } :root[data-theme="dark"] .aq-form .aq-warn { color: #f4c58a; }
+
+/* 16b (worker G, 2 Nov 2026): a case's "In depth" tables (business/_case_depth.html): on phones each cell shows its column name */
+.pc-depth .pc-table td { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .pc-depth .pc-table td[data-label]:not([data-label=""])::before { content: attr(data-label) ": "; font-weight: 600; color: var(--pico-muted-color); }
+}

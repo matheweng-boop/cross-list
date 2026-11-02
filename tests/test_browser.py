@@ -1590,3 +1590,23 @@ def test_drones_show_satellite_navigation_and_anti_jamming(page):
     expect(page.locator("#k-drone_link_choice table")).to_be_visible()
     go(page, "/library/drone_antijam")
     expect(page.locator('a[href="/library/drone_navigation"]').first).to_be_visible()
+
+
+# --- Systems library > Industrial > Robotics (European view) (owner, 3 Nov 2026, worker Q) ---------------------------
+def test_industrial_shows_robotics_and_its_deep_dive_opens(page):
+    """Owner, 3 Nov 2026 ("something for robotics ... a Euro-centric view"): Industrial & energy opens with the
+    Robotics (European view) card; its deep dive opens and links back to the factory-automation diagrams."""
+    go(page, "/library#sys-industrial")
+    expect(page.locator("details#sys-industrial[open]")).to_have_count(1)
+    card = page.locator("#card-industrial-robotics")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Robotics (European view)")
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/robotics_europe")
+    expect(page.locator("main h1")).to_contain_text("Robotics in Europe")
+    with page.expect_navigation():
+        page.locator(".lib-see-also a", has_text="Factory automation").click()
+    expect(page.locator("#sub-factory-automation")).to_be_in_viewport()
+    go(page, "/blocks?system=industrial&sub=robotics#sub-robotics")
+    expect(page.locator("#sub-robotics")).to_be_in_viewport()

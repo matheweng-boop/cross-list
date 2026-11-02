@@ -331,6 +331,15 @@ datasheets:
   sha256: f49391ca00e15397076dfc7482f56b0a1ea794a5249f1d14a1a60bb5ef33ae33
   revision: '1.7'
   revision_date: '2026-04-09'
+pinouts:
+  1ed020i12_dso16: [VEE2, DESAT, GND2, NC, VCC2, OUT, CLAMP, VEE2, GND1, IN+, IN-, RDY, FLT, RST, VCC1, GND1]
+  1ed3124mu12f: [VCC1, IN+, IN-, GND1, VCC2, OUT+, OUT-, VEE2]
+  1ed312xmu12f_clamp: [VCC1, IN+, IN-, GND1, VCC2, OUT, CLAMP, VEE2]
+  1ed314x_split: [VCC1, IN+, IN-, GND1, VCC2, OUTH, OUTL, VEE2]
+  1ed314x_gnd2: [VCC1, IN+, IN-, GND1, VCC2, OUT, GND2, VEE2]
+  1ed3145_adj: [VCC1, IN+, IN-, GND1, VCC2, OUT, ADJ, VEE2]
+  1ed31xxh_split: [VCC1, IN+, IN-, GND1, VEE2, OUT-, OUT+, VCC2]
+  1ed3122h_clamp: [VCC1, IN+, IN-, GND1, VEE2, CLAMP, OUT, VCC2]
 parts:
 - mpn: 2EDS9265HXUMA1
   manufacturer: Infineon
@@ -431,12 +440,13 @@ parts:
     1ED3124MU12F: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 14.0 A, Functional isolation,
     PG-DSO-8-72
   package: SOIC-8N
-  pinout: []
+  pinout: 1ed3124mu12f
   datasheet: infineon-1ed312xmu12f-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed312xmu12f-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3124MU12F
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pins 6 and 7 are OUT+
+    (source) and OUT- (sink) in the pin table, OUTH and OUTL in the drawing (p6).
   lifecycle:
     status: active
     release_date: '2021-04-05'
@@ -468,6 +478,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed312xmu12f-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed312xmu12f-datasheet-en.pdf p6 (Table 2 pin configuration of 1ED3124MU12F, Figure 4 top view)
 - mpn: 1ED3890MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -564,12 +575,11 @@ parts:
     1ED3122MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 9.0 A, Reinforced isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed3122h_clamp
   datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   datasheet_url: >-
     https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3122MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2021-04-19'
@@ -604,6 +614,8 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p6-7 (Table 3 pin configuration of 1ED3122MC12H, Figure 5 top view)
 - mpn: 1ED3124MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -611,12 +623,11 @@ parts:
     1ED3124MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 14.0 A, Reinforced isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   datasheet_url: >-
     https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3124MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2021-04-27'
@@ -651,6 +662,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3491MC12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -884,12 +896,12 @@ parts:
     1ED3141MU12F: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.5 A, Functional isolation,
     PG-DSO-8-72
   package: SOIC-8N
-  pinout: []
+  pinout: 1ed314x_split
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3141MU12F
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2023-01-25'
@@ -924,6 +936,8 @@ parts:
     prop_delay_ns: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf Table 12 dynamic characteristics (tPDON / tPDOFF typ 40 ns, max 50 ns; includes the input filter; typ first, owner 22 Oct 2026)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p7 (Table 4 pin configuration for 1ED3140, 1ED3141 and 1ED3142, Figure 5 top view)
 - mpn: 1ED3140MU12FXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -931,15 +945,15 @@ parts:
     1ED3140MU12F: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.5 A, Functional isolation,
     PG-DSO-8-72
   package: SOIC-8N
-  pinout: []
+  pinout: 1ed314x_split
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3140MU12F
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
-    UVLO option by the fourth digit (datasheet product table): 1ED3140 9.3 V, 1ED3141 12.0 V, 1ED3142 13.6 V (rising,
-    typ). The G / B / C / E letter (4 / 8 / 12 / 15 V) is the Skyworks Si82x code of the candidate. Prop delay typ 40 ns
-    includes the input filter. Peak current depends on VCC2 (owner, 22 Oct 2026: correct as is).
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). UVLO option by the fourth
+    digit (datasheet product table): 1ED3140 9.3 V, 1ED3141 12.0 V, 1ED3142 13.6 V (rising, typ). The G / B / C / E
+    letter (4 / 8 / 12 / 15 V) is the Skyworks Si82x code of the candidate. Prop delay typ 40 ns includes the input
+    filter. Peak current depends on VCC2 (owner, 22 Oct 2026: correct as is).
   lifecycle:
     status: active
     release_date: '2023-01-25'
@@ -974,6 +988,8 @@ parts:
     prop_delay_ns: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf Table 12 dynamic characteristics (tPDON / tPDOFF typ 40 ns, max 50 ns; includes the input filter; typ first, owner 22 Oct 2026)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p7 (Table 4 pin configuration for 1ED3140, 1ED3141 and 1ED3142, Figure 5 top view)
 - mpn: 1ED3142MU12FXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -981,12 +997,12 @@ parts:
     1ED3142MU12F: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.0 A, Functional isolation,
     PG-DSO-8-72
   package: SOIC-8N
-  pinout: []
+  pinout: 1ed314x_split
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3142MU12F
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2023-01-25'
@@ -1021,6 +1037,8 @@ parts:
     prop_delay_ns: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf Table 12 dynamic characteristics (tPDON / tPDOFF typ 40 ns, max 50 ns; includes the input filter; typ first, owner 22 Oct 2026)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p7 (Table 4 pin configuration for 1ED3140, 1ED3141 and 1ED3142, Figure 5 top view)
 - mpn: 1ED3127MU12FXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -1028,12 +1046,12 @@ parts:
     1ED3127MU12F: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 9.0 A, Functional isolation,
     PG-DSO-8-72
   package: SOIC-8N
-  pinout: []
+  pinout: 1ed312xmu12f_clamp
   datasheet: infineon-1ed312xmu12f-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed312xmu12f-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3127MU12F
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2022-09-12'
@@ -1065,6 +1083,8 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed312xmu12f-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed312xmu12f-datasheet-en.pdf p6-7 (Table 3 pin configuration of 1ED3125MU12F and 1ED3127MU12F, Figure 5 top view)
 - mpn: 1ED3141MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -1072,11 +1092,10 @@ parts:
     1ED3141MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.0 A, Reinforced isolation,
     PG-LDSO-8-1
   package: PG-LDSO-8-1
-  pinout: []
+  pinout: 1ed314x_split
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3141MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2025-01-01'
@@ -1115,6 +1134,8 @@ parts:
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p7 (Table 4 pin configuration for 1ED3140, 1ED3141 and 1ED3142, Figure 5 top view)
 - mpn: 1ED3143MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -1122,11 +1143,11 @@ parts:
     1ED3143MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.0 A, Reinforced isolation,
     PG-LDSO-8-1
   package: PG-LDSO-8-1
-  pinout: []
+  pinout: 1ed314x_gnd2
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3143MC12H
-  notes: Pinout not transcribed.
+  notes: One output; the output UVLO is referred to GND2, pin 7 (datasheet p1, p10).
   lifecycle:
     status: active
     release_date: '2025-01-01'
@@ -1165,6 +1186,8 @@ parts:
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p8 (Table 5 pin configuration for 1ED3143 and 1ED3144, Figure 6 top view)
 - mpn: 2EDB8259FXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3012,12 +3035,11 @@ parts:
     1ED3120MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 5.5 A, Reinforced isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   datasheet_url: >-
     https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3120MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2021-04-19'
@@ -3050,6 +3072,7 @@ parts:
     peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
+    pinout: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3121MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3057,12 +3080,11 @@ parts:
     1ED3121MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 5.5 A, Reinforced isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   datasheet_url: >-
     https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3121MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2021-04-19'
@@ -3097,6 +3119,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3123MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3104,12 +3127,11 @@ parts:
     1ED3123MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 13.5 A, Reinforced isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   datasheet_url: >-
     https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3123MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2021-04-19'
@@ -3144,6 +3166,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3124MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3151,12 +3174,12 @@ parts:
     1ED3124MU12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 13.5 A, Functional isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmu12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3124MU12H
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2020-10-27'
@@ -3188,6 +3211,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmu12h-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3125MU12FXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3195,12 +3219,12 @@ parts:
     1ED3125MU12F: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 10.0 A, Functional isolation,
     PG-DSO-8-72
   package: SOIC-8N
-  pinout: []
+  pinout: 1ed312xmu12f_clamp
   datasheet: infineon-1ed312xmu12f-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed312xmu12f-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3125MU12F
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2021-04-27'
@@ -3232,6 +3256,8 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed312xmu12f-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed312xmu12f-datasheet-en.pdf p6-7 (Table 3 pin configuration of 1ED3125MU12F and 1ED3127MU12F, Figure 5 top view)
 - mpn: 1ED3240MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3688,11 +3714,10 @@ parts:
     1ED3142MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.5 A, Reinforced isolation,
     PG-LDSO-8-1
   package: PG-LDSO-8-1
-  pinout: []
+  pinout: 1ed314x_split
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3142MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2025-01-01'
@@ -3731,6 +3756,8 @@ parts:
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p7 (Table 4 pin configuration for 1ED3140, 1ED3141 and 1ED3142, Figure 5 top view)
 - mpn: 1ED3144MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3738,11 +3765,11 @@ parts:
     1ED3144MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.5 A, Reinforced isolation,
     PG-LDSO-8-1
   package: PG-LDSO-8-1
-  pinout: []
+  pinout: 1ed314x_gnd2
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3144MC12H
-  notes: Pinout not transcribed.
+  notes: One output; the output UVLO is referred to GND2, pin 7 (datasheet p1, p10).
   lifecycle:
     status: active
     release_date: '2025-01-01'
@@ -3781,6 +3808,8 @@ parts:
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p8 (Table 5 pin configuration for 1ED3143 and 1ED3144, Figure 6 top view)
 - mpn: 1ED3145MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3788,11 +3817,11 @@ parts:
     1ED3145MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 6.5 A, Reinforced isolation,
     PG-LDSO-8-1
   package: PG-LDSO-8-1
-  pinout: []
+  pinout: 1ed3145_adj
   datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3145MC12H
-  notes: Pinout not transcribed.
+  notes: One output; pin 7 (ADJ) sets the output UVLO with a resistor divider (p10).
   lifecycle:
     status: active
     release_date: '2025-01-01'
@@ -3829,6 +3858,8 @@ parts:
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p1 features, p18-19 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: >-
+      infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf p9 (Table 6 pin configuration for 1ED3145, Figure 7 top view)
 - mpn: 1ED3250MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3927,12 +3958,13 @@ parts:
     1ED020I12-F2: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 2.0 A, Functional isolation,
     PG-DSO-16-15
   package: PG-DSO-16-15
-  pinout: []
+  pinout: 1ed020i12_dso16
   datasheet: infineon-1ed020i12-f2-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed020i12-f2-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED020I12-F2
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pins 13 and 14 are the
+    active-low /FLT and /RST (FLT, RST in the pinout).
   lifecycle:
     status: active
     release_date: '2017-08-15'
@@ -3957,6 +3989,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed020i12-f2-datasheet-en.pdf p1 features, electrical characteristics
+    pinout: infineon-1ed020i12-f2-datasheet-en.pdf p10 (Table 1 pin configuration, Figure 3 top view)
 - mpn: 1ED3120MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -3964,12 +3997,12 @@ parts:
     1ED3120MU12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 5.5 A, Functional isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmu12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3120MU12H
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2020-12-02'
@@ -3999,6 +4032,7 @@ parts:
     peak_sink_a: Infineon product page parametrics (Output Current Sink, typ)
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
+    pinout: infineon-1ed31xxmu12h-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3121MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4006,12 +4040,12 @@ parts:
     1ED3121MU12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 5.5 A, Functional isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmu12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3121MU12H
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2021-04-05'
@@ -4043,6 +4077,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmu12h-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3122MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4050,12 +4085,12 @@ parts:
     1ED3122MU12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 9.0 A, Functional isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed3122h_clamp
   datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmu12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3122MU12H
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2020-10-27'
@@ -4087,6 +4122,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmu12h-datasheet-en.pdf p6-7 (Table 3 pin configuration of 1ED3122MU12H, Figure 5 top view)
 - mpn: 1ED3123MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4094,12 +4130,12 @@ parts:
     1ED3123MU12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 14.0 A, Functional isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmu12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3123MU12H
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2020-11-15'
@@ -4131,6 +4167,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmu12h-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3131MC12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4138,12 +4175,11 @@ parts:
     1ED3131MC12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 5.5 A, Reinforced isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   datasheet_url: >-
     https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3131MC12H
-  notes: Pinout not transcribed.
   lifecycle:
     status: active
     release_date: '2021-04-19'
@@ -4178,6 +4214,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p1 features, p17 insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3131MU12HXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -4185,12 +4222,12 @@ parts:
     1ED3131MU12H: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 5.5 A, Functional isolation,
     PG-DSO-8-66
   package: PG-DSO-8-66
-  pinout: []
+  pinout: 1ed31xxh_split
   datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed31xxmu12h-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED3131MU12H
   notes: >-
-    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating). Pinout not transcribed.
+    Isolation type per Infineon: Galvanic isolation - Functional (no basic/reinforced rating).
   lifecycle:
     status: active
     release_date: '2021-01-06'
@@ -4222,6 +4259,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     protection: infineon-1ed31xxmu12h-datasheet-en.pdf p1 features, insulation characteristics
     theta_ja_c_w: Infineon product page parametrics (RthJA)
+    pinout: infineon-1ed31xxmu12h-datasheet-en.pdf p6 (Table 2 pin configuration, Figure 4 top view)
 - mpn: 1ED3431MU12MXUMA1
   manufacturer: Infineon
   family: gate_driver
@@ -5109,11 +5147,11 @@ parts:
   description: >-
     1ED020I12-B2: Infineon EiceDRIVER single-channel galvanic isolated gate driver (High-side), 2.0 A, Basic isolation, PG-DSO-16-15
   package: PG-DSO-16-15
-  pinout: []
+  pinout: 1ed020i12_dso16
   datasheet: infineon-1ed020i12-b2-datasheet-en.pdf
   datasheet_url: https://www.infineon.com/assets/row/public/documents/24/49/infineon-1ed020i12-b2-datasheet-en.pdf
   product_url: https://www.infineon.com/part/1ED020I12-B2
-  notes: Pinout not transcribed.
+  notes: Pins 13 and 14 are the active-low /FLT and /RST (FLT, RST in the pinout).
   lifecycle:
     status: nrnd
     release_date: '2015-02-23'
@@ -5147,6 +5185,7 @@ parts:
     uvlo_v: Infineon product page (VBS UVLO On)
     output_supply_v: Infineon product table (Output Vbs)
     protection: infineon-1ed020i12-b2-datasheet-en.pdf p1 features, insulation characteristics
+    pinout: infineon-1ed020i12-b2-datasheet-en.pdf p5-6 (Table 2 pin configuration, Figure 3 top view)
 - mpn: 1EDI20I12MHXUMA1
   manufacturer: Infineon
   family: gate_driver

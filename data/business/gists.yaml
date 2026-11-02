@@ -129,6 +129,238 @@ gists:
     - Nothing to decide here; confirm if the sources look sound, or comment on one that does not.
     gist: 'The sources behind the car radio tuner case: every figure with its link and a confidence level, for checking
       a number.'
+  evidence:acdc_controller:
+    abstract:
+    - 'Path: new design; only Active-Semi heritage (ACT43950, 400 V input) is left; controller IP, a 700 V start-up device and
+      safety approvals are missing.'
+    - 'Manufacturing: foundry HV BCD with 650–700 V devices, nothing in-house; competitor technology: integrated GaN offline
+      switchers (Power Integrations), entry hard.'
+    - 'Trend: growing with GaN USB-C chargers up to 240 W and AI server power supplies.'
+    gist: 'AC/DC controllers grow with GaN chargers and AI server supplies, but entry is hard: we lack the controller IP and
+      a 700 V start-up process.'
+  evidence:active_antenna_amp:
+    abstract:
+    - 'Path: variant of our automotive LNAs, pairing with the Si47xx tuners; an AM high-impedance input and AEC-Q100 phantom
+      power are missing.'
+    - 'Manufacturing: GaAs pHEMT or SiGe, already in-house; competitor technology: mostly discrete RF transistors (NXP, Infineon),
+      so we could differentiate.'
+    - 'Trend: stable; EU cars must receive digital radio, and the US AM-radio bill passed the House in Sep 2026.'
+    gist: An AM/FM in-antenna amplifier is a variant of our LNAs that pairs with our tuners; rivals sell mostly discrete transistors.
+  evidence:adc:
+    abstract:
+    - 'Path: new design; Si894x isolated delta-sigma modulators are the base, a SAR or multichannel delta-sigma family is missing.'
+    - 'Manufacturing: foundry mixed-signal CMOS is enough; competitor technology: precision and GSPS ADCs from Analog Devices
+      and TI, entry hard.'
+    - 'Trend: growing with EV battery monitoring, industrial sensing and medical wearables.'
+    gist: General-purpose ADCs grow with battery monitoring and industrial sensing, but ADI and TI are hard to displace beyond
+      our isolated-modulator niche.
+  evidence:amplifier:
+    abstract:
+    - 'Path: new design; Si892x isolated amplifiers and Qorvo PAC current-sense blocks are the base, a precision op-amp family
+      is missing.'
+    - 'Manufacturing: foundry analog CMOS; competitor technology: thousands of TI and ADI op-amps with standard footprints,
+      a follower entry.'
+    - 'Trend: stable overall; current sensing grows with 48 V and EV electrification.'
+    gist: Op-amps are a crowded TI and ADI catalogue market; the card suggests starting with current-sense amplifiers for motor
+      and power designs.
+  evidence:audio_codec:
+    abstract:
+    - 'Path: new design; our wireless audio SoC, Class-D amplifier and tuner DSP hold converters, but high-SNR codec IP and
+      DSP tools are missing.'
+    - 'Manufacturing: foundry CMOS or BCD; competitor technology: 119–120 dB codecs and DSP codecs with tuning software (Cirrus
+      Logic, TI, ADI, AKM), entry hard.'
+    - 'Trend: stable; cars add codecs for audio zones and noise cancelling, while SoC integration limits phones and PCs.'
+    gist: A standalone audio codec would need new converter IP against Cirrus Logic and TI; only car audio paired with our tuners
+      looks plausible.
+  evidence:battery_protector:
+    abstract:
+    - 'Path: cost-down variant of the Qorvo PAC25140 / PAC25141N pack monitors; a 1–4 cell protector with an ultra-low-Iq FET
+      driver is missing.'
+    - 'Manufacturing: foundry low-Iq BCD; competitor technology: low-cost protectors with accurate thresholds (TI, ABLIC, Nisshinbo),
+      price-driven.'
+    - 'Trend: stable, following Li-ion packs in phones, tools and e-bikes.'
+    gist: A simple 1–4 cell protector would be a cost-down variant of Qorvo's battery-management chips, in a stable, price-driven
+      market.
+  evidence:ble_soc:
+    abstract:
+    - 'Path: already ours (Qorvo QPG6200L and QPG7015M; QPG6095 / 6100 / 6105 discontinued), but mapped to wireless SoC, not
+      this function.'
+    - 'Manufacturing: fabless 40 / 22 nm RF CMOS, as today; competitor technology: Nordic, Silicon Labs and TI SoCs with large
+      software ecosystems.'
+    - 'Trend: growing with Channel Sounding, LE Audio and electronic shelf labels.'
+    gist: We already sell BLE and Thread chips (Qorvo QPG); the catalogue files them under another function, and Nordic and
+      Silicon Labs set the pace.
+  evidence:can_transceiver:
+    abstract:
+    - 'Path: new design; Si858x isolated RS-485 shows bus-PHY skills, but CAN FD / SIC IP, ±58 V bus protection and ISO 11898-2
+      approval are missing.'
+    - 'Manufacturing: foundry BCD-on-SOI, nothing in-house; competitor technology: CAN FD and SIC transceivers with strong automotive
+      EMC (NXP, TI, Infineon), entry hard.'
+    - 'Trend: stable; CAN stays the edge bus in zonal cars, while Ethernet and 10BASE-T1S cap node growth.'
+    gist: A CAN transceiver is a new die on our RS-485 experience; stable market, qualification-heavy, led by NXP and TI.
+  evidence:circulator_isolator:
+    abstract:
+    - 'Path: new capability; the Trans-Tech ceramics business was sold in 2023 and is now a competitor, so only a partner fits.'
+    - 'Manufacturing: ferrite and garnet ceramics with magnets, no wafer process; competitor technology: custom drop-in and
+      SMT circulators (Smiths Interconnect, JQL).'
+    - 'Trend: stable; 5G massive MIMO, radar and LEO terminals add demand while some GaN designs drop the isolator.'
+    gist: Ferrite circulators are not a chip process; since Trans-Tech was sold in 2023, only a partner to sell alongside our
+      GaN amplifiers fits.
+  evidence:dac:
+    abstract:
+    - 'Path: new design; only bias and control DACs exist, inside Qorvo ACT43750 and our timing parts.'
+    - 'Manufacturing: foundry mixed-signal CMOS; competitor technology: 16–20 bit precision and GSPS RF DACs (Analog Devices,
+      TI), entry hard.'
+    - 'Trend: stable; industrial 4–20 mA loops and test equipment, while low-end DACs move into MCUs.'
+    gist: Precision DACs would need new converter IP against Analog Devices and TI in a stable industrial market; low-end DACs
+      move into microcontrollers.
+  evidence:ddr_flash:
+    abstract:
+    - 'Path: not pursued; memory is a third-party part.'
+    - 'Manufacturing: proprietary DRAM and 3D NAND processes, no foundry route; competitor technology: memory scaling leadership
+      (Samsung, SK hynix, Micron).'
+    - 'Trend: growing with AI servers, AI PCs and car central computers; WSTS expects memory to lead 2026–2027 growth.'
+    gist: Memory grows fast with AI servers, but DRAM and flash are made only by memory makers; not ours to build.
+  evidence:diversity_rx_module:
+    abstract:
+    - 'Path: already ours (Skyworks SKY537xx diversity receive modules), but filed as RF front end in the catalogue.'
+    - 'Manufacturing: in-house RF SOI, SAW / BAW filters and SiP modules; competitor technology: integrated modules tied to
+      modem reference designs (Qualcomm, Murata, Maxscend).'
+    - 'Trend: stable; more bands and MIMO, but flat phone units and a 2026 decline expected by IDC.'
+    gist: We already ship 5G diversity receive modules; only the catalogue mapping is missing, in a stable market as phone units
+      stay flat.
+  evidence:ecg_afe:
+    abstract:
+    - 'Path: new capability; a low-noise biopotential ADC, IEC 60601 qualification and a medical sales channel are missing.'
+    - 'Manufacturing: foundry low-noise CMOS; competitor technology: multichannel AFEs with lead-off detection (TI ADS129x,
+      ADI ADAS1000), entry hard.'
+    - 'Trend: growing with wearable ECG and the 2026 Medicare remote-monitoring payments.'
+    gist: Wearable ECG grows, but biopotential front ends are a medical niche led by TI and ADI where we have no product or
+      channel.
+  evidence:efuse_hotswap:
+    abstract:
+    - 'Path: variant; Qorvo ACT4910 / ACT85610 already hold eFuse FETs, a standalone eFuse with telemetry and UL 2367 approval
+      is missing.'
+    - 'Manufacturing: foundry BCD with low-Rds(on) LDMOS; competitor technology: integrated-FET eFuses and PMBus hot-swap controllers
+      (TI, ADI, Infineon), a follower entry.'
+    - 'Trend: growing; zonal cars replace fuses, and AI server racks move from 48 V toward 800 VDC.'
+    gist: A standalone eFuse is a subset of Qorvo's power-loss-protection chips; zonal cars and AI server racks make it a growing
+      market.
+  evidence:env_sensor:
+    abstract:
+    - 'Path: new capability, acquire or not pursue; Silicon Labs kept the Si70xx humidity sensors.'
+    - 'Manufacturing: foundry for light and pressure, proprietary films for humidity and gas; competitor technology: calibrated
+      MEMS sensors (Bosch Sensortec, Sensirion, TDK, ams OSRAM), entry hard.'
+    - 'Trend: growing with indoor air quality, ventilation guidance and Matter sensors.'
+    gist: Environmental sensors grow with indoor air quality and Matter, but need MEMS and calibration we lack; the card says
+      acquire or not pursue.
+  evidence:ethernet_phy:
+    abstract:
+    - 'Path: new capability; our PoE and SyncE parts sit next to the PHY, but PHY DSP IP, a TSN switch team and OPEN Alliance
+      compliance are missing.'
+    - 'Manufacturing: foundry CMOS, the barrier is IP not process; competitor technology: DSP-heavy PHYs and TSN switches (Marvell,
+      Broadcom, Realtek, TI, Microchip), entry hard.'
+    - 'Trend: growing; zonal cars move to 1–10 Gb/s backbones with 10BASE-T1S endpoints.'
+    gist: Car Ethernet grows with zonal designs, but PHYs need DSP and interoperability know-how we lack; only acquiring or
+      licensing would get us in.
+  evidence:flash:
+    abstract:
+    - 'Path: not pursued; memory is a third-party part.'
+    - 'Manufacturing: NOR at foundries is proven (GigaDevice), NAND has no foundry route; competitor technology: NOR and NAND
+      process leadership (Winbond, Macronix, Micron, GigaDevice).'
+    - 'Trend: growing with AI data-center SSDs and car software updates over the air (UN R156).'
+    gist: Flash demand grows with car software updates and AI storage, but it is a memory maker's business; not ours to build.
+  evidence:gnss_lna:
+    abstract:
+    - 'Path: already ours (SKY55951-11 L1+L5, automotive SKY5A2110 and others); only the catalogue mapping is missing.'
+    - 'Manufacturing: in-house RF SOI, SiGe and GaAs LNAs with SAW filters; competitor technology: sub-1 dB SiGe LNAs in tiny
+      packages (Infineon, Nexperia, Maxscend).'
+    - 'Trend: growing as dual-frequency L1+L5 spreads from phones to wearables and cars.'
+    gist: We already sell GNSS LNA modules, including L1+L5 and automotive parts; dual-frequency receivers in watches and cars
+      grow demand.
+  evidence:half_bridge_driver:
+    abstract:
+    - 'Path: variant; Qorvo PAC5xxx (up to 600 V) and ACT72350 hold half-bridge drivers, a standalone die and package are missing.'
+    - 'Manufacturing: foundry HV BCD or SOI; competitor technology: 600–700 V level-shift drivers and fast GaN drivers (Infineon,
+      TI, ST), a follower entry.'
+    - 'Trend: growing with GaN in chargers, server supplies, 48 V converters and solar.'
+    gist: A standalone half-bridge driver would reuse Qorvo's PAC gate-drive circuits; GaN power stages grow demand in a crowded
+      market.
+  evidence:hall_switch:
+    abstract:
+    - 'Path: new capability, partner or acquire; we have no magnetic sensing line and our current sensors are not Hall-based.'
+    - 'Manufacturing: standard foundry CMOS with Hall plates, nothing in-house; competitor technology: low-power automotive
+      Hall switches (Allegro, Melexis, Infineon), entry hard.'
+    - 'Trend: stable, tracking car and appliance builds (seats, doors, buckles, motors, lids).'
+    gist: Hall switches are a stable, high-volume market led by Allegro, Melexis and Infineon; with no magnetic sensing line,
+      we would partner or acquire.
+  evidence:haptics_driver:
+    abstract:
+    - 'Path: new design; our Class-D and boost drivers give the output stage, LRA tracking and a piezo boost are missing.'
+    - 'Manufacturing: foundry BCD (HV for piezo); competitor technology: closed-loop LRA drivers with boost (Cirrus Logic, TI,
+      Awinic); Class-D plus Qorvo force sensing could differentiate.'
+    - 'Trend: growing with touch surfaces in cars and devices, though Euro NCAP 2026 favours physical buttons.'
+    gist: Haptic drivers grow with touch surfaces in cars and devices; our Class-D and boost stages help, but the LRA control
+      loop is new.
+  evidence:hv_flyback:
+    abstract:
+    - 'Path: new design next to Si88xx isolated power and Qorvo ACT43950; a flyback controller with HV start-up and AEC-Q100
+      is missing.'
+    - 'Manufacturing: foundry HV BCD or SOI, few offer 700 V devices; competitor technology: integrated HV switchers (Power
+      Integrations, Infineon, onsemi), a follower entry.'
+    - 'Trend: growing with 800 V EV platforms, redundant bias supplies, solar and storage.'
+    gist: 800 V cars need flyback supplies from the battery; a controller next to our isolation parts is new design against
+      entrenched Power Integrations.
+  evidence:hv_pulser:
+    abstract:
+    - 'Path: new capability, partner or not pursue; Qorvo''s 600 V gate-drive level shift is only adjacent.'
+    - 'Manufacturing: partly foundry (HV SOI), mostly own processes at the leaders; competitor technology: multi-level pulsers
+      with T/R switches (Microchip, TI, ADI), entry hard.'
+    - 'Trend: growing with portable ultrasound and non-destructive testing.'
+    gist: Ultrasound pulsers need a ±100 V process and medical customers we do not have; portable ultrasound grows, but the
+      card says partner or skip.
+  evidence:io_expander:
+    abstract:
+    - 'Path: new design on plain CMOS, only as a companion fill-in; low strategic value.'
+    - 'Manufacturing: foundry mature CMOS; competitor technology: low-cost I2C / SPI expanders with standard pinouts (TI, NXP),
+      easy to follow.'
+    - 'Trend: stable commodity, following general electronics volumes.'
+    gist: I/O expanders are simple commodity logic led by TI and NXP; worth building only as a companion fill-in, with low strategic
+      value.
+  evidence:isolated_can:
+    abstract:
+    - 'Path: new design the Si858x way (isolator plus bus die); a CAN FD die, isolated power and ISO 11898-2 conformance are
+      missing.'
+    - 'Manufacturing: our in-house capacitive isolation plus a foundry BCD CAN die; competitor technology: isolated CAN FD with
+      built-in isolated power (TI, ADI), a follower entry.'
+    - 'Trend: growing with EV battery and charging systems, energy storage and industrial CAN.'
+    gist: Isolated CAN would put a new or licensed CAN die beside our isolator, as in Si858x RS-485; EV and storage systems
+      grow demand.
+  evidence:isolated_dcdc:
+    abstract:
+    - 'Path: already ours (Si88xx with integrated DC-DC incl. -AS codes, Si86Px in preview), mapped as digital isolators; a
+      standalone supply above 2 W is missing.'
+    - 'Manufacturing: in-house isolation platform plus transformer packaging; competitor technology: modules (Murata, RECOM)
+      and in-package transformers (TI, ADI).'
+    - 'Trend: growing; every gate driver in 800 V EV, solar and storage needs an isolated bias supply.'
+    gist: We already sell isolators with built-in DC-DC (Si88xx, Si86P); missing are the catalogue mapping and a standalone
+      supply for gate-driver bias above 2 W.
+  evidence:ldo_tracker:
+    abstract:
+    - 'Path: variant of the Qorvo ACT PMIC LDO with a tracking input; a 40 V automotive rating and AEC-Q100 are missing.'
+    - 'Manufacturing: foundry automotive HV BCD; competitor technology: accurate trackers with short-to-battery protection (Infineon,
+      TI), a follower entry.'
+    - 'Trend: growing with remote sensors and cameras per car (EU GSR2, zonal wiring).'
+    gist: A tracking LDO for remote car sensors is a small loop change to Qorvo's PMIC regulators; a small growing niche led
+      by Infineon and TI.
+  evidence:uwb_soc:
+    abstract:
+    - 'Path: not filled in yet on the card.'
+    - 'Manufacturing: not researched yet; competitor technology: not researched yet.'
+    - 'Trend: growing; the CCC digital key spreads UWB anchors, and Euro NCAP rewards direct-sensing child presence detection
+      from 2025 / 2026; no public unit forecast was read.'
+    gist: 'UWB chips gain a second car job: digital keys plus Euro NCAP child-presence sensing from 2025; path and competitor
+      research are still missing.'
   expansion:auto-hv-hot-swap:
     abstract:
     - Compares eFuses and hot-swap controllers in cars and data centers function by function, with a side-by-side table.
@@ -156,12 +388,26 @@ gists:
     - Answer yes, or say how to show it.
     gist: The child-presence diagram follows a public 60 GHz radar design, since no UWB-radar diagram was found; is that
       right under UWB in the car?
+  question:isolator-data-rate-as-priority-1:
+    abstract:
+    - Si86S F / H codes (36 ns deglitch, 10 Mbps per the ordering guide) now rank below the B / E codes (10 ns) when the original
+      runs at 150 Mbps.
+    - It decides which Si86S code is offered first for fast isolators.
+    - Answer yes, or say which code should come first.
+    gist: With data rate at priority 1, the 10 Mbps deglitch Si86S codes no longer rank first for a 150 Mbps part; is that right?
   question:new-systems:
     abstract:
     - Industrial & energy, Aerospace & defense, Consumer & wearables, Home & building and Medical.
     - It decides how the Block diagram library is grouped.
     - Answer yes, or name what to rename or move.
     gist: The 95 diagrams once under Other now sit in five new systems; are the names and the split right?
+  question:qpf5100q-together-with-qpf5001q-as-a-solution:
+    abstract:
+    - No public page for QPF5001Q was found; our QPF5001 is an 8–12 GHz, 12 W X-band radar front end, not automotive and not
+      UWB.
+    - Until answered, the page shows QPF5100Q with QM14068 / QM14070 / SKY5A2108 as our reading (est).
+    - Name the part you meant (QM14068 / QM14070, DW3300Q or another).
+    gist: 'QPF5001Q is not in our data; which part did you mean with QPF5100Q: a UWB front end like QM14068 or QM14070, or another?'
   question:us-am-mandate-status:
     abstract:
     - Shown as passed by the House on 16 Sep 2026; the Senate step is not checked.

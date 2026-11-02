@@ -1,5 +1,6 @@
 """Load per-family matching rules from rules/*.yaml."""
 
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -41,6 +42,13 @@ class ParamDef:
     # the value decides only when both sides took it from a datasheet (a page reference); a product-table or
     # estimated value is shown with "check datasheet" and never decides the ranking (owner, 26 Oct 2026, data rate)
     datasheet_only: bool = False
+    # set: items that steer the pick (owner, 2 Nov 2026: a gate driver's DESAT, overcurrent or short-circuit
+    # protection). When the reference has any of them, a candidate with none ranks below every candidate with one.
+    steer: tuple[str, ...] = ()
+    # a worse value is a downgrade that ranks the candidate below every candidate that is not worse here, whatever
+    # else differs (owner, 2 Nov 2026: isolation below the competitor's rating ranks below any output-option or
+    # feature difference)
+    downgrade_tier: bool = False
 
 
 @dataclass(frozen=True)
@@ -153,7 +161,25 @@ def gate_output_config(part, values: dict) -> str | None:
     return None
 
 
-DERIVE = {"gate_output_config": gate_output_config}
+_RANGE_TEXT = re.compile(
+    r"^\s*(?:±\s*(?P<pm>[\d.]+)|(?P<lo>[-+−]?[\d.]+)\s*(?:to|–|…)\s*(?P<hi>[-+−]?[\d.]+))\s*(?P<unit>mV|V)\s*$")
+
+
+def input_range_v(part, values: dict) -> list[float] | None:
+    """An isolated amplifier's stated input range ("±250 mV", "0.25 to 4.3 V", "8 to 68.5 mV") as [min, max] in V;
+    None when the text is not a plain range (owner, 2 Nov 2026: input ranges compared as numbers)."""
+    m = _RANGE_TEXT.match(str(values.get("input_range") or ""))
+    if not m:
+        return None
+    scale = 0.001 if m["unit"] == "mV" else 1.0
+    if m["pm"]:
+        lo, hi = -float(m["pm"]), float(m["pm"])
+    else:
+        lo, hi = (float(x.replace("−", "-")) for x in (m["lo"], m["hi"]))
+    return [round(lo * scale, 6), round(hi * scale, 6)]
+
+
+DERIVE = {"gate_output_config": gate_output_config, "input_range_v": input_range_v}
 
 
 def parse_rules(data: dict) -> FamilyRules:
@@ -183,9 +209,13 @@ def parse_rules(data: dict) -> FamilyRules:
             band=raw.get("band"),
             prefer=raw.get("prefer"),
             datasheet_only=bool(raw.get("datasheet_only", False)),
+            steer=tuple(raw.get("steer", ())),
+            downgrade_tier=bool(raw.get("downgrade_tier", False)),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")
+        if p.steer and p.kind != "set":
+            raise ValueError(f"{p.key}: steer goes with a set")
         if p.priority not in (1, 2, 3):
             raise ValueError(f"{p.key}: priority must be 1, 2 or 3")
         if p.kind == "number" and p.direction not in ("higher", "lower", "match"):

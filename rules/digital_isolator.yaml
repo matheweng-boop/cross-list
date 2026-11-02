@@ -4,7 +4,9 @@ title: Digital isolators
 # never block a cross, they are shown for information.
 params:
   # --- Priority 1: must be equal or better ---
-  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
+  # Owner, 2 Nov 2026: isolation below the competitor's rating is a downgrade that ranks below any other
+  # difference (output option, feature, another priority 1 value).
+  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher, downgrade_tier: true}
   # basic for a reinforced reference is listed as an exception, not a knock-out (the application decides).
   # Functional isolators (TI ISO652x/ISO654x) state no isolation rating, so they never pass as a drop-in for a
   # safety-rated part: the missing rating counts as a deviation.

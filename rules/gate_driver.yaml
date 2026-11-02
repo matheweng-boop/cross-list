@@ -2,7 +2,9 @@ family: gate_driver
 title: Isolated gate drivers
 params:
   # --- Priority 1: must be equal or better ---
-  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher}
+  # Owner, 2 Nov 2026: isolation below the competitor's rating is a downgrade that ranks below any other
+  # difference (output option, feature, another priority 1 value).
+  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 1, kind: number, direction: higher, downgrade_tier: true}
   - {key: isolation_class, label: Isolation class, priority: 1, kind: ordinal, levels: [functional, basic, reinforced], exception: true}
   - {key: creepage_mm, label: Creepage, unit: mm, priority: 3, kind: number, direction: higher}  # owner 21 Oct 2026: good to know, never blocks or ranks a cross
   - {key: qualification, label: "Automotive grade (AEC-Q100)", priority: 1, kind: ordinal, levels: [commercial, industrial, automotive], must_meet: true}
@@ -32,7 +34,9 @@ params:
   - {key: prop_delay_ns, label: "Propagation delay (typ, else max)", unit: ns, priority: 2, kind: number, direction: lower}
   # Dead time and overlap protection are one capability in the dual drivers compared (owner's question, 22 Oct 2026:
   # the NSI6602 dead-time logic also blocks overlapping inputs), judged once by `deadtime` below, not twice here.
-  - {key: protection, label: Protection features, priority: 2, kind: set, exclude: [programmable dead time, overlap protection]}
+  # Short-circuit protection steers the pick (owner, 2 Nov 2026): when the competitor has DESAT, overcurrent or
+  # short-circuit protection, a candidate with none of them ranks below every candidate with one (ADuM4136 -> Si8286).
+  - {key: protection, label: Protection features, priority: 2, kind: set, exclude: [programmable dead time, overlap protection], steer: [desaturation, overcurrent, short-circuit]}
   - {key: temp_range_c, label: Operating temperature, unit: °C, priority: 2, kind: range}
   - {key: deadtime, label: Dead-time control (incl. overlap protection), priority: 2, kind: category}
   - {key: theta_ja_c_w, label: Thermal resistance θJA, unit: °C/W, priority: 2, kind: number, direction: lower}

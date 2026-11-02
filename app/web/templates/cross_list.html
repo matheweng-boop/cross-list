@@ -81,7 +81,7 @@
     <td data-label="Best functional fit">{% if r.functional %}{{ col(r, r.functional) }}{% else %}<span class="cx-same">= Drop-in</span>{% endif %}</td>
     {% elif r.part and not r.part.is_reference %}
     <td data-label="Drop-in"><span class="cx-none">No drop-in</span></td>
-    <td data-label="Best functional fit"><span class="cx-none">No functional fit</span><div class="cx-cm">{{ r.reason }}{% if r.reason_link %} <a href="{{ r.reason_link }}">Open →</a>{% endif %}</div></td>
+    <td data-label="Best functional fit"><span class="cx-none">No functional fit</span><div class="cx-cm">{{ r.reason }}{% if r.reason_link %} <a href="{{ r.reason_link }}">Open →</a>{% endif %}</div>{% if r.nearest %}<div class="cx-nearest">{{ col(r, r.nearest) }}</div>{% endif %}</td>
     {% else %}
     <td colspan="2" class="cx-reason">{% if r.light == 'red' %}<span class="cx-none">Not in our data</span>{% endif %}<div class="cx-cm">{% if not (r.light == 'red' and r.reason.rstrip('.') == 'Not in our data') %}{{ r.reason }}{% endif %}{% if r.suggestion %} <a href="{{ r.reason_link }}">Search {{ r.suggestion }} →</a>{% endif %}</div></td>
     {% endif %}

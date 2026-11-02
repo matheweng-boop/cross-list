@@ -7,8 +7,9 @@ shown for information and never block a cross. In order of preference:
 * Drop-in (FFF)         – same package, pin-to-pin, every priority 1 parameter equal or
                           better (better ones are marked).
 * Functional equivalent – another package or pinout; priority 1 equal or better except
-                          for at most ``max_deviations`` parameters (worse, different or
-                          unknown). Better ones are marked, deviations listed. A
+                          for at most ``max_deviations`` parameters (worse or different; a
+                          value one side does not state is shown, never counted). Better
+                          ones are marked, deviations listed. A
                           package-locked reference (thermal / technical reasons) only
                           accepts other pinouts in its own package.
 * Package equivalent    – same package and basic function, other technical specs (more
@@ -22,9 +23,11 @@ the part does: they never count as a deviation, a mismatch is not listed at all.
 An engineer can reject a drop-in; it is then listed as a package equivalent.
 """
 
+import math
 import re
 from dataclasses import dataclass, field
 
+from app.matching import pinroles
 from app.matching.rules import BAND_SUFFIX, FamilyRules, ParamDef
 from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 
@@ -32,6 +35,7 @@ EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "differen
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
 UNKNOWN_SEVERITY = 0.25
 PREFERRED_SIDE_WEIGHT = 0.25  # a "match" value off on the preferred side (see ParamDef.prefer) weighs a quarter
+CONDITION_SEVERITY = 0.1  # a pinout that fits on one board wiring of a control pin (pinroles): close, not equal
 CATEGORY_ORDER = ("fff", "functional", "package")
 CATEGORY_LABELS = {
     "fff": "Drop-in (FFF)",
@@ -60,6 +64,14 @@ class Diff:
     exception: bool = False  # worse = an exception to list, not a deviation
     unknown_ok: bool = False  # an unknown value is shown but not counted as a deviation
     unverified: bool = False  # a ``datasheet_only`` value not from a datasheet page on one side: shown, never decides
+    # how far short a worse value falls, unbounded (rule 12, owner 2 Nov 2026): log2 of the ratio for a number (a 1 Mbps
+    # part for a 150 Mbps socket: 7.2), the uncovered share of a range; None: the severity (an option difference: 1)
+    size: float | None = None
+
+    @property
+    def shortfall(self) -> float:
+        """The size of this difference for the order among candidates with as many deviations (rule 12)."""
+        return self.severity if self.size is None else self.size
 
     @property
     def score(self) -> float:
@@ -81,13 +93,29 @@ class Diff:
 class Fit:
     same_package: bool
     package_relation: str  # same | smaller | larger | similar
-    same_pinout: bool
+    same_pinout: bool  # every pin takes the other part's board wiring, some maybe only on a condition (conditions)
     pin_diffs: list[tuple[int, str, str]] = field(default_factory=list)
     positions_unknown: bool = False  # same body, different pin counts, pin positions not known
+    # control pins compared by role (app/matching/pinroles.py, owner 2 Nov 2026):
+    conditions: list[tuple[int, str, str, str]] = field(default_factory=list)  # (pin, theirs, ours, note template)
+    role_diffs: list[tuple[int, str, str]] = field(default_factory=list)  # (pin, their role, our role): mismatches
+    board_default: list[int] = field(default_factory=list)  # pins setting their default output, ours ignore them
 
     @property
     def fits(self) -> bool:
-        return self.same_package and self.same_pinout
+        """Same package and pinout with no condition on the board wiring: a full drop-in fit."""
+        return self.same_package and self.same_pinout and not self.conditions
+
+    @property
+    def condition_note(self) -> str:
+        """The deciding note of a conditional fit in plain words ("Works if pins 7 and 10 are tied high or left open
+        on the board; tied low, our outputs switch off")."""
+        from app.matching.pinroles import pins_phrase
+
+        notes: dict[str, list[int]] = {}
+        for pos, _, _, note in self.conditions:
+            notes.setdefault(note, []).append(pos)
+        return "; ".join(n.replace("{pins}", pins_phrase(ps)) for n, ps in notes.items())
 
 
 SPEC_LABELS = {"exact": "Exact", "over": "Better", "under": "Worse", "mixed": "Mixed"}
@@ -134,6 +162,12 @@ class CrossResult:
     incomplete: bool
     fff_status: str | None = None
     feedback: object | None = None  # CrossFeedback row, if any
+    # the reference has an item of a ``steer`` set (a gate driver's DESAT, overcurrent or short-circuit protection) and
+    # the candidate has none of them: it ranks below every candidate that has one (owner, 2 Nov 2026)
+    steer_miss: bool = False
+    # worse on a ``downgrade_tier`` parameter (isolation rating): ranks below every candidate that is not (owner,
+    # 2 Nov 2026: "isolation below the competitor's rating is a downgrade")
+    downgrade: bool = False
 
     @property
     def all_diffs(self) -> list[Diff]:
@@ -153,8 +187,23 @@ class CrossResult:
 
     @property
     def deviations(self) -> list[Diff]:
-        """Priority 1 parameters that are worse, different or unknown (exceptions excluded)."""
+        """Priority 1 parameters that are worse or different (exceptions and unstated values excluded)."""
         return _deviations(self.diffs)
+
+    @property
+    def shortfall(self) -> float:
+        """The summed size of the priority 1 deviations (rule 12, owner 2 Nov 2026): with as many deviations, the
+        candidate falling less short ranks first; a 1 Mbps part for a 150 Mbps socket ranks below one whose only
+        difference is an option such as the default output state."""
+        return round(sum(d.shortfall for d in self.deviations), 6)
+
+    @property
+    def unstated_ours(self) -> int:
+        """Priority 1 values they state and our part does not: a "check" note, never a deviation (the cross is still
+        listed), but for the order it counts like one, so a part with the values stated ranks first (owner, 2 Nov 2026:
+        "a must-have value that our part doesn't state stays a visible 'check' note")."""
+        return sum(1 for d in self.diffs if d.priority == 1 and d.status == UNKNOWN and not d.unknown_ok
+                   and d.ref_display != "—" and d.cand_display == "—")  # fmt: skip
 
     @property
     def unverified_worse(self) -> int:
@@ -227,6 +276,8 @@ def format_value(p: ParamDef, value) -> str:
         return f"{_fmt_num(float(value))}{unit}"
     if p.kind == "range":
         lo, hi = value
+        if p.unit == "V" and max(abs(float(lo)), abs(float(hi))) < 1:  # an input range of a few mV reads in mV
+            return f"{_fmt_num(round(float(lo) * 1000, 3))} to {_fmt_num(round(float(hi) * 1000, 3))} mV"
         return f"{_fmt_num(lo)} to {_fmt_num(hi)}{unit}"
     if p.kind == "set":
         return ", ".join(sorted(value)) if value else "none"
@@ -242,6 +293,26 @@ def format_value(p: ParamDef, value) -> str:
         x_unit = f" {p.x_unit}" if p.x_unit else ""
         return ", ".join(f"{_fmt_num(float(y))}{unit} at {_fmt_num(float(x))}{x_unit}" for x, y in sorted(value))
     return f"{value}{unit}" if p.kind == "category" and p.unit else str(value)
+
+
+def uncovered(p: ParamDef, ref, cand) -> str:
+    """The part of the reference's range the candidate's range leaves out, in words ("2.25 to 4.3 V"; a frequency
+    range that starts at 0 starts at "DC"); "" when it is covered (owner, 2 Nov 2026: name the uncovered part)."""
+    if p.kind != "range" or not ref or not cand:
+        return ""
+    (a, b), (c, d) = sorted(map(float, ref)), sorted(map(float, cand))
+    gaps = ([(a, min(b, c))] if c > a else []) + ([(max(a, d), b)] if d < b else [])
+    gaps = [(x, y) for x, y in gaps if y > x]
+    if not gaps:
+        return ""
+    freq = p.unit in ("Hz", "kHz", "MHz", "GHz")
+
+    def end(x):
+        return "DC" if freq and x == 0 else _fmt_num(x)
+
+    if p.unit == "V" and max(abs(a), abs(b)) < 1:
+        return ", ".join(f"{_fmt_num(round(x * 1000, 3))} to {_fmt_num(round(y * 1000, 3))} mV" for x, y in gaps)
+    return ", ".join(f"{end(x)} to {_fmt_num(y)}" for x, y in gaps) + (f" {p.unit}" if p.unit else "")
 
 
 def format_at(rules: FamilyRules, p: ParamDef, values: dict) -> str:
@@ -328,8 +399,9 @@ def compare_param(p: ParamDef, ref, cand) -> tuple[str, float]:
 
 
 # Vendors name the same pin differently: VCCI / VDDI (input supply), VSSA / GNDA (output ground),
-# OUTA / VOA (driver output). Pin names are mapped to one spelling before comparing.
-_PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vo([a-z0-9]+)$", r"out\1"))
+# OUTA / VOA (driver output), VOUT / OUT (output). Pin names are mapped to one spelling before comparing. VOUT is read
+# before VO<x>, which would turn it into "outut" (owner, 2 Nov 2026: ADuM4121 VOUT against Si82B47 VO).
+_PIN_ALIASES = ((r"^vcc", "vdd"), (r"^vss", "gnd"), (r"^vout([a-z0-9]*)$", r"out\1"), (r"^vo([a-z0-9]+)$", r"out\1"))
 # Family-specific names for the same pin. Only within the family: gate drivers use VDDA/VDDB for the two output
 # channels, not for the input and output sides. Gate drivers: Skyworks VIA/VIB against INA/INB, and DISABLE against
 # DIS (EN is left alone: it has the opposite polarity). Isolated amplifiers: Skyworks side A/B names and TI's
@@ -351,6 +423,10 @@ _FAMILY_PIN_ALIASES = {
     ),
     # Oscillators: Skyworks CLK+ / CLK- against SiTime and others' OUT+ / OUT-.
     "timing": ((r"^clk([+-])$", r"out\1"),),
+    # Digital isolators: Analog Devices names its logic inputs VIA..VIF where Skyworks and TI use INA..INF (owner,
+    # 2 Nov 2026); its outputs VOA..VOF already read as OUTA..OUTF above. A lone VI / VO (one channel) is left alone:
+    # the Skyworks isoPower parts use VI / VO for their dc-dc converter.
+    "digital_isolator": ((r"^vi([a-z])$", r"in\1"),),
 }  # fmt: skip
 
 
@@ -404,10 +480,23 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         return Fit(same_pkg, relation, False, pin_diffs, positions_unknown=same_pkg)
     if len(ref_pos) != len(cand_pos):
         return Fit(same_pkg, relation, False, pin_diffs)
-    for i, (r, c) in enumerate(zip(ref_pos, cand_pos, strict=True), 1):
-        if not pins_compatible(r, c, ref.family if ref.family == cand.family else None):
+    conditions, role_diffs, board_default = [], [], []
+    # isolated amplifiers: the input side numbered 1 on both parts (ADI calls it side 2; data/pin_roles.yaml)
+    ref_side, cand_side = pinroles.by_side(ref, ref_pos), pinroles.by_side(cand, cand_pos)
+    for i, (r, c, rs, cs) in enumerate(zip(ref_pos, cand_pos, ref_side, cand_side, strict=True), 1):
+        j = pinroles.judge(ref, cand, r, c)  # control pins by what they do (data/pin_roles.yaml)
+        if j is None:
+            if not pins_compatible(rs, cs, ref.family if ref.family == cand.family else None):
+                pin_diffs.append((i, r, c))
+        elif j.result == pinroles.CONDITIONAL:
+            conditions.append((i, r, c, j.note or "Works only on one board wiring of pin {pins}"))
+        elif j.result == pinroles.MISMATCH:
             pin_diffs.append((i, r, c))
-    return Fit(same_pkg, relation, not pin_diffs, pin_diffs)
+            role_diffs.append((i, j.ref_role, j.cand_role))
+        elif j.default_variants:
+            board_default.append(i)
+    return Fit(same_pkg, relation, not pin_diffs, pin_diffs, conditions=conditions, role_diffs=role_diffs,
+               board_default=board_default)  # fmt: skip
 
 
 def pin_positions(part: Part) -> list[str] | None:
@@ -442,7 +531,10 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
         cand_display=f"{cp.code} ({cp.body_length_mm:g}×{cp.span_mm:g} mm)",
         severity=0.0 if pkg_status == EQUAL else 0.5 if pkg_status == BETTER else 1.0,
     )
-    if fit.same_pinout:
+    if fit.same_pinout and fit.conditions:  # control pins that take only one board wiring (pinroles)
+        pin = Diff("pinout", "Pinout", 1, DIFFERENT, "reference pinout", f"fits on a condition: {fit.condition_note}",
+                   CONDITION_SEVERITY)  # fmt: skip
+    elif fit.same_pinout:
         pin = Diff("pinout", "Pinout", 1, EQUAL, "matches", "matches")
     elif not ref.pinout or not cand.pinout:
         pin = Diff(
@@ -478,16 +570,11 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 
 
 def _deviations(diffs: list[Diff]) -> list[Diff]:
-    """Priority 1 parameters that are worse, different or unknown; an ``exception`` parameter that is worse is
-    listed separately and does not count (an unknown value still does: it cannot be checked, unless the parameter is
-    ``unknown_ok``). An ``unverified`` value (not from a datasheet page) never counts: it is a data gap to check."""
-    return [
-        d
-        for d in diffs
-        if d.priority == 1
-        and not d.unverified
-        and ((d.is_negative and not d.exception) or (d.status == UNKNOWN and not d.unknown_ok))
-    ]
+    """Priority 1 parameters that are worse or different; an ``exception`` parameter that is worse is listed
+    separately and does not count. A value one side does not state is never a deviation (owner, 2 Nov 2026: theirs is
+    shown as "not stated by <maker>", info only; ours as a "check" note): it cannot decide either way. An
+    ``unverified`` value (not from a datasheet page) never counts: it is a data gap to check."""
+    return [d for d in diffs if d.priority == 1 and not d.unverified and d.is_negative and not d.exception]
 
 
 # a page reference in a datasheet ("si86s6xx-datasheet.pdf p.22 (...)"); product tables and selection guides have none
@@ -542,6 +629,7 @@ def cross(
                 p.exception,
                 p.unknown_ok,
                 unverified,
+                shortfall_size(p, rv.get(p.key), cv.get(p.key), status),
             )
         )
 
@@ -573,23 +661,59 @@ def cross(
     else:
         category = None
     cats = [category] if category else []
+    steer_miss = any(p.steer and _any_of(rv.get(p.key), p.steer) and not _any_of(cv.get(p.key), p.steer)
+                     for p in rules.params)  # fmt: skip
+    tier = {p.key for p in rules.params if p.downgrade_tier}
+    downgrade = any(d.key in tier and d.status == WORSE and not d.unverified for d in diffs)
 
     return CrossResult(
-        ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback
+        ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback,
+        steer_miss, downgrade,
     )
+
+
+SHORTFALL_CAP = 10.0  # a shortfall of 2**10 or more (or against a zero value) counts as 10
+
+
+def shortfall_size(p: ParamDef, ref, cand, status: str) -> float | None:
+    """How far a worse number or range falls short, unbounded (owner, 2 Nov 2026, rule 12: "a numeric shortfall on a
+    must-meet spec ranks by its size, as a ratio or margin"): log2 of the ratio for a number (2x short = 1, the weight
+    of an option difference such as the default output; 1 Mbps for 150 Mbps = 7.2), the uncovered share of the
+    reference's range for a range. None for anything else (its severity stands)."""
+    if status != WORSE or ref is None or cand is None:
+        return None
+    if p.kind == "number" and p.direction in ("higher", "lower"):
+        r, c = abs(float(ref)), abs(float(cand))
+        hi, lo = (r, c) if p.direction == "higher" else (c, r)
+        if lo <= 0:
+            return SHORTFALL_CAP
+        return min(math.log2(hi / lo), SHORTFALL_CAP) if hi > lo else 0.0
+    if p.kind == "range":
+        (a, b), (c, d) = sorted(map(float, ref)), sorted(map(float, cand))
+        width = b - a if b > a else max(abs(a), abs(b), 1e-12)
+        return min((max(0.0, c - a) + max(0.0, b - d)) / width, SHORTFALL_CAP)
+    return None
+
+
+def _any_of(values, items) -> bool:
+    """A set value holds at least one of ``items`` (case-insensitive)."""
+    return bool({_norm(x) for x in values or []} & {_norm(x) for x in items})
 
 
 def sort_key(category: str):
     """Ordering within a category. Lifecycle-risk parts always sink to the bottom."""
 
     def key(r: CrossResult):
+        devs = len(r.deviations) + getattr(r, "unstated_ours", 0)  # a value we do not state ranks like a deviation
+        short = getattr(r, "shortfall", 0.0)  # with as many deviations, the smaller shortfall first (rule 12)
         if category == "functional":
-            main = (len(r.deviations), r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
+            main = (devs, short, r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
         elif category == "package":
-            main = (len(r.deviations), r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
+            main = (devs, r.unverified_worse, not r.fit.same_pinout, short, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
-        return (r.lifecycle_risk, main, r.candidate.label)
+        return (r.lifecycle_risk, getattr(r, "downgrade", False), getattr(r, "steer_miss", False), main,
+                r.candidate.label)
 
     return key
 
@@ -604,15 +728,20 @@ def _functional_focus(family: str | None) -> bool:
 def rank_key(r: CrossResult):
     """The order of preference across cross types (owner, 21 Oct 2026): a drop-in with the same function always comes
     first; then the fewest priority 1 deviations; with as many deviations, the same package before another package and
-    pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom."""
+    pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom; so does a candidate without the
+    reference's short-circuit protection (``steer_miss``), and below those one with a lower isolation rating than the
+    reference (``downgrade``; owner, 2 Nov 2026)."""
     pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
+        getattr(r, "downgrade", False),
+        getattr(r, "steer_miss", False),
         r.category != "fff",
-        len(r.deviations),
+        len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation
         pkg and not r.fit.same_package,
         pkg and not r.fit.same_pinout,
         r.unverified_worse,  # an unverified data rate only breaks ties (owner, 26 Oct 2026)
+        getattr(r, "shortfall", 0.0),  # how far short, not only how often (rule 12, owner 2 Nov 2026)
         len(r.exceptions),
         r.closeness,
         r.candidate.label,

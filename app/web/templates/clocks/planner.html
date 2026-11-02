@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title(request.url.path, plan.name if plan else '') }}{% endblock %}
+{% block content %}
+{% set fmt = cp.fmt_mhz %}
+<h1>{{ plan.name if plan else 'Clock planner' }}</h1>
+<p class="subtitle muted">Enter your input and output clocks to see which of our timing parts fit, a frequency plan and the jitter
+  against your target. This is a planning estimate, not a register-exact plan.</p>
+<aside class="cp-cbpro small" id="cp-cbpro">
+  <p><b>For the final register settings and programming files use <a href="{{ cbpro.url }}" target="_blank" rel="noopener">ClockBuilder Pro</a>.</b></p>
+  <details><summary>What ClockBuilder Pro does</summary><p>{{ cbpro.summary }}</p></details>
+</aside>
+
+<p class="cp-presets small"><span class="muted">Start from:</span>
+  {% for p in presets %}<a class="cp-chip{{ ' cp-chip-on' if req.preset == p.key }}" href="/clocks?preset={{ p.key }}" title="{{ p.note }}">{{ p.label }}</a>{% endfor %}</p>
+
+<form method="get" action="/clocks" class="cp-form" id="cp-form">
+  {% if plan %}<input type="hidden" name="plan" value="{{ plan.id }}">{% endif %}
+  {% if form.part %}<input type="hidden" name="part" value="{{ form.part }}">{% endif %}
+  <fieldset class="cp-box"><legend>Inputs</legend>
+    <div class="cp-inputs">
+      <label>Input 1
+        <span class="cp-pair"><select name="in1_kind" aria-label="Input 1 kind">
+          <option value="crystal"{{ ' selected' if form.in1_kind == 'crystal' }}>Crystal</option>
+          <option value="clock"{{ ' selected' if form.in1_kind != 'crystal' }}>Clock</option></select>
+        <input name="in1" value="{{ form.in1 }}" inputmode="decimal" placeholder="e.g. 25" aria-label="Input 1 frequency in MHz"><span class="muted">MHz</span></span></label>
+      <label>Input 2 <small class="muted">(optional clock)</small>
+        <span class="cp-pair"><input name="in2" value="{{ form.in2 }}" inputmode="decimal" placeholder="e.g. 156.25" aria-label="Input 2 frequency in MHz"><span class="muted">MHz</span></span></label>
+    </div>
+  </fieldset>
+  <fieldset class="cp-box"><legend>Outputs</legend>
+    <div class="cp-rows" id="cp-rows">
+      <div class="cp-row cp-row-head small muted" aria-hidden="true"><span>Frequency (MHz)</span><span>How many</span><span>Format</span><span>Supply</span><span></span></div>
+      {% for r in rows + [{'f': '', 'n': '1', 'fmt': 'LVDS', 'v': ''}] * blanks %}
+      <div class="cp-row">
+        <input name="f" value="{{ r.f }}" inputmode="decimal" placeholder="e.g. 100" aria-label="Output frequency in MHz">
+        <input name="n" value="{{ r.n }}" type="number" min="1" max="64" aria-label="How many outputs">
+        <select name="fmt" aria-label="Output format">{% for x in formats %}<option{{ ' selected' if r.fmt == x }}>{{ x }}</option>{% endfor %}</select>
+        <select name="v" aria-label="Output supply"><option value="">any V</option>{% for s in supplies %}<option value="{{ s }}"{{ ' selected' if r.v == '%g'|format(s) }}>{{ s }} V</option>{% endfor %}</select>
+        <button type="button" class="outline secondary small-btn cp-del" aria-label="Remove this output">×</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="outline small-btn" id="cp-add">+ Add output</button>
+    <p class="small muted">A fraction works too: 100/3 for 33.333… MHz.</p>
+  </fieldset>
+  <fieldset class="cp-box"><legend>Requirements</legend>
+    <div class="cp-reqs">
+      <label>Jitter target (RMS, 12 kHz–20 MHz)
+        <span class="cp-pair"><input name="jit" value="{{ form.jit }}" inputmode="decimal" placeholder="e.g. 300" aria-label="Jitter target">
+        <select name="jit_unit" aria-label="Jitter unit"><option{{ ' selected' if form.jit_unit != 'ps' }}>fs</option><option{{ ' selected' if form.jit_unit == 'ps' }}>ps</option></select></span></label>
+      <label>PCIe <select name="pcie">{% for g in ('none', 'gen1', 'gen2', 'gen3', 'gen4', 'gen5', 'gen6') %}<option value="{{ g }}"{{ ' selected' if form.pcie == g }}>{{ 'No PCIe' if g == 'none' else 'Gen ' ~ g[3:] }}</option>{% endfor %}</select></label>
+      <label>Part type <select name="type"><option value="">Any</option>{% for k, lbl in types.items() %}<option value="{{ k }}"{{ ' selected' if form.type == k }}>{{ lbl }}</option>{% endfor %}</select></label>
+      <label class="cp-check"><input type="checkbox" name="auto" value="1"{{ ' checked' if form.auto }}> Automotive (AEC-Q100)</label>
+    </div>
+  </fieldset>
+  <button type="submit">Plan</button>
+</form>
+
+{% if req.notes %}<div class="banner small">{% for n in req.notes %}<p>{{ n }}</p>{% endfor %}</div>{% endif %}
+
+{% if result %}
+{% set pick = result.pick %}
+<section class="cp-section" id="cp-parts">
+  <h2>Which parts fit</h2>
+  {% set fits = result.matched.ours|selectattr('fits')|list %}
+  <p class="small">{% if fits %}<b>{{ fits|length }}</b> of our {{ result.matched.ours|length }} timing parts fit.{% else %}None of our {{ result.matched.ours|length }} timing parts fits everything; the closest are first.{% endif %}
+    Checked with the timing cross rules: outputs, formats, frequency range, supply, jitter (typ), PCIe and automotive grade.</p>
+  {% macro part_rows(results, ours) %}
+  {% for r in results %}
+    <tr class="{{ 'cp-fit' if r.fits else 'cp-nofit' }}{{ ' cp-picked' if pick and r.part.mpn == pick.part.mpn and ours }}">
+      <td><a href="/find?q={{ r.part.mpn|urlencode }}"><b>{{ r.part.mpn }}</b></a>{% if not ours %}<br><small class="muted">{{ r.part.manufacturer }}</small>{% endif %}<br><small class="muted">{{ r.type_label }}</small></td>
+      <td>{% if r.fits %}<span class="cp-yes">Fits</span>{% else %}<span class="cp-no">Does not fit</span>{% endif %}</td>
+      <td><ul class="cp-checks">{% for label, ok, text in r.checks %}<li class="{{ 'cp-ok' if ok else ('cp-bad' if ok == false else 'cp-info') }}"><span aria-hidden="true">{{ '✓' if ok else ('✗' if ok == false else 'i') }}</span> <b>{{ label }}</b>: {{ text }}</li>{% endfor %}</ul></td>
+      {% if ours %}<td>{% if pick and r.part.mpn == pick.part.mpn %}<small><b>planned below</b></small>{% elif r.arch %}<a class="small" href="{{ cp.query(req, part=r.part.mpn) }}{{ '&plan=' ~ plan.id if plan }}#cp-plan">Plan with this part</a>{% endif %}</td>{% endif %}
+    </tr>
+  {% endfor %}
+  {% endmacro %}
+  <div class="table-wrap"><table class="cp-table">
+    <thead><tr><th>Part</th><th>Verdict</th><th>Why</th><th></th></tr></thead>
+    <tbody>{{ part_rows(result.matched.ours[:6], true) }}</tbody>
+  </table></div>
+  {% if result.matched.ours|length > 6 %}
+  <details class="cp-more"><summary>The other {{ result.matched.ours|length - 6 }} parts and why they do not fit as well</summary>
+    <div class="table-wrap"><table class="cp-table"><tbody>{{ part_rows(result.matched.ours[6:], true) }}</tbody></table></div></details>
+  {% endif %}
+  {% if result.matched.competitors %}
+  <h3>Closest competitor parts</h3>
+  <p class="small muted">TI and SiTime parts of the same kind, checked the same way, for comparison.</p>
+  <div class="table-wrap"><table class="cp-table">
+    <thead><tr><th>Part</th><th>Verdict</th><th>Why</th></tr></thead>
+    <tbody>{{ part_rows(result.matched.competitors, false) }}</tbody>
+  </table></div>
+  {% endif %}
+</section>
+
+{% if pick and result.plan %}
+{% set pl = result.plan %}
+<section class="cp-section" id="cp-plan">
+  <h2>Frequency plan for {{ pick.part.mpn }} <span class="cp-est" title="Our own estimate, not a datasheet value">est</span></h2>
+  <p class="small muted">A planning estimate from the part's divider structure: not a register-exact plan. ClockBuilder Pro works out the final values.</p>
+  {% for p in pl.problems %}<p class="cp-problem">✗ {{ p }}</p>{% endfor %}
+  {% if pl.kind in ('multisynth', 'si5332') and pl.vco %}
+  <p>{% if pl.all_integer %}<b>All outputs come from one VCO with integer dividers</b> (the lowest jitter).{% else %}<b>{{ pl.fractional|length }} output frequenc{{ 'y needs' if pl.fractional|length == 1 else 'ies need' }} a fractional divider:</b> {% for f in pl.fractional %}{{ fmt(f) }} MHz{{ ', ' if not loop.last }}{% endfor %}. No VCO in the range divides into all outputs with integers.{% endif %}</p>
+  <p class="small">VCO picked: <b>{{ fmt(pl.vco) }} MHz</b> (range {{ pick.arch.vco_mhz[0] }}–{{ pick.arch.vco_mhz[1] }} MHz, {{ pick.arch.vco_source }}): the lowest multiple of the outputs' least common multiple in range{% if not pl.all_integer %}, or the one that makes the most dividers integer{% endif %}.
+    {% if req.in1 %}Feedback from the {{ fmt(req.in1) }} MHz {{ req.in1_kind }}: {{ fmt(pl.vco / req.in1) }} ({{ 'integer' if pl.feedback_integer else 'fractional' }}).{% endif %}</p>
+  {% elif pl.kind == 'multi_pll' and pl.plls %}
+  <p><b>{{ pl.plls|length }} PLL{{ 's' if pl.plls|length > 1 }} used</b>, each with its own VCO and integer output dividers.</p>
+  <ul class="small">{% for p in pl.plls %}<li>{{ p.label }}: VCO {{ fmt(p.vco) }} MHz for {% for f in p.members %}{{ fmt(f) }}{{ ', ' if not loop.last }}{% endfor %} MHz</li>{% endfor %}</ul>
+  {% endif %}
+  {% if pl.rows %}
+  <div class="table-wrap"><table class="cp-table cp-divs">
+    <thead><tr><th>Output</th><th>Divider</th>{% if pl.kind in ('multisynth', 'si5332') %}<th>N (shared)</th>{% endif %}{% if pl.kind in ('multisynth', 'si5332', 'multi_pll') %}<th>R</th><th>VCO ÷ output</th>{% endif %}<th>Kind</th></tr></thead>
+    <tbody>{% for r in pl.rows %}<tr><td>{{ fmt(r.f) }} MHz</td><td>{{ r.group }}</td>
+      {% if pl.kind in ('multisynth', 'si5332') %}<td>{{ r.n_text }}</td>{% endif %}
+      {% if pl.kind in ('multisynth', 'si5332', 'multi_pll') %}<td>{{ r.r }}</td><td>{{ r.total_text }}</td>{% endif %}
+      <td>{% if r.integer %}<span class="cp-yes">integer</span>{% else %}<span class="cp-warn">fractional</span>{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% if pick.arch.divider_source %}<p class="small muted">Divider structure: {{ pick.arch.divider_source }}.{% if pick.arch.divider_count_source %} Number of dividers: {{ pick.arch.divider_count_source }}.{% endif %}</p>{% endif %}
+  {% endif %}
+
+  <h3>Clock tree</h3>
+  <div class="cp-diagram" tabindex="0" aria-label="Clock tree diagram, scrolls sideways on a phone">{{ result.svg|safe }}</div>
+  <p class="small muted cp-legend"><span class="cp-key cp-key-int"></span> integer divider <span class="cp-key cp-key-frac"></span> fractional divider</p>
+
+  {% set jt = result.jitter %}
+  {% if jt %}
+  <h3>Jitter</h3>
+  {% if jt.rows %}
+  <div class="table-wrap"><table class="cp-table">
+    <thead><tr><th>Value</th><th>Typ</th><th>Max</th><th>Your target</th><th>Result</th></tr></thead>
+    <tbody>{% for r in jt.rows %}<tr><td>{{ r.what }}{% if r.est %} <span class="cp-est" title="Our own estimate, not a datasheet value">est</span>{% endif %}<br><small class="muted">{{ r.source }}</small></td>
+      <td>{{ '%g fs'|format(r.typ) if r.typ is not none else '—' }}</td><td>{{ '%g fs'|format(r.max) if r.max is not none else 'not stated' }}</td>
+      <td>{{ '%g fs'|format(jt.target) if jt.target is not none else '—' }}</td>
+      <td>{% if r.ok %}<span class="cp-yes">meets (typ)</span>{% if r.max_ok == false %}<br><small class="cp-warn">max above target</small>{% elif r.max_ok %}<br><small>max too</small>{% endif %}{% elif r.ok == false %}<span class="cp-no">above target</span>{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="small muted">No jitter value in our data for this part.</p>{% endif %}
+  {% if jt.pcie %}
+  <p class="small">PCIe {{ 'Gen ' ~ jt.pcie.gen[3:] }}: limit {{ jt.pcie.limit }} ps RMS (common clock).
+    {% if jt.pcie.stated %}Datasheet: {{ jt.pcie.typ if jt.pcie.typ is not none else '—' }} ps typ, {{ jt.pcie.max if jt.pcie.max is not none else '—' }} ps max ({{ jt.pcie.source }}){% if jt.pcie.ok %}: <span class="cp-yes">meets</span>{% elif jt.pcie.ok == false %}: <span class="cp-no">above the limit</span>{% endif %}.{% else %}The PCIe-filtered jitter for this generation is not in our data; the datasheet's compliance statement is in the checks above.{% endif %}</p>
+  {% endif %}
+  {% for f, note in jt.format_notes %}<p class="small"><b>{{ f }}</b>: {{ note }}</p>{% endfor %}
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="cp-section cp-save" id="cp-save">
+  <h2>Save and share</h2>
+  <p class="small muted">Saves the plan shown above (inputs, outputs, requirements and the part). The link opens it again.</p>
+  <div class="cp-savebar">
+    <input id="cp-name" type="text" placeholder="Plan name" aria-label="Plan name" value="{{ plan.name if plan else '' }}" maxlength="200">
+    <button id="cp-save-btn" type="button" class="small-btn">{{ 'Save changes' if plan else 'Save' }}</button>
+    <button id="cp-copy" type="button" class="outline small-btn"{{ ' hidden' if not plan }}>Copy link</button>
+  </div>
+  <p id="cp-status" class="small" role="status">{% if plan %}Saved plan: <a href="/clocks/plans/{{ plan.id }}">/clocks/plans/{{ plan.id }}</a>{% endif %}</p>
+  <p class="small"><a href="/clocks/plans">All saved plans</a></p>
+  <script type="application/json" id="cp-data">{{ form|tojson }}</script>
+  <script type="application/json" id="cp-plan-id">{{ plan.id if plan else 'null' }}</script>
+</section>
+{% endif %}
+<script src="/static/clocks.js" defer></script>
+{% endblock %}

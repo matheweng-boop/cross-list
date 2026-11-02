@@ -46,6 +46,8 @@ KINDS = (
     (r"^/blocks/verify$", "Mark an application verified"),
     (r"^/api/broadcast/configs", "Saved radio configuration"),
     (r"^/broadcast/configurations/[^/]+/delete$", "Delete a radio configuration"),
+    (r"^/api/clocks/plans", "Saved clock plan"),
+    (r"^/clocks/plans/[^/]+/delete$", "Delete a clock plan"),
     (r"^/business/shortlist", "Shortlist"),
     (r"^/business/schedule", "Scheduled review"),
     (r"^/business/cases", "Business case"),

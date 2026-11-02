@@ -1,0 +1,176 @@
+# Clock planner (owner, 2 Nov 2026, item 18: "create something similar to ClockBuilder Pro"). A planning aid only:
+# which of our timing parts fit a set of input and output clocks, a frequency plan (VCO and divider values) and the
+# jitter against a target. The parts and their main values come from data/real/*_timing.yaml (rules/timing.yaml);
+# this file adds what the planner needs on top: how each part makes its frequencies, the jitter by mode (typ and max)
+# and the output formats' frequency limits. Values read from the public Skyworks datasheets (fetched 2 Nov 2026) name
+# the page; "est" marks our own reading or a value not stated in the datasheet.
+clockbuilder:
+  url: https://www.skyworksinc.com/Application-Pages/Clockbuilder-Pro-Software
+  # read 2 Nov 2026 (the public page, robots.txt checked); nothing downloaded
+  summary: >-
+    ClockBuilder Pro (CBPro) is Skyworks' free Windows software for the clock generators, jitter attenuators, buffers
+    and oscillators. A step-by-step wizard takes the input and output clocks, checks the design rules as you go,
+    estimates power and junction temperature, checks output crosstalk and gives the RMS phase jitter. It writes the
+    configuration and programming files, can request a custom factory-programmed part number with its datasheet
+    addendum and phase noise plots, and talks to the evaluation boards and the field programmer.
+
+formats: [LVDS, HCSL, LVPECL, CML, LVCMOS]
+supplies_v: [1.5, 1.8, 2.5, 3.3]
+function_types: [clock_generator, jitter_attenuator, clock_buffer, pcie_buffer, crystal_oscillator]
+
+# PCIe base specification limits for the reference clock (common clock), for the PCIe check; ps RMS.
+pcie_limits_ps: {gen1: 86, gen2: 3.1, gen3: 1.0, gen4: 0.5, gen5: 0.15, gen6: 0.1}
+
+# How each part makes its outputs. Keys match the start of a part number (longest match wins).
+#   kind multisynth: one PLL; the VCO feeds fractional-capable MultiSynth dividers (N), then an even integer output
+#                    divider R. Integer N gives the best jitter.
+#   kind si5332:     one PLL; the VCO feeds integer dividers (INT) and two fractional MultiSynths, then an output
+#                    divider R (1, or even up to 62).
+#   kind multi_pll:  several independent PLLs, each with any VCO frequency (fractional feedback) and integer output
+#                    dividers only.
+#   kind buffer:     fixed ratio: every output repeats the input.
+#   kind xo:         an oscillator: one output at the ordered frequency.
+architectures:
+  Si5332:
+    kind: si5332
+    vco_mhz: [2375, 2625]
+    vco_source: est (not stated in the datasheet; check in ClockBuilder Pro)
+    frac_dividers: 2
+    int_dividers: 5
+    r_max: 62
+    crystal_mhz: [16, 50]
+    format_max_mhz: {LVCMOS: 170}
+    vddo_v: [1.5, 1.8, 2.5, 3.3]
+    vddo_note: 1.5 V for LVCMOS only
+    jitter:  # fs RMS, 12 kHz to 20 MHz: [typ, max]
+      xtal_int: [190, 240]
+      xtal_frac: [250, null]
+      clock_int: [210, 280]
+      clock_frac: [250, null]
+    jitter_source: si5332-datasheet.pdf p.31 (Table 5.10; integer at 156.25 MHz LVPECL, fractional at 150 MHz)
+    pcie_jitter_ps: {gen5: [0.025, 0.04], gen6: [0.013, 0.022]}
+    pcie_source: si5332-datasheet.pdf p.33 (Table 5.11, 100 MHz HCSL, spread spectrum off)
+    format_notes:
+      LVCMOS: The datasheet's jitter values are for differential outputs; LVCMOS outputs may add jitter (p.32 note 4).
+    divider_source: si5332-datasheet.pdf section 3.3 (MultiSynth fractional or INT dividers, then an even output divider 1 to 63)
+  Si5332A-AM:
+    like: Si5332
+    jitter_source: si5332-automotive-grade-datasheet.pdf p.30 (Table 5.9, typ 190 / max 240 fs at 156.25 MHz)
+    pcie_jitter_ps: {}
+  Si5341:
+    kind: multisynth
+    vco_mhz: [13200, 14256]
+    vco_source: 'lower end si5341-40-d-datasheet.pdf revision history (13.2 GHz); upper end est'
+    frac_dividers: 5
+    crystal_mhz: [25, 54]
+    format_max_mhz: {LVCMOS: 250}
+    vddo_v: [1.8, 2.5, 3.3]
+    jitter:
+      xtal_int: [90, 140]
+      xtal_frac: [115, 170]
+      clock_int: [140, 180]
+      clock_frac: [160, 210]
+    jitter_source: si5341-40-d-datasheet.pdf p.25 (Table 5.8, 12 kHz to 20 MHz)
+    divider_source: si5341-40-d-datasheet.pdf section 3.2 (MultiSynth Nn/Nd, then output divider R, even 2 to 2^25-2)
+  Si5340:
+    like: Si5341
+    frac_dividers: 4
+    divider_count_source: est (block diagram, four N dividers)
+  Si5345:
+    kind: multisynth
+    vco_mhz: [13200, 14256]
+    vco_source: est (same DSPLL generation as Si5341)
+    frac_dividers: 5
+    crystal_mhz: [25, 54]
+    format_max_mhz: {LVCMOS: 250}
+    vddo_v: [1.8, 2.5, 3.3]
+    jitter:
+      clock_int: [90, 145]
+      clock_frac: [120, 170]
+    jitter_source: si5345-44-42-d-datasheet.pdf jitter table (RMS phase jitter, integer and fractional mode, 12 kHz to 20 MHz)
+    divider_source: si5345-44-42-d-datasheet.pdf section 3 (MultiSynth N, then integer R)
+  Si5344:
+    like: Si5345
+    frac_dividers: 4
+    divider_count_source: est (block diagram)
+  Si5342:
+    like: Si5345
+    frac_dividers: 2
+    divider_count_source: est (block diagram)
+  Si5395:
+    like: Si5345
+    jitter:
+      clock_int: [85, null]
+    jitter_source: si5395-94-92-a-datasheet.pdf p.1 (85 fs typ, integer mode); max not read
+    vco_source: est (drop-in compatible with Si5345)
+  Si5397:
+    kind: multi_pll
+    plls: 4
+    vco_mhz: [13200, 14256]
+    vco_source: est (same DSPLL generation as Si5345)
+    format_max_mhz: {LVCMOS: 250}
+    vddo_v: [1.8, 2.5, 3.3]
+    jitter:
+      clock_int: [95, 125]
+    jitter_source: si5397-96-a-datasheet.pdf jitter table (RMS phase jitter JGEN, 12 kHz to 20 MHz)
+    divider_source: si5397-96-a-datasheet.pdf section 3 (fractional multiplication Mn/Md, integer output division Rn)
+  Si5320:
+    kind: buffer
+    vddo_v: [1.5, 1.8]
+    additive_fs: [null, 210]
+    jitter_source: si532xx-datasheet.pdf p.1 (additive jitter, 210 fs max 12 kHz to 20 MHz)
+    pcie_jitter_ps: {gen6: [null, 0.02]}
+    pcie_source: si532xx-datasheet.pdf p.1 (PCIe Gen 6 additive jitter 0.02 ps max)
+  Si545:
+    kind: xo
+    format_max_mhz: {HCSL: 400, LVCMOS: 250}
+    vddo_v: [1.8, 2.5, 3.3]
+    jitter:
+      xo: [80, null]
+    jitter_source: si545-datasheet.pdf p.1 (80 fs typ, 12 kHz to 20 MHz)
+  Si549:
+    like: Si545
+    jitter:
+      xo: [95, null]
+    jitter_source: si549-datasheet.pdf p.1 (95 fs typ, 12 kHz to 20 MHz)
+
+# Ready-made requests (the planner form). Frequencies in MHz; jitter target in fs RMS (12 kHz to 20 MHz).
+presets:
+  - key: pcie5x8
+    label: PCIe Gen5 100 MHz ×8
+    note: Eight 100 MHz HCSL reference clocks for PCIe Gen5 slots and retimers, from a 25 MHz crystal.
+    in1: 25
+    in1_kind: crystal
+    outputs:
+      - {f: '100', n: 8, fmt: HCSL, v: 1.8}
+    jitter: 300
+    pcie: gen5
+  - key: ethernet
+    label: Ethernet 156.25 + 125 MHz
+    note: 10G / 25G Ethernet reference clocks (156.25 MHz) and a 125 MHz for 1G, from a 48 MHz crystal.
+    in1: 48
+    in1_kind: crystal
+    outputs:
+      - {f: '156.25', n: 4, fmt: LVDS, v: 2.5}
+      - {f: '125', n: 2, fmt: LVDS, v: 2.5}
+    jitter: 200
+  - key: auto_serdes
+    label: Automotive SerDes + 25 MHz
+    note: Camera / display SerDes reference clocks plus 25 MHz for the Ethernet PHYs, AEC-Q100.
+    in1: 25
+    in1_kind: crystal
+    outputs:
+      - {f: '100', n: 2, fmt: HCSL, v: 1.8}
+      - {f: '25', n: 3, fmt: LVCMOS, v: 3.3}
+    jitter: 1000
+    automotive: true
+  - key: mixed
+    label: Mixed with fractional outputs
+    note: Ethernet, PCIe and a 33.33 MHz processor clock from one chip; some outputs need a fractional divider.
+    in1: 25
+    in1_kind: crystal
+    outputs:
+      - {f: '156.25', n: 2, fmt: LVDS, v: 2.5}
+      - {f: '100', n: 2, fmt: HCSL, v: 1.8}
+      - {f: '100/3', n: 1, fmt: LVCMOS, v: 3.3}
+    jitter: 300

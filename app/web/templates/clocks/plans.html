@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Saved clock plans</h1>
+<p class="subtitle muted">Clock plans saved from the <a href="/clocks">Clock planner</a>. Each link opens the plan with its parts, frequency plan and jitter.</p>
+<p><a href="/clocks" role="button">New plan</a></p>
+{% if plans %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Name</th><th>Outputs</th><th>Part</th><th>Last saved</th><th></th></tr></thead>
+  <tbody>
+  {% for p in plans %}
+    <tr><td><a href="/clocks/plans/{{ p.id }}"><b>{{ p.name }}</b></a></td>
+      <td><small>{% for f in (p.data.get('f') or []) %}{{ f }} MHz{% if p.data.get('n') and p.data.n[loop.index0] not in ('1', '') %} ×{{ p.data.n[loop.index0] }}{% endif %}{{ ', ' if not loop.last }}{% endfor %}</small></td>
+      <td><small>{{ p.data.get('part') or 'best fit' }}</small></td>
+      <td><small>{{ p.updated_at|date('stamp') }}</small></td>
+      <td><form method="post" action="/clocks/plans/{{ p.id }}/delete" onsubmit="return confirm('Delete {{ p.name|e }}?')">
+        <button class="secondary outline small-btn">Delete</button></form></td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<div class="empty-state"><p><b>No saved clock plans yet.</b></p><p class="small">Open the Clock planner, start from a preset or enter your clocks, then press Save.</p><p><a href="/clocks?preset=pcie5x8" role="button" class="small-btn">Try the PCIe preset</a></p></div>
+{% endif %}
+{% endblock %}

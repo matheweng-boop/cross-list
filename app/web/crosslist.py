@@ -24,12 +24,21 @@ templates.env.globals["demand_seen"] = demand.seen  # owner-only volume totals (
 templates.env.globals["demand_fmt"] = demand.fmt
 
 
-def _ctx(request: Request, text: str, session: Session, sent: int | None = None) -> dict:
+def supply(value) -> float | None:
+    """The optional design supply voltage (V) from a form or query value; None when empty or out of 1-60 V."""
+    try:
+        v = float(str(value).replace(",", ".").replace("V", "").strip())
+    except (TypeError, ValueError):
+        return None
+    return v if 1.0 <= v <= 60.0 else None
+
+
+def _ctx(request: Request, text: str, session: Session, sent: int | None = None, vdd: float | None = None) -> dict:
     entries, over = cl.parse(text)
-    rows = cl.cross_list(session, entries) if entries else []
+    rows = cl.cross_list(session, entries, vdd) if entries else []
     families = sorted({r.part.family for r in rows if r.part})
     owner = signed_in_owner(request) is not None
-    return {"text": text, "unknown": sum(1 for r in rows if lk.is_unknown(r)), "sent": sent,
+    return {"text": text, "vdd": vdd, "unknown": sum(1 for r in rows if lk.is_unknown(r)), "sent": sent,
             "vol_rows": {r.n for r in lk.volume_rows(rows)} if owner else set(), "steps": demand.CHOICES,
             "gaps": sum(1 for r in rows if lk.is_gap(r)),
             "rows": rows, "sum": cl.summary(rows), "over": over, "max_lines": cl.MAX_LINES,
@@ -61,9 +70,10 @@ def page(request: Request, lookup: int | None = None, sent: int = 0, session: Se
 
 
 @router.post("/cross-list", response_class=HTMLResponse)
-def run(request: Request, parts: str = Form(""), session: Session = Depends(get_session)):
-    """Compute only: the pasted list is read, crossed and shown; nothing is written."""
-    ctx = _ctx(request, parts[:MAX_CHARS], session)
+def run(request: Request, parts: str = Form(""), vdd: str = Form(""), session: Session = Depends(get_session)):
+    """Compute only: the pasted list is read, crossed and shown; nothing is written. ``vdd``: the optional design
+    supply voltage; supply-dependent values (data rate) are compared there (owner, 2 Nov 2026)."""
+    ctx = _ctx(request, parts[:MAX_CHARS], session, vdd=supply(vdd))
     return templates.TemplateResponse(request, "cross_list.html", ctx)
 
 
@@ -107,12 +117,12 @@ def send_lookup(request: Request, form: dict = Depends(_form), session: Session 
 
 
 @router.post("/cross-list.xlsx")
-def download(parts: str = Form(""), lights: str = Form(""), crossed: str = Form(""),
+def download(parts: str = Form(""), lights: str = Form(""), crossed: str = Form(""), vdd: str = Form(""),
              session: Session = Depends(get_session)):  # fmt: skip
     """The table as shown: every row, or only the rows of the light chosen on the page ("Export shown rows"), and,
     with "Only crossed parts", only the rows with a drop-in or functional fit (owner, 27 Oct 2026)."""
     entries, over = cl.parse(parts[:MAX_CHARS])
-    rows = cl.cross_list(session, entries)
+    rows = cl.cross_list(session, entries, supply(vdd))
     sm = cl.summary(rows)
     want = lights if lights in cl.LIGHTS else ""
     if want:

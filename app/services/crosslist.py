@@ -234,8 +234,9 @@ class Crosser:
     candidates that fail a function-defining ("hard") or must-meet categorical spec are skipped before the full
     comparison (the engine would not list them either: the same compare_param decides)."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, supply_v: float | None = None):
         self.session = session
+        self.supply_v = supply_v  # the design's supply: rates read there (owner, 2 Nov 2026)
         self._cands: dict[tuple, list[Part]] = {}
         self._values: dict[int, dict] = {}
 
@@ -269,7 +270,7 @@ class Crosser:
                     keep.append(c)
             cands = keep
         return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id),
-                            DEFAULT_MAX_DEVIATIONS if max_deviations is None else max_deviations)
+                            DEFAULT_MAX_DEVIATIONS if max_deviations is None else max_deviations, self.supply_v)
 
 
 def _p1(r: CrossResult) -> list:
@@ -497,6 +498,7 @@ def comment(r: CrossResult, column: int) -> str:
             theirs = sorted(str(x) for x in rules.values(ref).get(p.key) or [] if str(x).lower() in steer)
             if theirs:
                 bits.append(f"also: ours has no {' or '.join(theirs)} protection (ranked lower)")
+    bits += low_supply_notes(r)
     if getattr(r.fit, "notes", None) and r.fit.same_package:  # e.g. their output enable facing our NC pin
         bits.append(r.fit.info_note)
     bits += [unstated(r, d, d.ref_display == "—", d.cand_display == "—") for d in p1
@@ -511,6 +513,23 @@ def comment(r: CrossResult, column: int) -> str:
     if not get_rules(ref.family).by_priority(1):
         bits.append("(no priority list yet)")
     return lead + "; ".join(bits) + "."
+
+
+def low_supply_notes(r: CrossResult) -> list[str]:
+    """Where a part's data rate drops at a low supply and no supply was given (owner, 2 Nov 2026): "their data rate
+    100 Mbps up to 3 V supply (give the supply to compare there)"."""
+    from app.matching.rules import low_supply_note
+
+    rules = get_rules(r.reference.family)
+    out = []
+    for p in (p for p in rules.params if p.by_supply):
+        if any(d.key == p.key and d.ref_display.endswith("V supply") for d in r.diffs):
+            continue  # compared at the given supply already
+        for side, part in (("their", r.reference), ("our", r.candidate)):
+            note = low_supply_note(part.param_map().get(p.by_supply))
+            if note:
+                out.append(f"{side} {_short(p.label).lower()} {note} supply (give the supply to compare there)")
+    return out
 
 
 def _role_diffs(fit) -> str:
@@ -769,9 +788,10 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
     return f"Function known ({what}), no cross yet – see Opportunities › Gaps.", link
 
 
-def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
+def cross_list(session: Session, entries: list[Entry], supply_v: float | None = None) -> list[Row]:
+    """``supply_v``: the design's supply voltage; values that depend on it (data rate) are compared there."""
     ix = build_index(session)
-    crosser = Crosser(session)
+    crosser = Crosser(session, supply_v)
     verified = Verified(session)
     said = answers(session)
     rows = []

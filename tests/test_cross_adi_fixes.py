@@ -361,6 +361,33 @@ def test_asil_d_driver_only_where_the_competitor_states_asil(session, gd):
     assert not cross(gd("ADUM4177WBRNZ"), gd("SI82900AA-AU"), rules).hard_fail
 
 
+def test_value_at_supply_reads_the_low_supply_table():
+    from app.matching.rules import low_supply_note, value_at_supply
+
+    assert value_at_supply(150, [[3.0, 100]], 2.5) == 100 and value_at_supply(150, [[3.0, 100]], 3.3) == 150
+    assert value_at_supply(50, [[4.49, 40]], 3.3) == 40 and value_at_supply(50, [[4.49, 40]], 5) == 50
+    assert value_at_supply(150, None, 2.5) == 150
+    assert low_supply_note([[3.0, 100]]) == "100 Mbps up to 3 V"
+
+
+def test_data_rate_compared_at_the_design_supply(client, session, load):
+    """Owner, 2 Nov 2026: "compare at the design's supply voltage". ISO6441: 150 Mbps, 100 Mbps at 2.25-3 V with CL
+    over 10 pF (iso6441.pdf p.7); Si8641: 150 Mbps in the 5, 3.3 and 2.5 V tables (si864x-datasheet.pdf). Without a
+    supply the headline rates compare and the row notes their slowdown; at 2.5 V theirs is 100 Mbps, ours 150."""
+    load("ti_digital_isolators", "skyworks_si86")
+    plain = cl.cross_list(session, cl.parse("ISO6441DWR")[0])[0]
+    col = plain.drop_in or plain.functional
+    assert "their data rate 100 Mbps up to 3 V supply" in col.comment
+    low = cl.cross_list(session, cl.parse("ISO6441DWR")[0], 2.5)[0]
+    col = low.drop_in or low.functional
+    assert "Data rate 100 Mbps at 2.5 V supply vs 150 Mbps at 2.5 V supply (ours better)" in col.comment
+    html = client.post("/cross-list", data={"parts": "ISO6441DWR", "vdd": "2.5"}).text
+    assert 'value="2.5"' in html and "at 2.5 V supply" in html
+    pid = session.scalar(select(Part.id).where(Part.mpn == "ISO6441DWR"))
+    page = client.get(f"/parts/{pid}?vdd=2.5").text
+    assert 'name="vdd"' in page and "at 2.5 V supply" in page
+
+
 def test_ti_control_pins_compare_by_role(load):
     """Owner, 2 Nov 2026: pin roles for TI datasheets too, from the cached datasheets. ISO7041 EN1 / EN2 are refresh
     enables (iso7041.pdf p.5: refresh is enabled when EN1 is connected to GND1), a mismatch against our output

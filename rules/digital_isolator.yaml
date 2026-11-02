@@ -24,11 +24,15 @@ params:
   # decides only when both values come from a datasheet page; a product-table or estimated value is shown amber with
   # "check datasheet" and never decides the ranking on its own (datasheet_only).
   - {key: data_rate_mbps, label: Data rate, unit: Mbps, priority: 1, kind: number, direction: higher, unknown_ok: true,
-     datasheet_only: true}
+     datasheet_only: true, by_supply: data_rate_low_vdd}
   # Optocoupler-replacement parts (LED-emulator input, often inverting) are not interchangeable with CMOS-input
   # isolators; parts that state nothing are the usual CMOS-input, non-inverting kind.
   - {key: input_type, label: Input type, priority: 1, kind: category, hard: true, default: cmos}
   - {key: output_polarity, label: Output polarity, priority: 1, kind: category, hard: true, default: non-inverting}
+  # Owner, 2 Nov 2026: compare at the design's supply voltage. Some datasheets give a lower rate at a low supply:
+  # [[supply up to (V), data rate (Mbps)], ...]. With a supply given (Cross a list, part page), both parts' rates are
+  # read there; without one the headline rate is compared and the slower low-supply rate is noted.
+  - {key: data_rate_low_vdd, label: Data rate at low supply, unit: Mbps, x_unit: V, priority: 3, kind: curve}
   # --- Priority 2: for information ---
   - {key: vdd_range_v, label: Supply range, unit: V, priority: 2, kind: range}
   - {key: viorm_vpk, label: Working voltage (VIORM), unit: Vpk, priority: 2, kind: number, direction: higher}

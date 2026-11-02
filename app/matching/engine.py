@@ -28,7 +28,7 @@ import re
 from dataclasses import dataclass, field
 
 from app.matching import pinroles
-from app.matching.rules import BAND_SUFFIX, FamilyRules, ParamDef
+from app.matching.rules import BAND_SUFFIX, SUPPLY_SUFFIX, FamilyRules, ParamDef
 from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
@@ -329,6 +329,8 @@ def uncovered(p: ParamDef, ref, cand) -> str:
 def format_at(rules: FamilyRules, p: ParamDef, values: dict) -> str:
     """The value with its test condition, when the parameter has one (``7.5 A at 18 V``)."""
     text = format_value(p, values.get(p.key))
+    if values.get(p.key + SUPPLY_SUFFIX) is not None and values.get(p.key) is not None:  # read at the design's supply
+        return f"{text} at {_fmt_num(values[p.key + SUPPLY_SUFFIX])} V supply"
     band = values.get(p.key + BAND_SUFFIX) if p.band else None
     if band and values.get(p.key) is not None:  # read off the part's curve over the reference's band
         return f"{text} over {_fmt_num(band[0])}–{_fmt_num(band[1])} {(rules.get(p.band) or p).unit}".rstrip()
@@ -614,10 +616,12 @@ def _sources(part) -> dict:
 
 
 def cross(
-    ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS
+    ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS,
+    supply_v: float | None = None,
 ) -> CrossResult:
     fit = check_fit(ref, cand)
     rv, cv = rules.at_same_conditions(rules.values(ref), rules.values(cand))
+    rv, cv = rules.at_supply(rv, supply_v), rules.at_supply(cv, supply_v)  # the design's supply, when given
     srcs = (_sources(ref), _sources(cand)) if any(p.datasheet_only for p in rules.params) else ({}, {})
     diffs = []
     for p in rules.params:
@@ -780,6 +784,7 @@ def find_crosses(
     rules: FamilyRules,
     feedback: dict | None = None,
     max_deviations: int = DEFAULT_MAX_DEVIATIONS,
+    supply_v: float | None = None,
 ) -> dict[str, list[CrossResult]]:
     """``feedback`` maps candidate id -> CrossFeedback for this reference."""
     out: dict[str, list[CrossResult]] = {c: [] for c in CATEGORY_ORDER}
@@ -787,7 +792,7 @@ def find_crosses(
     for cand in candidates:
         if cand.id == ref.id or cand.family != ref.family:
             continue
-        result = cross(ref, cand, rules, feedback.get(cand.id), max_deviations)
+        result = cross(ref, cand, rules, feedback.get(cand.id), max_deviations, supply_v)
         for c in result.categories:
             out[c].append(result)
     for c in out:

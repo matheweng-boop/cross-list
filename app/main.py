@@ -69,6 +69,10 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
         from app.services import demand  # owner volume estimates: 12 months, then deleted
 
         demand.purge(session)
+        from app.services import answers  # Questions to ask: old answers move in as internal; kept 12 months
+
+        answers.migrate(session)
+        answers.purge(session)
         empty = session.scalar(select(func.count(Part.id))) == 0
         if get_settings().load_real_on_start:
             load_real_if_changed(session)
@@ -248,4 +252,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.qspice import router as qspice_router  # QSPICE library + AI services (later) (27 Oct 2026)
 
     app.include_router(qspice_router)
+    from app.web.answers import router as answers_router  # answers to the Questions to ask (2 Nov 2026)
+
+    app.include_router(answers_router)
     return app

@@ -840,6 +840,53 @@ def test_expand_this_idea_asks_once_and_shows_the_request(page):
     assert page.locator("details.rp-exp").count() == 0
 
 
+def test_answer_a_question_to_ask_switch_edit_and_find_it_in_answers(page):
+    """Owner, 2 Nov 2026 (item 15): under a research report's question, write a two-line answer and who answered;
+    it saves as Internal only, the switch makes it Can be shared, an edit keeps the earlier version (shown on a tap),
+    and Data management › Answers lists it with a link back to its question (iPad upright; 390 px checked after)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/business/reports/filters-1-11ghz")
+    box = page.locator("#i-q-bu-standalone")
+    form = box.locator("form.aq-form")
+    expect(form.locator(".aq-warn")).to_have_text("Don't record confidential figures or plans; summarise instead")
+    expect(form.locator("input[name=sharing][value=internal]")).to_be_checked()
+    form.locator("textarea[name=text]").fill("They keep standalone filters.\nLow volume stays for now.")
+    form.locator("input[name=who]").fill("Filter BU product line")
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save answer").click()
+    card = page.locator("#i-q-bu-standalone article.aq-a").first
+    expect(card).to_contain_text("Low volume stays for now.")
+    expect(card).to_contain_text("Filter BU product line")
+    expect(card.get_by_role("button", name="🔒 Internal only")).to_have_attribute("aria-pressed", "true")
+    with page.expect_navigation():
+        card.get_by_role("button", name="✅ Can be shared").click()
+    card = page.locator("#i-q-bu-standalone article.aq-a").first
+    expect(card.get_by_role("button", name="✅ Can be shared")).to_have_attribute("aria-pressed", "true")
+    card.locator("details.aq-more summary", has_text="Edit").click()
+    card.locator("textarea[name=text]").fill("They keep standalone filters for defense and test.")
+    with page.expect_navigation():
+        card.get_by_role("button", name="Save changes").click()
+    card = page.locator("#i-q-bu-standalone article.aq-a").first
+    expect(card.locator(".aq-text")).to_have_text("They keep standalone filters for defense and test.")
+    expect(card.locator(".aq-edited")).to_be_visible()
+    old = card.locator("details.aq-more", has_text="Earlier versions")
+    expect(old.locator(".aq-vers")).to_be_hidden()
+    old.locator("summary").click()
+    expect(old.locator(".aq-vers")).to_contain_text("Low volume stays for now.")
+    assert overflow(page) <= 1
+    go(page, "/manage/answers?sharing=shared")
+    item = page.locator(".aq-list > li", has_text="for defense and test").first
+    expect(item.locator(".aq-q")).to_contain_text("standalone filters")
+    with page.expect_navigation():
+        item.locator(".aq-where a").click()
+    assert page.url.endswith("/business/reports/filters-1-11ghz#i-q-bu-standalone")
+    go(page, "/manage/answers?sharing=internal")
+    expect(page.locator(".aq-list > li", has_text="for defense and test")).to_have_count(0)
+    expect(page.locator("#open-questions")).to_contain_text("Still open")
+    go(page, "/business/reports/auto-uwb-15-4ab#questions-to-ask")  # a case's section 8 (390 px checked after)
+    expect(page.locator("#i-q-bu-ab form.aq-form .aq-warn")).to_be_visible()
+
+
 # --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------
 def test_describe_your_system_builds_blocks_at_ipad_size(page):
     """Type a sentence, Build: the 48 V input, protection, buck, LDO and MCU frames appear, linked left to right, with

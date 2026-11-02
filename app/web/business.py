@@ -1161,6 +1161,9 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx["radio"] = radio_summary(request, session, slug)
     ctx["radio_mandates"] = radio_mandates(slug)
     ctx |= {"expansion": ir.get(session, slug), "owner": signed_in_owner(request) is not None}
+    from app.services import answers  # Questions to ask: the answers this viewer may see (owner, 2 Nov 2026)
+
+    ctx["qa"] = answers.page(session, request, slug)
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

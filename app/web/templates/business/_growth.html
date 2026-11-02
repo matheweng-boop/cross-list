@@ -19,8 +19,9 @@ first question to the business unit (background, idea, pros and cons against com
   {% if links %}<p class="learn-links small"><b>Read more in the knowledge base:</b> {% for k in links %}<a href="{{ k.href }}">{{ k.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 </details>{% endif %}{% endmacro %}
 
-{% macro opener_box(o, slug, answer_form=true) %}{% if o %}{% set f = o.fb or {} %}
-<section class="bu-open" id="{{ 'i-' ~ o.id if answer_form else 'bu-opener' }}" aria-labelledby="bu-open-t">
+{# the answers are recorded under Questions to ask (business/_answers.html), where this is the first question #}
+{% macro opener_box(o, slug) %}{% if o %}
+<section class="bu-open" id="bu-opener" aria-labelledby="bu-open-t">
   <p class="label" id="bu-open-t">First question for the business unit <small class="muted">· background and idea, to start the talk</small></p>
   <p class="bu-q">{{ o.question }}</p>
   {% if o.pros or o.cons %}<div class="bu-pc">
@@ -28,9 +29,4 @@ first question to the business unit (background, idea, pros and cons against com
     {% if o.cons %}<div class="bu-con"><h4>Against us</h4><ul>{% for x in o.cons %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
   </div>{% endif %}
   {% if o.vs %}<p class="small muted">Compared with: {{ o.vs }}</p>{% endif %}
-  {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
-  {% if answer_form %}<details class="small"><summary>{{ 'Answered · add to the answer' if f.verdict == 'answered' else 'Record the answer' }}</summary>
-    <form method="post" action="/business/reports/{{ slug }}/react" class="pc-form"><input type="hidden" name="key" value="{{ o.id }}">
-      <textarea name="comment" rows="2" maxlength="2000" placeholder="The answer, and who gave it" aria-label="Answer"></textarea>
-      <button name="verdict" value="answer" class="small-btn">Save answer</button></form></details>{% endif %}
 </section>{% endif %}{% endmacro %}

@@ -239,6 +239,9 @@ def seed_rows(client) -> None:
                        follow_redirects=False).status_code in ok  # fmt: skip
     assert client.post("/business/shortlist", data={"origin": "idea", "key": "Test idea"},
                        follow_redirects=False).status_code in ok  # fmt: skip
+    # an answer to a question to ask, so its switch, edit and release forms are on Data management › Answers
+    assert client.post("/business/reports/auto-uwb-15-4ab/answers", data={"key": "q-bu-ab", "text": "Confidential",
+                       "sharing": "shared"}, follow_redirects=False).status_code in ok  # fmt: skip
     from app.auth.passkeys import new_invite
 
     with Session(get_engine()) as s:

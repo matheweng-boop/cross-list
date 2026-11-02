@@ -1573,3 +1573,20 @@ def test_data_center_shows_cooling_and_hvac(page):
         page.locator("#card-datacenter-cooling a.sys-btn-dg").click()
     expect(page.locator("#sub-cooling")).to_be_in_viewport()
     expect(page.locator("#sub-cooling + .tpl-grid a.tpl-card")).to_have_count(5)
+
+
+def test_drones_show_satellite_navigation_and_anti_jamming(page):
+    """Owner, 2 Nov 2026 (worker P): Drones gets "Satellite link (NTN / direct-to-cell)", "Navigation" and
+    "Anti-jamming and anti-spoofing", each with diagrams and a deep dive; the radio-links deep dive shows "Which link
+    when"."""
+    go(page, "/blocks?system=drones")
+    for sub in ("satellite-link", "navigation", "anti-jamming"):
+        card = page.locator(f"#card-drones-{sub}")
+        expect(card).to_have_count(1)
+        expect(card.locator(".sys-btn-deep")).to_have_count(1)
+    go(page, "/library/drone_satellite_link")
+    expect(page.locator("h1")).to_contain_text("satellite link")
+    go(page, "/library/drone_radio_links")
+    expect(page.locator("#k-drone_link_choice table")).to_be_visible()
+    go(page, "/library/drone_antijam")
+    expect(page.locator('a[href="/library/drone_navigation"]').first).to_be_visible()

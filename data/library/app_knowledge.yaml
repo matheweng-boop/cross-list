@@ -122,3 +122,65 @@ items:
       - {title: "QPF5100Q catalogue row (RFMW product page title, search snippet)", url: "https://rfmw.com/products/detail/qpf5100q-qorvo/858672/", kind: snippet}
       - {title: "QPF5001 8-12 GHz 12 W transmit/receive module (GlobalSpec datasheet listing)", url: "https://datasheets.globalspec.com/ds/qorvo/qpf5001/f5508ac4-b97d-4f34-adf6-7c232f224276", kind: snippet}
       - {title: "Part knowledge: How UWB works (parts table, QM14068, QM14070, SKY5A2108)", url: "/reviews/how/uwb", kind: ours}
+
+  # owner, 2 Nov 2026 ("For Drones: add NTN/DTC, drone connectivity, drone navigation"): which drone link when, and
+  # where the GNSS material sits (navigation vs anti-jamming), so the drone deep dives do not repeat each other.
+  - id: drone_link_choice
+    title: "Which link when: control radio, cellular, satellite NTN / direct-to-cell or satellite modem"
+    intro: >-
+      A drone picks its link by distance and by what has to travel: commands and telemetry need little data but must
+      never stop; video needs Mbit/s. In sight of the pilot the own radio wins; beyond sight the mobile network; where
+      no cell reaches, a satellite path carries telemetry and commands, not video. Figures are our estimates (est)
+      from the sources named in the rows.
+    points:
+      - "Control and video radio (868 / 915 MHz, 2.4 GHz, 5.8 GHz): no subscription and the lowest delay, but only in line of sight; the US allows up to 36 dBm EIRP, the EU 20 dBm at 2.4 GHz (47 CFR 15.247, ETSI EN 300 328)."
+      - "Cellular LTE / 5G: beyond sight wherever the network reaches; good coverage below about 120 m, interference from many cells above. Needs an operator plan that allows aerial use (in the US, 47 CFR 22.925 bars cellular phones on aircraft in the 800 MHz cellular band)."
+      - "Satellite IoT-NTN (NB-IoT / LTE-M over L / S band): global telemetry at kbit/s from the same PA as the terrestrial bands; LEO delay is low, GEO up to a few hundred ms (3GPP NTN overview)."
+      - "Direct-to-cell (DTC): a satellite acting as a cell site in the operator's own band, reached by a standard LTE / 5G radio; text and low-rate data today (est). In the US it runs under supplemental coverage from space (47 CFR 25.125)."
+      - "Satellite modem (Iridium-class LEO, L-band MSS): a separate module for global command and control backup; bursts of 1-2 W next to GNSS L1 (est)."
+      - "Most BVLOS drones carry two or three of these and let a link manager pick (see the resilient command-and-control diagram under Anti-jamming)."
+    table:
+      head: ["Link", "Range", "Delay (est)", "Data rate (est)", "Rules", "Power on the drone (est)"]
+      rows:
+        - ["Control / video radio", "Line of sight, km to tens of km", "Lowest (ms)", "Control kbit/s; video several Mbit/s", "Licence-free: US 1 W + 6 dBi; EU 20 dBm EIRP at 2.4 GHz", "PA up to 1 W"]
+        - ["Cellular LTE / 5G", "Where the network reaches; best below about 120 m", "Tens of ms", "Hundreds of kbit/s to over 30 Mbit/s up", "Operator plan for aerial use; US 22.925 airborne rule", "About 23 dBm (PC3)"]
+        - ["IoT-NTN (L / S band)", "Global under the satellites", "LEO tens of ms; GEO up to a few hundred ms", "kbit/s (telemetry)", "3GPP Rel-17/18 bands n255 / n256; satellite operator", "23-31 dBm (PC3 to PC1)"]
+        - ["Direct-to-cell", "Where the partner LEO satellites cover", "LEO, tens of ms", "Text and low-rate data today", "US SCS (47 CFR 25.125); airborne use not settled", "Phone class, about 23 dBm"]
+        - ["Satellite modem", "Global (Iridium-class) or regional (MSS)", "Hundreds of ms to seconds for short bursts", "kbit/s to hundreds of kbit/s", "Operator's MSS licence; module certified", "1-2 W bursts"]
+    see:
+      - {label: "Drone radio links (deep dive)", href: "/library/drone_radio_links"}
+      - {label: "Drone cellular link (deep dive)", href: "/library/drone_cellular"}
+      - {label: "Drone satellite link: NTN and direct-to-cell (deep dive)", href: "/library/drone_satellite_link"}
+      - {label: "Link budget and range (visual)", href: "/visuals#link"}
+    sources:
+      - {title: "Systems library: drone radio links (47 CFR 15.247, ETSI EN 300 328 V2.2.2)", url: "/library/drone_radio_links", kind: ours}
+      - {title: "Systems library: drone cellular link (Zeng, Lyu, Zhang 2018; RedCap overview)", url: "/library/drone_cellular", kind: ours}
+      - {title: "Systems library: drone satellite link (3GPP NTN overview, 47 CFR 25.125, 47 CFR 22.925, TS 38.101-5)", url: "/library/drone_satellite_link", kind: ours}
+      - {title: "47 CFR 15.247 (US licence-free power and hopping rules; read 24 Oct 2026 for the Systems library)", url: "https://www.law.cornell.edu/cfr/text/47/15.247", kind: ours}
+      - {title: "3GPP: Non-Terrestrial Networks (NTN) overview (read 2 Nov 2026 for the Systems library)", url: "https://www.3gpp.org/technologies/ntn-overview", kind: ours}
+      - {title: "47 CFR 25.125: supplemental coverage from space (read 2 Nov 2026 for the Systems library)", url: "https://www.law.cornell.edu/cfr/text/47/25.125", kind: ours}
+      - {title: "47 CFR 22.925: airborne operation of cellular telephones (read 2 Nov 2026 for the Systems library)", url: "https://www.law.cornell.edu/cfr/text/47/22.925", kind: ours}
+
+  - id: drone_gnss_map
+    title: "GNSS on a drone: what is in Navigation and what is in Anti-jamming"
+    intro: >-
+      Two drone deep dives share GNSS. Navigation covers getting a good position: bands, RTK corrections and fusing
+      GNSS with the other sensors. Anti-jamming covers keeping it when someone or something disturbs the signal:
+      filters, linear LNAs, antenna arrays and spoofing checks.
+    points:
+      - "Navigation: L1 + L5 (and L2 / E6) front ends, RTK and PPP-RTK corrections, the IMU / baro / optical-flow fusion, UWB near the dock."
+      - "Anti-jamming: blockers and compression (the dBm and IP3 visuals), notch filters for the drone's own transmitters, CRPA arrays, AGC / C/N0 monitoring, spoofing checks, and a control link that falls back to cellular or satellite."
+      - "Both use the same GNSS front-end parts; the Part knowledge GNSS page lists them."
+    see:
+      - {label: "Drone navigation (deep dive)", href: "/library/drone_navigation"}
+      - {label: "Drone anti-jamming and anti-spoofing (deep dive)", href: "/library/drone_antijam"}
+      - {label: "GNSS: how satellite positioning works", href: "/engineering/gnss_how_it_works"}
+      - {label: "Part knowledge: GNSS front-end parts", href: "/reviews/how/gnss"}
+      - {label: "GNSS band plan and interferers (visual)", href: "/visuals#gnssbands"}
+      - {label: "IP3 and intermodulation (visual)", href: "/visuals#ip3"}
+      - {label: "dBm: the power ladder (visual)", href: "/visuals#dbm"}
+    sources:
+      - {title: "Systems library: drone navigation (SKY55951-11, u-blox ZED-X20P, ETSI EN 303 413, Vana and Bisnath 2023)", url: "/library/drone_navigation", kind: ours}
+      - {title: "Systems library: drone anti-jamming (47 USC 333, Kazim et al. 2026, ETSI EN 303 413)", url: "/library/drone_antijam", kind: ours}
+      - {title: "Kazim, Darwich, Marais: GNSS jamming detection with AGC and C/N0 (arXiv 2602.12688; read 21 Oct 2026 for the Systems library)", url: "https://arxiv.org/pdf/2602.12688", kind: ours}
+      - {title: "47 U.S. Code 333: willful or malicious interference (read 2 Nov 2026 for the Systems library)", url: "https://www.law.cornell.edu/uscode/text/47/333", kind: ours}

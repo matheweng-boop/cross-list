@@ -16035,3 +16035,196 @@
   - {id: door, question: Door type, choices: [passive (no fans), active (fan row)]}
   - {id: supply, question: Fan supply, choices: [48 V DC from the rack, AC mains]}
   - {id: link, question: Building link, choices: [Modbus RS-485, Modbus TCP / SNMP on Ethernet]}
+# ---- Drones: satellite link, navigation, anti-jamming (owner, 2 Nov 2026: "For Drones: add NTN/DTC, drone
+# connectivity, drone navigation if we don't already have this"; "drone disturbance" = anti-jamming). Drawn by us from
+# the public sources of the Systems library topics drone_satellite_link, drone_navigation and drone_antijam; our own
+# reasoning is marked "est".
+- name: Drone satellite IoT module (NB-IoT / LTE-M over NTN, 3GPP Rel-17/18, L-band n255 and S-band n256)
+  category: RF & connectivity
+  note: "A drone's satellite telemetry path to the 3GPP IoT-NTN standard (drawn by us from the 3GPP NTN overview, TS 38.101-5 and our catalogue): the modem pre-compensates timing advance and Doppler from its own GNSS fix and the satellite's ephemeris, so GNSS is part of the link, not an extra. One multimode PA covers the terrestrial LTE-M / NB-IoT bands and the NTN L / S bands (SKY68040-11). The hard part is the L-band uplink (1626.5-1660.5 MHz) a few cm from the GNSS L1 antenna (est)."
+  sources:
+  - {doc: 3GPP_NTN, title: '3GPP: Non-Terrestrial Networks (NTN) overview (J. Krause, 3GPP MCC)', url: 'https://www.3gpp.org/technologies/ntn-overview'}
+  - {doc: TS38101-5, title: '3GPP TS 38.101-5 V19.6.0 (ETSI TS 138 101-5): NR UE radio, satellite access', url: 'https://www.etsi.org/deliver/etsi_ts/138100_138199/13810105/19.06.00_60/ts_13810105v190600p.pdf'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: 'L / S-band patch, sky-facing (0-3 dBic)'}, {fn: antenna, label: Terrestrial LTE-M / NB-IoT}, {fn: antenna, label: GNSS L1 / L5}]}
+  - {id: sw, label: Antenna selection, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Terrestrial / satellite antenna switch}]}
+  - {id: fe, label: NTN front end, col: 2, row: 0, blocks: [{fn: pa_module, label: 'Multimode PA: LTE-M / NB-IoT + n255 / n256 (23 dBm PC3)'}, {fn: filter_saw_baw, label: n255 / n256 duplex filters}, {fn: lna, label: Satellite receive LNA}]}
+  - {id: modem, label: Modem, col: 3, row: 0, blocks: [{fn: modem, label: 'NB-IoT / LTE-M modem with NTN (TA and Doppler pre-compensation)'}, {fn: crystal_oscillator, label: TCXO (frequency accuracy for Doppler)}, {fn: secure_element, label: eSIM}]}
+  - {id: gnss, label: GNSS (needed by the NTN modem), col: 1, row: 1, blocks: [{fn: gnss_lna, label: L1 + L5 LNA with high rejection at 1610-1660 MHz}, {fn: filter_saw_baw, label: L1 post-filter}]}
+  - {id: pwr, label: Power, col: 2, row: 1, blocks: [{fn: wide_vin_buck, label: 'Pack to 3.8 V PA rail'}, pol_ldo]}
+  - {id: fc, label: Flight computer, col: 3, row: 1, blocks: [{fn: soc, label: Flight controller / link manager}]}
+  links:
+  - [ant, sw, '']
+  - [sw, fe, RF]
+  - [fe, modem, RF + MIPI RFFE]
+  - [ant, gnss, GNSS]
+  - [gnss, modem, position and time (TA / Doppler)]
+  - [pwr, fe, 3.8 V]
+  - [modem, fc, telemetry and commands (kbit/s)]
+  questions:
+  - {id: ntn_band, question: Satellite band, choices: ['L-band n255 (1626.5-1660.5 MHz up)', 'S-band n256 (1980-2010 MHz up)', both]}
+  - {id: ntn_orbit, question: Satellite network, choices: [GEO, LEO]}
+  - {id: ntn_pc, question: Power class, choices: ['PC3 23 dBm', 'PC2 26 dBm', 'PC1 31 dBm (not for phones)']}
+
+- name: Drone direct-to-cell (DTC) link (standard LTE / 5G phone-band radio to LEO satellites under supplemental coverage from space)
+  category: RF & connectivity
+  note: "Direct-to-cell: the satellite works as a cell site in the mobile operator's own terrestrial band, so an unmodified LTE / 5G radio can reach it (as Starlink Direct to Cell, AST SpaceMobile and Lynk describe it; their pages were not readable by us, so the description is est). In the US this is supplemental coverage from space (SCS, 47 CFR 25.125): the satellite operator leases the band from the terrestrial licensee, and the device is certified under the terrestrial rules (Parts 22, 24 or 27). No new RF block on the drone; what changes is the link budget (sky-facing antenna, full PA power, best receiver noise figure) and the rule for airborne use (47 CFR 22.925 bars cellular phones on aircraft in the 800 MHz cellular band; how this applies to drones is an open question)."
+  sources:
+  - {doc: CFR47_25_125, title: '47 CFR 25.125: Applications for supplemental coverage from space (SCS)', url: 'https://www.law.cornell.edu/cfr/text/47/25.125'}
+  - {doc: CFR47_22_925, title: '47 CFR 22.925: Prohibition on airborne operation of cellular telephones', url: 'https://www.law.cornell.edu/cfr/text/47/22.925'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: Down-looking (towers)}, {fn: antenna, label: Up-looking (satellites)}, {fn: antenna, label: GNSS}]}
+  - {id: sw, label: Antenna selection and tuning, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Up / down antenna switch}, antenna_tuner]}
+  - {id: fe, label: Cellular front end (600-2200 MHz), col: 2, row: 0, blocks: [{fn: rf_frontend, label: 'LTE / 5G FEM or LPAMiD (low and mid bands)'}, {fn: diversity_rx_module, label: Diversity receive (2nd branch helps the weak satellite downlink)}, filter_saw_baw]}
+  - {id: modem, label: Modem, col: 3, row: 0, blocks: [{fn: modem, label: Standard LTE / 5G modem (DTC-capable firmware)}, {fn: secure_element, label: eSIM (operator with a DTC partner)}]}
+  - {id: gnss, label: GNSS, col: 1, row: 1, blocks: [{fn: gnss_lna, label: L1 + L5 LNA}]}
+  - {id: fc, label: Flight computer, col: 3, row: 1, blocks: [{fn: soc, label: Flight controller / link manager}]}
+  links:
+  - [ant, sw, '']
+  - [sw, fe, RF]
+  - [fe, modem, RF]
+  - [ant, gnss, GNSS]
+  - [gnss, fc, position]
+  - [modem, fc, 'telemetry, text, low-rate data']
+  questions:
+  - {id: dtc_role, question: Role of the satellite path, choices: [none (terrestrial only), fallback for telemetry and messages, always-on second path]}
+  - {id: dtc_band, question: Operator band used for DTC, choices: [low band 600-900 MHz, mid band 1.7-2.2 GHz]}
+
+- name: Drone dedicated satellite modem for command and control (Iridium-class LEO or L-band MSS, with GNSS protection)
+  category: RF & connectivity
+  note: "A separate satellite modem module for beyond-line-of-sight command and control on remote routes (est, from public descriptions of mobile-satellite services): Iridium-class LEO in 1616-1626.5 MHz (TDD), Globalstar-class uplink 1610-1618.725 MHz with downlink at 2483.5-2500 MHz (the same pair as 3GPP band n254), or L-band MSS (uplink 1626.5-1660.5, downlink 1525-1559 MHz, as n255). All transmit within 15-90 MHz of GNSS L1, so the GNSS front end needs specified rejection there and the satellite PA needs low noise and spurious output in the GNSS band (est)."
+  sources:
+  - {doc: 3GPP_NTN, title: '3GPP: Non-Terrestrial Networks (NTN) overview (band n254 1610-1626.5 / 2483.5-2500 MHz)', url: 'https://www.3gpp.org/technologies/ntn-overview'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: 'L-band satellite antenna (sky-facing, as far from GNSS as the frame allows)'}, {fn: antenna, label: GNSS}]}
+  - {id: fe, label: Satellite front end, col: 1, row: 0, blocks: [{fn: power_amplifier, label: L-band PA (1-2 W class, est)}, {fn: antenna_switch, label: T/R switch (TDD) or duplexer}, {fn: lna, label: L-band LNA}, {fn: filter_saw_baw, label: L-band filter with low noise in the GNSS band}]}
+  - {id: modem, label: Satellite modem module, col: 2, row: 0, blocks: [{fn: external_block, label: Satellite modem (Iridium / Globalstar / L-band MSS)}, crystal_oscillator]}
+  - {id: gnss, label: GNSS with satellite-uplink protection, col: 1, row: 1, blocks: [{fn: gnss_lna, label: GNSS LNA with high IIP3}, {fn: filter_saw_baw, label: Steep L1 filter (1610-1660 MHz rejection)}]}
+  - {id: pwr, label: Power, col: 0, row: 1, blocks: [{fn: wide_vin_buck, label: Pack to modem rail}, {fn: efuse_hotswap, label: Burst-current limit}]}
+  - {id: fc, label: Flight computer, col: 2, row: 1, blocks: [{fn: soc, label: Flight controller / link manager}]}
+  links:
+  - [ant, fe, '']
+  - [fe, modem, RF]
+  - [ant, gnss, GNSS]
+  - [gnss, fc, position]
+  - [pwr, modem, rail]
+  - [modem, fc, commands and telemetry]
+  questions:
+  - {id: msat_net, question: Satellite network, choices: ['Iridium-class LEO (global, TDD)', 'Globalstar-class (n254 pair)', 'L-band MSS (GEO)']}
+  - {id: msat_role, question: Role, choices: [command and control backup, primary on remote routes, tracking only]}
+
+- name: Drone multi-band GNSS receiver with RTK (L1 / L5, optional L2 / E6, corrections over the radio link, cellular or L-band)
+  category: RF & connectivity
+  note: "Centimetre positioning for mapping, spraying and precision landing (drawn by us from the u-blox ZED-X20P integration manual, the Skyworks SKY55951-11 data sheet and ETSI EN 303 413): a multi-band antenna, an LNA front end with pre-filter and notch, a band split to an all-band receiver, a TCXO, and RTK corrections from a base station over the control link, from NTRIP over cellular or PPP-RTK over L-band. Net gain to the receiver 17-40 dB; group delay matters for carrier phase (est where not in the sources)."
+  sources:
+  - {doc: UBX_ZEDX20P, title: 'u-blox ZED-X20P Integration manual R05', url: 'https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf'}
+  - {doc: SKY55951-11, title: 'Skyworks SKY55951-11 GNSS L1 + L5 LNA FEM data sheet 205521I', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf'}
+  groups:
+  - {id: ant, label: Antenna, col: 0, row: 0, blocks: [{fn: antenna, label: 'Multi-band patch or helix (L1 / L2 / L5 / E6), ground plane'}]}
+  - {id: afe, label: Antenna front end, col: 1, row: 0, blocks: [{fn: filter_saw_baw, label: Pre-filter and B13 notch}, {fn: gnss_lna, label: L1 + L5 LNA FEM}, {fn: diplexer, label: Band split L1 / L5 (L2 / E6)}]}
+  - {id: bias, label: Antenna supply, col: 1, row: 1, blocks: [{fn: load_switch, label: Bias-T feed with current limit and short detection}]}
+  - {id: rx, label: GNSS receiver, col: 2, row: 0, blocks: [{fn: external_block, label: 'Multi-band, multi-constellation RTK receiver'}, {fn: crystal_oscillator, label: TCXO}]}
+  - {id: corr, label: Corrections in, col: 2, row: 1, blocks: [{fn: rf_transceiver, label: RTK base link (in the control radio)}, {fn: modem, label: NTRIP over cellular}, {fn: lna, label: L-band correction channel (in the receiver)}]}
+  - {id: fc, label: Flight controller, col: 3, row: 0, blocks: [{fn: soc, label: Navigation estimator}]}
+  links:
+  - [ant, afe, RF]
+  - [afe, rx, 'L1, L5 (L2 / E6)']
+  - [bias, afe, DC over coax]
+  - [corr, rx, RTCM / SPARTN corrections]
+  - [rx, fc, 'position, velocity, 1 PPS']
+  questions:
+  - {id: gnss_bands, question: GNSS bands, choices: [L1 only, L1 + L5, 'all-band L1 / L2 / L5 / E6']}
+  - {id: gnss_corr, question: Corrections, choices: [none (SBAS), RTK from own base station, NTRIP over cellular, PPP-RTK over L-band]}
+  - {id: gnss_heading, question: Heading, choices: [magnetometer, two GNSS antennas (moving baseline)]}
+
+- name: Drone navigation sensor-fusion unit (IMU, magnetometer, barometer, optical flow / visual odometry, rangefinder, GNSS, UWB)
+  category: Industrial
+  note: "What keeps a drone's position when GNSS is weak or denied (drawn by us from Vana and Bisnath 2023 and public flight-controller designs, est): two or three IMUs, a magnetometer, a barometer, a downward optical-flow camera with a rangefinder for low altitude, a stereo or visual-inertial camera, GNSS and, near docks, UWB beacons, all time-stamped on one clock and fused in an extended Kalman filter. Few RF parts; timing and clean supplies are where our parts fit."
+  sources:
+  - {doc: ION_NAVI_578, title: 'Vana, Bisnath: Low-cost triple-frequency multi-GNSS PPP and MEMS IMU integration (NAVIGATION 70(2), 2023)', url: 'https://navi.ion.org/content/navi/70/2/navi.578.full.pdf'}
+  groups:
+  - {id: inertial, label: Inertial and air data, col: 0, row: 0, blocks: [{fn: external_block, label: IMU x2-3 (redundant)}, {fn: external_block, label: Magnetometer}, {fn: env_sensor, label: Barometer}]}
+  - {id: vision, label: Vision and range, col: 0, row: 1, blocks: [{fn: camera_radar, label: Optical-flow camera}, {fn: camera_radar, label: 'Rangefinder (ToF lidar or radar altimeter)'}, {fn: camera_radar, label: Stereo / visual-inertial odometry camera}]}
+  - {id: radio, label: Radio positioning, col: 1, row: 1, blocks: [{fn: gnss_lna, label: GNSS L1 + L5 front end}, {fn: uwb_soc, label: UWB for docking and indoor}]}
+  - {id: est, label: Estimator, col: 1, row: 0, blocks: [{fn: mcu, label: Flight controller (EKF sensor fusion)}, {fn: soc, label: Companion computer (visual odometry)}]}
+  - {id: clk, label: Timing, col: 2, row: 0, blocks: [{fn: crystal_oscillator, label: Low-drift oscillator}, {fn: clock_buffer, label: Sensor sync and time stamps}]}
+  - {id: pwr, label: Clean supplies, col: 2, row: 1, blocks: [{fn: pol_ldo, label: Low-noise LDO for IMU and magnetometer}, pol_buck]}
+  links:
+  - [inertial, est, 'rates, accelerations, heading, altitude']
+  - [vision, est, 'velocity, height, features']
+  - [radio, est, 'position, time']
+  - [clk, est, time base]
+  - [pwr, inertial, quiet rails]
+  questions:
+  - {id: nav_denied, question: GNSS-denied fallback, choices: [none (hold and land), optical flow + rangefinder (low altitude), visual-inertial odometry, terrain or map matching]}
+  - {id: nav_imu, question: IMUs, choices: [one, two, three (voting)]}
+
+- name: Drone CRPA anti-jam GNSS (controlled-reception-pattern antenna array with a nulling / beamforming front end)
+  category: RF & connectivity
+  note: "Business and block level only (drawn by us from public descriptions of CRPA products and the GNSS interference literature, est): 2-7 antenna elements, one coherent receive channel per element (limiter, filter, high-linearity LNA, down-conversion on a shared local oscillator and clock, ADC), and a processor that steers nulls toward interferers and gain toward the satellites; the output is a cleaned RF signal for a standard receiver or digital samples for an integrated one. Channel-to-channel phase and gain matching over temperature is the design core."
+  sources:
+  - {doc: arXiv_2602_12688, title: 'Kazim, Darwich, Marais: GNSS jamming detection with AGC and C/N0 observables (arXiv 2602.12688)', url: 'https://arxiv.org/pdf/2602.12688'}
+  groups:
+  - {id: arr, label: Antenna array (2-7 elements), col: 0, row: 0, blocks: [{fn: antenna, label: GNSS elements x4-7}]}
+  - {id: ch, label: Receive channel per element, col: 1, row: 0, blocks: [{fn: rf_limiter, label: Limiter}, {fn: filter_saw_baw, label: Band filter}, {fn: gnss_lna, label: High-IIP3 LNA}, {fn: rf_mixer, label: Down-converter}, {fn: adc, label: ADC}]}
+  - {id: cal, label: Calibration, col: 1, row: 1, blocks: [{fn: rf_switch, label: Calibration-signal injection switch}]}
+  - {id: lo, label: Coherent LO and clocks, col: 2, row: 1, blocks: [{fn: rf_synthesizer, label: Shared LO}, {fn: clock_buffer, label: Clock fan-out to all ADCs}, jitter_attenuator, {fn: crystal_oscillator, label: OCXO / TCXO}]}
+  - {id: proc, label: Nulling processor, col: 2, row: 0, blocks: [{fn: logic, label: 'FPGA: adaptive nulling / beamforming'}]}
+  - {id: out, label: Output, col: 3, row: 0, blocks: [{fn: external_block, label: 'GNSS receiver (RF out or digital samples)'}]}
+  links:
+  - [arr, ch, RF per element]
+  - [cal, ch, test tone]
+  - [lo, ch, LO and clocks]
+  - [ch, proc, samples per element]
+  - [proc, out, cleaned signal]
+  questions:
+  - {id: crpa_elements, question: Array elements, choices: ['2 (small drones)', '4', '7']}
+  - {id: crpa_out, question: Output, choices: [RF to a standard receiver, digital to an integrated receiver]}
+  - {id: crpa_bands, question: Bands, choices: [L1 only, L1 + L2, L1 + L5]}
+
+- name: Drone hardened GNSS front end (multi-band, multi-constellation, interference and notch filters, high-linearity LNA, jamming and spoofing monitor)
+  category: RF & connectivity
+  note: "The single-antenna answer to interference (drawn by us from ETSI EN 303 413, the SKY55951-11 data sheet and the interference-monitoring literature): steep pre-filters and notches for the drone's own 0.9 / 2.4 / 5.8 GHz transmitters, an LNA with high input compression and IIP3, multi-band and multi-constellation tracking, and a receiver that watches AGC and C/N0 and checks positions against the IMU and authenticated signals (Galileo OSNMA) to flag spoofing (est where not in the sources)."
+  sources:
+  - {doc: EN303413, title: 'ETSI EN 303 413 V1.2.1 (GNSS receivers, harmonised standard)', url: 'https://www.etsi.org/deliver/etsi_en/303400_303499/303413/01.02.01_60/en_303413v010201p.pdf'}
+  - {doc: SKY55951-11, title: 'Skyworks SKY55951-11 GNSS L1 + L5 LNA FEM data sheet 205521I', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf'}
+  groups:
+  - {id: ant, label: Antenna, col: 0, row: 0, blocks: [{fn: antenna, label: 'Multi-band antenna, high on the frame, ground plane'}]}
+  - {id: prot, label: Protection, col: 1, row: 0, blocks: [tvs_esd, {fn: rf_limiter, label: Limiter against strong signals}]}
+  - {id: filt, label: Interference filtering, col: 2, row: 0, blocks: [{fn: filter_saw_baw, label: Steep pre-filter (SAW / BAW)}, {fn: filter_saw_baw, label: 'Notches for own 0.9 / 2.4 / 5.8 GHz transmitters'}]}
+  - {id: lna, label: Low-noise gain, col: 3, row: 0, blocks: [{fn: gnss_lna, label: High-IIP3 L1 + L5 LNA}, {fn: rf_gain_block, label: Second stage}, {fn: diplexer, label: Band split}]}
+  - {id: rx, label: Receiver and monitor, col: 3, row: 1, blocks: [{fn: external_block, label: 'Multi-band receiver: AGC / C/N0 jamming flag, OSNMA, spoofing checks'}, {fn: crystal_oscillator, label: TCXO}]}
+  - {id: fc, label: Flight controller, col: 2, row: 1, blocks: [{fn: mcu, label: Estimator (cross-checks GNSS against IMU)}]}
+  links:
+  - [ant, prot, RF]
+  - [prot, filt, '']
+  - [filt, lna, '']
+  - [lna, rx, L1 / L5]
+  - [rx, fc, position + integrity flags]
+  questions:
+  - {id: aj_threat, question: Interference to plan for, choices: [own transmitters only, unintentional interference, 'deliberate jamming and spoofing (defence, border)']}
+  - {id: aj_auth, question: Signal authentication, choices: [none, Galileo OSNMA, military / PRS (government only)]}
+
+- name: Drone resilient command-and-control link (FHSS control radio with antenna diversity, cellular and NTN fallback, link manager)
+  category: RF & connectivity
+  note: "Keeping control when one link is disturbed (drawn by us from 47 CFR 15.247, the drone radio-links and cellular deep dives and our catalogue, est): a frequency-hopping control radio with two antennas and a diversity switch, a second terrestrial path over LTE / 5G, a satellite path (IoT-NTN on the same PA, or a dedicated modem), and a link manager that encrypts, scores each link and falls back, with a fail-safe (hold, return home, land) if all are lost."
+  sources:
+  - {doc: CFR47_15_247, title: '47 CFR 15.247 (902-928, 2400-2483.5 and 5725-5850 MHz)', url: 'https://www.law.cornell.edu/cfr/text/47/15.247'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: Control x2 (diversity)}, {fn: antenna, label: Cellular}, {fn: antenna, label: Satellite L / S-band}]}
+  - {id: rc, label: FHSS control radio, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Diversity + T/R switch}, {fn: power_amplifier, label: PA}, {fn: lna, label: High-IIP3 LNA}, {fn: filter_saw_baw, label: Band filter}, {fn: rf_transceiver, label: Fast-hopping transceiver}, {fn: rf_synthesizer, label: Fast-settling synthesizer}]}
+  - {id: cell, label: Cellular path, col: 1, row: 1, blocks: [{fn: rf_frontend, label: LTE / RedCap FEM}, {fn: modem, label: LTE / 5G modem}]}
+  - {id: sat, label: Satellite path, col: 1, row: 2, blocks: [{fn: pa_module, label: NTN-capable PA (n255 / n256)}, {fn: external_block, label: Or a dedicated satellite modem}]}
+  - {id: mgr, label: Link manager, col: 2, row: 0, blocks: [{fn: soc, label: 'Link scoring, fallback, fail-safe'}, {fn: secure_element, label: Keys for link encryption}, crystal_oscillator]}
+  - {id: fc, label: Flight controller, col: 3, row: 0, blocks: [{fn: mcu, label: Flight controller}]}
+  links:
+  - [ant, rc, control]
+  - [ant, cell, cellular]
+  - [ant, sat, satellite]
+  - [rc, mgr, commands / telemetry]
+  - [cell, mgr, commands / telemetry / video]
+  - [sat, mgr, commands / telemetry]
+  - [mgr, fc, selected link]
+  questions:
+  - {id: c2_paths, question: Links on board, choices: [control radio only, control radio + cellular, control radio + cellular + satellite]}
+  - {id: c2_band, question: Control-radio band, choices: [868 / 915 MHz, 2.4 GHz, both (band switching)]}

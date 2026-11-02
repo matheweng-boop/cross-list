@@ -465,3 +465,16 @@ def test_data_center_timing_sub_system_diagrams_and_deep_dive(client):
     assert 'href="/clocks"' in deep and "Clock planner" in deep and "Si5332" in deep
     one = client.get(f"/blocks/new?template={x['idx'][0]}").text  # the server clock tree shows our timing parts
     assert "Si5332" in one and "Si532" in one
+
+
+def test_data_center_timing_market_by_socket_is_an_estimate(client, session):
+    """Owner, 2 Nov 2026 ("Yes to all"): units x content per socket in the deep dive, and the total as a TAM entry
+    marked est (no fn, so it does not set a function's market size)."""
+    from app.services import tam
+
+    segs = [m["segment"] for m in library.topic("dc_timing")["market"]]
+    for socket in ("Servers", "Switches", "Optical modules", "Time cards", "Total"):
+        assert any(s.startswith(socket) and "est" in s for s in segs), socket
+    e = next(x for x in tam.estimates(session) if x["key"] == "dc-timing-sockets-est")
+    assert "(est)" in e["value"] and e["usd"] == 170_000_000 and not e["fn"]
+    assert "dc-timing-sockets-est" in client.get("/library/dc_timing").text

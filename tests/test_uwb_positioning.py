@@ -46,11 +46,11 @@ def test_page_has_every_method_a_visual_each_and_the_when_to_use_boxes(client):
         assert s in table, s
 
 
-def test_lightweight_tdoa_finding_is_stated_with_the_open_question(client):
+def test_lightweight_tdoa_finding_is_stated_with_our_reading(client):
     html = _page(client)
     sec = html.split('id="ltdoa"', 1)[1].split('id="pdoa"', 1)[0]
     assert "not a defined method name" in sec and "lightweight uplink message" in sec
-    assert "Which document or product used" in sec and "Our reading" in sec and "kn-est" in sec
+    assert "source for the term is internal" in sec and "Our reading" in sec and "kn-est" in sec
     assert 'data-uwp="uwbltdoa"' in sec and "Classic TDoA tag" in sec and "Lightweight TDoA tag" in sec
 
 

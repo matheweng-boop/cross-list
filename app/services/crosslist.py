@@ -294,14 +294,20 @@ def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
 
 def drop_in_key(r: CrossResult):
     """A candidate without the reference's short-circuit protection (``steer_miss``) ranks last (owner, 2 Nov 2026)."""
-    return (getattr(r, "steer_miss", False), r.category != "fff", len(r.deviations), getattr(r, "unverified_worse", 0),
+    return (getattr(r, "steer_miss", False), r.category != "fff", _devs(r), getattr(r, "unverified_worse", 0),
             _worse_score(r), len(r.exceptions), r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
-    return (getattr(r, "steer_miss", False), len(r.deviations), getattr(r, "unverified_worse", 0), p1_off,
+    return (getattr(r, "steer_miss", False), _devs(r), getattr(r, "unverified_worse", 0), p1_off,
             len(r.exceptions), not r.fit.same_package, not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
+
+
+def _devs(r) -> int:
+    """Deviations for the order: a priority 1 value we do not state (a "check" note, never a deviation) counts like one
+    (owner, 2 Nov 2026), so a part with its values stated ranks first."""
+    return len(r.deviations) + getattr(r, "unstated_ours", 0)
 
 
 def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult | None]:
@@ -403,10 +409,8 @@ def data_gaps(r: CrossResult) -> list[str]:
         if d.status == UNKNOWN and not d.unknown_ok:
             rv, cv = rules.values(r.reference).get(d.key), rules.values(r.candidate).get(d.key)
             empty = (None, "", [])
-            if rv in empty and cv in empty:
-                gaps.append(f"{_short(d.label)} in neither datasheet")
-            elif rv in empty or cv in empty:
-                gaps.append(f"{_short(d.label)} not in {'their' if rv in empty else 'our'} datasheet")
+            if rv in empty or cv in empty:
+                gaps.append(unstated(r, d, rv in empty, cv in empty))
             else:
                 gaps.append(f"{_short(d.label)} not comparable ({d.ref_display} vs {d.cand_display})")
         for side in ("their", "our"):
@@ -418,6 +422,16 @@ def data_gaps(r: CrossResult) -> list[str]:
             elif _is_estimate(src):
                 gaps.append(f"{_short(d.label)} estimated ({side}s)")
     return list(dict.fromkeys(gaps))
+
+
+def unstated(r: CrossResult, d, theirs_missing: bool, ours_missing: bool) -> str:
+    """A priority 1 value one side does not state (owner, 2 Nov 2026): never a deviation; theirs is info, ours a check
+    note."""
+    if theirs_missing and ours_missing:
+        return f"{_short(d.label)} stated by neither (info)"
+    if theirs_missing:
+        return f"{_short(d.label)} not stated by {r.reference.manufacturer.name} (info)"
+    return f"{_short(d.label)} not stated in our datasheet: check"
 
 
 def _short(label: str) -> str:
@@ -450,7 +464,8 @@ def comment(r: CrossResult, column: int) -> str:
     p1 = _p1(r)
     qual = next((d for d in p1 if d.key == "qualification"), None)
     order = {WORSE: 0, DIFFERENT: 0, UNKNOWN: 1, BETTER: 2, EQUAL: 3}
-    shown = [d for d in p1 if d.key != "qualification" and (d.status != EQUAL or d.ref_display != d.cand_display)]
+    shown = [d for d in p1 if d.key != "qualification" and d.status != UNKNOWN  # unstated: said below
+             and (d.status != EQUAL or d.ref_display != d.cand_display)]
     for d in sorted(shown, key=lambda d: order[d.status])[:5]:
         bits.append(f"{_short(d.label)} {d.ref_display} vs {d.cand_display} ({_tag(d)})")
     if qual is not None and qual.status == EQUAL and _qual(ref) == "automotive" == _qual(cand):
@@ -469,7 +484,10 @@ def comment(r: CrossResult, column: int) -> str:
             theirs = sorted(str(x) for x in rules.values(ref).get(p.key) or [] if str(x).lower() in steer)
             if theirs:
                 bits.append(f"also: ours has no {' or '.join(theirs)} protection (ranked lower)")
+    bits += [unstated(r, d, d.ref_display == "—", d.cand_display == "—") for d in p1
+             if d.status == UNKNOWN and d.key != "qualification"]  # fmt: skip
     bits += data_gaps(r)
+    bits = list(dict.fromkeys(bits))
     if r.lifecycle_risk:
         bits.append(f"our part is {lifecycle.badge(cand)[0]}")
     notes = cross_notes.notes_for(ref.mpn, cand.mpn)

@@ -180,3 +180,18 @@ def test_adum4195_1_sides_compare_by_function(load):
     assert [p[0] for p in check_fit(ref, get("SI8932D-IS4")).pin_diffs] == [3, 6]
     assert pinroles.by_side(ref, ["VDD2", "GND1", "VIN", "VOUT"]) == ["VDD1", "GND2", "VIN", "VOUT"]
     assert pinroles.by_side(get("SI8932D-IS4"), ["VDDA", "GNDB"]) == ["VDDA", "GNDB"]  # ours: side A is the input
+
+
+# ---------------------------------------------------------------- rule 5: unstated values are info, not deviations
+
+
+def test_unstated_values_are_info_not_deviations(gd):
+    """ADuM4137 states no CMTI (ADuM4137.pdf has no CMTI row). Owner, 2 Nov 2026: a value the competitor does not state
+    no longer counts against our candidates; it is shown as "not stated by" the maker. Si8285 (DESAT, automotive) is
+    then a functional fit with its two real deviations: peak source 2.7 A and sink 5.5 A against ADI's 6 A."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    r = cross(gd("ADuM4137WBRNZ"), gd("SI8285CD-AS"), get_rules("gate_driver"))
+    assert {d.key for d in r.deviations} == {"peak_source_a", "peak_sink_a"} and r.category == "functional"
+    assert "CMTI not stated by Analog Devices (info)" in cl.comment(r, 2)

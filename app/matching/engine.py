@@ -7,8 +7,9 @@ shown for information and never block a cross. In order of preference:
 * Drop-in (FFF)         – same package, pin-to-pin, every priority 1 parameter equal or
                           better (better ones are marked).
 * Functional equivalent – another package or pinout; priority 1 equal or better except
-                          for at most ``max_deviations`` parameters (worse, different or
-                          unknown). Better ones are marked, deviations listed. A
+                          for at most ``max_deviations`` parameters (worse or different; a
+                          value one side does not state is shown, never counted). Better
+                          ones are marked, deviations listed. A
                           package-locked reference (thermal / technical reasons) only
                           accepts other pinouts in its own package.
 * Package equivalent    – same package and basic function, other technical specs (more
@@ -174,8 +175,16 @@ class CrossResult:
 
     @property
     def deviations(self) -> list[Diff]:
-        """Priority 1 parameters that are worse, different or unknown (exceptions excluded)."""
+        """Priority 1 parameters that are worse or different (exceptions and unstated values excluded)."""
         return _deviations(self.diffs)
+
+    @property
+    def unstated_ours(self) -> int:
+        """Priority 1 values they state and our part does not: a "check" note, never a deviation (the cross is still
+        listed), but for the order it counts like one, so a part with the values stated ranks first (owner, 2 Nov 2026:
+        "a must-have value that our part doesn't state stays a visible 'check' note")."""
+        return sum(1 for d in self.diffs if d.priority == 1 and d.status == UNKNOWN and not d.unknown_ok
+                   and d.ref_display != "—" and d.cand_display == "—")  # fmt: skip
 
     @property
     def unverified_worse(self) -> int:
@@ -520,16 +529,11 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
 
 
 def _deviations(diffs: list[Diff]) -> list[Diff]:
-    """Priority 1 parameters that are worse, different or unknown; an ``exception`` parameter that is worse is
-    listed separately and does not count (an unknown value still does: it cannot be checked, unless the parameter is
-    ``unknown_ok``). An ``unverified`` value (not from a datasheet page) never counts: it is a data gap to check."""
-    return [
-        d
-        for d in diffs
-        if d.priority == 1
-        and not d.unverified
-        and ((d.is_negative and not d.exception) or (d.status == UNKNOWN and not d.unknown_ok))
-    ]
+    """Priority 1 parameters that are worse or different; an ``exception`` parameter that is worse is listed
+    separately and does not count. A value one side does not state is never a deviation (owner, 2 Nov 2026: theirs is
+    shown as "not stated by <maker>", info only; ours as a "check" note): it cannot decide either way. An
+    ``unverified`` value (not from a datasheet page) never counts: it is a data gap to check."""
+    return [d for d in diffs if d.priority == 1 and not d.unverified and d.is_negative and not d.exception]
 
 
 # a page reference in a datasheet ("si86s6xx-datasheet.pdf p.22 (...)"); product tables and selection guides have none
@@ -633,10 +637,11 @@ def sort_key(category: str):
     """Ordering within a category. Lifecycle-risk parts always sink to the bottom."""
 
     def key(r: CrossResult):
+        devs = len(r.deviations) + getattr(r, "unstated_ours", 0)  # a value we do not state ranks like a deviation
         if category == "functional":
-            main = (len(r.deviations), r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
+            main = (devs, r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
         elif category == "package":
-            main = (len(r.deviations), r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
+            main = (devs, r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
         return (r.lifecycle_risk, getattr(r, "steer_miss", False), main, r.candidate.label)
@@ -661,7 +666,7 @@ def rank_key(r: CrossResult):
         r.lifecycle_risk,
         getattr(r, "steer_miss", False),
         r.category != "fff",
-        len(r.deviations),
+        len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation
         pkg and not r.fit.same_package,
         pkg and not r.fit.same_pinout,
         r.unverified_worse,  # an unverified data rate only breaks ties (owner, 26 Oct 2026)

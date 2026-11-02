@@ -18,13 +18,17 @@ One YAML file per product family. Each parameter has:
 | `derive` | name of a function in `app/matching/rules.py` (`DERIVE`) that works the value out when a part states none, e.g. `gate_output_config` reads the output option from the pinout |
 | `at`, `curve` | `number`: the parameter holding the value's test condition (e.g. `peak_current_vdd_v`) and a `curve` parameter with the value at other conditions. Two parts stated at different conditions are compared at one: the part with a curve covering the other's condition is read off it there |
 | `x_unit` | `curve` only: unit of the condition |
-| `unknown_ok` | an unknown value (stated by neither part, not derivable) is shown as unknown but not counted as a deviation |
+| `unknown_ok` | an unknown value (stated by neither part, not derivable) raises no data gap (amber light) either. No unstated value counts as a deviation (owner, 2 Nov 2026) |
 | `must_meet` | one-way requirement: a candidate below the reference (or without a value) is not listed; a better one is fine. Used for the automotive grade: an AEC-Q100 reference only gets AEC-Q100 candidates |
 | `steer` | `set` only: items that steer the pick. When the reference has any of them, a candidate with none ranks below every candidate with one (gate drivers: `desaturation`, `overcurrent`, `short-circuit`; owner, 2 Nov 2026) |
 
 Edit a file and restart the app to apply changes.
 
 Rules that live in code rather than in these files:
+
+- **Unstated values** (owner, 2 Nov 2026). A priority 1 value one side does not state never counts as a deviation:
+  theirs is shown as "not stated by <maker> (info)", ours as "not stated in our datasheet: check". It still keeps a
+  row amber (a missing priority 1 value), and a must-meet grade still has to be stated.
 
 - **Control pins by what they do** (owner, 2 Nov 2026: "pins 7 and 10 (control pins), as one rule"). Pins with a
   role in `data/pin_roles.yaml` (one entry per datasheet pin, with its page: not connected, output enable,

@@ -45,6 +45,17 @@ def car_explorer(request: Request, area: str = "", session: Session = Depends(ge
     return templates.TemplateResponse(request, "business/car_explorer.html", ctx)
 
 
+@router.get("/business/automotive-focus", response_class=HTMLResponse)
+def automotive_focus(request: Request, session: Session = Depends(get_session)):
+    """Future growth > Automotive focus (owner, 3 Nov 2026): six goals, short to long term, built live from the
+    Automotive map, Cross-sell, reference designs, research cases and TAM (app/services/auto_focus.py)."""
+    from app.services import auto_focus as af
+
+    ctx = {"f": af.build(session), "horizons": af.HORIZON, "level_label": au.LEVEL_LABEL, "effort": af.EFFORT,
+           "dist_label": scoring.distance_label}  # fmt: skip
+    return templates.TemplateResponse(request, "business/automotive_focus.html", ctx)
+
+
 @router.post("/business/automotive/review")
 def review(cell: str = Form(...), verdict: str = Form(...), view: str = Form("apps"),
            session: Session = Depends(get_session)):  # fmt: skip

@@ -36,6 +36,8 @@ NAV = (
     )),
     ("growth", "Future growth", (
         ("Research & ideas", "/business/reports", "Research reports and preliminary product ideas and cases"),
+        # owner, 3 Nov 2026: "one page that summarizes the top five things I should pursue" in automotive
+        ("Automotive focus", "/business/automotive-focus", "Six automotive goals, short to long term, from our data"),
         ("Markets & customers", "/business/markets", "End markets and the companies that build the systems"),
         ("Shortlist & cases", "/business/shortlist", "Candidates from the portfolio and new ideas; cases analysed"),
         ("TAM estimates", "/business/tam", "Market size per product or technology, with sources to review"),
@@ -121,6 +123,7 @@ PLACES = {
     "/business/rf-coverage": ("systems", "/business/rf-coverage"),
     "/business/risks": ("opportunities", "/business/risks"),
     "/business/automotive": ("systems", "/business/automotive"),
+    "/business/automotive-focus": ("growth", "/business/automotive-focus"),
     "/business/car-explorer": ("systems", "/business/car-explorer"),
     "/business/competitors": ("opportunities", "/business/competitors"),
     "/business/markets": ("growth", "/business/markets"),

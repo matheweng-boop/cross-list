@@ -563,6 +563,32 @@ def test_car_explorer_without_webgl(page):
     assert not [u for u in asked if "/vendor/three/" in u or "car_explorer.js" in u]
 
 
+def test_automotive_focus_goals_folds_and_links(page):
+    """Automotive focus (owner, 3 Nov 2026): from the Future growth menu, six goal cards (two or more per row on an
+    iPad held sideways), "Parts and diagrams" and "How these were picked" open on a tap, a "why" link leads to its
+    page (the 390 px check follows)."""
+    go(page, "/business/reports")
+    page.locator("nav").get_by_role("link", name="Automotive focus").first.click()
+    page.wait_for_url("**/business/automotive-focus", timeout=90_000)
+    cards = page.locator(".af-card")
+    expect(cards).to_have_count(6)
+    tops = page.evaluate("[...document.querySelectorAll('.af-card')].slice(0, 2).map(e => e.offsetTop)")
+    assert tops[0] == tops[1]  # side by side
+    how = page.locator("#af-how")
+    expect(how.locator("li").first).to_be_hidden()
+    how.locator("summary").click()
+    expect(how.locator("li").first).to_be_visible()
+    more = cards.first.locator("details.af-more")
+    if more.count():
+        more.locator("summary").click()
+        expect(more.locator("a").first).to_be_visible()
+    link = cards.first.locator(".af-why a").first
+    href = link.get_attribute("href")
+    link.click()
+    page.wait_for_load_state("load")
+    assert href.split("?")[0].split("#")[0] in page.url
+
+
 def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
     """Owner, 2 Nov 2026: each gap row says why it could matter, with the applications linked; on a phone the sentence
     is a second line under the row and the table is not wider than the screen."""

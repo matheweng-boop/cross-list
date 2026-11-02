@@ -3,13 +3,35 @@
 Ask these before the next update of the live site (the next merge into `main`), then record the answers here and
 remove what is settled. Kept on the owner's request, 21 Oct 2026.
 
-1. **Isolator data rate as priority 1 (26 Oct 2026).** A 10 Mbps deglitch code (Si86S F/H) no longer comes first
-   for a 150 Mbps part; the B/E codes do (Si86S620HE / SI86S640FC are 36 ns, 10 Mbps per the datasheet ordering
-   guide; 10 ns is the E/B code). Is that right?
-2. **"QPF5100Q together with QPF5001Q as a solution" (28 Oct 2026).** QPF5001Q is not in our data and no public page
-   was found; our QPF5001 is an 8-12 GHz, 12 W X-band radar front end (not automotive, not a UWB part). Which part did
-   you mean: a UWB front end such as QM14068 (LNA) / QM14070 (PA), DW3300Q, or another? The page now shows the
-   QPF5100Q + QM14068 / QM14070 / SKY5A2108 pairing as our reading (est).
+1. **Market sizes (2 Nov 2026).** Radio TAM band: keep it on 2024 (both full sources) with MRFR's $2.43 B (2025)
+   quoted, or move the band to 2025? Add a dollar TAM for isolated current sensing (today units only, 85–150 M a year, est)?
+2. **Pages (2 Nov 2026).** Sub-system cards: title no longer a link, only the two buttons, OK? Cross-sell on phones: 2
+   visible part numbers per cell instead of 3? RF coverage "Nearest of ours: … in the next band" where we have no part:
+   keep? Automotive map: take the letters from car diagrams only (changes some letters)?
+3. **PCIe buffer jitter (2 Nov 2026).** Stored as max on both sides (Si532xx 20 fs, LMKDB 3 fs); switch to typical first
+   (Si532xx 15 fs) as for other values?
+4. **Clock planner (2 Nov 2026).** Prefer the lowest-jitter part (today) or a part with an all-integer plan? Typical jitter
+   targets for the presets (today 300 / 200 / 1000 fs, est)? Guests' saved plans stay held for review (today)?
+5. **Not known (owner, 2 Nov 2026), kept as they are:** ADuM110N VI/VO pins not aliased to IN/OUT (Si86Px uses VI/VO for
+   its converter); the "main band" for the RF-switch partial-band rule; which part "QPF5001Q" meant (the page keeps the
+   QPF5100Q + QM14068 / QM14070 / SKY5A2108 reading, est).
+
+## Settled (owner, 2 Nov 2026)
+
+- Isolator data rate as priority 1: right (150 Mbps B/E codes before the 10 Mbps deglitch F/H codes for a 150 Mbps part).
+- Cross engine: DESAT is a P1 feature; Si82900 (ASIL D) only when the competitor requires ASIL; a value our part does
+  not state ranks lower (not counted as a deviation); their output enable against our NC carries a note; pin roles to
+  be added for TI, Novosense and Chipanalog; data rates compared at the design's supply voltage; ISO6163 stored at 50
+  Mbps; ISO774x keep "est 100 Mbps"; ISO7421E-Q1 at 50 Mbps.
+- Answers: guests see shareable answers without who answered; internal answers deleted after 12 months like the rest;
+  report questions from "Needed now" and next steps are right; guests may answer (reviewed, saved internal); the strict
+  screen stays.
+- Visuals: IP3 slider is output IP3; no Skyworks LNA bias-mode data known (the 2× current stays est); Japan's FM band only
+  in the folded view; /visuals shows "Pick a visual". UWB "lightweight TDoA": the owner's source is internal; the page
+  keeps our public-source reading (est). Battery figures to be checked against a current datasheet when one is attached.
+- Car explorer: shorter labels (Sell now / Qualify / New variant / Adjacent / Gap) with A-B-C-D-G tabs; car diagrams only
+  in the counts; Lights says plainly there is no lighting application or part yet; Doors link to Cockpit and body.
+- Research: whether Active-Semi had PD firmware or IP is to be researched (worker on it, 2 Nov 2026).
 
 ## Settled (owner, 27 Oct 2026, other-family option): "We still follow the same rules for package comparisons. I simply want to make sure that when I offer the SI86 family, I also get the choice of the SI86 as family and vice versa"
 

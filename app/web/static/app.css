@@ -1198,16 +1198,12 @@ a.am-cell:hover { outline: 2px solid var(--pico-primary); }
 .am-detail p { margin-bottom: .45rem; }
 .am-next { border-top: 1px dashed var(--pico-muted-border-color); margin-top: .6rem; }
 .am-moves td { vertical-align: top; }
-/* Automotive map: by application */
-.am-apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr)); gap: .8rem; margin: .6rem 0 .4rem; }
+/* Automotive map: by application (layout of the cards and letter rows: "Item 10" block at the end) */
 .am-app { border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; padding: .7rem .9rem; margin: 0; }
 .am-app h3 { font-size: 1rem; margin: 0 0 .5rem; }
-.am-row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin: .3rem 0; }
-.am-row > .am-cell { margin-right: .2rem; }
 .am-fnchip { font-size: .82rem; padding: .1rem .5rem; border: 1px solid var(--pico-muted-border-color); border-radius: 1rem; text-decoration: none; color: inherit; }
 .am-fnchip:hover, .am-fnchip.am-sel { border-color: var(--pico-primary); color: var(--pico-primary); }
 .am-nx { font-size: .75rem; font-weight: 600; color: #8a6d00; }
-@media (max-width: 600px) { .am-apps { grid-template-columns: 1fr; } }
 /* Preliminary cases */
 .pc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr)); gap: .7rem; margin: .4rem 0 .8rem; }
 .pc-box { border: 1px solid var(--pico-muted-border-color); border-top: 3px solid; border-radius: .4rem; padding: .5rem .8rem; margin: 0; }
@@ -2189,4 +2185,22 @@ form.qs-ask { display: block; max-width: none; margin: 1rem 0; } .qs-ask .row { 
 .qs-topic, .qs-note { margin: 0 0 .6rem; padding: .6rem .9rem; overflow-wrap: anywhere; } .qs-topic p, .qs-note p { margin: .25rem 0; }
 details.qs-note { border-bottom: 1px solid var(--pico-muted-border-color); padding: .35rem 0; } details.qs-note summary { cursor: pointer; }
 .bk-practice { border-left: 3px solid var(--card-line); padding-left: .5rem; }
+
+/* Item 10 (2 Nov 2026): Automotive map, By application. The letter sits in its own left column with its meaning, the
+   function chips wrap only in the right column, a thin line separates the letter groups; about two cards per row on
+   a PC (wide window, mouse), full width on an iPad and a phone. */
+.am-apps { display: grid; grid-template-columns: minmax(0, 1fr); gap: .9rem; margin: .6rem 0 .4rem; }
+@media (min-width: 1100px) and (hover: hover) and (pointer: fine) { .am-apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.am-app { scroll-margin-top: 1rem; }
+.am-app:target { outline: 2px solid var(--pico-primary); outline-offset: 2px; }
+.am-row { display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); gap: .3rem .7rem; align-items: start; margin: 0; padding: .45rem 0; }
+.am-row + .am-row { border-top: 1px solid var(--pico-muted-border-color); }
+.am-lv { display: flex; align-items: center; gap: .45rem; font-size: .8rem; font-weight: 600; line-height: 1.25; min-height: 1.5rem; }
+.am-lv .am-cell { flex: 0 0 auto; }
+.am-fns { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; min-width: 0; }
+.am-fns .am-fnchip { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .am-row { grid-template-columns: 5.4rem minmax(0, 1fr); gap: .3rem .5rem; }
+  .am-lv { flex-direction: column; align-items: flex-start; gap: .15rem; font-size: .72rem; }
+}
 

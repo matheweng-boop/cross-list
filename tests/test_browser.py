@@ -307,6 +307,24 @@ def test_cross_sell_parts_table_and_automotive_filter(page):
         expect(page.locator(target)).to_be_in_viewport()
 
 
+def test_automotive_map_letter_column(page):
+    """Item 10 (owner, 2 Nov 2026): in By application each letter sits in its own left column with its meaning, the
+    function chips wrap only in the right column, and a PC shows about two cards per row (the 390 px check follows)."""
+    go(page, "/business/automotive")
+    rows = page.locator(".am-app .am-row")
+    assert rows.count() > 5
+    expect(page.locator(".am-app .am-lv", has_text="Gap").first).to_be_visible()
+    gaps = page.evaluate("""() => [...document.querySelectorAll('.am-app .am-row')].map(r => {
+        const lv = r.querySelector('.am-lv').getBoundingClientRect();
+        return Math.min(...[...r.querySelectorAll('.am-fnchip')].map(c => c.getBoundingClientRect().left)) - lv.right;
+    })""")
+    assert min(gaps) > 0  # no chip ever wraps under the letter
+    tops = page.evaluate("[...document.querySelectorAll('.am-app')].slice(0, 2).map(e => e.offsetTop)")
+    assert tops[0] == tops[1]  # two cards side by side on a PC
+    page.goto("/business/automotive?view=apps#app-bms", wait_until="load")
+    expect(page.locator("#app-bms")).to_be_in_viewport()
+
+
 # --- Engineering knowledge --------------------------------------------------------------------------------------------
 def test_rf_bands_type_and_application_chips_change_the_chart(page):
     go(page, "/rf-bands")

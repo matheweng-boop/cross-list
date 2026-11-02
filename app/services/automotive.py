@@ -183,6 +183,17 @@ def build(session: Session) -> dict:
     return out
 
 
+def by_level(m: dict, app_id: str, columns) -> dict[str, list[dict]]:
+    """One application's cells by level, in column order, rejected calls left out: the By application view of the
+    map, and the Car explorer's lists (all columns there)."""
+    out: dict[str, list[dict]] = {}
+    for f in columns:
+        c = m["cells"].get((app_id, f))
+        if c and c["status"] != "rejected":
+            out.setdefault(c["level"], []).append(c)
+    return out
+
+
 def _moves(cells: list[dict], score=None) -> list[dict]:
     """The B, C and D steps (a cell's own level, or the next step on a cell we already fill), one per function and
     step, ranked by score(fn, step): the Opportunity score at the step's distance; then research demand, B and C

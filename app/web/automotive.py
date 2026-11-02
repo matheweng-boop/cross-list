@@ -22,12 +22,7 @@ def automotive(request: Request, view: str = "apps", cell: str = "", session: Se
         named = {c["fn"] for c in m["cells"].values() if c.get("next") or c.get("curated")}
         columns = [f for f in m["columns"] if f in m["rf"] or f in named]
     cols = set(columns)
-    by_app = {a["id"]: {} for a in m["apps"]}  # application -> level -> cells, for the default view
-    for f in columns:
-        for a in m["apps"]:
-            c = m["cells"].get((a["id"], f))
-            if c and c["status"] != "rejected":
-                by_app[a["id"]].setdefault(c["level"], []).append(c)
+    by_app = {a["id"]: au.by_level(m, a["id"], columns) for a in m["apps"]}  # application -> level -> cells
     app_id, _, fn = cell.partition(":")
     ctx = {"m": m, "view": view, "columns": columns, "moves": [x for x in m["moves"] if x["fn"] in cols][:12],
            "sel": m["cells"].get((app_id, fn)), "by_app": by_app, "levels": au.LEVELS, "level_label": au.LEVEL_LABEL,

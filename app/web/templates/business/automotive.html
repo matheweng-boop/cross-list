@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import score_chip %}
+{% from "business/_lv_tabs.html" import lv_tabs %}
 {% macro dist(d) %}{% if d is not none %}<small class="am-dist" title="distance {{ d }}: {{ dist_label(d) }}">·{{ d }}</small>{% endif %}{% endmacro %}
 {% macro step(s, here) %}
   {% if s.why %}<p>{{ s.why }}</p>{% endif %}
@@ -21,20 +22,23 @@
 </nav>
 
 {% if view == 'apps' %}
+<div data-lv-scope>{{ lv_tabs(levels, level_label, counts) }}
 <div class="am-apps">{% for a in m.apps %}
-  <section class="am-app" id="app-{{ a.id }}"><h3>{{ a.label }}{% if a.diagrams %} <small class="muted" title="{{ a.diagrams|join(' · ') }}">{{ a.diagrams|length }} diagram{{ 's' if a.diagrams|length != 1 }}</small>{% endif %}</h3>
+  <section class="am-app" data-lv-card id="app-{{ a.id }}"><h3>{{ a.label }}{% if a.car %} <small class="muted" title="{{ a.car|join(' · ') }}">{{ a.car|length }} car diagram{{ 's' if a.car|length != 1 }}</small>{% endif %}</h3>
+  <p class="lv-empty small muted" hidden>No functions at this letter.</p>
   {% for lv in levels %}{% set cs = by_app[a.id].get(lv) %}{% if cs %}
-    <div class="am-row"><span class="am-lv"><span class="am-cell am-{{ lv }}">{{ 'G' if lv == 'gap' else lv }}</span> {{ level_label[lv] }}</span>
+    <div class="am-row" data-lv="{{ lv }}"><span class="am-lv"><span class="am-cell am-{{ lv }}">{{ 'G' if lv == 'gap' else lv }}</span> {{ level_label[lv] }}</span>
     <span class="am-fns">{% for c in cs %}<a href="?view=apps&cell={{ c.key }}#detail" class="am-fnchip{{ ' am-sel' if sel and sel.key == c.key }}">{{ c.label }}{% if c.next and c.next.level %} <span class="am-nx" title="next: {{ level_label[c.next.level] }}">→{{ c.next.level }}</span>{% endif %}{% if c.status == 'accepted' %} ✓{% endif %}</a>{% endfor %}</span></div>
   {% endif %}{% endfor %}
   </section>{% endfor %}
-</div>
+</div></div>
+<script src="/static/lv_tabs.js" defer></script>
 <p class="small muted">→C / →D = a next step is proposed on a function we already sell. ✓ = accepted by a reviewer. A and B come from our parts (automotive grade as the cross lists and catalogue state it, or from ordering codes); C, D and next steps are proposals from our technology platforms and public research.</p>
 {% else %}
 <div class="table-wrap am-wrap"><table class="am-matrix">
   <thead><tr><th scope="col">Application</th>{% for fn in columns %}<th scope="col" class="am-fn"><span>{{ label(fn) }}</span></th>{% endfor %}</tr></thead>
   <tbody>{% for a in m.apps %}<tr>
-    <th scope="row">{{ a.label }}{% if a.diagrams %} <small class="muted" title="{{ a.diagrams|join(' · ') }}">{{ a.diagrams|length }} diagram{{ 's' if a.diagrams|length != 1 }}</small>{% endif %}</th>
+    <th scope="row">{{ a.label }}{% if a.car %} <small class="muted" title="{{ a.car|join(' · ') }}">{{ a.car|length }} car diagram{{ 's' if a.car|length != 1 }}</small>{% endif %}</th>
     {% for fn in columns %}{% set c = m.cells.get((a.id, fn)) %}<td>{% if c and (c.status != 'rejected' or c.level == 'A') %}<a href="?view={{ view }}&cell={{ c.key }}#detail" class="am-cell am-{{ c.level }}{{ ' am-sel' if sel and sel.key == c.key }}" title="{{ c.label }}: {{ level_label[c.level] }}{% if c.next and c.next.level and c.status != 'rejected' %} → next: {{ level_label[c.next.level] }}{% endif %}">{{ 'G' if c.level == 'gap' else c.level }}{% if c.next and c.next.level and c.status != 'rejected' %}<sup>+</sup>{% endif %}{% if c.status == 'accepted' %}<sup>✓</sup>{% endif %}</a>{% endif %}</td>{% endfor %}
   </tr>{% endfor %}</tbody>
 </table></div>

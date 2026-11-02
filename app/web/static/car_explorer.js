@@ -154,7 +154,7 @@ function start(renderer) {
     canvas.style.cursor = k ? "pointer" : "grab";
     if (!k) { hideTip(); return; }
     const n = AREAS[k] ? AREAS[k].n : 0;
-    tip.textContent = `${AREAS[k] ? AREAS[k].title : k} · ${n} block diagram${n === 1 ? "" : "s"} – click to fly in`;
+    tip.textContent = `${AREAS[k] ? AREAS[k].title : k} · ${n} car diagram${n === 1 ? "" : "s"} – click to fly in`;
     const r = stage.getBoundingClientRect();
     const x = Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth - 6);
     tip.style.transform = `translate(${Math.max(6, x)}px, ${e.clientY - r.top + 14}px)`;

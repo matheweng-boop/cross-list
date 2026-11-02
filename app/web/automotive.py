@@ -23,11 +23,12 @@ def automotive(request: Request, view: str = "apps", cell: str = "", session: Se
         columns = [f for f in m["columns"] if f in m["rf"] or f in named]
     cols = set(columns)
     by_app = {a["id"]: au.by_level(m, a["id"], columns) for a in m["apps"]}  # application -> level -> cells
+    counts = {lv: sum(len(by_app[a["id"]].get(lv) or []) for a in m["apps"]) for lv in au.LEVELS}  # letter tabs
     app_id, _, fn = cell.partition(":")
     ctx = {"m": m, "view": view, "columns": columns, "moves": [x for x in m["moves"] if x["fn"] in cols][:12],
-           "sel": m["cells"].get((app_id, fn)), "by_app": by_app, "levels": au.LEVELS, "level_label": au.LEVEL_LABEL,
-           "level_help": au.LEVEL_HELP, "label": vocab.fn_label, "ladder": scoring.config()["distance"]["ladder"],
-           "dist_label": scoring.distance_label}  # fmt: skip
+           "sel": m["cells"].get((app_id, fn)), "by_app": by_app, "counts": counts, "levels": au.LEVELS,
+           "level_label": au.LEVEL_LABEL, "level_help": au.LEVEL_HELP, "label": vocab.fn_label,
+           "ladder": scoring.config()["distance"]["ladder"], "dist_label": scoring.distance_label}  # fmt: skip
     return templates.TemplateResponse(request, "business/automotive.html", ctx)
 
 
@@ -40,7 +41,8 @@ def car_explorer(request: Request, area: str = "", session: Session = Depends(ge
     zs = ce.areas(session)
     sel = area if any(z["id"] == area for z in zs) else ""
     car = [{"id": z["id"], "title": z["title"], "n": z["n_diagrams"]} for z in zs]  # what the 3D car needs
-    return templates.TemplateResponse(request, "business/car_explorer.html", {"areas": zs, "sel": sel, "car": car})
+    ctx = {"areas": zs, "sel": sel, "car": car, "levels": au.LEVELS, "level_label": au.LEVEL_LABEL}
+    return templates.TemplateResponse(request, "business/car_explorer.html", ctx)
 
 
 @router.post("/business/automotive/review")

@@ -68,7 +68,7 @@ def _row(rid: str, label: str, n_diagrams: int, levels: dict, links: dict, on_ma
 
 def _app_rows(m: dict) -> dict[str, dict]:
     subs = config().get("subs") or {}
-    return {a["id"]: _row(a["id"], a["label"], len(a["diagrams"]), au.by_level(m, a["id"], m["columns"]),
+    return {a["id"]: _row(a["id"], a["label"], len(a["car"]), au.by_level(m, a["id"], m["columns"]),
                           _links(subs.get(a["id"]) or _sub(a["idx"]), a["id"]), lambda c: True)
             for a in m["apps"]}  # fmt: skip
 
@@ -97,7 +97,8 @@ def areas(session: Session) -> list[dict]:
     out = []
     for z in config().get("areas") or []:
         apps = [rows[i] for i in z.get("apps") or [] if i in rows]
+        counts = {lv: sum(r["n"] for a in apps for r in a["rows"] if r["level"] == lv) for lv in au.LEVELS}
         out.append({"id": z["id"], "title": z["title"], "note": " ".join(str(z.get("note") or "").split()),
-                    "apps": apps, "n_diagrams": sum(a["n_diagrams"] for a in apps)})  # fmt: skip
+                    "apps": apps, "n_diagrams": sum(a["n_diagrams"] for a in apps), "counts": counts})  # fmt: skip
     _CACHE[:] = [(m, out)]
     return out

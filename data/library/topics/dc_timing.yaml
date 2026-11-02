@@ -54,7 +54,7 @@ trends:
 skyworks_fit:
   - {fn: clock_generator, parts: ["Si5332A-GM1", "Si5332A-GM2", "Si5332A-GM3", "SKY62101", "Si5341A", "Si5340A"], note: "Si5332: 6 / 8 / 12-output any-frequency generator, PCIe Gen 1-6, 190 fs, the server REFCLK and platform clock source; SKY62101: 12 outputs to 3.2 GHz, <55 fs, PCIe Gen 1-7, for Gen 7 platforms and 224G SerDes; Si5341 / Si5340: 10 / 4-output, 90 fs, for switch and NIC references"}
   - {fn: pcie_buffer, parts: ["Si53204-A01", "Si53208-A01", "Si53212-A01", "Si53254", "Si53258", "SKY53582", "SKY53512", "SKY53542"], note: "Si532xx: LP-HCSL PCIe Gen 1-6 fanout, 20 fs additive max (Gen 6), 85 Ω (A02) or 100 Ω (A01) versions; SKY53512 / 82 / 42: 10 / 8 / 4 outputs, PCIe Gen 1-7 (2 fs typ additive at Gen 7) and 35 fs at 156.25 MHz for SerDes"}
-  - {fn: jitter_attenuator, parts: ["Si5345", "Si5344", "Si5342", "Si5395", "Si5397", "Si5361", "SKY63101", "SKY63104", "Si5348"], note: "Si5345 / Si5395: 90 / 85 fs line-card attenuators (Si5345 meets G.8262); Si536x / SKY6310x: <31 fs (4 MHz HPF) for 224G switches; Si5348: dual-reference network synchronizer for SyncE / PTP. Si5403 and SKY69002 (r2) are not in our catalogue yet"}
+  - {fn: jitter_attenuator, parts: ["Si5403A", "SKY69002", "Si5345", "Si5344", "Si5342", "Si5395", "Si5397", "Si5361", "SKY63101", "SKY63104", "Si5348"], note: "Si5345 / Si5395: 90 / 85 fs line-card attenuators (Si5345 meets G.8262); Si536x / SKY6310x: <31 fs (4 MHz HPF) for 224G switches; Si5348: dual-reference network synchronizer for SyncE / PTP; Si5403 (18 outputs, 51 fs, G.8273.1 / .2 / .4) and SKY69002 (16 outputs, 47 fs, integrated BAW): the NetSync synchronizers r2 recommends for every switch generation"}
   - {fn: clock_buffer, parts: ["SKY53510", "Si53307-B-GM"], note: "Any-format fanout next to the switch jitter attenuator (r2)"}
   - {fn: crystal_oscillator, parts: ["Si545", "Si549", "Si5344H"], note: "Si545 (80 fs) and Si549 (95 fs, I2C programmable) differential XOs, 0.2-1500 MHz, for optical-module DSPs and NICs; Si5344H coherent-optics clock (a jitter attenuator, listed here for the optical socket). No TCXO / OCXO or atomic clock of our own"}
 competitors:
@@ -68,7 +68,6 @@ market:
   - {segment: "Optical modules", text: "One low-jitter XO or coherent clock per pluggable module; the largest unit count of the four, with the strongest price pressure from crystal and MEMS oscillator makers (est).", refs: [r3], conf: low}
   - {segment: "Time cards and grandmasters", text: "Small volume (a few per rack or per row) but high value per card (OCXO or atomic clock, synchronizer); a niche that grows with PTP in AI fabrics (est).", refs: [r5], conf: low}
 open_questions:
-  - "Si5403 and SKY69002 (network synchronizers recommended in r2) are not in our catalogue: add them, with their SyncE / PTP class and jitter, so they show in block coverage?"
   - "How large is the data-center timing market by socket (server, switch, optics, time card)? No public number was read; all market lines here are estimates."
   - "Do AI back-end fabrics (InfiniBand or Ethernet) actually run SyncE / PTP today, and to what accuracy? Only the OCP Time Card specification was read; no hyperscaler or network-vendor source."
   - "Is co-packaged optics changing the clock socket (one reference for the whole switch package instead of one XO per module)? Not read."

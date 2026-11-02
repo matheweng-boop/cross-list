@@ -267,16 +267,28 @@ def test_every_post_route_is_covered(client):
                "/business/capabilities/feedback", "/api/business/review", "/business/evidence/{fn}/mapping",
                "/business/automotive/review", "/pricing/{part_id}/call", "/pipeline/new", "/pipeline/{draft_id}",
                "/site-feedback/{item_id}/file"}  # fmt: skip
-    missing = []
-    for route in client.app.routes:
+    def flat(routes, prefix=""):
+        # FastAPI 0.143+ keeps an included router as one entry wrapping its own routes
+        for r in routes:
+            inner = getattr(r, "original_router", None)
+            if inner is not None:
+                ctx = getattr(r, "include_context", None)
+                yield from flat(inner.routes, prefix + (getattr(ctx, "prefix", "") or ""))
+            else:
+                yield prefix, r
+
+    missing, seen = [], 0
+    for prefix, route in flat(client.app.routes):
         methods = getattr(route, "methods", set()) or set()
         if not methods & {"POST", "PUT", "PATCH", "DELETE"}:
             continue
-        p = route.path.replace(":int", "")
+        seen += 1
+        p = (prefix + route.path).replace(":int", "")
         sample = re.sub(r"\{[^}]+\}", "1", p)
         if p in signing_in or p in covered or guest_input.is_compute_only(p) or access.owner_only(sample, "POST"):
             continue
         missing.append(p)
+    assert seen > 50, f"only {seen} POST routes found: the route walk is broken"
     assert not missing, f"POST routes without a guest test: {missing}"
 
 

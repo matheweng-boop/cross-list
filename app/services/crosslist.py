@@ -497,6 +497,8 @@ def comment(r: CrossResult, column: int) -> str:
             theirs = sorted(str(x) for x in rules.values(ref).get(p.key) or [] if str(x).lower() in steer)
             if theirs:
                 bits.append(f"also: ours has no {' or '.join(theirs)} protection (ranked lower)")
+    if getattr(r.fit, "notes", None) and r.fit.same_package:  # e.g. their output enable facing our NC pin
+        bits.append(r.fit.info_note)
     bits += [unstated(r, d, d.ref_display == "—", d.cand_display == "—") for d in p1
              if d.status == UNKNOWN and d.key != "qualification"]  # fmt: skip
     bits += data_gaps(r)

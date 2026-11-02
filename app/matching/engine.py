@@ -100,6 +100,17 @@ class Fit:
     conditions: list[tuple[int, str, str, str]] = field(default_factory=list)  # (pin, theirs, ours, note template)
     role_diffs: list[tuple[int, str, str]] = field(default_factory=list)  # (pin, their role, our role): mismatches
     board_default: list[int] = field(default_factory=list)  # pins setting their default output, ours ignore them
+    notes: list[tuple[int, str]] = field(default_factory=list)  # (pin, note template): a match worth a word
+
+    @property
+    def info_note(self) -> str:
+        """Plain notes on matching control pins ("Their enable on pins 7 and 10 switches the outputs off; ...")."""
+        from app.matching.pinroles import pins_list
+
+        notes: dict[str, list[int]] = {}
+        for pos, note in self.notes:
+            notes.setdefault(note, []).append(pos)
+        return "; ".join(n.replace("{pins}", pins_list(ps)) for n, ps in notes.items())
 
     @property
     def fits(self) -> bool:
@@ -480,7 +491,7 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         return Fit(same_pkg, relation, False, pin_diffs, positions_unknown=same_pkg)
     if len(ref_pos) != len(cand_pos):
         return Fit(same_pkg, relation, False, pin_diffs)
-    conditions, role_diffs, board_default = [], [], []
+    conditions, role_diffs, board_default, notes = [], [], [], []
     # isolated amplifiers: the input side numbered 1 on both parts (ADI calls it side 2; data/pin_roles.yaml)
     ref_side, cand_side = pinroles.by_side(ref, ref_pos), pinroles.by_side(cand, cand_pos)
     for i, (r, c, rs, cs) in enumerate(zip(ref_pos, cand_pos, ref_side, cand_side, strict=True), 1):
@@ -493,10 +504,13 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         elif j.result == pinroles.MISMATCH:
             pin_diffs.append((i, r, c))
             role_diffs.append((i, j.ref_role, j.cand_role))
-        elif j.default_variants:
-            board_default.append(i)
+        else:
+            if j.default_variants:
+                board_default.append(i)
+            if j.note:
+                notes.append((i, j.note))
     return Fit(same_pkg, relation, not pin_diffs, pin_diffs, conditions=conditions, role_diffs=role_diffs,
-               board_default=board_default)  # fmt: skip
+               board_default=board_default, notes=notes)  # fmt: skip
 
 
 def pin_positions(part: Part) -> list[str] | None:

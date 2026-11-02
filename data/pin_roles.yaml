@@ -6,7 +6,8 @@
 #   from (its pinout source), else of its own datasheet.
 # pairs: how our pin (the candidate) takes the board wiring of the competitor's pin (the part being crossed), by role.
 #   match = no pin deviation; conditional = a fit for one board wiring only, shown with its note (never a full drop-in);
-#   mismatch = a pin deviation. "any" = any pin with a role here. Two roles with no pair: the same role matches,
+#   mismatch = a pin deviation. "any" = any pin with a role here. A note on a match is shown as information (owner,
+#   2 Nov 2026: their output enable facing our NC pin). Two roles with no pair: the same role matches,
 #   different roles do not (the pin name never decides then: "same name, different job" is a mismatch).
 #   default_variants: our default output is fixed by the ordering code while theirs follows the board wiring, so the
 #   drop-in is offered in both default-output variants (B/F = low, E/H = high; app/services/alternates.output_variants).
@@ -22,6 +23,8 @@ roles:
 
 pairs:
   - {ours: nc, theirs: default_output_control, result: match, default_variants: true}
+  - {ours: nc, theirs: output_enable, result: match,
+     note: "Their enable on {pins} switches the outputs off; ours has no enable there (NC): our outputs are always on"}
   - {ours: nc, theirs: any, result: match}
   - {ours: output_enable, theirs: output_enable, result: match}
   - {ours: output_enable, theirs: default_output_control, result: conditional,

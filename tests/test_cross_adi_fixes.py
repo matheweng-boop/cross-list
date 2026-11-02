@@ -160,8 +160,8 @@ def test_desat_reference_ranks_unprotected_candidates_last(session, gd):
     ranks below every candidate with one, so Si8286 is the pick."""
     ref = gd("ADuM4136BRWZ")
     pool = cl._pool(ref, cl.Crosser(session).crosses(ref))
-    order = [(r.downgrade, r.steer_miss) for r in sorted(pool, key=cl.functional_key)]  # isolation tier first (rule 6)
-    assert order == sorted(order) and not order[0][1] and any(m for _, m in order)
+    order = [(r.steer_miss, r.downgrade) for r in sorted(pool, key=cl.functional_key)]  # DESAT first (owner, 2 Nov)
+    assert order == sorted(order) and not order[0][0] and any(m for m, _ in order)
     row = cl.cross_list(session, cl.parse("ADuM4136BRWZ")[0])[0]
     assert (row.drop_in or row.functional).part.mpn.startswith("SI8286")
     plain = next(r for r in pool if r.candidate.mpn.startswith("SI82B28"))
@@ -325,3 +325,45 @@ def test_rf_partial_band_names_dc_and_the_uncovered_band(load):
     r = cross(get("ADGM1121BCCZ-RL7"), get("SKY13355-374LF"), get_rules("rf_switch"))
     assert any(d.key == "freq_range_ghz" for d in r.deviations)
     assert "partial: not covered DC to 0.1, 6 to 18 GHz" in cl.comment(r, 2)
+
+
+# ---------------------------------------------------------------- owner's answers, 2 Nov 2026
+
+
+def test_desat_is_priority_1_and_ranks_above_isolation(session, load):
+    """Owner: "DESAT is a P1 feature". TI ISO5451 has DESAT and is rated 5.7 kVrms (iso5451.pdf); Si8285 has DESAT at
+    5 kVrms, Si82B41 6 kVrms without DESAT. The DESAT part is the pick, its isolation shortfall shown; a candidate
+    without DESAT carries a priority 1 deviation."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    get = load("ti_gate_drivers_more", "skyworks_gate_drivers_more")
+    ref = get("ISO5451DWR")
+    row = cl.cross_list(session, cl.parse("ISO5451DWR")[0])[0]
+    best = row.drop_in or row.functional
+    assert best.part.mpn.startswith("SI828") and "Isolation rating 5.7 kVrms vs 5 kVrms (ours worse)" in best.comment
+    plain = cross(ref, get("SI82B41BCE-IS4"), get_rules("gate_driver"))
+    assert "short_circuit_protection" in {d.key for d in plain.deviations}
+
+
+def test_asil_d_driver_only_where_the_competitor_states_asil(session, gd):
+    """Owner: "Si82900 is an ASIL D level gate driver, only cross when required". ADuM4137W / 4138W state no ASIL
+    level: Si82900 is not offered and the automotive DESAT Si8285CD-AS is the pick. ADuM4177 states ASIL D
+    (ADuM4177.pdf p.1): Si82900 stays allowed for it."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    rules = get_rules("gate_driver")
+    for mpn in ("ADuM4137WBRNZ", "ADuM4138WBRNZ"):
+        assert cross(gd(mpn), gd("SI82900AA-AU"), rules).hard_fail, mpn
+        row = cl.cross_list(session, cl.parse(mpn)[0])[0]
+        assert (row.drop_in or row.functional).part.mpn == "SI8285CD-AS", mpn
+    assert not cross(gd("ADUM4177WBRNZ"), gd("SI82900AA-AU"), rules).hard_fail
+
+
+def test_their_enable_facing_our_nc_carries_a_note(iso):
+    """Owner: "yes" to the note. ADuM1401 VE1 / VE2 are output enables (adum1400_1401_1402.pdf p.24); Si86SS41 has NC
+    there (si86s6xx-datasheet.pdf p.5): a match, with a plain note."""
+    fit = check_fit(iso("ADuM1401BRWZ"), iso("SI86SS41EE-IS2"))
+    assert fit.fits and fit.info_note == ("Their enable on pins 7 and 10 switches the outputs off; ours has no enable "
+                                          "there (NC): our outputs are always on")

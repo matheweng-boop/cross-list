@@ -16,6 +16,11 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    its converter); the "main band" for the RF-switch partial-band rule; which part "QPF5001Q" meant (the page keeps the
    QPF5100Q + QM14068 / QM14070 / SKY5A2108 reading, est).
 
+## Settled (owner, 3 Nov 2026)
+
+- Drones: no check of SKY68040-11 for the satellite power class, no drone GNSS LNA product idea, no study of how drone
+  makers buy GNSS parts, no export-control check, no TCXO. Data center cooling questions set aside for now.
+
 ## Settled (owner, 2 Nov 2026)
 
 - Isolator data rate as priority 1: right (150 Mbps B/E codes before the 10 Mbps deglitch F/H codes for a 150 Mbps part).

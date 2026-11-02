@@ -38,8 +38,10 @@ def test_suggestions_ordered_with_reasons(session):
 
 
 def test_page(client):
+    """By part was retired (owner, 2 Nov 2026); an old part link lands in the part box of By system."""
     r = client.get("/business/attach?part=SKY87604&app=dcdc")
-    assert r.status_code == 200 and "Offer with it" in r.text and "SKY87604" in r.text
+    assert r.status_code == 200 and str(r.url).endswith("/blocks/cross-sell?part=SKY87604")
+    assert "SKY87604" in r.text and 'class="xs-sys-list"' in r.text and "Offer with it" not in r.text
     assert "No part number starting with" in client.get("/business/attach?part=zzzzzz").text
 
 
@@ -122,14 +124,115 @@ def test_skyworks_and_qorvo_parts_table_tops_the_selection(client):
     head = _section(table, "<thead>", "</thead>")
     assert re.search(r"Skyworks <small[^>]*>· \d+ parts? in \d+ functions?", head)
     assert re.search(r"Qorvo <small[^>]*>· \d+ parts? in \d+ functions?", head)
-    groups = re.findall(r'<th scope="rowgroup" colspan="2">([^<]+)<', table)
-    assert len(groups) == len(set(groups)) >= 3  # one group per function
+    groups = re.findall(r'<th scope="row">([^<]+)<', table)
+    assert len(groups) == len(set(groups)) >= 3  # one row per function
     # synergy pairs: a small link from the table to the card below, and the card has that anchor
     links = re.findall(r'href="#pair-(\d+)"', table)
     assert links and all(f'id="pair-{j}"' in _section(html, 'id="together"', "</section>") for j in links)
     # no duplication: the parts are listed in the table, not again in "Our parts that go together"
     ours = _section(html, "Our parts that go together", "</table>")
     assert "aec-chip" not in ours and "Our parts</th>" not in ours
+
+
+# ---- compact parts table and system chooser (owner, 2 Nov 2026) ------------------------------------------------------
+# "After picking a system, the table uses two rows per function: with 30-40 functions a very long page." One compact row
+# per function (Function | Skyworks | Qorvo | Used in), at most three chips per cell and the rest under "+N more" (a
+# <details>, no script), the synergy markers kept in the row; one line only: three columns. The "Pick a system" chooser
+# is a grid of system buttons; the sub-systems appear as chips once a system is picked.
+
+ROW = re.compile(r'<tr id="fn-([a-z0-9_]+)" class="xs-row([^"]*)">(.*?)</tr>', re.S)
+
+
+def _cells(row: str) -> list[str]:
+    return re.findall(r'<td class="ln-(?:skyworks|qorvo)" data-label="[^"]+">(.*?)</td>', row, re.S)
+
+
+def test_compact_table_one_row_per_function_three_chips_then_more(client):
+    html = client.get(f"{URL}?system=cellular&aec=0").text
+    table = _section(html, 'id="parts-here"', "</section>")
+    head = _section(table, "<thead>", "</thead>")
+    assert re.findall(r"<th scope=\"col\"[^>]*>(Function|Skyworks|Qorvo|Used in)\b", head) == [
+        "Function", "Skyworks", "Qorvo", "Used in"]  # fmt: skip
+    rows = ROW.findall(table)
+    n_all = len(sy.selection("cellular")["idx"])
+    assert len(rows) >= 20 and table.count("<tr id=") == len(rows) and "rowgroup" not in table
+    folded = 0
+    for fn, _cls, row in rows:
+        assert row.count('<th scope="row">') == 1, fn
+        used = re.search(r'<td class="xs-used">(\d+) of (\d+) diagrams?</td>', row)
+        assert used and int(used.group(2)) == n_all and 1 <= int(used.group(1)) <= n_all, fn
+        for cell in _cells(row):
+            before, _, more = cell.partition('<details class="xs-more">')
+            assert before.count('aec-chip"') <= 3, fn
+            if more:  # "+N more": the chips folded away plus the series not listed
+                folded += 1
+                n = int(re.search(r"<summary>\+(\d+) more</summary>", more).group(1))
+                rest = re.search(r"and (\d+) more in Browse products", more)
+                assert n == more.count('aec-chip"') + (int(rest.group(1)) if rest else 0) > 0, fn
+                assert before.count('aec-chip"') == 3, fn
+    assert folded >= 5
+    # the rows keep the order of "most used first"
+    counts = [int(re.search(r'<td class="xs-used">(\d+) of', r).group(1)) for _, _, r in rows]
+    assert counts == sorted(counts, reverse=True)
+
+
+def test_compact_table_keeps_the_pair_markers_and_the_filter(client):
+    html = client.get(f"{URL}?system=automotive&sub=powertrain&aec=0").text
+    rows = ROW.findall(_section(html, 'id="parts-here"', "</section>"))
+    marked = [(cls, row) for _, cls, row in rows if 'class="xs-pair small"' in row]
+    assert marked
+    for cls, row in marked:  # the marker sits in the row's own function cell, and the row says it is a synergy pair
+        assert re.search(r'<th scope="row">[^<]+ <a class="xs-pair small" href="#pair-\d+"', row)
+        assert cls == " xs-syn"
+    on = client.get(f"{URL}?system=automotive&sub=powertrain").text  # the AEC-Q filter is on for Automotive
+    table = _section(on, 'id="parts-here"', "</section>")
+    assert "aec-no" not in table and "aec-yes" in table
+    for _fn, _cls, row in ROW.findall(table):
+        for cell in _cells(row):
+            assert cell.partition("<details")[0].count('aec-chip"') <= 3
+
+
+def test_compact_table_with_one_line_has_three_columns(client, session):
+    mine = op.company("combined")[2]
+    i = next(i for x in sy.systems() for s in x["subsystems"] for i in s["idx"]
+             if len(sy.parts_table(session, sy.bottom_up(session, [i], mine)["ours"], mine)["lines"]) == 1)  # fmt: skip
+    system, sub = sy.place_of(i)[0]
+    html = client.get(f"{URL}?system={system}&sub={sub}&template={i}&aec=0").text
+    table = _section(html, 'id="parts-here"', "</section>")
+    head = _section(table, "<thead>", "</thead>")
+    assert head.count('<th scope="col"') == 3 and "xs-one" in table
+    line = re.findall(r'<th scope="col" class="ln-(skyworks|qorvo)">', head)
+    assert len(line) == 1
+    other = "qorvo" if line[0] == "skyworks" else "skyworks"
+    assert f'class="ln-{other}"' not in table
+    assert all(row.count("<td") == 2 for _, _, row in ROW.findall(table))  # one parts cell and "Used in"
+    # the service keeps both lines when both have parts, and only the lines that have one
+    t = sy.parts_table(session, sy.bottom_up(session, sy.selection("cellular")["idx"], mine)["ours"], mine)
+    assert t["lines"] == ["Skyworks", "Qorvo"]
+    assert sy.parts_table(session, [], mine)["lines"] == ["Skyworks", "Qorvo"]  # nothing here: nothing dropped
+
+
+def test_system_chooser_is_a_grid_of_buttons_then_sub_system_chips(client):
+    html = client.get(URL).text
+    pick = _section(html, '<nav class="xs-pick"', "</nav>")
+    buttons = re.findall(r'<a class="xs-sys" href="/blocks/cross-sell\?co=combined&amp;system=([\w-]+)">', pick)
+    assert buttons == [s["key"] for s in sy.systems()]
+    assert "xs-subs" not in pick and "sub=" not in pick  # no sub-system before a system is picked
+    assert 'name="sel"' not in html  # the old drop-down is gone; ?sel= links still work
+    auto = client.get(f"{URL}?system=automotive").text
+    pick = _section(auto, '<nav class="xs-pick"', "</nav>")
+    on = '<a class="xs-sys on" href="/blocks/cross-sell?co=combined&amp;system=automotive" aria-current="true">'
+    assert on in pick
+    chips = re.findall(r'href="/blocks/cross-sell\?co=combined&amp;system=automotive&amp;sub=([\w-]+)"', pick)
+    assert chips == [x["key"] for x in sy.get("automotive")["subsystems"]]
+    assert f"Automotive <small>{len(sy.selection('automotive')['idx'])}</small>" in pick
+    one = client.get(f"{URL}?system=automotive&sub=car-radio&aec=1").text
+    pick = _section(one, '<nav class="xs-pick"', "</nav>")
+    chip = 'class="fchip on" href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio&amp;aec=1"'
+    assert chip in pick
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=datacenter&amp;aec=1"' in pick  # the filter choice is kept
+    old = _section(client.get(f"{URL}?sel=automotive:car-radio").text, '<nav class="xs-pick"', "</nav>")
+    assert old.count(' on"') == 2 and "sub=car-radio\" aria-current" in old  # old picker links: system and sub
 
 
 def test_table_on_a_single_line_and_on_one_diagram(client):
@@ -175,7 +278,7 @@ def test_portfolio_moved_from_products_to_cross_sell():
     desc = next(d for label, href, d in systems[2] if href == "/blocks/cross-sell")
     assert "portfolio" in desc
     tabs = next(g for g in nav.TABS if g[0][1] == "/blocks/cross-sell")
-    assert [label for label, _ in tabs] == ["By system", "By part", "Skyworks + Qorvo portfolio"]
+    assert [label for label, _ in tabs] == ["By system", "Skyworks + Qorvo portfolio"]  # By part retired, 2 Nov 2026
     st = nav.state("/portfolio")
     assert (st["section"], st["item"], st["active_tab"]) == ("systems", "/blocks/cross-sell", "/portfolio")
     assert st["crumbs"] == [("Systems & applications", "/library"), ("Cross-sell", "/blocks/cross-sell")]
@@ -207,7 +310,7 @@ def test_portfolio_page_keeps_every_section_and_shows_the_tab_row(client):
 def test_tab_links_keep_the_selected_system(client):
     html = client.get("/blocks/cross-sell?system=automotive&sub=car-radio").text
     tabs = _section(html, 'class="page-tabs"', "</nav>")
-    assert 'href="/business/attach?system=automotive&amp;sub=car-radio"' in tabs
+    assert "/business/attach" not in tabs and ">By part<" not in tabs  # retired (owner, 2 Nov 2026)
     assert 'href="/portfolio?system=automotive&amp;sub=car-radio"' in tabs
     back = _section(client.get("/portfolio?system=automotive").text, 'class="page-tabs"', "</nav>")
     assert 'href="/blocks/cross-sell?system=automotive"' in back
@@ -293,9 +396,10 @@ def test_no_together_block_when_nothing_matches(client):
     assert 'id="together"' in one_line  # one company now: an old ?co=skyworks link shows the combined view
 
 
-def test_by_part_links_a_function_to_its_systems(client):
-    html = client.get("/business/attach?fn=am_fm_tuner").text
-    assert 'href="/blocks/cross-sell?system=automotive&amp;sub=car-radio"' in html
+def test_old_function_links_land_on_the_systems_that_use_it(client):
+    r = client.get("/business/attach?fn=am_fm_tuner")
+    assert str(r.url).endswith("/blocks/cross-sell?fn=am_fm_tuner")
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio&amp;fn=am_fm_tuner"' in r.text
     places = sy.places_of_function("am_fm_tuner")
     assert places and places[0]["n"] >= places[-1]["n"]
 
@@ -312,3 +416,96 @@ def test_bundle_table_count_matches_the_diagrams_where_both_lines_supply_blocks(
     assert f"The {shown} most complementary of {total} block diagrams where both lines supply blocks" in html
     auto = sy.selection("automotive")["idx"]
     assert pf.together_in(auto)["n_both"] == sum(1 for b in pf.bundles(limit=10_000) if b["i"] in set(auto))
+
+
+# ---- "Start from a part we already sell" (owner, 2 Nov 2026) ---------------------------------------------------------
+# "Suggesting partner parts without the application is a guess": the By part tab is gone. By system has a part box: one
+# of our part numbers shows the systems and sub-systems that use its function, with diagram counts; picking one opens
+# the normal By system view with the part highlighted (its chip first and marked, its row marked, a short note).
+# Unknown and competitor part numbers are answered plainly; old /business/attach links redirect.
+
+
+def test_systems_of_a_function_count_each_diagram_once():
+    fn = "digital_isolator"
+    idx = sy.diagrams_of_function(fn)
+    out = sy.systems_of_function(fn)
+    assert out and [s["n"] for s in out] == sorted((s["n"] for s in out), reverse=True)
+    for s in out:
+        mine = idx & set(sy.selection(s["key"])["idx"])
+        assert s["n"] == len(mine) and s["subs"] and all(p["system"] == s["key"] for p in s["subs"])
+        assert max(p["n"] for p in s["subs"]) <= s["n"] <= sum(p["n"] for p in s["subs"])
+    assert {p["sub"] for s in out for p in s["subs"]} == {p["sub"] for p in sy.places_of_function(fn)}
+    assert sy.systems_of_function("no_such_function") == []
+
+
+def test_part_box_lists_the_systems_that_use_our_part(client, session):
+    html = client.get(f"{URL}?part=SKY87604").text
+    p = cs.resolve_part(session, "SKY87604")
+    box = _section(html, 'class="xs-places"', "</section>")
+    assert f"{p['mpn']} <small" in box and "Skyworks" in box and "Closest match for “SKY87604”" in box
+    systems = sy.systems_of_function("load_switch")
+    n = len(sy.diagrams_of_function("load_switch"))
+    assert f"is used in {n} diagrams of {len(systems)} systems" in box
+    listed = re.findall(r'<li><a href="/blocks/cross-sell\?co=combined&amp;system=([\w-]+)&amp;part=([^"]+)"><b>([^<]+)'
+                        r"</b> \((\d+) diagrams?\)</a>", box)  # fmt: skip
+    assert [(k, int(c)) for k, _, _, c in listed] == [(s["key"], s["n"]) for s in systems]
+    assert {unquote(m) for _, m, _, _ in listed} == {p["mpn"]}
+    first = systems[0]["subs"][0]
+    assert f"system={first['system']}&amp;sub={first['sub']}&amp;part=" in box and f"({first['n']})" in box
+    assert "Sell what we have" in html  # the rest of the page as before
+    exact = client.get(f"{URL}?part={p['mpn']}").text
+    assert "Closest match" not in exact and f"{p['mpn']} <small" in exact
+
+
+def test_picking_a_system_highlights_the_part(client, session):
+    mpn = cs.resolve_part(session, "SKY87604")["mpn"]
+    place = sy.places_of_function("load_switch")[0]
+    html = client.get(f"{URL}?system={place['system']}&sub={place['sub']}&part={mpn}&aec=0").text
+    note = _section(html, '<p class="xs-note small" role="status">', "</p>")
+    assert f"<b>{mpn}</b> (Skyworks · " in note and "its chip and row are highlighted" in note
+    assert 'href="#fn-load_switch"' in note and f"part={mpn}" in note and ">Clear</a>" in note
+    rows = {fn: (cls, row) for fn, cls, row in ROW.findall(_section(html, 'id="parts-here"', "</section>"))}
+    cls, row = rows["load_switch"]
+    assert "xs-hl" in cls and sum("xs-hl" in c for c, _ in rows.values()) == 1
+    sky = _cells(row)[0]
+    you = '<div class="xs-chips"><span class="xs-you" title="The part you started from"><a class="badge'
+    assert sky.startswith(you)
+    assert sky.count(f'href="/parts?q={mpn}"') == 1  # listed once, first
+    # the selection keeps the part: system buttons, sub-system chips, the filter toggle and the one-diagram form
+    pick = _section(html, '<nav class="xs-pick"', "</nav>")
+    assert pick.count(f"part={mpn}") == pick.count("<a ") and f'name="part" value="{mpn}"' in html
+    assert f"part={mpn}&amp;aec=1" in _section(html, 'class="chip-row aec-filter"', "</div>")
+    # a system that does not use the function says so
+    used = sy.diagrams_of_function("load_switch")
+    other = next(s for s in sy.systems() if not set(sy.selection(s["key"])["idx"]) & used)
+    none = client.get(f"{URL}?system={other['key']}&part={mpn}").text
+    assert "is not used in these diagrams" in none and "xs-hl" not in _section(none, "<main", "</main>")
+
+
+def test_part_box_answers_unknown_and_competitor_parts_plainly(client, real):
+    html = client.get(f"{URL}?part=zzzzzz").text
+    assert "No part number starting with “zzzzzz” in BizDev" in html and 'class="xs-places"' not in html
+    comp = client.get(f"{URL}?part=ISO7741").text
+    m = re.search(r'<b>(ISO7741[^<]*)</b> is a TI part, not one of ours\. '
+                  r'<a href="(/parts/\d+)">See its cross: our replacements</a>', comp)  # fmt: skip
+    assert m and client.get(m.group(2)).status_code == 200
+    assert 'class="xs-places"' not in comp and "xs-hl" not in comp
+    blank = client.get(f"{URL}?part=").text  # the box sent empty: the chooser, no message
+    assert "No part number" not in blank and "Pick a system" in blank
+
+
+def test_old_by_part_links_redirect(client):
+    for old, new in (("/business/attach", "/blocks/cross-sell"),
+                     ("/business/attach?part=Si8641&app=dcdc", "/blocks/cross-sell?part=Si8641"),
+                     ("/business/attach?fn=gate_driver&co=combined", "/blocks/cross-sell?fn=gate_driver"),
+                     ("/business/attach?part=Si8641&fn=gate_driver", "/blocks/cross-sell?part=Si8641"),
+                     ("/business/attach?system=automotive&sub=car-radio&aec=0",
+                      "/blocks/cross-sell?system=automotive&sub=car-radio&aec=0")):  # fmt: skip
+        r = client.get(old, follow_redirects=False)
+        assert r.status_code == 307 and r.headers["location"] == new, old
+    from app.services import vocab
+
+    fn = client.get("/blocks/cross-sell?fn=gate_driver").text
+    label = vocab.fn_label("gate_driver")
+    assert f'<h3 id="xs-places-h">{label}</h3>' in fn and f"{label} is used in " in fn
+    assert "No part number" not in client.get("/blocks/cross-sell?fn=no_such_function").text

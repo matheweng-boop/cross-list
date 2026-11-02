@@ -149,37 +149,45 @@ def bottom_up(session, idx: list[int], mine: frozenset, n_parts: int = 12) -> di
 LINES = ("Skyworks", "Qorvo")
 
 
-def parts_table(session, ours: list[dict], mine: frozenset, aec_only: bool = False, per_line: int = 2) -> dict:
-    """The "Skyworks and Qorvo parts here" table (owner, 25 Oct 2026): one group per function of the selection we
-    have parts for (most used first), a cell per line with its best parts, each marked AEC-Q or not automotive
-    (autograde.is_aec). Under "Automotive-qualified only" a cell shows the line's best AEC-Q parts instead, and
-    `hidden` counts the non-automotive parts that the filter takes off the table (never removed silently)."""
-    from app.services import autograde
+def parts_table(session, ours: list[dict], mine: frozenset, aec_only: bool = False, per_line: int = 15) -> dict:
+    """The "Skyworks and Qorvo parts here" table (owner, 25 Oct 2026; one compact row per function, 2 Nov 2026): one
+    row per function of the selection we have parts for (most used first), a cell per line with up to `per_line` of
+    its best parts (one per series; the page shows three and folds the rest), each marked AEC-Q or not automotive
+    (autograde.is_aec), and `more` = the line's further series not listed. Under "Automotive-qualified only" a cell
+    shows the line's best AEC-Q parts instead, and `hidden` counts the non-automotive parts that the filter takes off
+    the table (never removed silently). `lines` keeps only the lines with a part here: one line, one parts column."""
+    from app.services import autograde, products
 
     lines = [m for m in LINES if m in mine]
-    rows, hidden = [], 0
+    rows, hidden, has = [], 0, set()
     count = {m: 0 for m in lines}
     fns = {m: 0 for m in lines}
     for e in ours:
         by = {m["manufacturer"]: m for m in blocks.parts_for(session, e["fn"], top=per_line)["manufacturers"]}
-        cells = {}
+        cells, more = {}, {}
         for m in lines:
             g = by.get(m)
             if not g:
-                cells[m] = []
+                cells[m], more[m] = [], 0
                 continue
+            has.add(m)
             shown, h = autograde.marked(g["best"], aec_only)
+            series = {blocks._series(p["mpn"]) for p in g["all"]}
             if aec_only:  # the line's best qualified parts, one per series, not only those among the unfiltered best
                 seen, shown = set(), []
                 for p in g["all"]:
                     if len(shown) < per_line and blocks._series(p["mpn"]) not in seen and autograde.is_aec(p):
                         seen.add(blocks._series(p["mpn"]))
                         shown.append({**p, "aec": True})
+                series = {blocks._series(p["mpn"]) for p in g["all"] if autograde.is_aec(p)}
             cells[m], hidden = shown, hidden + h
+            more[m] = max(len(series) - len(shown), 0)
             count[m] += len(shown)
             fns[m] += bool(shown)
-        rows.append({"fn": e["fn"], "label": e["label"], "n_apps": len(e["apps"]), "cells": cells,
+        rows.append({"fn": e["fn"], "label": e["label"], "n_apps": len(e["apps"]), "cells": cells, "more": more,
+                     "browse": products.taxonomy()["functions"].get(e["fn"], ""),
                      "pairs": {m: [] for m in lines}})  # fmt: skip
+    lines = [m for m in lines if m in has] or lines
     return {"lines": lines, "rows": rows, "count": count, "fns": fns, "hidden": hidden, "aec_only": aec_only}
 
 
@@ -192,8 +200,28 @@ def places(idx) -> list[dict]:
     return sorted((p for p in out if p["n"]), key=lambda p: -p["n"])
 
 
-def places_of_function(fn: str) -> list[dict]:
-    """The sub-systems whose diagrams use a function (Cross-sell › By part: from a part to its systems)."""
+def diagrams_of_function(fn: str) -> set[int]:
+    """The library diagrams (template indexes) that use a function."""
     from app.services import opportunity as op
 
-    return places(a.i for a in op.applications() if not a.background and any(p.fn == fn for p in a.positions))
+    return {a.i for a in op.applications() if not a.background and any(p.fn == fn for p in a.positions)}
+
+
+def places_of_function(fn: str) -> list[dict]:
+    """The sub-systems whose diagrams use a function (from a part or a function to its systems)."""
+    return places(diagrams_of_function(fn))
+
+
+def systems_of_function(fn: str) -> list[dict]:
+    """The systems whose diagrams use a function, most diagrams first, each with how many of its diagrams use it and
+    those sub-systems (places), for "Start from a part we already sell" on Cross-sell › By system (owner, 2 Nov
+    2026). A diagram in two sub-systems of one system counts once for the system."""
+    idx = diagrams_of_function(fn)
+    subs = places(idx)
+    out = []
+    for s in systems():
+        n = len(idx & {i for x in s["subsystems"] for i in x["idx"]})
+        if n:
+            out.append({"key": s["key"], "title": s["title"], "n": n,
+                        "subs": [p for p in subs if p["system"] == s["key"]]})  # fmt: skip
+    return sorted(out, key=lambda s: -s["n"])

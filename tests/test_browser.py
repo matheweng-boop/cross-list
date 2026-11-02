@@ -255,14 +255,87 @@ def test_block_diagram_library_opens_a_system_by_button_hash_and_query(page):
 
 
 def test_cross_sell_by_system(page):
+    """Owner, 2 Nov 2026: a grid of system buttons; the sub-systems appear as chips once a system is picked."""
     go(page, "/blocks/cross-sell")
-    sel = page.locator("select[name=sel]")
-    option = sel.locator("option").nth(2)  # the first sub-system of the first system
+    expect(page.locator(".xs-subs")).to_have_count(0)
     with page.expect_navigation():
-        sel.select_option(option.get_attribute("value"))
-    assert "sel=" in page.url
+        page.locator(".xs-sys").first.click()
+    assert "system=" in page.url
+    expect(page.locator(".xs-sys.on")).to_have_count(1)
+    chip = page.locator(".xs-subs a.fchip").nth(1)  # the first sub-system (the first chip is "All of …")
+    with page.expect_navigation():
+        chip.click()
+    assert "sub=" in page.url
     assert page.locator("main h2").first.is_visible()
     assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
+
+
+def test_cross_sell_start_from_a_part(page):
+    """Owner, 2 Nov 2026: By part is gone; type one of our part numbers in By system's box, see the systems that use
+    its function, pick one and find the part highlighted there. An old By part link lands on the same list."""
+    go(page, "/blocks/cross-sell")
+    expect(page.locator("nav.page-tabs a", has_text="By part")).to_have_count(0)
+    page.locator("#xs-part").fill("Si8641")
+    with page.expect_navigation():
+        page.locator("#part-box button[type=submit]").click()
+    assert "part=Si8641" in page.url
+    expect(page.locator(".xs-places .xs-sys-list li").first).to_be_visible()
+    with page.expect_navigation():
+        page.locator(".xs-sys-list li a").nth(1).click()  # the first sub-system of the first system
+    assert "sub=" in page.url and "part=" in page.url
+    expect(page.locator(".xs-note")).to_contain_text("highlighted")
+    expect(page.locator("#parts-here tr.xs-hl .xs-you").first).to_be_visible()
+    go(page, "/business/attach?fn=digital_isolator")
+    assert "/blocks/cross-sell?fn=digital_isolator" in page.url
+    expect(page.locator(".xs-sys-list")).to_be_visible()
+
+
+def test_cross_sell_system_buttons_fit_side_by_side(page, chromium, live_server):
+    """The system buttons sit side by side: at 390 px three per row in three short rows, nothing sideways, the
+    sub-system chips right under them."""
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/blocks/cross-sell?system=automotive", wait_until="load")
+    tops = tab.locator(".xs-sys").evaluate_all("bs => bs.map(b => Math.round(b.getBoundingClientRect().top))")
+    assert len(tops) >= 9 and len(tops) / len(set(tops)) >= 3  # three or more per row
+    grid = tab.locator(".xs-sys-grid").bounding_box()
+    assert grid["x"] >= 0 and grid["x"] + grid["width"] <= 391 and grid["height"] < 200  # three short rows
+    subs = tab.locator(".xs-subs").bounding_box()
+    assert 0 <= subs["y"] - (grid["y"] + grid["height"]) < 30  # the sub-system chips right under the buttons
+    assert overflow(tab) <= 1
+    ctx.close()
+
+
+def test_cross_sell_compact_parts_table(page, chromium, live_server):
+    """Owner, 2 Nov 2026: one row per function (Function | Skyworks | Qorvo | Used in), three chips, the rest under
+    "+N more" (opens on a tap, no script). At 390 px the function and "Used in" share a line and the two line cells sit
+    side by side under it; no sideways scrolling."""
+    go(page, "/blocks/cross-sell?system=cellular&aec=0")
+    table = page.locator("#parts-here table")
+    expect(table.locator("thead th")).to_have_count(4)
+    row = page.locator("#parts-here tr.xs-row", has=page.locator("details.xs-more")).first
+    more = row.locator("details.xs-more").first
+    expect(more.locator(".aec-chip").first).to_be_hidden()
+    more.locator("summary").click()
+    expect(more).to_have_attribute("open", "")
+    expect(more.locator(".aec-chip").first).to_be_visible()
+    rows = table.locator("tbody tr").count()
+    heights = table.locator("tbody tr").evaluate_all("rs => rs.map(r => r.getBoundingClientRect().height)")
+    assert rows >= 20 and sorted(heights)[len(heights) // 2] < 70  # compact: most rows one line of chips
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/blocks/cross-sell?system=cellular&aec=0", wait_until="load")
+    first = tab.locator("#parts-here tbody tr").first
+    fn = first.locator("th").bounding_box()
+    used = first.locator("td.xs-used").bounding_box()
+    sky, qor = (first.locator(f"td.ln-{k}").bounding_box() for k in ("skyworks", "qorvo"))
+    assert abs(fn["y"] - used["y"]) < 4 and used["x"] > fn["x"]  # one line: function, then "Used in"
+    assert abs(sky["y"] - qor["y"]) < 4 and qor["x"] > sky["x"] >= 0 and sky["y"] > fn["y"]  # the lines side by side
+    assert qor["x"] + qor["width"] <= 391
+    box = tab.locator("#parts-here table").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert overflow(tab) <= 1
+    ctx.close()
 
 
 def test_new_systems_in_the_libraries_and_cross_sell(page):
@@ -369,7 +442,7 @@ def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     with the system kept and its pairs marked, and come back to By system."""
     go(page, "/blocks/cross-sell")
     with page.expect_navigation():
-        page.locator("select[name=sel]").select_option("automotive")
+        page.locator(".xs-sys", has_text="Automotive").click()
     block = page.locator("#together")
     assert block.get_by_role("heading", name=re.compile("Skyworks \\+ Qorvo together here")).is_visible()
     assert block.locator(".pf-syn-card").count() >= 5
@@ -476,6 +549,28 @@ def test_car_explorer_without_webgl(page):
     page.get_by_role("link", name="Doors, mirrors and access").click()
     expect(page.locator("#ce-area-doors").get_by_role("heading", name="Digital key & car access")).to_be_visible()
     assert not [u for u in asked if "/vendor/three/" in u or "car_explorer.js" in u]
+
+
+def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
+    """Owner, 2 Nov 2026: each gap row says why it could matter, with the applications linked; on a phone the sentence
+    is a second line under the row and the table is not wider than the screen."""
+    go(page, "/business/rf-coverage")
+    why = page.locator("table.rf-gaps td.rf-why").first
+    expect(why).to_contain_text("Needed by")
+    link = why.locator("a").first
+    with page.expect_navigation():
+        link.click()
+    assert "/business/applications/" in page.url
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/business/rf-coverage", wait_until="load")
+    row = tab.locator("table.rf-gaps tbody tr").first
+    first, sentence = row.locator("td").first.bounding_box(), row.locator("td.rf-why").bounding_box()
+    assert sentence["y"] > first["y"] + 5 and sentence["x"] < 40  # its own line, from the left edge
+    box = tab.locator("table.rf-gaps").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert overflow(tab) <= 1
+    ctx.close()
 
 
 # --- Engineering knowledge --------------------------------------------------------------------------------------------

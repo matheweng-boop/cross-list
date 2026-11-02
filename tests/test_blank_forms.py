@@ -293,6 +293,22 @@ hi</textarea><button name="go" value="save">Save</button><input type="file" name
     ]  # fmt: skip
 
 
+def test_the_cross_sell_part_box_is_among_those_sent_blank(owner_client):
+    """Cross-sell › By part was retired (owner, 2 Nov 2026): By system's "Start from a part we already sell" box is on a
+    menu page, the old tab is not, and the box sent blank gives the page without an error message."""
+    pages = menu_pages()
+    assert "/blocks/cross-sell" in pages and "/business/attach" not in pages
+    p = _Forms()
+    p.feed(owner_client.get("/blocks/cross-sell").text)
+    p.close()
+    box = next(f for f in p.forms
+               if f["action"] == "/blocks/cross-sell" and any(x["name"] == "part" for x in f["fields"]))  # fmt: skip
+    sub = submitters(box)[0]
+    assert ("part", "") in browser_payload(box, sub)
+    path, r = send(owner_client, "/blocks/cross-sell", box, sub)
+    assert path == "/blocks/cross-sell" and r.status_code == 200 and "No part number" not in r.text
+
+
 def test_the_price_estimate_form_is_among_those_sent_blank(owner_client):
     """The form that broke on 23 Oct is found, and its number fields go out blank (released=, pins=)."""
     p = _Forms()

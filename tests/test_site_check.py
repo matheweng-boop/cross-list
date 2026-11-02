@@ -13,7 +13,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 OLD_NAMES = ("Opportunity explorer", "Cross-sell & gaps", "Cross-sell &amp; gaps", "Radio & audio", "Radio &amp; audio",
-             "Requests & reviews", "Requests &amp; reviews", "Data centre", "data centre")  # fmt: skip
+             "Requests & reviews", "Requests &amp; reviews", "Data centre", "data centre", "Application library")  # fmt: skip
 PAGES = ("/", "/parts", "/portfolio", "/library", "/blocks", "/blocks/cross-sell", "/business/opportunities",
          "/business/explorer/table", "/business/risks", "/business/reports", "/business/shortlist", "/business/tam",
          "/business/quality", "/business/validation", "/business/method", "/business/markets", "/manage/schedule",

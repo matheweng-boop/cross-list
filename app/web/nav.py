@@ -21,7 +21,7 @@ NAV = (
         ("Block diagram library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
         ("Cross-sell", "/blocks/cross-sell",
-         "What to sell together: by system, by part, and the Skyworks + Qorvo portfolio side by side"),
+         "What to sell together: by system or from one of our parts, and the Skyworks + Qorvo portfolio"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
         # owner, 2 Nov 2026: the Automotive map on a see-through 3D car
@@ -178,9 +178,9 @@ TABS = (
     ),
     (("Markets", "/business/markets"), ("Customers", "/business/customers")),
     # owner, 25 Oct 2026: the Skyworks + Qorvo portfolio moved from Products to Cross-sell (cross-sell = how the two
-    # lines go together); the selected system carries over between these tabs (TAB_CARRY)
-    (("By system", "/blocks/cross-sell"), ("By part", "/business/attach"),
-     ("Skyworks + Qorvo portfolio", "/portfolio")),
+    # lines go together); the selected system carries over between these tabs (TAB_CARRY). Owner, 2 Nov 2026: By part
+    # retired (partner parts without the application are a guess); By system has "Start from a part we already sell"
+    (("By system", "/blocks/cross-sell"), ("Skyworks + Qorvo portfolio", "/portfolio")),
     (("Gaps & new technology", "/business/opportunities"), ("Detailed table", "/business/explorer/table")),
     (("Shortlist", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
     # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab

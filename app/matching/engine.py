@@ -28,7 +28,7 @@ import re
 from dataclasses import dataclass, field
 
 from app.matching import pinroles
-from app.matching.rules import BAND_SUFFIX, FamilyRules, ParamDef
+from app.matching.rules import BAND_SUFFIX, SUPPLY_SUFFIX, FamilyRules, ParamDef
 from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 
 EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "different", "unknown"
@@ -100,6 +100,17 @@ class Fit:
     conditions: list[tuple[int, str, str, str]] = field(default_factory=list)  # (pin, theirs, ours, note template)
     role_diffs: list[tuple[int, str, str]] = field(default_factory=list)  # (pin, their role, our role): mismatches
     board_default: list[int] = field(default_factory=list)  # pins setting their default output, ours ignore them
+    notes: list[tuple[int, str]] = field(default_factory=list)  # (pin, note template): a match worth a word
+
+    @property
+    def info_note(self) -> str:
+        """Plain notes on matching control pins ("Their enable on pins 7 and 10 switches the outputs off; ...")."""
+        from app.matching.pinroles import pins_list
+
+        notes: dict[str, list[int]] = {}
+        for pos, note in self.notes:
+            notes.setdefault(note, []).append(pos)
+        return "; ".join(n.replace("{pins}", pins_list(ps)) for n, ps in notes.items())
 
     @property
     def fits(self) -> bool:
@@ -318,6 +329,8 @@ def uncovered(p: ParamDef, ref, cand) -> str:
 def format_at(rules: FamilyRules, p: ParamDef, values: dict) -> str:
     """The value with its test condition, when the parameter has one (``7.5 A at 18 V``)."""
     text = format_value(p, values.get(p.key))
+    if values.get(p.key + SUPPLY_SUFFIX) is not None and values.get(p.key) is not None:  # read at the design's supply
+        return f"{text} at {_fmt_num(values[p.key + SUPPLY_SUFFIX])} V supply"
     band = values.get(p.key + BAND_SUFFIX) if p.band else None
     if band and values.get(p.key) is not None:  # read off the part's curve over the reference's band
         return f"{text} over {_fmt_num(band[0])}–{_fmt_num(band[1])} {(rules.get(p.band) or p).unit}".rstrip()
@@ -480,7 +493,7 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         return Fit(same_pkg, relation, False, pin_diffs, positions_unknown=same_pkg)
     if len(ref_pos) != len(cand_pos):
         return Fit(same_pkg, relation, False, pin_diffs)
-    conditions, role_diffs, board_default = [], [], []
+    conditions, role_diffs, board_default, notes = [], [], [], []
     # isolated amplifiers: the input side numbered 1 on both parts (ADI calls it side 2; data/pin_roles.yaml)
     ref_side, cand_side = pinroles.by_side(ref, ref_pos), pinroles.by_side(cand, cand_pos)
     for i, (r, c, rs, cs) in enumerate(zip(ref_pos, cand_pos, ref_side, cand_side, strict=True), 1):
@@ -493,10 +506,13 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         elif j.result == pinroles.MISMATCH:
             pin_diffs.append((i, r, c))
             role_diffs.append((i, j.ref_role, j.cand_role))
-        elif j.default_variants:
-            board_default.append(i)
+        else:
+            if j.default_variants:
+                board_default.append(i)
+            if j.note:
+                notes.append((i, j.note))
     return Fit(same_pkg, relation, not pin_diffs, pin_diffs, conditions=conditions, role_diffs=role_diffs,
-               board_default=board_default)  # fmt: skip
+               board_default=board_default, notes=notes)  # fmt: skip
 
 
 def pin_positions(part: Part) -> list[str] | None:
@@ -600,10 +616,12 @@ def _sources(part) -> dict:
 
 
 def cross(
-    ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS
+    ref: Part, cand: Part, rules: FamilyRules, feedback=None, max_deviations: int = DEFAULT_MAX_DEVIATIONS,
+    supply_v: float | None = None,
 ) -> CrossResult:
     fit = check_fit(ref, cand)
     rv, cv = rules.at_same_conditions(rules.values(ref), rules.values(cand))
+    rv, cv = rules.at_supply(rv, supply_v), rules.at_supply(cv, supply_v)  # the design's supply, when given
     srcs = (_sources(ref), _sources(cand)) if any(p.datasheet_only for p in rules.params) else ({}, {})
     diffs = []
     for p in rules.params:
@@ -641,6 +659,9 @@ def cross(
         or (d.must_meet and (d.is_negative or (d.status == UNKNOWN and rv.get(d.key) is not None)))
         for d in diffs
     )
+    # a candidate rated for something the reference does not ask for (ASIL D): not offered (owner, 2 Nov 2026)
+    hard_fail = hard_fail or any(p.only_if_stated and cv.get(p.key) not in (None, "", []) and rv.get(p.key) in
+                                 (None, "", []) for p in rules.params)  # fmt: skip
     incomplete = any(d.status == UNKNOWN for d in diffs if d.priority in (1, 2))
     deviations = _deviations(diffs)
     rejected = feedback is not None and feedback.verdict == FeedbackVerdict.reject
@@ -712,7 +733,7 @@ def sort_key(category: str):
             main = (devs, r.unverified_worse, not r.fit.same_pinout, short, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
-        return (r.lifecycle_risk, getattr(r, "downgrade", False), getattr(r, "steer_miss", False), main,
+        return (r.lifecycle_risk, getattr(r, "steer_miss", False), getattr(r, "downgrade", False), main,
                 r.candidate.label)
 
     return key
@@ -734,8 +755,8 @@ def rank_key(r: CrossResult):
     pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
+        getattr(r, "steer_miss", False),  # DESAT before isolation (owner, 2 Nov 2026: "DESAT is a P1 feature")
         getattr(r, "downgrade", False),
-        getattr(r, "steer_miss", False),
         r.category != "fff",
         len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation
         pkg and not r.fit.same_package,
@@ -763,6 +784,7 @@ def find_crosses(
     rules: FamilyRules,
     feedback: dict | None = None,
     max_deviations: int = DEFAULT_MAX_DEVIATIONS,
+    supply_v: float | None = None,
 ) -> dict[str, list[CrossResult]]:
     """``feedback`` maps candidate id -> CrossFeedback for this reference."""
     out: dict[str, list[CrossResult]] = {c: [] for c in CATEGORY_ORDER}
@@ -770,7 +792,7 @@ def find_crosses(
     for cand in candidates:
         if cand.id == ref.id or cand.family != ref.family:
             continue
-        result = cross(ref, cand, rules, feedback.get(cand.id), max_deviations)
+        result = cross(ref, cand, rules, feedback.get(cand.id), max_deviations, supply_v)
         for c in result.categories:
             out[c].append(result)
     for c in out:

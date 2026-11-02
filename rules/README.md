@@ -21,6 +21,7 @@ One YAML file per product family. Each parameter has:
 | `unknown_ok` | an unknown value (stated by neither part, not derivable) raises no data gap (amber light) either. No unstated value counts as a deviation (owner, 2 Nov 2026) |
 | `must_meet` | one-way requirement: a candidate below the reference (or without a value) is not listed; a better one is fine. Used for the automotive grade: an AEC-Q100 reference only gets AEC-Q100 candidates |
 | `downgrade_tier` | a worse value is a downgrade that ranks the candidate below every candidate that is not worse there, whatever else differs (the isolation rating; owner, 2 Nov 2026) |
+| `by_supply` | `number`: a curve parameter with the value at lower supplies ([[supply up to V, value], ...]); compared at the design's supply when one is given |
 | `steer` | `set` only: items that steer the pick. When the reference has any of them, a candidate with none ranks below every candidate with one (gate drivers: `desaturation`, `overcurrent`, `short-circuit`; owner, 2 Nov 2026) |
 
 Edit a file and restart the app to apply changes.
@@ -41,6 +42,10 @@ Rules that live in code rather than in these files:
   name. Where their default output follows the board (CTRL pins) and ours ignores those pins, the drop-in names both of
   our default-output variants. On Cross a list a conditional fit shows in the functional column (when the drop-in is
   also the best functional fit, the drop-in family's best conditional fit takes that column).
+- **Data rate at the design's supply** (owner, 2 Nov 2026). `by_supply` names a curve parameter of
+  [supply up to V, value] pairs (`data_rate_low_vdd`, from the datasheets that give a lower rate at low supply).
+  With a supply voltage given on Cross a list or the part page, both parts' rates are read there; without one the
+  headline rates are compared and the row notes "their data rate 100 Mbps up to 3 V supply".
 - **Nearest part when there is no cross** (owner, 2 Nov 2026, rule 13). When no candidate is within the deviation
   limit, Cross a list keeps the row red and shows the nearest candidate (the usual order, no limit), marked
   "Nearest (not a drop-in): differs in …"; it never counts as a cross. It must pass the function-defining and

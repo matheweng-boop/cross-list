@@ -160,8 +160,8 @@ def test_desat_reference_ranks_unprotected_candidates_last(session, gd):
     ranks below every candidate with one, so Si8286 is the pick."""
     ref = gd("ADuM4136BRWZ")
     pool = cl._pool(ref, cl.Crosser(session).crosses(ref))
-    order = [(r.downgrade, r.steer_miss) for r in sorted(pool, key=cl.functional_key)]  # isolation tier first (rule 6)
-    assert order == sorted(order) and not order[0][1] and any(m for _, m in order)
+    order = [(r.steer_miss, r.downgrade) for r in sorted(pool, key=cl.functional_key)]  # DESAT first (owner, 2 Nov)
+    assert order == sorted(order) and not order[0][0] and any(m for m, _ in order)
     row = cl.cross_list(session, cl.parse("ADuM4136BRWZ")[0])[0]
     assert (row.drop_in or row.functional).part.mpn.startswith("SI8286")
     plain = next(r for r in pool if r.candidate.mpn.startswith("SI82B28"))
@@ -325,3 +325,87 @@ def test_rf_partial_band_names_dc_and_the_uncovered_band(load):
     r = cross(get("ADGM1121BCCZ-RL7"), get("SKY13355-374LF"), get_rules("rf_switch"))
     assert any(d.key == "freq_range_ghz" for d in r.deviations)
     assert "partial: not covered DC to 0.1, 6 to 18 GHz" in cl.comment(r, 2)
+
+
+# ---------------------------------------------------------------- owner's answers, 2 Nov 2026
+
+
+def test_desat_is_priority_1_and_ranks_above_isolation(session, load):
+    """Owner: "DESAT is a P1 feature". TI ISO5451 has DESAT and is rated 5.7 kVrms (iso5451.pdf); Si8285 has DESAT at
+    5 kVrms, Si82B41 6 kVrms without DESAT. The DESAT part is the pick, its isolation shortfall shown; a candidate
+    without DESAT carries a priority 1 deviation."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    get = load("ti_gate_drivers_more", "skyworks_gate_drivers_more")
+    ref = get("ISO5451DWR")
+    row = cl.cross_list(session, cl.parse("ISO5451DWR")[0])[0]
+    best = row.drop_in or row.functional
+    assert best.part.mpn.startswith("SI828") and "Isolation rating 5.7 kVrms vs 5 kVrms (ours worse)" in best.comment
+    plain = cross(ref, get("SI82B41BCE-IS4"), get_rules("gate_driver"))
+    assert "short_circuit_protection" in {d.key for d in plain.deviations}
+
+
+def test_asil_d_driver_only_where_the_competitor_states_asil(session, gd):
+    """Owner: "Si82900 is an ASIL D level gate driver, only cross when required". ADuM4137W / 4138W state no ASIL
+    level: Si82900 is not offered and the automotive DESAT Si8285CD-AS is the pick. ADuM4177 states ASIL D
+    (ADuM4177.pdf p.1): Si82900 stays allowed for it."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    rules = get_rules("gate_driver")
+    for mpn in ("ADuM4137WBRNZ", "ADuM4138WBRNZ"):
+        assert cross(gd(mpn), gd("SI82900AA-AU"), rules).hard_fail, mpn
+        row = cl.cross_list(session, cl.parse(mpn)[0])[0]
+        assert (row.drop_in or row.functional).part.mpn == "SI8285CD-AS", mpn
+    assert not cross(gd("ADUM4177WBRNZ"), gd("SI82900AA-AU"), rules).hard_fail
+
+
+def test_value_at_supply_reads_the_low_supply_table():
+    from app.matching.rules import low_supply_note, value_at_supply
+
+    assert value_at_supply(150, [[3.0, 100]], 2.5) == 100 and value_at_supply(150, [[3.0, 100]], 3.3) == 150
+    assert value_at_supply(50, [[4.49, 40]], 3.3) == 40 and value_at_supply(50, [[4.49, 40]], 5) == 50
+    assert value_at_supply(150, None, 2.5) == 150
+    assert low_supply_note([[3.0, 100]]) == "100 Mbps up to 3 V"
+
+
+def test_data_rate_compared_at_the_design_supply(client, session, load):
+    """Owner, 2 Nov 2026: "compare at the design's supply voltage". ISO6441: 150 Mbps, 100 Mbps at 2.25-3 V with CL
+    over 10 pF (iso6441.pdf p.7); Si8641: 150 Mbps in the 5, 3.3 and 2.5 V tables (si864x-datasheet.pdf). Without a
+    supply the headline rates compare and the row notes their slowdown; at 2.5 V theirs is 100 Mbps, ours 150."""
+    load("ti_digital_isolators", "skyworks_si86")
+    plain = cl.cross_list(session, cl.parse("ISO6441DWR")[0])[0]
+    col = plain.drop_in or plain.functional
+    assert "their data rate 100 Mbps up to 3 V supply" in col.comment
+    low = cl.cross_list(session, cl.parse("ISO6441DWR")[0], 2.5)[0]
+    col = low.drop_in or low.functional
+    assert "Data rate 100 Mbps at 2.5 V supply vs 150 Mbps at 2.5 V supply (ours better)" in col.comment
+    html = client.post("/cross-list", data={"parts": "ISO6441DWR", "vdd": "2.5"}).text
+    assert 'value="2.5"' in html and "at 2.5 V supply" in html
+    pid = session.scalar(select(Part.id).where(Part.mpn == "ISO6441DWR"))
+    page = client.get(f"/parts/{pid}?vdd=2.5").text
+    assert 'name="vdd"' in page and "at 2.5 V supply" in page
+
+
+def test_ti_control_pins_compare_by_role(load):
+    """Owner, 2 Nov 2026: pin roles for TI datasheets too, from the cached datasheets. ISO7041 EN1 / EN2 are refresh
+    enables (iso7041.pdf p.5: refresh is enabled when EN1 is connected to GND1), a mismatch against our output
+    enables; ISO7741 EN1 / EN2 are output enables (iso7741.pdf pin table): against Si86SS41 NC pins a match with the
+    note; ISO7240CF DISABLE / CTRL (iso7240cf.pdf p.4: input disable, failsafe output control) work like ADuM1410's."""
+    get = load("ti_digital_isolators", "skyworks_si86")
+    assert pinroles.role(get("ISO7041DBQ"), "EN1")["role"] == "refresh_enable"
+    fit = check_fit(get("ISO7041DBQ"), get("SI86S641EB-IU"))
+    assert (7, "refresh_enable", "output_enable") in fit.role_diffs
+    fit = check_fit(get("ISO7741DWR"), get("SI86SS41EE-IS2"))
+    assert fit.fits and "switches the outputs off" in fit.info_note
+    assert pinroles.role(get("ISO7240CFDWR"), "CTRL")["role"] == "default_output_control"
+    assert pinroles.role(get("ISO7240CFDWR"), "DISABLE")["role"] == "input_disable"
+
+
+def test_their_enable_facing_our_nc_carries_a_note(iso):
+    """Owner: "yes" to the note. ADuM1401 VE1 / VE2 are output enables (adum1400_1401_1402.pdf p.24); Si86SS41 has NC
+    there (si86s6xx-datasheet.pdf p.5): a match, with a plain note."""
+    fit = check_fit(iso("ADuM1401BRWZ"), iso("SI86SS41EE-IS2"))
+    assert fit.fits and fit.info_note == ("Their enable on pins 7 and 10 switches the outputs off; ours has no enable "
+                                          "there (NC): our outputs are always on")

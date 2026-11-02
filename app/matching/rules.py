@@ -49,6 +49,12 @@ class ParamDef:
     # else differs (owner, 2 Nov 2026: isolation below the competitor's rating ranks below any output-option or
     # feature difference)
     downgrade_tier: bool = False
+    # a candidate with a value here is offered only when the reference states one too (owner, 2 Nov 2026: an ASIL D
+    # gate driver is crossed only where the competitor states a functional-safety rating)
+    only_if_stated: bool = False
+    # number: a curve parameter [[supply up to V, value], ...] giving a lower value at low supply; compared at the
+    # design's supply when one is given (owner, 2 Nov 2026: data rate at the design's supply voltage)
+    by_supply: str | None = None
 
 
 @dataclass(frozen=True)
@@ -77,6 +83,17 @@ class FamilyRules:
             if p.derived_from:
                 src = values.get(p.derived_from)
                 values[p.key] = None if src is None else p.contains.upper() in {str(x).upper() for x in src}
+        return values
+
+    def at_supply(self, values: dict, supply_v: float | None) -> dict:
+        """Values read at the design's supply (owner, 2 Nov 2026): a ``by_supply`` value comes from its table."""
+        if not supply_v:
+            return values
+        values = dict(values)
+        for p in self.params:
+            if p.by_supply and values.get(p.key) is not None:
+                v = value_at_supply(values.get(p.key), values.get(p.by_supply), float(supply_v))
+                values[p.key], values[p.key + SUPPLY_SUFFIX] = v, float(supply_v)
         return values
 
     def at_same_conditions(self, ref: dict, cand: dict) -> tuple[dict, dict]:
@@ -112,6 +129,23 @@ class FamilyRules:
 
 
 BAND_SUFFIX = "@band"  # values key: the band a value was read over (shown next to it)
+SUPPLY_SUFFIX = "@vdd"  # values key: the supply a value was read at (shown next to it)
+
+
+def value_at_supply(headline, table, supply_v: float):
+    """The value at a supply: the entry with the smallest "up to" supply that covers it ([[3.0, 100]]: 100 at 3 V and
+    below), never above the headline value; the headline above every entry."""
+    rows = sorted((float(v), float(x)) for v, x in table or [])
+    hit = next((x for v, x in rows if supply_v <= v + 1e-9), None)
+    if hit is None:
+        return headline
+    return hit if headline is None else min(float(headline), hit)
+
+
+def low_supply_note(table) -> str:
+    """'100 Mbps up to 3 V' for the first entry of a low-supply table, '' when there is none."""
+    rows = sorted((float(v), float(x)) for v, x in table or [])
+    return ", ".join(f"{x:g} Mbps up to {v:g} V" for v, x in rows)
 
 
 def curve_worst(curve, lo: float, hi: float, direction: str | None) -> float | None:
@@ -179,7 +213,17 @@ def input_range_v(part, values: dict) -> list[float] | None:
     return [round(lo * scale, 6), round(hi * scale, 6)]
 
 
-DERIVE = {"gate_output_config": gate_output_config, "input_range_v": input_range_v}
+SHORT_CIRCUIT = {"desaturation", "overcurrent", "short-circuit"}
+
+
+def short_circuit_protection(part, values: dict) -> bool | None:
+    """DESAT, overcurrent or short-circuit protection, read from the protection set (None when it states none)."""
+    prot = values.get("protection")
+    return None if prot is None else bool({str(x).lower() for x in prot} & SHORT_CIRCUIT)
+
+
+DERIVE = {"gate_output_config": gate_output_config, "input_range_v": input_range_v,
+          "short_circuit_protection": short_circuit_protection}
 
 
 def parse_rules(data: dict) -> FamilyRules:
@@ -211,6 +255,8 @@ def parse_rules(data: dict) -> FamilyRules:
             datasheet_only=bool(raw.get("datasheet_only", False)),
             steer=tuple(raw.get("steer", ())),
             downgrade_tier=bool(raw.get("downgrade_tier", False)),
+            only_if_stated=bool(raw.get("only_if_stated", False)),
+            by_supply=raw.get("by_supply"),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")

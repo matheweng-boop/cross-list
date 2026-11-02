@@ -337,7 +337,8 @@ def companies_of(rows: list) -> list[tuple[str, int]]:
 
 
 def _part_context(
-    session: Session, part: Part, hide_eol: bool, company: str, scope: str, type: str, dev: int, grade: str, all: bool
+    session: Session, part: Part, hide_eol: bool, company: str, scope: str, type: str, dev: int, grade: str, all: bool,
+    vdd: float | None = None,
 ) -> dict:
     """Everything the part page shows; also used by the fragments that load on demand (grouped view, row detail)."""
     rules = get_rules(part.family)
@@ -346,7 +347,7 @@ def _part_context(
     grade = "automotive" if grade_of(part) == "automotive" else (grade if grade in GRADE_LABELS else "industrial")
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
-    crosses = crosses_for(session, part, scope, dev)
+    crosses = crosses_for(session, part, scope, dev, vdd)  # vdd: the design's supply (owner, 2 Nov 2026)
     # the part counts as crossed only with an active drop-in of the grade (owner, 22 Oct 2026; filters on the page
     # aside). Without one it gets "Start a prelim case"; with no cross of any type it is the strongest case.
     graded = [r for r in ranked(crosses) if not r.lifecycle_risk and grade_of(r.candidate) == grade]
@@ -402,6 +403,8 @@ def _part_context(
     }
     return {
         "part": part,
+        "vdd": vdd,
+        "supply_ok": any(p.by_supply for p in rules.params),
         "pinout_source": part.pinout_source,
         "rules": rules,
         "groups": groups,
@@ -466,10 +469,13 @@ def part_detail(
     dev: int = DEFAULT_MAX_DEVIATIONS,
     grade: str = "",
     all: bool = False,
+    vdd: str = "",
     session: Session = Depends(get_session),
 ):
+    from app.web.crosslist import supply
+
     part = _part_or_404(session, part_id)
-    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, all)
+    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, all, supply(vdd))
     return templates.TemplateResponse(request, "part.html", ctx)
 
 

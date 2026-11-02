@@ -234,8 +234,9 @@ class Crosser:
     candidates that fail a function-defining ("hard") or must-meet categorical spec are skipped before the full
     comparison (the engine would not list them either: the same compare_param decides)."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, supply_v: float | None = None):
         self.session = session
+        self.supply_v = supply_v  # the design's supply: rates read there (owner, 2 Nov 2026)
         self._cands: dict[tuple, list[Part]] = {}
         self._values: dict[int, dict] = {}
 
@@ -269,7 +270,7 @@ class Crosser:
                     keep.append(c)
             cands = keep
         return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id),
-                            DEFAULT_MAX_DEVIATIONS if max_deviations is None else max_deviations)
+                            DEFAULT_MAX_DEVIATIONS if max_deviations is None else max_deviations, self.supply_v)
 
 
 def _p1(r: CrossResult) -> list:
@@ -298,14 +299,14 @@ def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
 def drop_in_key(r: CrossResult):
     """A candidate with a lower isolation rating (``downgrade``), then one without the reference's short-circuit
     protection (``steer_miss``), ranks last (owner, 2 Nov 2026)."""
-    return (getattr(r, "downgrade", False), getattr(r, "steer_miss", False), r.category != "fff", _devs(r),
+    return (getattr(r, "steer_miss", False), getattr(r, "downgrade", False), r.category != "fff", _devs(r),
             getattr(r, "shortfall", 0.0), getattr(r, "unverified_worse", 0), _worse_score(r), len(r.exceptions),
             r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
-    return (getattr(r, "downgrade", False), getattr(r, "steer_miss", False), _devs(r),
+    return (getattr(r, "steer_miss", False), getattr(r, "downgrade", False), _devs(r),
             getattr(r, "unverified_worse", 0), getattr(r, "shortfall", 0.0), p1_off, len(r.exceptions),
             not r.fit.same_package, not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
 
@@ -470,8 +471,10 @@ def comment(r: CrossResult, column: int) -> str:
     p1 = _p1(r)
     qual = next((d for d in p1 if d.key == "qualification"), None)
     order = {WORSE: 0, DIFFERENT: 0, UNKNOWN: 1, BETTER: 2, EQUAL: 3}
+    rules_ = get_rules(ref.family)
     shown = [d for d in p1 if d.key != "qualification" and d.status != UNKNOWN  # unstated: said below
-             and (d.status != EQUAL or d.ref_display != d.cand_display)]
+             and (d.status != EQUAL or d.ref_display != d.cand_display)
+             and not (d.status == BETTER and getattr(rules_.get(d.key), "kind", "") == "bool")]  # only ours
     rules = get_rules(ref.family)
     rvals, cvals = (rules.values(ref), rules.values(cand)) if any(
         p.kind == "range" and p.priority == 1 for p in rules.params) else ({}, {})  # fmt: skip
@@ -495,6 +498,9 @@ def comment(r: CrossResult, column: int) -> str:
             theirs = sorted(str(x) for x in rules.values(ref).get(p.key) or [] if str(x).lower() in steer)
             if theirs:
                 bits.append(f"also: ours has no {' or '.join(theirs)} protection (ranked lower)")
+    bits += low_supply_notes(r)
+    if getattr(r.fit, "notes", None) and r.fit.same_package:  # e.g. their output enable facing our NC pin
+        bits.append(r.fit.info_note)
     bits += [unstated(r, d, d.ref_display == "—", d.cand_display == "—") for d in p1
              if d.status == UNKNOWN and d.key != "qualification"]  # fmt: skip
     bits += data_gaps(r)
@@ -507,6 +513,23 @@ def comment(r: CrossResult, column: int) -> str:
     if not get_rules(ref.family).by_priority(1):
         bits.append("(no priority list yet)")
     return lead + "; ".join(bits) + "."
+
+
+def low_supply_notes(r: CrossResult) -> list[str]:
+    """Where a part's data rate drops at a low supply and no supply was given (owner, 2 Nov 2026): "their data rate
+    100 Mbps up to 3 V supply (give the supply to compare there)"."""
+    from app.matching.rules import low_supply_note
+
+    rules = get_rules(r.reference.family)
+    out = []
+    for p in (p for p in rules.params if p.by_supply):
+        if any(d.key == p.key and d.ref_display.endswith("V supply") for d in r.diffs):
+            continue  # compared at the given supply already
+        for side, part in (("their", r.reference), ("our", r.candidate)):
+            note = low_supply_note(part.param_map().get(p.by_supply))
+            if note:
+                out.append(f"{side} {_short(p.label).lower()} {note} supply (give the supply to compare there)")
+    return out
 
 
 def _role_diffs(fit) -> str:
@@ -765,9 +788,10 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
     return f"Function known ({what}), no cross yet – see Opportunities › Gaps.", link
 
 
-def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
+def cross_list(session: Session, entries: list[Entry], supply_v: float | None = None) -> list[Row]:
+    """``supply_v``: the design's supply voltage; values that depend on it (data rate) are compared there."""
     ix = build_index(session)
-    crosser = Crosser(session)
+    crosser = Crosser(session, supply_v)
     verified = Verified(session)
     said = answers(session)
     rows = []

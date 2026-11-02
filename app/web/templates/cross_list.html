@@ -23,6 +23,7 @@
 <form method="post" action="/cross-list" class="cx-paste">
   <label for="cx-parts" class="visually-hidden">Part numbers</label>
   <textarea id="cx-parts" name="parts" rows="7" maxlength="60000" placeholder="ISO7741DWR&#10;UCC21520DW, 2000 pcs&#10;NSI8241W1&#9;500&#9;0.85">{{ text }}</textarea>
+  <div class="cx-vdd"><label for="cx-vdd">Supply voltage (optional)</label> <input id="cx-vdd" name="vdd" type="number" inputmode="decimal" step="0.01" min="1" max="60" placeholder="e.g. 3.3" value="{{ vdd if vdd else '' }}"> V <span class="cx-vdd-hint">Data rates are compared at this supply where a datasheet gives a lower rate at low supply.</span></div>
   <div class="cx-row-inline"><button type="submit">Cross all</button><span class="cx-privacy">{{ privacy }} Nothing you paste is stored{{ ' unless you tap Update cross-lists' if owner }}. Up to {{ max_lines }} lines; commas, semicolons and tabs work too.</span></div>
 </form>
 
@@ -38,7 +39,7 @@
   </span>
   <span class="cx-chip cx-static">Coverage {{ sum.coverage }} %</span>{% if sum.verified %}<span class="cx-chip cx-static">{{ sum.verified }} verified</span>{% endif %}
   <span class="cx-export">
-    <form method="post" action="/cross-list.xlsx" class="cx-dl"><textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea><input type="hidden" name="lights" value="" id="cx-dl-lights"><input type="hidden" name="crossed" value="" id="cx-dl-crossed"><button type="submit" class="outline">Download Excel</button></form>
+    <form method="post" action="/cross-list.xlsx" class="cx-dl"><textarea name="parts" hidden aria-hidden="true">{{ text }}</textarea><input type="hidden" name="vdd" value="{{ vdd if vdd else '' }}"><input type="hidden" name="lights" value="" id="cx-dl-lights"><input type="hidden" name="crossed" value="" id="cx-dl-crossed"><button type="submit" class="outline">Download Excel</button></form>
     <button type="button" class="outline" id="cx-copy">Copy table</button>
     <label class="cx-shown"><input type="checkbox" id="cx-only-shown"> Export shown rows</label>
     <label class="cx-shown" title="{{ crossed_note }}"><input type="checkbox" id="cx-only-crossed"> Only crossed parts</label>

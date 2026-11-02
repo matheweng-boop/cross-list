@@ -93,6 +93,11 @@ def by_side(part, pins: list[str]) -> list[str]:
     return [_SIDE_PIN.sub(lambda m: m.group(1) + ("1" if m.group(2) == "2" else "2"), p) for p in pins]
 
 
+def pins_list(positions: list[int]) -> str:
+    """"pin 7" / "pins 7 and 10"."""
+    return pins_phrase(positions).rsplit(" ", 1)[0]
+
+
 def label(role_name: str | None) -> str:
     """A role in a few words ("output enable")."""
     return (role_name or "").replace("_", " ")

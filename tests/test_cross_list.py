@@ -440,19 +440,26 @@ def test_owner_marks_the_other_family_row(owner, session, isolators):
 
 
 def test_part_page_shows_the_other_family_as_a_result(client, session, isolators):
-    """The part page ranks by the engine's order (Si86 first for NSI8321N1-Q1SPR): SI86S621EC-AS joins the results
-    as "Other family equivalent", with its details; no note line."""
+    """The part page ranks by the engine's order. NSI8120D1: the best results are Si86S, SI8620ET-IS joins them as
+    "Other family equivalent", with its details; no note line. NSI8321N1-Q1SPR (CMTI 200 kV/µs) now has Si86S621EC
+    (100) first (rule 12, owner 2 Nov 2026: the smaller shortfall first) and Si86 among its package equivalents, so
+    both families are shown already and no other-family row is added."""
     from app.models import Part
 
-    pid = session.scalar(select(Part.id).where(Part.mpn == "NSI8321N1-Q1SPR"))
+    pid = session.scalar(select(Part.id).where(Part.mpn == "NSI8120D1"))
     html = client.get(f"/parts/{pid}").text
     assert "Other family:" not in html and 'class="alt-line other-family"' not in html
-    cand = session.scalar(select(Part.id).where(Part.mpn == "SI86S621EC-AS"))
+    cand = session.scalar(select(Part.id).where(Part.mpn == "SI8620ET-IS"))
     row = html[html.index(f'id="row-{cand}"'):]
     row = row[:row.index("</tr>")]
     assert ">Other family equivalent</span>" in row and "rank-reason" in row
     detail = html[html.index(f'id="d-{cand}"'):]
     assert "detail-lazy" not in detail[:detail.index("</tr>")]  # full details inline, as the best results
+    nsi = session.scalar(select(Part.id).where(Part.mpn == "NSI8321N1-Q1SPR"))
+    page = client.get(f"/parts/{nsi}").text
+    assert ">Other family equivalent</span>" not in page
+    for mpn in ("SI86S621EC-AS", "SI8621BB-AS"):
+        assert f'id="row-{session.scalar(select(Part.id).where(Part.mpn == mpn))}"' in page
     iso = session.scalar(select(Part.id).where(Part.mpn == "ISO6760QDWRQ1"))
     assert "Other family" not in client.get(f"/parts/{iso}").text  # both families among the best already
 

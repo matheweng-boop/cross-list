@@ -740,8 +740,8 @@ def rank_key(r: CrossResult):
         len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation
         pkg and not r.fit.same_package,
         pkg and not r.fit.same_pinout,
-        getattr(r, "shortfall", 0.0),  # how far short, not only how often (rule 12, owner 2 Nov 2026)
         r.unverified_worse,  # an unverified data rate only breaks ties (owner, 26 Oct 2026)
+        getattr(r, "shortfall", 0.0),  # how far short, not only how often (rule 12, owner 2 Nov 2026)
         len(r.exceptions),
         r.closeness,
         r.candidate.label,

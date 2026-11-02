@@ -23,7 +23,8 @@ EXPECTED = {  # with the default of 2 accepted priority 1 deviations
         "fff": ["SC141", "SD8641A", "SA7741", "SA7741X"],
         # same package, other pinout; then basic-insulation parts (an exception, not a knock-out)
         # (SD140N: creepage is priority 3 now, so its two other deviations fit the default of 2)
-        "functional": ["SB8641N", "SD4100", "SA7740N", "SC140N", "SB8140Q", "SD140N"],
+        # (rule 12, owner 2 Nov 2026: with as many deviations, SC140N's 3 kVrms falls further short than 3.75 kVrms)
+        "functional": ["SB8641N", "SD4100", "SA7740N", "SB8140Q", "SC140N", "SD140N"],
         "package": ["SB8441"],  # pin-to-pin, other default output (SC142: other channels, not listed)
     },
     "SR8640N": {

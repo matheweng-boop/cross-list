@@ -160,8 +160,8 @@ def test_desat_reference_ranks_unprotected_candidates_last(session, gd):
     ranks below every candidate with one, so Si8286 is the pick."""
     ref = gd("ADuM4136BRWZ")
     pool = cl._pool(ref, cl.Crosser(session).crosses(ref))
-    misses = [r.steer_miss for r in sorted(pool, key=cl.functional_key)]
-    assert misses == sorted(misses) and not misses[0] and any(misses)
+    order = [(r.downgrade, r.steer_miss) for r in sorted(pool, key=cl.functional_key)]  # isolation tier first (rule 6)
+    assert order == sorted(order) and not order[0][1] and any(m for _, m in order)
     row = cl.cross_list(session, cl.parse("ADuM4136BRWZ")[0])[0]
     assert (row.drop_in or row.functional).part.mpn.startswith("SI8286")
     plain = next(r for r in pool if r.candidate.mpn.startswith("SI82B28"))

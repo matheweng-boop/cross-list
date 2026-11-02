@@ -456,8 +456,8 @@ def test_v2x_background_sources_from_5gaa(client):
     registered, and the C-V2X case background and automotive map citing them."""
     t = library.topic("v2x_frontend")
     bg = t["background_references"]
-    assert len(t["references"]) == 6 and 1 <= len(bg) <= 5
-    assert all(r["url"].startswith("https://5gaa.org/content/uploads/") and 3 <= len(r["points"]) <= 6 for r in bg)
+    assert len(t["references"]) == 6 and 1 <= len(bg) <= 6
+    assert all(r["url"].startswith("https://5gaa.org/") and 3 <= len(r["points"]) <= 6 for r in bg)
     assert all(any(re.search(r"\bpp?\. \d", p) for p in r["points"]) for r in bg)
     assert all(any("(est)" in p for p in r["points"]) for r in bg)
     page = client.get("/library/v2x_frontend").text

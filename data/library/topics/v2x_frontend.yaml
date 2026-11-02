@@ -9,7 +9,7 @@ references:
   - {id: r4, title: "Multi-Channel Operation (MCO) Part 2: Technical capabilities and limits (WP 2084 V1.0)", publisher: "CAR 2 CAR Communication Consortium", year: 2020, url: "https://www.car-2-car.org/fileadmin/documents/General_Documents/C2CCC_WP_2084_MCO-TechnicalCapabilies_V1.0.pdf", type: white_paper, licence: "Free download; no reproduction without permission (summarised)", retrieved: 2026-10-21, why: "Shows which RF parameters (TX mask vs RX selectivity, overloading, IM, CSMA threshold) limit several V2X channels in one area; lists 802.11bd PHY features"}
   - {id: r5, title: "Co-channel coexistence between ITS-G5 and LTE-V2X: mitigation methods (WP 2091 V1.0)", publisher: "CAR 2 CAR Communication Consortium", year: 2021, url: "https://www.car-2-car.org/fileadmin/documents/General_Documents/C2CCC_WP_2091_Co-ChannelCoexistence_MitigationMethods_V1.0.pdf", type: white_paper, licence: "Free download; no reproduction without permission (summarised)", retrieved: 2026-10-21, why: "Evaluates ETSI TR 103 766 methods A–F for ITS-G5 and LTE-V2X in the same EU channel; the chosen method makes one radio send both waveforms back to back"}
   - {id: r6, title: "Survey of Spectrum Regulation for Intelligent Transportation Systems (Choi, Marojevic, Dietrich, Reed, Ahn), IEEE Access 8", publisher: "IEEE Access / arXiv 2008.00084", year: 2020, url: "https://arxiv.org/abs/2008.00084", type: paper, licence: "CC BY 4.0", retrieved: 2026-10-21, why: "Open-access review of DSRC, C-V2X and UNII-4 Wi-Fi sharing in the US, EU, China, Korea and Japan, with adjacent-channel Wi-Fi interference results (2020, before the final FCC rules)"}
-background_references:  # 5GAA documents read 2 Nov 2026 as background only (not used for the rules or trends above); page numbers are PDF pages; "est" marks our reading
+background_references:  # 5GAA documents read 2 Nov 2026 (g6 via its download link, owner approved) as background only (not used for the rules or trends above); page numbers are PDF pages; "est" marks our reading
   - id: g1
     title: "5GAA Annual Report 2025"
     publisher: "5GAA"
@@ -87,6 +87,21 @@ background_references:  # 5GAA documents read 2 Nov 2026 as background only (not
       - "Steps 2 and 3: mutual detect-and-vacate in the middle channel (5885–5895 MHz), then in all channels; full sharing of 5855–5925 MHz later, with the rules in ETSI EN 302 571 (pp. 3–4)."
       - "EU framework: 5875–5905 MHz safety ITS (Decision 2008/671/EC), 5905–5925 MHz extension under review, 5855–5875 MHz non-safety; EN 302 571 equipment is licence-exempt (p. 2)."
       - "Our reading (est): later work (r5 and the 2024 band plan) refined this, but it shows why EU radios must tune across all 10 MHz channels and detect the other waveform."
+  - id: g6
+    title: "Connectivity and V2X for Highly Automated Vehicles (position paper)"
+    publisher: "5GAA"
+    year: 2026
+    url: "https://5gaa.org/sdc_download/9723/?key=wz6eh4bwzqh6qh0w90hb3idg229xsg"
+    type: white_paper
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "Where direct and network V2X fit in L4 robotaxi and automated-freight operations"
+    points:
+      - "L4 services run at scale in the US and China; today they are \"autonomy-first, connectivity-enhanced\", with connectivity used mainly for fleet supervision, remote assistance, OTA updates and data upload (p. 3)."
+      - "Large-scale L4 needs connectivity beyond best effort: continuous availability, the same service quality across operators and differentiated QoS, because safety signals, remote-intervention commands and cooperative-awareness messages need high reliability and low latency (p. 4)."
+      - "Where connectivity enables remote supervision, tele-assistance or cooperative services, it may need to count as part of the Automated Driving System; how it is assessed in type approval is still \"limited or inconsistent\" (p. 5)."
+      - "Seven-point call for action: a technology-agnostic use-case catalogue, harmonised connectivity requirements and QoS/SLA levels, consistent QoS across operators, and recognition of connectivity as \"a foundational AV deployment layer\" (p. 6)."
+      - "No spectrum, RF or timeline figures (pp. 3–6). Our reading (est): supports demand for always-on, multi-operator telematics and V2X in robotaxi and freight fleets, not a new front-end requirement."
 block_diagram:
   name: "V2X front end at the roof antenna (compensator mode) beside car Wi-Fi"
   note: "Drawn by us from r1–r5 (not copied). One V2X path is shown, as in SKY5A2105: T/R switch, BAW band-pass, PA, LNA, step attenuator, log detector and temperature sensor. It sits next to the V2X antenna and makes up the coax loss to the V2X chipset. A dual-carrier car (US 20 + 10 MHz, EU ITS-G5 + C-V2X) has two such paths. The car's Wi-Fi 5/6 GHz front end shares the roof module and needs its own filter so it does not leak into 5855–5925 MHz."

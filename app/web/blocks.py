@@ -61,7 +61,7 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
     dg = {"subs": len(subs), "with": sum(1 for x in subs if x["idx"]), "other": len(sy.unassigned())}
     ctx = {"designs": designs, "cards": [(k, v) for k, v in cards if v], "n_all": len(allcards),
            "tree": tree, "dg": dg, "other": [(k, v) for k, v in other if v], "system": system, "sub": subsystem,
-           "expanded": bool(system) or filtered, "filtered": filtered,
+           "filtered": filtered,
            "asked": request.query_params.get("asked") == "1",
            "n_shown": sum(len(v) for _, v in cards), "markets": facet("market"), "sources": facet("source"),
            "market": market, "source": source, "variants": variants, "verified": verified,

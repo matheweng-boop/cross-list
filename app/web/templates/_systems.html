@@ -5,7 +5,7 @@
 {% if n %}<span class="dg-flag has" title="{{ n }} block diagram{{ 's' if n != 1 }} available">Block diagram ✓ ({{ n }})</span>{% else %}<span class="dg-flag none" title="No block diagram drawn for this yet">No diagram yet</span>{% endif %}
 {%- endmacro %}
 {% macro sub_card(s, x, n, deep, diagrams=none) -%}
-<article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}">
+<article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}" data-sub="{{ x.key }}">
   <a class="sys-sub-title" href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}"><b>{{ x.title }}</b></a>
   <small>{{ diagram_flag(n) }}{% if deep %} <span class="muted">· {{ deep|length }} deep dive{{ 's' if deep|length != 1 }}</span>{% endif %}</small>
   {% if diagrams %}<small class="sys-diags">{% for d in diagrams[:3] %}<a href="/blocks/new?template={{ d.i }}" title="Open the block diagram: {{ d.name }}">▸ {{ d.name|truncate(46) }}</a>{% endfor %}{% if diagrams|length > 3 %}<a href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}">All {{ diagrams|length }} diagrams</a>{% endif %}</small>{% endif %}

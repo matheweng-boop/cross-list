@@ -8,7 +8,9 @@
 {% from "_systems.html" import sub_card, diagram_flag %}
 <p class="dg-summary small" id="diagrams"><b>{{ n_all }} block diagrams</b> · {% if dg.with == dg.subs %}every one of the {{ dg.subs }} sub-systems has at least one{% else %}{{ dg.with }} of {{ dg.subs }} sub-systems have one, {{ dg.subs - dg.with }} have none yet{% endif %}{% if dg.other %} · {{ dg.other }} more under <a href="{{ url(system='other', sub='') }}#other-areas">Other areas</a>{% endif %}.
   Each card shows {{ diagram_flag(1) }} or {{ diagram_flag(0) }}; click a diagram name (▸) to open it.</p>
-<nav class="sys-pick small" aria-label="Block diagrams by system"><span class="chip-lbl">Block diagrams by system</span><a class="fchip{{ ' on' if not system }}" href="{{ url(system='', sub='') }}">All systems</a>{% for s in tree %}<a class="fchip{{ ' on' if system == s.key }}" href="{{ url(system=s.key, sub='') }}#area-{{ s.key }}">{{ s.title }} <small>{{ s.n }}</small></a>{% endfor %}{% if other %}<a class="fchip{{ ' on' if system == 'other' }}" href="{{ url(system='other', sub='') }}#other-areas">Other <small>{{ other|map(attribute=1)|map('length')|sum }}</small></a>{% endif %}<a href="#request-area">Request an area</a></nav>
+{# owner, 2 Nov 2026: as in the Systems library, each system is one closed line that opens and closes; the buttons
+   jump to a system and open it; #area-<key>, #sub-<key> and ?system=<key> open the right system. #}
+<nav class="sys-pick small" aria-label="Block diagrams by system"><span class="chip-lbl">Block diagrams by system</span>{% for s in tree %}<a class="fchip{{ ' on' if system == s.key }}" href="#area-{{ s.key }}">{{ s.title }} <small>{{ s.n }}</small></a>{% endfor %}{% if other %}<a class="fchip{{ ' on' if system == 'other' }}" href="#other-areas">Other <small>{{ other|map(attribute=1)|map('length')|sum }}</small></a>{% endif %}<a href="#request-area">Request an area</a></nav>
 <details class="sys-filters small"{{ ' open' if filtered }}><summary>Filters: end market, source, verification, variants{% if filtered %} <small class="muted">· {{ n_shown }} of {{ n_all }} shown</small>{% endif %}</summary>
 <div class="lib-facets small filter-cols">
   {% for title, ms in market_groups(mcount.keys()) %}<div class="chip-row"><span class="chip-lbl">{{ title }}</span>
@@ -33,17 +35,18 @@
     {% if t.chips %}<span class="tpl-chips">{% for label, have in t.chips %}<span class="tpl-chip{{ ' have' if have else '' }}" title="{{ 'Skyworks / Qorvo candidate in BizDev' if have else 'no candidate yet' }}">{{ label }}</span>{% endfor %}</span>{% endif %}</a>
 {% endmacro %}
 {% if not cards %}<div class="empty-state"><p><b>No architecture matches these filters.</b></p><p class="small"><a href="/blocks">Show all</a>.</p></div>{% endif %}
-{% for s in tree if not system or system == s.key %}
-<section class="sys-block" aria-labelledby="area-{{ s.key }}">
-<h2 class="tpl-cat lib-focus" id="area-{{ s.key }}"><a href="{{ url(system=s.key, sub='') }}#area-{{ s.key }}">{{ s.title }}</a> <small class="muted">· {{ s.n }} block diagram{{ 's' if s.n != 1 }} in {{ s.subs|length }} sub-systems</small></h2>
-<p class="small muted">{{ s.summary }}</p>
+{% for s in tree %}{% set ssub = sub if system == s.key else '' %}
+<details class="sys-block" id="area-{{ s.key }}"{{ ' open' if system == s.key }}>
+<summary><span class="sys-name">{{ s.title }}</span> <small class="muted">· {{ s.subs|length }} sub-systems · {{ s.n }} block diagram{{ 's' if s.n != 1 }}</small></summary>
+<div class="sys-body">
+<p class="small muted">{{ s.summary }}{% if system != s.key and not filtered %} <a href="{{ url(system=s.key, sub='') }}#diagrams-{{ s.key }}">Show all {{ s.n }} block diagrams in {{ s.title }}</a>{% endif %}</p>
 <div class="sys-grid">{% for x in s.subs %}{{ sub_card(s, x, x.cards|length, x.deep, x.cards) }}{% endfor %}</div>
-{% if expanded %}<h3 class="dg-head" id="diagrams-{{ s.key }}">Block diagrams in {{ s.title }}{% if sub %} › {{ (s.subs|selectattr('key', 'equalto', sub)|first).title }}{% endif %} <small class="muted">· click one to open it</small></h3>
-{% for x in s.subs if not sub or sub == x.key %}
+{% if system == s.key or filtered %}<h3 class="dg-head" id="diagrams-{{ s.key }}">Block diagrams in {{ s.title }}{% if ssub %} › {{ (s.subs|selectattr('key', 'equalto', ssub)|first).title }}{% endif %} <small class="muted">· click one to open it</small></h3>
+{% for x in s.subs if not ssub or ssub == x.key %}
 <h3 class="tpl-cat" id="sub-{{ x.key }}">{{ x.title }} <small>{{ diagram_flag(x.cards|length) }}</small></h3>
 {% if x.cards %}<div class="tpl-grid">{% for t in x.cards %}{{ card(t) }}{% endfor %}</div>
 {% else %}<p class="small muted">No diagram yet{{ ' with these filters' if filtered }}. The daily update researches this area a few documents at a time and adds diagrams here.</p>{% endif %}
-{% if sub == x.key and xsell %}<section class="sys-xsell" aria-labelledby="xs-title">
+{% if ssub == x.key and xsell %}<section class="sys-xsell" aria-labelledby="xs-title">
   <h4 id="xs-title">Cross-sell in {{ x.title }}</h4>
   <p class="small muted">Our functions that sit together in these {{ xsell.apps|length }} diagrams, most used first. {{ xsell.n_gaps }} function{{ 's' if xsell.n_gaps != 1 }} without a part of ours {{ 'are' if xsell.n_gaps != 1 else 'is' }} listed under <a href="/business/opportunities">Opportunities</a>.</p>
   {% if xsell.ours %}<ul class="sys-xs-list small">{% for e in xsell.ours[:6] %}<li><b>{{ e.label }}</b> <span class="muted">in {{ e.n_apps }} of {{ xsell.apps|length }}</span>{% if e.parts %} · {% for p in e.parts %}<a href="{{ p.url }}">{{ p.mpn }}</a>{{ ', ' if not loop.last }}{% endfor %}{% endif %}</li>{% endfor %}</ul>
@@ -51,15 +54,17 @@
   <p class="small"><a href="/blocks/cross-sell?system={{ s.key }}&amp;sub={{ x.key }}">Full cross-sell for {{ x.title }}</a></p>
 </section>{% endif %}
 {% endfor %}{% endif %}
-</section>
+</div>
+</details>
 {% endfor %}
-{% if not system or system == 'other' %}
+{% if other or not system or system == 'other' %}
 <details class="lib-other" id="other-areas"{{ ' open' if system == 'other' or 0 < other|map(attribute=1)|map('length')|sum <= 6 }}><summary><b>Other areas</b> <small class="muted">· {{ other|map(attribute=1)|map('length')|sum }} diagrams in {{ other|length }} categories, not yet in a system</small></summary>
 {% for cat, items in other %}
 <h3 class="tpl-cat">{{ cat }}</h3>
 <div class="tpl-grid">{% for t in items %}{{ card(t) }}{% endfor %}</div>
 {% endfor %}
 </details>{% endif %}
+<script src="/static/systems.js"></script>
 <section class="lib-request" id="request-area">
   <h2>Request another area</h2>
   {% if asked %}<p class="small rp-thanks">Saved. Requests are reviewed in <a href="/manage/reviews?type=area">Site data › Review queue</a> and picked up by the daily update.</p>{% endif %}

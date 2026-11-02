@@ -187,6 +187,29 @@ def test_systems_library_shows_systems_with_sub_system_cards(client):
     assert html.index('id="sys-automotive"') < uwb < html.index('id="sys-datacenter"')
 
 
+def test_systems_open_and_close_in_both_libraries(client):
+    """Owner, 2 Nov 2026: each system is one closed line ("Automotive · 8 sub-systems · 48 block diagrams") that opens
+    its sub-systems; a row of system buttons jumps to a system; ?system= opens the picked one on /blocks."""
+    lib, blk = client.get("/library").text, client.get("/blocks").text
+    for s in sy.systems():
+        n = len({i for x in s["subsystems"] for i in x["idx"]})
+        for page, anchor in ((lib, "sys"), (blk, "area")):
+            assert f'<details class="sys-block" id="{anchor}-{s["key"]}">' in page  # closed
+            assert f'href="#{anchor}-{s["key"]}"' in page  # its button
+            line = page.split(f'id="{anchor}-{s["key"]}">')[1].split("</summary>")[0]
+            assert h.escape(s["title"]) in line and f"· {len(s['subsystems'])} sub-systems · {n} block diagram" in line
+    for page in (lib, blk):
+        assert not re.findall(r'<details class="sys-block" id="[^"]+" open>', page)  # every system starts closed
+        assert '<script src="/static/systems.js"></script>' in page
+    n_deep = sum(len(x["topics"]) for x in sy.get("automotive")["subsystems"])
+    assert f"{n_deep} deep dives" in lib.split('id="sys-automotive">')[1].split("</summary>")[0]
+    picked = client.get("/blocks?system=drones").text
+    assert '<details class="sys-block" id="area-drones" open>' in picked and 'id="diagrams-drones"' in picked
+    assert '<details class="sys-block" id="area-automotive">' in picked and 'id="diagrams-automotive"' not in picked
+    js = client.get("/static/systems.js").text
+    assert "hashchange" in js and "d.open = true" in js and "data-sub" in js
+
+
 def test_application_library_groups_by_system_and_sub_system(client):
     html = client.get("/blocks").text
     order = [html.index(f'id="area-{s["key"]}"') for s in sy.systems()]
@@ -195,11 +218,15 @@ def test_application_library_groups_by_system_and_sub_system(client):
     n_radio = len(sy.sub("automotive", "car-radio")["idx"])
     assert f"Block diagram ✓ ({n_radio})" in html.split('id="card-automotive-car-radio"')[1].split("</article>")[0]
     one = client.get("/blocks?system=automotive&sub=car-radio").text
-    assert 'id="sub-car-radio"' in one and 'id="sub-adas"' not in one and 'id="area-datacenter"' not in one
+    assert 'id="sub-car-radio"' in one and 'id="sub-adas"' not in one
+    # owner, 2 Nov 2026: every system stays on the page as a closed line; ?system= opens the picked one
+    assert '<details class="sys-block" id="area-automotive" open>' in one
+    assert '<details class="sys-block" id="area-datacenter">' in one
     assert "Cross-sell in Car radio" in one and 'href="/blocks/cross-sell?system=automotive&amp;sub=car-radio"' in one
     assert "Car radio tuner system" in one
     other = client.get("/blocks?system=other").text
-    assert "<details class=\"lib-other\" id=\"other-areas\" open>" in other and 'id="area-automotive"' not in other
+    assert '<details class="lib-other" id="other-areas" open>' in other
+    assert '<details class="sys-block" id="area-automotive">' in other
 
 
 def test_radio_is_an_application_not_a_menu_item(client):

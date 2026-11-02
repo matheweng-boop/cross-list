@@ -189,18 +189,69 @@ def test_feedback_button_sends_and_confirms(page):
 def test_application_library_system_then_sub_system(page):
     go(page, "/blocks")
     system = page.locator(".sys-pick a.fchip").nth(1)
-    name = system.inner_text().rsplit(" ", 1)[0].strip()
-    system.click()
-    page.wait_for_load_state("load")
-    assert "system=" in page.url
-    assert page.locator(".sys-pick a.fchip.on").inner_text().startswith(name)
-    sub = page.locator(".sys-sub-title").first
+    key = system.get_attribute("href").removeprefix("#area-")
+    system.click()  # owner, 2 Nov 2026: jumps to the system and opens it, no reload
+    expect(page.locator(f"details#area-{key}[open]")).to_have_count(1)
+    sub = page.locator(f"details#area-{key} .sys-sub-title").first
     sub_name = sub.inner_text().strip()
-    sub.click()
-    page.wait_for_load_state("load")
-    assert "sub=" in page.url
-    heading = page.locator("h3.tpl-cat").first
+    with page.expect_navigation():
+        sub.click()
+    assert f"system={key}" in page.url and "sub=" in page.url
+    assert page.locator(".sys-pick a.fchip.on").get_attribute("href") == f"#area-{key}"
+    heading = page.locator(f"details#area-{key}[open] h3.tpl-cat").first
     assert heading.is_visible() and heading.inner_text().startswith(sub_name)
+
+
+def test_systems_library_systems_open_and_close(page):
+    """Owner, 2 Nov 2026: each system is one closed line; a click opens its sub-systems and deep dives, a second click
+    closes it; the buttons jump to a system and open it; /library#sys-<key> opens with that system expanded."""
+    go(page, "/library")
+    expect(page.locator("details.sys-block")).not_to_have_count(0)
+    expect(page.locator("details.sys-block[open]")).to_have_count(0)  # all start closed
+    auto = page.locator("details#sys-automotive")
+    card = auto.locator(".sys-sub").first
+    expect(card).to_be_hidden()
+    auto.locator("summary").click()
+    expect(card).to_be_visible()
+    expect(auto.locator(".lib-card").first).to_be_visible()  # its deep dives
+    auto.locator("summary").click()
+    expect(card).to_be_hidden()
+    button = page.locator('.sys-pick a[href="#sys-drones"]')
+    button.click()
+    drones = page.locator("details#sys-drones")
+    expect(page.locator("details#sys-drones[open]")).to_have_count(1)
+    expect(drones.locator("summary")).to_be_in_viewport()
+    drones.locator("summary").click()  # closed again, then the same button (same hash) opens it once more
+    expect(page.locator("details#sys-drones[open]")).to_have_count(0)
+    button.click()
+    expect(page.locator("details#sys-drones[open]")).to_have_count(1)
+    go(page, "/blocks")
+    go(page, "/library#sys-medical")  # an old link: opens with that system expanded
+    expect(page.locator("details#sys-medical[open]")).to_have_count(1)
+    expect(page.locator("details#sys-medical .sys-sub").first).to_be_visible()
+    expect(page.locator("details.sys-block[open]")).to_have_count(1)
+
+
+def test_block_diagram_library_opens_a_system_by_button_hash_and_query(page):
+    """Owner, 2 Nov 2026: the Block diagram library opens and closes its systems like the Systems library; #area-,
+    #sub- and ?system= open the right one."""
+    go(page, "/blocks")
+    expect(page.locator("details.sys-block[open]")).to_have_count(0)
+    page.locator('.sys-pick a[href="#area-cellular"]').click()
+    expect(page.locator("details#area-cellular[open]")).to_have_count(1)
+    expect(page.locator("details#area-cellular .sys-sub").first).to_be_visible()
+    page.locator("details#area-cellular > summary").click()
+    expect(page.locator("details#area-cellular[open]")).to_have_count(0)
+    go(page, "/library")
+    go(page, "/blocks#sub-car-radio")  # a sub-system whose diagrams are not listed: its card, system open
+    expect(page.locator("details#area-automotive[open]")).to_have_count(1)
+    expect(page.locator("#card-automotive-car-radio")).to_be_in_viewport()
+    go(page, "/blocks?system=drones")
+    expect(page.locator("details#area-drones[open]")).to_have_count(1)
+    expect(page.locator("#diagrams-drones")).to_be_visible()
+    expect(page.locator("details.sys-block[open]")).to_have_count(1)
+    go(page, "/blocks?system=automotive&sub=car-radio#sub-car-radio")
+    expect(page.locator("#sub-car-radio")).to_be_in_viewport()
 
 
 def test_cross_sell_by_system(page):
@@ -232,11 +283,12 @@ def test_new_systems_in_the_libraries_and_cross_sell(page):
 def test_library_card_opens_its_block_diagram_in_one_click(page):
     """Owner, 25 Oct 2026: each card says whether a block diagram exists, and one click on a diagram name opens it
     (the editor is visited last: leaving it asks before unload)."""
-    go(page, "/library")
-    expect(page.locator(".sys-sub .dg-flag").first).to_be_visible()
+    go(page, "/library#sys-automotive")
+    expect(page.locator("#sys-automotive .sys-sub .dg-flag").first).to_be_visible()
     go(page, "/blocks")
     expect(page.locator("#diagrams")).to_be_in_viewport()  # the summary sits at the top
-    card = page.locator(".sys-sub", has=page.locator(".dg-flag.has")).first
+    page.locator(".sys-pick a.fchip").first.click()  # opens the first system
+    card = page.locator("details.sys-block[open] .sys-sub", has=page.locator(".dg-flag.has")).first
     expect(card.locator(".dg-flag")).to_contain_text("Block diagram ✓")
     with page.expect_navigation():
         card.locator(".sys-diags a").first.click()

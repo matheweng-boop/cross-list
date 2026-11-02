@@ -1511,3 +1511,23 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
     expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
     go(page, "/clocks/plans")
     expect(page.locator("main")).to_contain_text("Browser clock plan")
+
+
+# --- Systems library > Industrial > Robotics (European view) (owner, 3 Nov 2026, worker Q) ---------------------------
+def test_industrial_shows_robotics_and_its_deep_dive_opens(page):
+    """Owner, 3 Nov 2026 ("something for robotics ... a Euro-centric view"): Industrial & energy opens with the
+    Robotics (European view) card; its deep dive opens and links back to the factory-automation diagrams."""
+    go(page, "/library#sys-industrial")
+    expect(page.locator("details#sys-industrial[open]")).to_have_count(1)
+    card = page.locator("#card-industrial-robotics")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Robotics (European view)")
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/robotics_europe")
+    expect(page.locator("main h1")).to_contain_text("Robotics in Europe")
+    with page.expect_navigation():
+        page.locator(".lib-see-also a", has_text="Factory automation").click()
+    expect(page.locator("#sub-factory-automation")).to_be_in_viewport()
+    go(page, "/blocks?system=industrial&sub=robotics#sub-robotics")
+    expect(page.locator("#sub-robotics")).to_be_in_viewport()

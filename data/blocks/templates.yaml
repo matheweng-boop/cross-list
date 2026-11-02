@@ -15775,3 +15775,105 @@
   - {id: board_net, question: Board net, choices: [12 V, 48 V]}
   - {id: motor_type, question: Motor type, choices: [brushed DC (H-bridge), BLDC (3-phase)]}
   - {id: motors, question: Motors per seat, choices: [2-4, 6-8, 10 or more (massage, lumbar)]}
+
+# Owner, 3 Nov 2026 ("For Factory automation, something for robotics would be good. Focus on a Euro-centric view for
+# this."): three robot diagrams for the sub-system "Robotics (European view)" (data/blocks/systems.yaml) and the deep
+# dive data/library/topics/robotics_europe.yaml. Drawn by us from public material; Skyworks / Qorvo sockets and gaps
+# are named in each note.
+- name: Six-axis industrial robot - controller, EtherCAT joint chain, safe torque off and safety controller (ISO 13849 / IEC 61508) (after TI, EU Commission and Skyworks public material)
+  category: Industrial
+  note: "After TI-SOL-SERVO (TI industrial servo drive: isolated gate drive, isolated current sense, encoder interface, 24 V auxiliary input), TI-SOL-HUMANOIDJOINT (robot joint drive with holding-brake power and an Ethernet / CAN link to the controller) and EC-MACHINERY (EU Machinery Regulation (EU) 2023/1230, applying from 20 January 2027: safety control systems, AI-powered safety functions and cyber-safety of safety software). Drawn by us: a European cabinet controller runs motion planning and an EtherCAT master; six servo axes (one per joint, often one multi-axis drive) sit on a 560-750 V DC link from 400 V AC mains; a two-channel safety controller (PL d / PL e per EN ISO 13849-1, SIL 2-3 per IEC 61508 / IEC 62061, est) commands safe torque off (STO), safe stop 1 and safe brake control, usually over FSoE (Safety over EtherCAT) or PROFIsafe. Our parts that fit: Si828x isolated gate drivers with DESAT (Si8281BD-IS), Si8941 / Si8922 isolated delta-sigma modulator and amplifier for phase current, Si86xx / Si88xx digital isolators for the STO paths and EtherCAT side, Si838x 24 V isolated inputs and Si834x isolated smart switches for safety I/O and brakes, Si85833D isolated RS-485 for EnDat / BiSS encoders, Si5341 / Si545 timing. Gaps: no EtherCAT / Ethernet PHY, no IO-Link master or device PHY, no MCU or safety MCU, no power modules."
+  sources:
+  - {doc: TI-SOL-SERVO, title: 'Industrial servo drive (single axis, AC motor) - block diagram + subsystems', url: 'https://www.ti.com/solution/robot-servo-drive'}
+  - {doc: TI-SOL-HUMANOIDJOINT, title: 'Humanoid / collaborative robot joint motor drive (48 V) - block diagram + subsystems', url: 'https://www.ti.com/solution/humanoid-robot-joint-motor-control'}
+  - {doc: EC-MACHINERY, title: 'European Commission: Machinery - Machinery Directive 2006/42/EC and Machinery Regulation (EU) 2023/1230 (applies from 20 January 2027)', url: 'https://single-market-economy.ec.europa.eu/sectors/mechanical-engineering/machinery_en'}
+  groups:
+  - {id: ctrl, label: 'Robot controller: motion planning, EtherCAT master, HMI and cell network', col: 0, row: 0, blocks: [soc, ddr_flash, ethernet_phy, crystal_oscillator, clock_generator]}
+  - {id: safety, label: 'Safety controller, two channels (PL d / PL e, SIL 2-3, est): FSoE or PROFIsafe', col: 0, row: 1, blocks: [mcu x2, watchdog, supervisor, digital_isolator]}
+  - {id: pendant, label: 'Teach pendant: E-stop, three-position enabling switch, safety fence and light curtain inputs', col: 0, row: 2, blocks: [external_block, isolated_digital_input]}
+  - {id: io, label: '24 V I/O and IO-Link master (grippers, sensors, valves)', col: 1, row: 2, blocks: [isolated_digital_input, isolated_smart_switch, digital_isolator, tvs_esd]}
+  - {id: psu, label: 'Cabinet power: 400 V AC rectifier, 560-750 V DC link, brake chopper, 24 V supply', col: 1, row: 0, blocks: [dc_link_cap, acdc_controller, isolated_dcdc, efuse_hotswap]}
+  - {id: axis, label: 'Servo axis x6 (one per joint): FOC current loop, isolated gate drive and current sense', col: 2, row: 0, blocks: [mcu, gate_driver, power_module, isolated_amplifier, digital_isolator, isolated_dcdc]}
+  - {id: sto, label: 'Safe torque off per axis: two channels block the gate-driver inputs and cut the driver supply', col: 2, row: 1, blocks: [digital_isolator, load_switch, isolated_switch_driver]}
+  - {id: brake, label: 'Holding brake control (safe brake control, 24 V)', col: 3, row: 1, blocks: [isolated_smart_switch, current_sensor]}
+  - {id: encoder, label: 'Encoder interface: EnDat 2.2, BiSS or one-cable HIPERFACE DSL over RS-485', col: 3, row: 0, blocks: [rs485_transceiver, position_interface, tvs_esd]}
+  - {id: joint, label: 'Joint: PMSM, gearbox, absolute encoder, holding brake', col: 4, row: 0, blocks: [motor, position_sensor, temperature_sensor]}
+  links:
+  - [ctrl, axis, 'EtherCAT, 100 Mbit/s, distributed clocks (cycle 0.125-1 ms, est)']
+  - [safety, axis, 'FSoE / PROFIsafe: STO, SS1, SLS commands']
+  - [safety, sto, 'STO channel 1 and channel 2']
+  - [sto, axis, gate enable and driver supply]
+  - [pendant, safety, 'E-stop, enabling switch, fence']
+  - [io, ctrl, 'IO-Link and 24 V signals']
+  - [psu, axis, DC link]
+  - [axis, joint, 3 phases]
+  - [joint, encoder, position]
+  - [encoder, axis, 'position, multi-turn']
+  - [brake, joint, brake release 24 V]
+  - [safety, brake, safe brake control]
+  questions:
+  - {id: payload, question: Robot class, choices: [cobot up to 20 kg, industrial 20-300 kg, heavy over 300 kg]}
+  - {id: fieldbus, question: Drive network, choices: [EtherCAT, PROFINET IRT, EtherNet/IP with CIP Motion, TSN]}
+  - {id: safety_level, question: Safety level of the stop functions, choices: [PL d / SIL 2, PL e / SIL 3]}
+  - {id: encoder, question: Encoder link, choices: [EnDat 2.2, BiSS-C, HIPERFACE DSL (one cable), resolver]}
+
+- name: Autonomous mobile robot (AMR) for European warehouses and factories - safety laser scanners, 48 V battery, wireless charging, private 5G / Wi-Fi 7 and UWB (after IFR, EU Commission and MobileKnowledge public material)
+  category: Industrial
+  note: "After IFR-SR2026 (IFR: global sales of professional service robots up 24% to almost 250,000 units in 2025; transport and logistics robots, about 117,000, the top application), EC-MACHINERY (an AMR is machinery under (EU) 2023/1230 from 20 January 2027, including AI-powered safety functions and cyber-safety) and MK-ROBOTICS (UWB module with BLE and 3D angle of arrival for AGV / AMR navigation and docking). Drawn by us: a navigation computer runs SLAM and the fleet client; a two-channel safety controller reads front and rear safety laser scanners (IEC 61496-3, typically PL d, est) and limits speed; wheel and lift drives run from a 48 V Li-ion pack; the robot charges on an inductive pad or contacts; it talks to the fleet manager over Wi-Fi 6 / 7 or a private 5G campus network (Germany assigns 3.7-3.8 GHz, n78, for local licences, est) and uses UWB for precise positioning and docking. Our parts that fit: QPF4557 / QM45655 Wi-Fi 7 FEMs, SKY58261-11 (n77 / n78 5G front end), QM33120W / DWM3001C UWB, QM14068 UWB LNA, PAC5527 / ACT72350 motor controllers, PAC25140 battery SoC, Si86xx isolators and Si838x inputs in the safety I/O, Si545 / Si5341 timing. Gaps: no wireless-charging transmitter or receiver, no MOSFETs, no eFuse, no navigation SoC or 5G modem."
+  sources:
+  - {doc: IFR-SR2026, title: 'IFR press releases: Global Sales of Professional Service Robots Surge 24% (30 Sep 2026) and World Robotics 2026 (24 Sep 2026)', url: 'https://ifr.org/ifr-press-releases'}
+  - {doc: EC-MACHINERY, title: 'European Commission: Machinery - Machinery Regulation (EU) 2023/1230 (applies from 20 January 2027)', url: 'https://single-market-economy.ec.europa.eu/sectors/mechanical-engineering/machinery_en'}
+  - {doc: MK-ROBOTICS, title: 'MobileKnowledge MK UWB Kit Robotics (product page and product brief v1.1)', url: 'https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/'}
+  groups:
+  - {id: nav, label: 'Navigation computer: SLAM, AI vision, fleet client', col: 0, row: 0, blocks: [soc, ddr_flash, camera_radar, crystal_oscillator]}
+  - {id: safety, label: 'Safety controller, two channels, with front and rear safety laser scanners (IEC 61496-3, PL d est)', col: 0, row: 1, blocks: [mcu x2, external_block, isolated_digital_input, digital_isolator]}
+  - {id: radio, label: 'Wi-Fi 6 / 7 and private 5G (n78) to the fleet manager', col: 1, row: 0, blocks: [wifi_soc, wifi_fem, modem, rf_frontend, antenna]}
+  - {id: uwb, label: 'UWB positioning and docking (anchors in the hall)', col: 2, row: 0, blocks: [uwb_soc, uwb_fem, antenna, crystal_oscillator]}
+  - {id: drives, label: 'Wheel and lift drives (48 V, 2-4 motors)', col: 1, row: 1, blocks: [motor_controller, three_phase_gate_driver, power_fets, current_sensor]}
+  - {id: motors, label: 'Wheel hub / lift motors with encoders and brakes', col: 2, row: 1, blocks: [motor, position_sensor]}
+  - {id: battery, label: '48 V Li-ion pack and BMS', col: 0, row: 2, blocks: [battery_pack, battery_monitor, battery_protector, efuse_hotswap]}
+  - {id: charge, label: 'Charging: inductive pad or floor contacts', col: 1, row: 2, blocks: [wireless_power, battery_charger]}
+  - {id: rails, label: '24 V / 12 V / 5 V rails', col: 2, row: 2, blocks: [wide_vin_buck, pol_buck, supervisor]}
+  links:
+  - [nav, radio, fleet commands and maps]
+  - [nav, uwb, 'position, docking']
+  - [nav, drives, speed set-points]
+  - [safety, drives, 'safe stop, speed limit (STO)']
+  - [safety, nav, protective field switching]
+  - [drives, motors, 3 phases]
+  - [battery, drives, 48 V]
+  - [battery, rails, 48 V]
+  - [charge, battery, charge current]
+  - [rails, nav, '']
+  questions:
+  - {id: link, question: Fleet radio, choices: [Wi-Fi 6, Wi-Fi 7, private 5G (n78), both Wi-Fi and 5G]}
+  - {id: position, question: Positioning, choices: [laser SLAM only, SLAM + UWB, SLAM + floor markers]}
+  - {id: charge, question: Charging, choices: [inductive pad, floor contacts, battery swap]}
+
+- name: Robot end-of-arm tool and tool changer with IO-Link Wireless or contactless power and data (gripper, vacuum, tool identification) (after Skyworks and TI public material)
+  category: Industrial
+  note: "After SKY-SI834X (Skyworks Si834x isolated smart switch: 24 V sourcing outputs, 2.5 A per channel, 1.5 kVrms, status indicators) and SKY-SI838X (Skyworks Si838x eight-channel 24 V isolated digital inputs), with TI-SOL-HUMANOIDJOINT for the joint side. Drawn by us (est): the robot flange carries a tool changer; a wired changer passes 24 V, I/O and an IO-Link port through spring contacts, which wear and arc when tools change under power; a contactless coupler instead transfers tens of watts inductively and the data over a short-range radio, or the tool talks IO-Link Wireless (2.4 GHz, a master serves many tools with deterministic 5 ms cycles, est). The tool (electric gripper, vacuum ejector, screwdriver) has a small motor drive, sensors, an ID chip and its own 24 V supply. Our parts that fit: Si834x outputs and Si838x inputs on the flange I/O, Si86P320 isolator with integrated power for a small isolated sensor side, PAC5527 one-chip motor controller for the electric gripper, QPG6200L 2.4 GHz SoC or Skyworks 2.4 GHz front ends for a wireless link (est). Gaps: no IO-Link transceiver, no inductive power transmitter / receiver, no NFC tool ID part of ours."
+  sources:
+  - {doc: SKY-SI834X, title: 'Skyworks Si834x Isolated Smart Switch (product page, Si83401BAA-IF)', url: 'https://www.skyworksinc.com/en/Products/Isolation/Si834x-Isolated-Smart-Switch/Si83401BAA-IF'}
+  - {doc: SKY-SI838X, title: 'Skyworks Si838x 24 V digital isolators (product page, Si8380P-IU)', url: 'https://www.skyworksinc.com/en/Products/Isolation/Si838x-Digital-Isolators/Si8380P-IU'}
+  - {doc: TI-SOL-HUMANOIDJOINT, title: 'Humanoid / collaborative robot joint motor drive (48 V) - block diagram + subsystems', url: 'https://www.ti.com/solution/humanoid-robot-joint-motor-control'}
+  groups:
+  - {id: arm, label: 'Robot controller side: IO-Link master or wireless master, 24 V', col: 0, row: 0, blocks: [external_block, isolated_digital_input, isolated_smart_switch]}
+  - {id: flange, label: 'Tool changer, robot side: 24 V outputs, inputs, tool-present and lock sensing', col: 1, row: 0, blocks: [isolated_smart_switch, isolated_digital_input, tvs_esd, hall_switch]}
+  - {id: coupler, label: 'Contactless coupler: inductive power (tens of W) and short-range data', col: 1, row: 1, blocks: [wireless_power, wireless_soc, antenna]}
+  - {id: tool_io, label: 'Tool side: IO-Link device or IO-Link Wireless device (2.4 GHz)', col: 2, row: 0, blocks: [mcu, wireless_soc, rf_frontend, crystal_oscillator]}
+  - {id: tool_power, label: 'Tool 24 V supply and isolated sensor side', col: 2, row: 1, blocks: [wide_vin_buck, pol_ldo, digital_isolator]}
+  - {id: gripper, label: 'Electric gripper drive (24-48 V BLDC or stepper)', col: 3, row: 0, blocks: [motor_controller, power_fets, current_sensor, motor]}
+  - {id: sensors, label: 'Tool sensors: jaw position, force, vacuum, tool ID', col: 3, row: 1, blocks: [position_sensor, env_sensor, nfc_frontend]}
+  links:
+  - [arm, flange, '24 V, I/O, IO-Link through the arm']
+  - [flange, tool_io, 'spring contacts: 24 V and IO-Link']
+  - [flange, coupler, 'or contactless']
+  - [coupler, tool_power, inductive power]
+  - [coupler, tool_io, data]
+  - [tool_power, gripper, 24 V]
+  - [tool_io, gripper, 'grip, force, speed']
+  - [sensors, tool_io, '']
+  questions:
+  - {id: link, question: Tool link, choices: [wired IO-Link through spring contacts, IO-Link Wireless, contactless power + data coupler]}
+  - {id: tool, question: Tool, choices: [electric gripper, vacuum gripper, screwdriver / process tool]}

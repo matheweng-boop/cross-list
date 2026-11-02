@@ -303,6 +303,8 @@ systems:
       - key: factory-automation
         title: "Factory automation and PLCs"
         summary: "Controllers and their isolated inputs and outputs."
+        links:
+          - ["Robotics (European view): deep dive", "/library/robotics_europe"]
         elements:
           - "PLC CPU"
           - "Digital and analog I/O modules"
@@ -318,6 +320,8 @@ systems:
       - key: motion
         title: "Motor drives and robots"
         summary: "AC drives, servos, steppers, robot joints and motor protection."
+        links:
+          - ["Robotics (European view): deep dive", "/library/robotics_europe"]
         elements:
           - "AC drive power stage"
           - "Servo drive"
@@ -390,6 +394,33 @@ systems:
           - "E-mobility BLDC drive, 72 V class up to 85 V (Microchip AN5324)"
           - "Forklift traction inverter, 48 V 5 kW (TI TIDA-00364)"
           - "Railway auxiliary converter (750 V-3 kV DC catenary to 400 V AC and 110 V DC battery charging) (after Skyworks AN1456, Wolfspeed forum and UNIFE public material)"
+      # Owner, 3 Nov 2026: "For Factory automation, something for robotics would be good. Focus on a Euro-centric view
+      # for this." The robot and servo diagrams also stay under Motor drives and robots.
+      - key: robotics
+        title: "Robotics (European view)"
+        summary: "Industrial robots and cobots, mobile robots (AMR) and robot tools, as built and regulated in Europe."
+        elements:
+          - "Robot controller and EtherCAT / PROFINET joint chain"
+          - "Safe torque off and safety controller (ISO 13849)"
+          - "Servo axis: isolated gate drive and current sense"
+          - "Mobile robot (AMR): safety scanner, 48 V battery, private 5G / Wi-Fi / UWB"
+          - "End-of-arm tool and IO-Link"
+        diagrams:
+          - "Six-axis industrial robot - controller, EtherCAT joint chain, safe torque off and safety controller (ISO 13849 / IEC 61508) (after TI, EU Commission and Skyworks public material)"
+          - "Autonomous mobile robot (AMR) for European warehouses and factories - safety laser scanners, 48 V battery, wireless charging, private 5G / Wi-Fi 7 and UWB (after IFR, EU Commission and MobileKnowledge public material)"
+          - "Robot end-of-arm tool and tool changer with IO-Link Wireless or contactless power and data (gripper, vacuum, tool identification) (after Skyworks and TI public material)"
+          - "Industrial servo drive (single axis, AC motor) (TI)"
+          - "AC servo drive with EtherCAT (MPU, IPM, delta-sigma current sense, encoder) (Renesas)"
+          - "Humanoid / collaborative robot joint motor drive (48 V) (TI)"
+          - "UWB positioning for mobile robots and drones (AGV / AMR navigation, follow-me, return to base, landing where GPS is missing) (after MobileKnowledge)"
+          - "Industrial isolated I/O"
+        topics: [robotics_europe]
+        links:
+          - ["Factory automation and PLCs", "/blocks?system=industrial&sub=factory-automation#sub-factory-automation"]
+          - ["Motor drives and robots", "/blocks?system=industrial&sub=motion#sub-motion"]
+          - ["BLDC motor visual", "/visuals#bldc"]
+          - ["Gate driver visual", "/visuals#bootstrap"]
+          - ["Isolated current sensing visual", "/visuals#isosense"]
   - key: aerospace
     title: "Aerospace & defense"
     summary: "Radar, electronic warfare, satellite links, tactical radios and RF test equipment."

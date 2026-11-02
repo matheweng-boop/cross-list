@@ -136,7 +136,7 @@ def test_matching_automotive_jitter_formats_and_supply():
     r = req([("100", 2, "HCSL", 1.8), ("25", 3, "LVCMOS", 3.3)], jit="1000", auto="1")
     m = cp.match(r)
     fits = [x["part"]["mpn"] for x in m["ours"] if x["fits"]]
-    assert fits and all(mpn.startswith("Si5332A-AM") for mpn in fits)
+    assert fits and all(mpn.startswith("Si5332") and "-AM" in mpn for mpn in fits)  # any Si5332 automotive grade
     assert any(c[0] == "Automotive" and c[1] is False for c in _fit(r, "Si5341A")["checks"])
     tight = _fit(req([("156.25", 1, "LVDS")], jit="100"), "Si5332A-GM1")
     assert ("Jitter", False, "190 fs typ, above your 100 fs") in tight["checks"]

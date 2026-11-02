@@ -44,6 +44,10 @@ class ParamDef:
     # set: items that steer the pick (owner, 2 Nov 2026: a gate driver's DESAT, overcurrent or short-circuit
     # protection). When the reference has any of them, a candidate with none ranks below every candidate with one.
     steer: tuple[str, ...] = ()
+    # a worse value is a downgrade that ranks the candidate below every candidate that is not worse here, whatever
+    # else differs (owner, 2 Nov 2026: isolation below the competitor's rating ranks below any output-option or
+    # feature difference)
+    downgrade_tier: bool = False
 
 
 @dataclass(frozen=True)
@@ -187,6 +191,7 @@ def parse_rules(data: dict) -> FamilyRules:
             prefer=raw.get("prefer"),
             datasheet_only=bool(raw.get("datasheet_only", False)),
             steer=tuple(raw.get("steer", ())),
+            downgrade_tier=bool(raw.get("downgrade_tier", False)),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")

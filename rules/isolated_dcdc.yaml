@@ -6,7 +6,9 @@ family: isolated_dcdc
 title: Isolated DC-DC converters
 params:
   - {key: construction, label: Construction, priority: 3, kind: category}
-  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 3, kind: number, direction: higher}
+  # Owner, 2 Nov 2026: isolation below the competitor's rating is a downgrade that ranks below any other
+  # difference (output option, feature, another priority 1 value).
+  - {key: isolation_rating_kvrms, label: Isolation rating, unit: kVrms, priority: 3, kind: number, direction: higher, downgrade_tier: true}
   - {key: isolation_class, label: Isolation class, priority: 3, kind: ordinal, levels: [basic, reinforced]}
   - {key: working_voltage_vrms, label: Working isolation voltage, unit: Vrms, priority: 3, kind: number, direction: higher}
   - {key: vin_range_v, label: Input voltage, unit: V, priority: 3, kind: range}

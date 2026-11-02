@@ -156,6 +156,9 @@ class CrossResult:
     # the reference has an item of a ``steer`` set (a gate driver's DESAT, overcurrent or short-circuit protection) and
     # the candidate has none of them: it ranks below every candidate that has one (owner, 2 Nov 2026)
     steer_miss: bool = False
+    # worse on a ``downgrade_tier`` parameter (isolation rating): ranks below every candidate that is not (owner,
+    # 2 Nov 2026: "isolation below the competitor's rating is a downgrade")
+    downgrade: bool = False
 
     @property
     def all_diffs(self) -> list[Diff]:
@@ -621,10 +624,12 @@ def cross(
     cats = [category] if category else []
     steer_miss = any(p.steer and _any_of(rv.get(p.key), p.steer) and not _any_of(cv.get(p.key), p.steer)
                      for p in rules.params)  # fmt: skip
+    tier = {p.key for p in rules.params if p.downgrade_tier}
+    downgrade = any(d.key in tier and d.status == WORSE and not d.unverified for d in diffs)
 
     return CrossResult(
         ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback,
-        steer_miss,
+        steer_miss, downgrade,
     )
 
 
@@ -644,7 +649,8 @@ def sort_key(category: str):
             main = (devs, r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
-        return (r.lifecycle_risk, getattr(r, "steer_miss", False), main, r.candidate.label)
+        return (r.lifecycle_risk, getattr(r, "downgrade", False), getattr(r, "steer_miss", False), main,
+                r.candidate.label)
 
     return key
 
@@ -660,10 +666,12 @@ def rank_key(r: CrossResult):
     """The order of preference across cross types (owner, 21 Oct 2026): a drop-in with the same function always comes
     first; then the fewest priority 1 deviations; with as many deviations, the same package before another package and
     pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom; so does a candidate without the
-    reference's short-circuit protection (``steer_miss``; owner, 2 Nov 2026)."""
+    reference's short-circuit protection (``steer_miss``), and below those one with a lower isolation rating than the
+    reference (``downgrade``; owner, 2 Nov 2026)."""
     pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
+        getattr(r, "downgrade", False),
         getattr(r, "steer_miss", False),
         r.category != "fff",
         len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation

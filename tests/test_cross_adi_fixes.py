@@ -195,3 +195,20 @@ def test_unstated_values_are_info_not_deviations(gd):
     r = cross(gd("ADuM4137WBRNZ"), gd("SI8285CD-AS"), get_rules("gate_driver"))
     assert {d.key for d in r.deviations} == {"peak_source_a", "peak_sink_a"} and r.category == "functional"
     assert "CMTI not stated by Analog Devices (info)" in cl.comment(r, 2)
+
+
+# ---------------------------------------------------------------- rule 6: isolation below theirs ranks last
+
+
+def test_isolation_shortfall_ranks_below_an_output_option_difference(session, gd):
+    """ADuM4122 is a 5 kVrms reinforced driver (ADuM4122.pdf p.1). Si82B28 (3.75 kVrms) falls short of it; Si82B47
+    (6 kVrms) differs in the output option. Owner, 2 Nov 2026: the 6 kVrms part with another output option ranks above
+    the 3.75 kVrms part, and every candidate below their isolation rating ranks below every candidate that is not."""
+    ref = gd("ADuM4122ARIZ")
+    pool = cl._pool(ref, cl.Crosser(session).crosses(ref))
+    order = sorted(pool, key=cl.functional_key)
+    downs = [r.downgrade for r in order]
+    assert downs == sorted(downs) and any(downs)
+    assert order[0].candidate.mpn.startswith("SI82B47") and not order[0].downgrade
+    assert all(r.downgrade for r in pool if r.candidate.mpn.startswith("SI82B28"))
+

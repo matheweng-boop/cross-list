@@ -189,23 +189,26 @@ reports:
       our parts. Qorvo has one automotive PD-ready buck, ACT4751M (4.5–40 V, 4 A, supplies a PD controller), the
       consumer ACT4751 / ACT4752 bucks with PD 3.0 PPS and the AEC-Q100 ACT4529M Quick Charge 2.0 buck; no automotive
       buck-boost and no PD protocol engine. (c) Our own PD controller: not as a standalone product (est): crowded, cheap and
-      certification-heavy; partner first, then integrate a licensed PD engine into an ACT buck-boost. (a) Beyond USB, we
+      certification-heavy; partner first, then integrate a licensed PD engine into an ACT buck-boost. A closer look on 2 Nov
+      2026 (owner's comment) maps what we could reuse (the power stage, the Arm-plus-power recipe of the PAC parts, Power over
+      Ethernet know-how; not the protocol, the CC transceiver or USB-IF test practice) and rates the routes: partner 1,
+      license 2, build 3 (est). (a) Beyond USB, we
       cover the isolation, gate-drive, isolated-power and sensing blocks of BMS, on-board chargers and charging stations
       with automotive Skyworks parts; the gaps are the BMS cell-monitor AFE, OBC controllers and SiC / GaN power stages
       (UnitedSiC went to onsemi in January 2025).
     tags: [USB-C, USB PD, PD 3.1, EPR, PPS, car charger, rear-seat charging, buck-boost, load dump, CISPR 25, ACT4751,
-      ACT4752, ACT4529, ACT2861, ACT5101, PAC25140, TPS25772-Q1, TPS25762-Q1, CCG7D, RTQ7880, BMS, battery monitor,
+      ACT4752, ACT4529, ACT2861, ACT5101, PAC25140, TPS25772-Q1, TPS25762-Q1, CCG7D, RTQ7880, USB-IF, PD compliance, BMS, battery monitor,
       on-board charger, OBC, wallbox, Si8239x, Si828x, Si89xx, Si875x, Si88xx]
     sources: "BizDev Qorvo and Skyworks catalogues with the AEC-Q rule, path-to-product data, 4,195 public reference designs,
       the ACT88321 review and the hot-swap and current-sense reports; 16 public web requests (ti.com, infineon.com, usb.org,
       weltrend.com.tw, richtek.com; monolithicpower.com showed a bot check and microchip.com returned 403, both stopped) and
-      13 web searches"
+      13 web searches; 5 more on 2 Nov 2026 (usb.org compliance page; richtek.com, whose product list loads by script)"
     decision: Should Skyworks + Qorvo build a car charging offer, an automotive USB-C buck-boost first, and should we make our
       own USB PD controller?
     answer:
       text: '(b) Yes, as a DC-DC: an automotive 4-switch buck-boost successor of ACT4751M / ACT5101 that pairs with a partner''s
-        certified PD controller (est). (c) No standalone PD controller of our own; license a PD engine later for a one-chip
-        version. (a) Sell our isolation, drivers and sensing into BMS and chargers now; partner for BMS AFE, controllers and SiC.'
+        certified PD controller (est). (c) No standalone PD controller of our own (feasibility 3: the protocol, its tests and
+        firmware are new to us); license a PD engine later for a one-chip version (feasibility 2, est). (a) Sell our isolation, drivers and sensing into BMS and chargers now; partner for BMS AFE, controllers and SiC.'
       conf: low
     needed_now:
     - 'Power BU (Qorvo ACT line): is an automotive ACT4751M-class buck-boost (6–36 V in, 3.3–21 V out, 100 W) feasible on the existing process, and does any PD firmware from the ACT4751 / ACT4752 programme still exist?'

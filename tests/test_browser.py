@@ -860,3 +860,18 @@ def test_describe_your_system_builds_blocks_at_ipad_size(page):
     expect(page.locator("#bk-words-echo")).to_contain_text("MCU → Microcontroller")
     expect(page.locator("#bk-status")).to_contain_text("built from your description")
     assert overflow(page) <= 1
+
+
+# --- Research: our own PD controller (worker G, 2 Nov 2026) -----------------------------------------------------------
+def test_charging_report_own_pd_controller_section_on_a_phone(page):
+    """Owner, 2 Nov 2026 ("Look into own pd controller"): the summary links to the closer look; its five parts show
+    and their tables scroll inside their own box on a 390 px phone, not the page."""
+    page.set_viewport_size(PHONE)
+    go(page, "/business/reports/auto-charging-power")
+    page.locator('.brief a[href="#own-pd-controller"]').click()
+    sec = page.locator("#own-pd-controller")
+    expect(sec).to_be_in_viewport()
+    for h in ("What we could reuse (est)", "What it takes", "Who sells it today", "Effort and feasibility",
+              "Build, partner or license"):  # fmt: skip
+        expect(sec.locator("h3", has_text=h)).to_have_count(1)
+    assert overflow(page) <= 1

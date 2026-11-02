@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ page_title(request.url.path, design.name or 'Block diagram') }}{% endblock %}
 {% block content %}
+{% if not bare %}{% from "_where.html" import where_strip %}{% from "_systems.html" import crumbs %}{% set c0 = places[0] if places else none %}
+{{ where_strip("blocks" if tpl_i is not none else "workspace", {"systems": "/library#sys-" ~ c0.system, "deep": ("/library/" ~ c0.deep[0].key) if c0.deep else none} if c0 else {}) }}
+{% for c in places %}{{ crumbs(c, "diagram") }}{% endfor %}{% endif %}
 <div id="bk" class="bk">
   <h1 id="bk-title" class="bk-title">{{ design.name or 'New block diagram' }}</h1>
   <p id="bk-headline" class="bk-headline" role="status"></p>

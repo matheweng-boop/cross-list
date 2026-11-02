@@ -1,0 +1,19 @@
+{# "Where am I" strip (owner, 2 Nov 2026): the four pages from a system to your own diagram, the current one highlighted
+   with one line on what it shows. Used by the Systems library, a deep dive, the Block diagram library (and a diagram
+   opened from it) and the workspace. step: systems | deep | blocks | workspace. links: {step: href} points a step
+   at the same sub-system (from a deep dive to its block diagrams, from a diagram to its deep dive). #}
+{% macro where_strip(step, links={}) -%}
+{%- set steps = [
+  ("systems", "Systems library", "/library", "The map of systems and the sub-systems they are made of."),
+  ("deep", "Deep dive", none, "A written explainer for one sub-system: how it works, our block diagram, design rules, trends, where our and Qorvo's parts sit, competitors, market and references."),
+  ("blocks", "Block diagrams", "/blocks", "Real block diagrams from public sources, with their blocks, candidate parts and coverage."),
+  ("workspace", "Your workspace", "/blocks/new", "Your own diagrams, to build, edit and save."),
+] -%}
+<nav class="where" aria-label="Where you are">
+  <ol class="where-steps">{% for key, label, href, what in steps %}{% set href = links.get(key) or href %}
+    <li class="where-step{{ ' on' if key == step }}">{% if key == step %}<span aria-current="page"><b>{{ loop.index }}</b> {{ label }}</span>{% elif href %}<a href="{{ href }}"><b>{{ loop.index }}</b> {{ label }}</a>{% else %}<span class="where-off"><b>{{ loop.index }}</b> {{ label }}</span>{% endif %}</li>{% endfor %}
+  </ol>
+  {%- for key, label, href, what in steps if key == step %}
+  <p class="where-what">{{ what }}</p>{% endfor %}
+</nav>
+{%- endmacro %}

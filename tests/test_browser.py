@@ -189,18 +189,69 @@ def test_feedback_button_sends_and_confirms(page):
 def test_application_library_system_then_sub_system(page):
     go(page, "/blocks")
     system = page.locator(".sys-pick a.fchip").nth(1)
-    name = system.inner_text().rsplit(" ", 1)[0].strip()
-    system.click()
-    page.wait_for_load_state("load")
-    assert "system=" in page.url
-    assert page.locator(".sys-pick a.fchip.on").inner_text().startswith(name)
-    sub = page.locator(".sys-sub-title").first
-    sub_name = sub.inner_text().strip()
-    sub.click()
-    page.wait_for_load_state("load")
-    assert "sub=" in page.url
-    heading = page.locator("h3.tpl-cat").first
+    key = system.get_attribute("href").removeprefix("#area-")
+    system.click()  # owner, 2 Nov 2026: jumps to the system and opens it, no reload
+    expect(page.locator(f"details#area-{key}[open]")).to_have_count(1)
+    card = page.locator(f"details#area-{key} .sys-sub", has=page.locator('a.sys-btn-dg[href^="/blocks?"]')).first
+    sub_name = card.locator(".sys-sub-title").inner_text().strip()
+    with page.expect_navigation():
+        card.locator("a.sys-btn-dg").click()  # "▦ See the N block diagrams"
+    assert f"system={key}" in page.url and "sub=" in page.url
+    assert page.locator(".sys-pick a.fchip.on").get_attribute("href") == f"#area-{key}"
+    heading = page.locator(f"details#area-{key}[open] h3.tpl-cat").first
     assert heading.is_visible() and heading.inner_text().startswith(sub_name)
+
+
+def test_systems_library_systems_open_and_close(page):
+    """Owner, 2 Nov 2026: each system is one closed line; a click opens its sub-systems and deep dives, a second click
+    closes it; the buttons jump to a system and open it; /library#sys-<key> opens with that system expanded."""
+    go(page, "/library")
+    expect(page.locator("details.sys-block")).not_to_have_count(0)
+    expect(page.locator("details.sys-block[open]")).to_have_count(0)  # all start closed
+    auto = page.locator("details#sys-automotive")
+    card = auto.locator(".sys-sub").first
+    expect(card).to_be_hidden()
+    auto.locator("summary").click()
+    expect(card).to_be_visible()
+    expect(auto.locator(".lib-card").first).to_be_visible()  # its deep dives
+    auto.locator("summary").click()
+    expect(card).to_be_hidden()
+    button = page.locator('.sys-pick a[href="#sys-drones"]')
+    button.click()
+    drones = page.locator("details#sys-drones")
+    expect(page.locator("details#sys-drones[open]")).to_have_count(1)
+    expect(drones.locator("summary")).to_be_in_viewport()
+    drones.locator("summary").click()  # closed again, then the same button (same hash) opens it once more
+    expect(page.locator("details#sys-drones[open]")).to_have_count(0)
+    button.click()
+    expect(page.locator("details#sys-drones[open]")).to_have_count(1)
+    go(page, "/blocks")
+    go(page, "/library#sys-medical")  # an old link: opens with that system expanded
+    expect(page.locator("details#sys-medical[open]")).to_have_count(1)
+    expect(page.locator("details#sys-medical .sys-sub").first).to_be_visible()
+    expect(page.locator("details.sys-block[open]")).to_have_count(1)
+
+
+def test_block_diagram_library_opens_a_system_by_button_hash_and_query(page):
+    """Owner, 2 Nov 2026: the Block diagram library opens and closes its systems like the Systems library; #area-,
+    #sub- and ?system= open the right one."""
+    go(page, "/blocks")
+    expect(page.locator("details.sys-block[open]")).to_have_count(0)
+    page.locator('.sys-pick a[href="#area-cellular"]').click()
+    expect(page.locator("details#area-cellular[open]")).to_have_count(1)
+    expect(page.locator("details#area-cellular .sys-sub").first).to_be_visible()
+    page.locator("details#area-cellular > summary").click()
+    expect(page.locator("details#area-cellular[open]")).to_have_count(0)
+    go(page, "/library")
+    go(page, "/blocks#sub-car-radio")  # a sub-system whose diagrams are not listed: its card, system open
+    expect(page.locator("details#area-automotive[open]")).to_have_count(1)
+    expect(page.locator("#card-automotive-car-radio")).to_be_in_viewport()
+    go(page, "/blocks?system=drones")
+    expect(page.locator("details#area-drones[open]")).to_have_count(1)
+    expect(page.locator("#diagrams-drones")).to_be_visible()
+    expect(page.locator("details.sys-block[open]")).to_have_count(1)
+    go(page, "/blocks?system=automotive&sub=car-radio#sub-car-radio")
+    expect(page.locator("#sub-car-radio")).to_be_in_viewport()
 
 
 def test_cross_sell_by_system(page):
@@ -229,18 +280,66 @@ def test_new_systems_in_the_libraries_and_cross_sell(page):
     assert page.locator("main h2").first.is_visible()
 
 
-def test_library_card_opens_its_block_diagram_in_one_click(page):
-    """Owner, 25 Oct 2026: each card says whether a block diagram exists, and one click on a diagram name opens it
-    (the editor is visited last: leaving it asks before unload)."""
-    go(page, "/library")
-    expect(page.locator(".sys-sub .dg-flag").first).to_be_visible()
+def test_sub_system_card_buttons_open_the_deep_dive_and_the_diagrams(page):
+    """Owner, 2 Nov 2026: a sub-system card has two clear buttons, "📖 Read the deep dive" and "▦ See the N block
+    diagrams" (the editor is visited last: leaving a library diagram asks before unload)."""
+    go(page, "/library#sys-automotive")
+    card = page.locator("#card-automotive-car-access")
+    expect(card.locator("a.sys-btn")).to_have_count(2)
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/auto_uwb")
     go(page, "/blocks")
     expect(page.locator("#diagrams")).to_be_in_viewport()  # the summary sits at the top
-    card = page.locator(".sys-sub", has=page.locator(".dg-flag.has")).first
-    expect(card.locator(".dg-flag")).to_contain_text("Block diagram ✓")
+    page.locator(".sys-pick a.fchip").first.click()  # opens the first system
+    card = page.locator("details.sys-block[open] .sys-sub", has=page.locator('a.sys-btn-dg[href^="/blocks?"]')).first
+    expect(card.locator("a.sys-btn-dg")).to_have_text(re.compile(r"^▦ See the \d+ block diagrams$"))
     with page.expect_navigation():
-        card.locator(".sys-diags a").first.click()
+        card.locator("a.sys-btn-dg").click()
+    sub = re.search(r"sub=([a-z0-9-]+)", page.url).group(1)
+    expect(page.locator(f"#sub-{sub}")).to_be_in_viewport()
+    with page.expect_navigation():
+        page.locator(f"#sub-{sub} + .tpl-grid a.tpl-card").first.click()
     assert "/blocks/new?template=" in page.url
+
+
+def test_where_am_i_strip_and_breadcrumbs(page):
+    """Owner, 2 Nov 2026: a strip on the four pages highlights where you are, with one line on what the page shows; a
+    deep dive and a diagram show "Automotive › UWB in the car" and link to the other view of the same sub-system."""
+    page.on("dialog", lambda d: d.accept())  # a library diagram opens as an unsaved copy: leaving it asks first
+    here = page.locator('nav.where [aria-current="page"]')
+    what = page.locator("nav.where .where-what")
+    go(page, "/library")
+    expect(here).to_have_text("1 Systems library")
+    expect(what).to_have_text("The map of systems and the sub-systems they are made of.")
+    with page.expect_navigation():
+        page.locator("nav.where").get_by_role("link", name="3 Block diagrams").click()
+    expect(here).to_have_text("3 Block diagrams")
+    expect(what).to_contain_text("Real block diagrams from public sources")
+    go(page, "/library/auto_uwb")
+    expect(here).to_have_text("2 Deep dive")
+    expect(what).to_contain_text("A written explainer for one sub-system")
+    crumbs = page.locator("nav.crumbs")
+    expect(crumbs).to_contain_text("Automotive")
+    expect(crumbs).to_contain_text("UWB in the car")
+    with page.expect_navigation():
+        crumbs.get_by_role("link", name=re.compile(r"See its block diagrams \(\d+\)")).click()
+    assert "system=automotive" in page.url and "sub=car-access" in page.url
+    expect(page.locator("details#area-automotive[open]")).to_have_count(1)
+    expect(page.locator("#sub-car-access")).to_be_in_viewport()
+    with page.expect_navigation():
+        page.locator("#sub-car-access + .tpl-grid a.tpl-card").first.click()
+    expect(here).to_have_text("3 Block diagrams")
+    expect(page.locator("nav.crumbs")).to_contain_text("UWB in the car")
+    with page.expect_navigation():
+        page.locator("nav.crumbs").get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/auto_uwb")
+    with page.expect_navigation():
+        page.locator("nav.where").get_by_role("link", name="4 Your workspace").click()
+    assert page.url.endswith("/blocks/new")
+    expect(here).to_have_text("4 Your workspace")
+    expect(what).to_have_text("Your own diagrams, to build, edit and save.")
+    expect(page.locator("nav.crumbs")).to_have_count(0)
 
 
 def test_efuse_key_applications_table_fits_desktop_and_phone(page, chromium, live_server):
@@ -326,6 +425,17 @@ def test_rf_bands_type_and_application_chips_change_the_chart(page):
     assert page.locator(".rbt-list").inner_text().strip()
 
 
+def pick_visual(page, vid: str):
+    """Open a visual the way a person does (owner, 2 Nov 2026): its tab, its drop-down line, then its title."""
+    link, inner = page.locator(f"#vz-nav a[data-id='{vid}']"), page.locator(f"a[data-id='{vid}']")
+    tab = page.locator("#vz-nav .vz-tp", has=inner).get_attribute("aria-labelledby")
+    page.locator(f"#{tab}").click()
+    line = page.locator("#vz-nav details.vz-sub", has=inner)
+    if line.get_attribute("open") is None:
+        line.locator("summary").click()
+    link.click()
+
+
 def test_every_visual_moves_without_errors(page):
     go(page, "/visuals")
     links = page.locator("#vz-nav a[data-id]")
@@ -333,7 +443,7 @@ def test_every_visual_moves_without_errors(page):
     assert len(ids) > 10
     stuck, total = [], 0
     for vid in ids:
-        page.locator(f"#vz-nav a[data-id='{vid}']").click()
+        pick_visual(page, vid)
         expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", vid)
         panel = page.locator("#vz-panel")
         before = panel.inner_html()
@@ -398,10 +508,10 @@ def test_frequency_visuals_draw_the_bands_as_ranges(page):
     for label in ("AM", "FM", "DAB", "GNSS", "UWB"):
         expect(chart.locator("text.vz-bl", has_text=label).first).to_be_attached()
     expect(page.locator("#vz-panel .vz-more")).to_contain_text("76–108 MHz")
-    page.locator("#vz-nav a[data-id='fmim']").click()
+    pick_visual(page, "fmim")
     for label in ("Japan", "most countries", "OIRT"):
         expect(page.locator("#vz-panel .vz-chart text.vz-bl", has_text=label).first).to_be_attached()
-    page.locator("#vz-nav a[data-id='nf']").click()
+    pick_visual(page, "nf")
     expect(page.locator("#vz-panel .vz-strip .vz-sbar").first).to_be_attached()
 
 
@@ -585,6 +695,74 @@ def test_uwb_positioning_page_visuals_follow_sliders_drags_taps_and_keys(page):
     expect(page.locator("#vz-panel .uwp-pdoa")).to_be_attached()
     page.locator('#vz-panel input[data-k="th"]').evaluate(slide, 70)
     expect(page.locator("#vz-panel .vz-kpi", has_text="Angle read back")).to_contain_text("70")
+
+
+def test_visuals_tabs_drop_downs_one_visual_deep_links_and_search(page):
+    """Owner, 2 Nov 2026: three tabs; under the chosen tab each sub-group is one closed line with a count; opening it
+    lists only the titles; a title shows only that visual; #id deep links open the right tab, line and visual; a
+    search box finds a visual by its title or a word."""
+    go(page, "/visuals")
+    tabs = page.locator("#vz-tabbar [role=tab]")
+    expect(tabs).to_have_count(3)
+    for i, label in enumerate(("RF & wireless", "Power & isolation", "Basics")):
+        expect(tabs.nth(i)).to_contain_text(label)
+    expect(tabs.nth(0)).to_have_attribute("aria-selected", "true")
+    rf = page.locator("#vz-tp-rf")
+    lines = ("RF links", "Receivers", "Matching and filters", "Broadcast radio", "GNSS", "UWB", "Timing")
+    expect(rf.locator("details.vz-sub > summary")).to_have_text([re.compile(rf"^{s} · \d+$") for s in lines])
+    expect(rf.locator("details.vz-sub[open]")).to_have_count(0)  # every line starts closed
+    expect(page.locator("#vz-panel .vz-hint")).to_be_visible()  # no visual until one is picked
+    radio = rf.locator("details.vz-sub").filter(has=page.locator("summary", has_text="Broadcast radio"))
+    radio.locator("summary").click()
+    titles = radio.locator(".vz-titles > *")
+    expect(titles.first).to_be_visible()
+    assert titles.count() == radio.locator(".vz-titles > a[data-id]").count()  # only titles in the list
+    radio.locator(".vz-titles a", has_text="AM vs FM").click()
+    expect(page.locator("#vz-panel h2")).to_have_count(1)  # only that visual
+    expect(page.locator("#vz-panel h2")).to_have_text("AM vs FM modulation")
+    assert page.url.endswith("#mod")
+    tabs.nth(1).click()
+    power = page.locator("#vz-tp-power")
+    expect(power).to_be_visible()
+    expect(rf).to_be_hidden()
+    expect(power.locator("details.vz-sub > summary")).to_have_text(
+        [re.compile(rf"^{s} · \d+$") for s in ("Isolation", "Power switching", "Circuits in motion")])  # fmt: skip
+    ids = power.locator("details.vz-sub").evaluate_all(
+        "ds => ds.map(d => [...d.querySelectorAll('a[data-id]')].map(a => a.dataset.id))")  # fmt: skip
+    assert ids[0] == ["cmti", "creep", "emc"] and ids[1][:4] == ["gate", "thermal", "swloss", "turnon"]
+    assert len(ids[2]) == 6
+    tabs.nth(2).click()
+    expect(page.locator("#vz-tp-basics details.vz-sub > summary")).to_have_text([re.compile(r"^Digital basics · \d+$")])
+    # deep links from other pages open the right tab, line and visual
+    for vid, tab, line in (("ip3", "rf", "Receivers"), ("creep", "power", "Isolation"),
+                           ("turnon", "power", "Power switching"), ("hex", "basics", "Digital basics")):  # fmt: skip
+        page.goto("about:blank")
+        go(page, f"/visuals#{vid}")
+        expect(page.locator(f"#vz-tab-{tab}")).to_have_attribute("aria-selected", "true")
+        expect(page.locator(f"#vz-tp-{tab} details.vz-sub[open] > summary")).to_have_text(re.compile(rf"^{line} · "))
+        expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", vid)
+        expect(page.locator("#vz-panel h2")).to_have_count(1)
+    page.evaluate("location.hash = 'nf'")  # a link inside a visual to another one switches the tab too
+    expect(page.locator("#vz-tab-rf")).to_have_attribute("aria-selected", "true")
+    expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", "nf")
+    # search by title or word
+    q, hits = page.locator("#vz-q"), page.locator("#vz-hits a[data-hit]")
+    q.fill("jitter")
+    expect(hits.first).to_have_attribute("data-hit", "jitter")
+    q.fill("VSWR")
+    expect(hits.first).to_have_attribute("data-hit", "vswr")
+    hits.first.click()
+    expect(page.locator("#vz-panel h2")).to_contain_text("VSWR")
+    expect(page.locator("#vz-tp-rf details.vz-sub[open] > summary")).to_contain_text(["Matching and filters"])
+    q.fill("clearance")  # a word from the visual's keywords, not its title; Enter opens the first hit
+    expect(hits.first).to_have_attribute("data-hit", "creep")
+    q.press("Enter")
+    expect(page.locator("#vz-panel h2")).to_have_text("Creepage against working voltage")
+    expect(page.locator("#vz-tab-power")).to_have_attribute("aria-selected", "true")
+    q.fill("zzzz")
+    expect(page.locator("#vz-hits")).to_contain_text("No visual matches")
+    q.fill("")
+    expect(page.locator("#vz-hits")).to_be_hidden()
 
 
 # --- Data management --------------------------------------------------------------------------------------------------

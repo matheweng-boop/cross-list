@@ -686,7 +686,7 @@ class TechReviewRequest(Base):
 
 
 class AreaRequest(Base):
-    """A request for another application area in the Application library (owner, 22 Oct 2026: the library focuses on
+    """A request for another application area in the Block diagram library (owner, 22 Oct 2026: the library focuses on
     automotive, data centers, drones and cellular; other areas are asked for here). Reviewed in Data management >
     Requests & reviews and listed in the daily inbox."""
 

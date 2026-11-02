@@ -2233,3 +2233,59 @@ details.qs-note { border-bottom: 1px solid var(--pico-muted-border-color); paddi
 @media (max-width: 600px) {
   .pc-depth .pc-table td[data-label]:not([data-label=""])::before { content: attr(data-label) ": "; font-weight: 600; color: var(--pico-muted-color); }
 }
+
+/* Worker B, 2 Nov 2026. Item 5: systems open and close (Systems library, Block diagram library); one closed line per
+   system, the buttons above jump to a system and open it (static/systems.js) */
+details.sys-block { margin: 0 0 .5rem; border: 1px solid var(--pico-muted-border-color); border-radius: .6rem; }
+details.sys-block > summary { padding: .7rem .9rem; line-height: 1.4; min-height: 44px; color: inherit; overflow-wrap: anywhere; }
+details.sys-block > summary::after { margin-top: .2rem; }
+details.sys-block > summary .sys-name { font-weight: 700; font-size: 1.05rem; color: var(--pico-primary); }
+details.sys-block > summary:hover .sys-name, details.sys-block > summary:focus-visible .sys-name { text-decoration: underline; }
+details.sys-block[open] > summary { margin: 0; background: var(--cl-base-bg); border-radius: .6rem .6rem 0 0; }
+details.sys-block > .sys-body { padding: .6rem .9rem .3rem; }
+details.sys-block > .sys-body > p:first-child { margin-bottom: .4rem; }
+/* Worker B, 2 Nov 2026. Item 6: "where am I" strip (_where.html), the two buttons on a sub-system card and the
+   breadcrumbs on deep dives and diagrams (_systems.html) */
+nav.where { display: block; margin: 0 0 .8rem; padding: .45rem .6rem .5rem; border-radius: .6rem; background: var(--cl-base-bg); }
+nav.where ol.where-steps { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 0; margin: 0; padding: 0; list-style: none; }
+nav.where li.where-step { display: flex; align-items: center; margin: 0; padding: 0; list-style: none; font-size: .85rem; }
+.where-step + .where-step::before { content: "›"; margin: 0 .3rem; color: var(--pico-muted-color); }
+.where-step > a, .where-step > span { display: inline-flex; align-items: center; gap: .35rem; min-height: 2.2rem; padding: .2rem .65rem; border-radius: 2rem; text-decoration: none; }
+.where-step > a:hover { background: var(--pico-background-color); }
+.where-step b { display: inline-grid; place-items: center; width: 1.3rem; height: 1.3rem; border-radius: 50%; font-size: .72rem; background: var(--pico-background-color); color: var(--pico-muted-color); }
+.where-step.on > span { background: var(--pico-primary); color: #fff; font-weight: 600; }
+.where-step.on b { background: #fff; color: var(--pico-primary); }
+.where-off { color: var(--pico-muted-color); }
+.where-what { margin: .3rem .3rem 0; font-size: .85rem; }
+.sys-btns { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .3rem; }
+.sys-btn { display: inline-flex; align-items: center; gap: .3rem; min-height: 2.2rem; padding: .2rem .75rem; border: 1px solid var(--pico-primary); border-radius: 2rem; font-size: .84rem; line-height: 1.25; text-decoration: none; overflow-wrap: anywhere; }
+.sys-btn:hover, .sys-btn:focus-visible { background: var(--cl-base-bg); }
+.sys-btn-lbl { flex: 1 0 100%; font-size: .84rem; font-weight: 600; }
+.sys-sub .sys-also { display: block; overflow-wrap: anywhere; }
+nav.crumbs { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: .35rem .45rem; margin: 0 0 .6rem; overflow-wrap: anywhere; }
+.crumbs .crumb-sep { color: var(--pico-muted-color); }
+.crumbs .crumb-x { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-left: .2rem; }
+body.bare .where, body.bare .crumbs { display: none; }
+/* Worker B, 2 Nov 2026. Item 14: Interactive visuals in three tabs, one closed drop-down line per sub-group (titles
+   only), one visual at a time, and a search box */
+.vz-top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; margin: 0 0 .7rem; }
+.vz-tabs { display: flex; flex-wrap: wrap; gap: .4rem; }
+.vz-tabs button { width: auto; margin: 0; padding: .4rem .9rem; min-height: 44px; border-radius: 2rem; border: 1px solid var(--pico-muted-border-color); background: transparent; color: inherit; font-size: .92rem; font-weight: 500; }
+.vz-tabs button small { color: var(--pico-muted-color); font-weight: 400; }
+.vz-tabs button.on { background: var(--cl-base-bg); border-color: var(--pico-primary); color: var(--pico-primary); font-weight: 600; }
+.vz-find { display: block; flex: 1 1 14rem; min-width: 0; }
+.vz-find input { margin: 0; }
+.vz-hits { margin: -.2rem 0 .8rem; padding: .5rem .8rem; border: 1px solid var(--pico-muted-border-color); border-radius: .6rem; }
+.vz-hits p { margin: 0 0 .3rem; } .vz-hits ul { margin: 0; padding-left: 1.1rem; } .vz-hits li { margin: .2rem 0; overflow-wrap: anywhere; }
+.vz-tp { display: grid; gap: .4rem; } .vz-tp[hidden] { display: none; }
+details.vz-sub { margin: 0; border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; }
+details.vz-sub > summary { padding: .55rem .7rem; min-height: 44px; line-height: 1.35; font-weight: 600; color: inherit; }
+details.vz-sub > summary small { color: var(--pico-muted-color); font-weight: 400; }
+details.vz-sub[open] > summary { margin: 0; background: var(--cl-base-bg); border-radius: .5rem .5rem 0 0; }
+.vz-titles { display: grid; gap: .1rem; padding: .3rem; }
+.vz-titles a { display: flex; align-items: center; min-height: 2.2rem; padding: .3rem .5rem; border-radius: .3rem; text-decoration: none; overflow-wrap: anywhere; }
+.vz-titles a.on { background: var(--pico-primary); color: #fff; }
+.vz-also { margin: .2rem .3rem 0; }
+.vz-hint { margin: 0; color: var(--pico-muted-color); }
+@media (min-width: 901px) { .vz { grid-template-columns: 17rem minmax(0, 1fr); } }
+@media (max-width: 900px) { .vz-nav { display: block; } }

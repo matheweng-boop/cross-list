@@ -676,6 +676,16 @@ def visuals_page(request: Request, session: Session = Depends(get_session)):
                                       {"data": data, "explain": visuals.explanations()})  # fmt: skip
 
 
+def _visual_words() -> dict[str, list[str]]:
+    """Search words per visual for the search box on Interactive visuals (owner, 2 Nov 2026): library.VISUALS."""
+    from app.services import library
+
+    return {k: list(v[2]) for k, v in library.VISUALS.items()}
+
+
+templates.env.globals["visual_words"] = _visual_words
+
+
 @router.get("/api/visuals/rf-parts")
 def visuals_rf_parts():
     """Active Skyworks / Qorvo RF parts with gain, NF, IP3, P1dB, loss and band, for the receiver visuals."""
@@ -718,13 +728,14 @@ def library_sources(request: Request):
 @router.get("/library/{key}", response_class=HTMLResponse)
 def library_topic(request: Request, key: str, session: Session = Depends(get_session)):
     from app.services import library
+    from app.services import systems as sy
 
     if library.topic(key) is None:
         raise HTTPException(404, "Topic not found")
     t = library.reviewed(session, key)
     ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
            "notes": library.notes(key), "cases": library.cases_using(key), "related": library.related(key),
-           "rule_links": library.rule_links}  # fmt: skip
+           "rule_links": library.rule_links, "where": sy.topic_crumb(key)}  # fmt: skip
     return templates.TemplateResponse(request, "library/topic.html", ctx)
 
 

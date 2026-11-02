@@ -68,6 +68,23 @@ def test_by_application_letter_column(client):
     assert re.search(row, html)
 
 
+def test_short_labels_letter_tabs_and_car_diagram_counts(client):
+    """Owner, 2 Nov 2026: the short labels, five letter tabs over the By application view, and diagram counts from
+    the Automotive system only (not keyword matches across the whole library)."""
+    from app.services import systems as sy
+
+    assert au.LEVEL_LABEL == {"A": "Sell now", "B": "Qualify", "C": "New variant", "D": "Adjacent", "gap": "Gap"}
+    in_car = {i for x in sy.get("automotive")["subsystems"] for i in x["idx"]}
+    apps = {a["id"]: a for a in au.applications()}
+    for a in apps.values():
+        assert set(a["car"]) <= set(a["diagrams"])
+        assert len(a["car"]) == sum(1 for i in a["idx"] if i in in_car)
+    assert len(apps["bms"]["car"]) < len(apps["bms"]["diagrams"])  # data-center backup units are not counted
+    html = client.get("/business/automotive").text
+    assert html.count('<button type="button" data-lv=') == 5 and "/static/lv_tabs.js" in html
+    assert f'{len(apps["bms"]["car"])} car diagrams</small>' in html
+
+
 def test_config_ids_are_known():
     fns = vocab.functions()
     apps = {a["id"] for a in au.config()["applications"]}

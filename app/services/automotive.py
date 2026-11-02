@@ -25,7 +25,8 @@ FILE = PROJECT_ROOT / "data" / "business" / "auto_reach.yaml"
 DATASET = "auto_reach"
 OURS = ("Skyworks", "Qorvo")
 LEVELS = ("A", "B", "C", "D", "gap")
-LEVEL_LABEL = {"A": "Automotive today", "B": "Qualify it", "C": "Variant", "D": "Adjacent technology", "gap": "Gap"}
+# owner, 2 Nov 2026: the short action words on the map and the Car explorer
+LEVEL_LABEL = {"A": "Sell now", "B": "Qualify", "C": "New variant", "D": "Adjacent", "gap": "Gap"}
 LEVEL_HELP = {
     "A": "We sell an automotive-grade part of this function",
     "B": "We sell parts of this function, none automotive: mostly qualification work",
@@ -45,8 +46,12 @@ def config() -> dict:
 
 @lru_cache
 def applications() -> tuple[dict, ...]:
-    """Configured applications with the library diagrams they cover (names and template indexes) and the functions
-    those diagrams use."""
+    """Configured applications with the library diagrams they cover (names and template indexes), the functions
+    those diagrams use and `car`: the names of those diagrams that sit in the Automotive system
+    (data/blocks/systems.yaml), the ones counted on the pages (owner, 2 Nov 2026: car diagrams only)."""
+    from app.services import systems as sy
+
+    in_car = {i for x in (sy.get("automotive") or {}).get("subsystems") or [] for i in x["idx"]}
     tpls = [(i, blocks.display_name(t), t) for i, t in enumerate(blocks.templates())]
     taken: set[str] = set()
     out = []
@@ -56,7 +61,8 @@ def applications() -> tuple[dict, ...]:
         taken.update(n for _, n, _ in mine)
         fns = {f for _, _, t in mine for f in blocks.template_functions(t)}
         out.append({"id": a["id"], "label": a["label"], "diagrams": [n for _, n, _ in mine],
-                    "idx": [i for i, _, _ in mine], "fns": fns})  # fmt: skip
+                    "idx": [i for i, _, _ in mine], "fns": fns,
+                    "car": [n for i, n, _ in mine if i in in_car]})  # fmt: skip
     return tuple(out)
 
 

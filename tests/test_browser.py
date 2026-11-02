@@ -320,8 +320,17 @@ def test_automotive_map_letter_column(page):
     go_built_on_first_use(page, "/business/automotive")
     rows = page.locator(".am-app .am-row")
     assert rows.count() > 5
+    tabs = page.locator(".lv-tabs button")
+    expect(tabs).to_have_count(5)  # owner, 2 Nov 2026: one letter at a time, A (Sell now) first where there is one
+    first = page.locator('.lv-tabs button[aria-pressed="true"]')
+    expect(first).to_have_count(1)
+    lv = first.get_attribute("data-lv")
+    expect(page.locator(f'.am-app .am-row[data-lv]:not([data-lv="{lv}"])').first).to_be_hidden()
+    page.locator('.lv-tabs button[data-lv="gap"]').click()
+    expect(page.locator('.lv-tabs button[data-lv="gap"]')).to_have_attribute("aria-pressed", "true")
     expect(page.locator(".am-app .am-lv", has_text="Gap").first).to_be_visible()
-    gaps = page.evaluate("""() => [...document.querySelectorAll('.am-app .am-row')].map(r => {
+    expect(page.locator('.am-app .am-row[data-lv="gap"]').first).to_be_visible()
+    gaps = page.evaluate("""() => [...document.querySelectorAll('.am-app .am-row:not([hidden])')].map(r => {
         const lv = r.querySelector('.am-lv').getBoundingClientRect();
         return Math.min(...[...r.querySelectorAll('.am-fnchip')].map(c => c.getBoundingClientRect().left)) - lv.right;
     })""")
@@ -355,7 +364,10 @@ def test_car_explorer_area_button_opens_its_list(page):
     expect(panel.locator(".am-row .am-lv").first).to_be_visible()
     blocks_link = panel.get_by_role("link", name=re.compile("^Block diagrams"))
     expect(blocks_link).to_have_attribute("href", "/blocks?system=automotive&sub=battery-power")
-    more = panel.locator("details.ce-more").first
+    expect(panel.locator(".lv-tabs button")).to_have_count(5)
+    panel.locator('.lv-tabs button[data-lv="gap"]').click()  # the gaps: the longest list
+    expect(panel.locator('.am-row[data-lv="gap"]').first).to_be_visible()
+    more = panel.locator('.am-row[data-lv="gap"] details.ce-more').first
     hidden = more.locator(".am-fnchip").first
     expect(hidden).to_be_hidden()
     more.locator("summary").click()

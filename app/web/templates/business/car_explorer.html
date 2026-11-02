@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "business/_lv_tabs.html" import lv_tabs %}
 {% macro chip(c) %}{% if c.href %}<a class="am-fnchip" href="{{ c.href }}">{% else %}<span class="am-fnchip">{% endif %}{{ c.label }}{% if c.next %} <span class="am-nx" title="next step proposed">→{{ c.next }}</span>{% endif %}{% if c.accepted %} ✓{% endif %}{% if c.href %}</a>{% else %}</span>{% endif %}{% endmacro %}
 {% block content %}
 <h1>Car explorer</h1>
@@ -15,14 +16,16 @@
 <nav class="ce-areas" aria-label="Areas of the car">{% for z in areas %}<a href="?area={{ z.id }}#ce-area-{{ z.id }}" class="ce-area{{ ' on' if sel == z.id }}" data-area="{{ z.id }}"{% if sel == z.id %} aria-current="true"{% endif %}>{{ z.title }}</a>{% endfor %}</nav>
 
 {% for z in areas %}
-<section class="ce-panel" id="ce-area-{{ z.id }}" aria-labelledby="ce-h-{{ z.id }}"{% if sel != z.id %} hidden{% endif %}>
+<section class="ce-panel" data-lv-scope id="ce-area-{{ z.id }}" aria-labelledby="ce-h-{{ z.id }}"{% if sel != z.id %} hidden{% endif %}>
   <h2 id="ce-h-{{ z.id }}">{{ z.title }}</h2>
-  <p class="small muted">{{ z.apps|length }} application{{ 's' if z.apps|length != 1 }} of the Automotive map sit{{ 's' if z.apps|length == 1 }} here.{% if z.note %} {{ z.note }}{% endif %}</p>
+  <p class="small muted">{% if z.apps %}{{ z.apps|length }} application{{ 's' if z.apps|length != 1 }} of the Automotive map sit{{ 's' if z.apps|length == 1 }} here.{% endif %}{% if z.note %} {{ z.note }}{% endif %}</p>
+  {% if z.apps %}{{ lv_tabs(levels, level_label, z.counts) }}{% endif %}
   {% for a in z.apps %}
-  <div class="ce-app">
-    <h3>{{ a.label }} <small class="muted">· {{ a.n_diagrams }} block diagram{{ 's' if a.n_diagrams != 1 }}</small></h3>
+  <div class="ce-app" data-lv-card>
+    <h3>{{ a.label }} <small class="muted">· {{ a.n_diagrams }} car diagram{{ 's' if a.n_diagrams != 1 }}</small></h3>
+    <p class="lv-empty small muted" hidden>No functions at this letter.</p>
     {% for r in a.rows %}
-    <div class="am-row"><span class="am-lv"><span class="am-cell am-{{ r.level }}">{{ 'G' if r.level == 'gap' else r.level }}</span> <span>{{ r.label }} <small class="muted">({{ r.n }})</small></span></span>
+    <div class="am-row" data-lv="{{ r.level }}"><span class="am-lv"><span class="am-cell am-{{ r.level }}">{{ 'G' if r.level == 'gap' else r.level }}</span> <span>{{ r.label }} <small class="muted">({{ r.n }})</small></span></span>
       <span class="am-fns">{% for c in r.shown %}{{ chip(c) }}{% endfor %}{% if r.more %}<details class="ce-more"><summary>+{{ r.more|length }} more</summary><span class="am-fns">{% for c in r.more %}{{ chip(c) }}{% endfor %}</span></details>{% endif %}</span></div>
     {% else %}<p class="small muted">No functions on the map yet.</p>{% endfor %}
     <p class="ce-links small"><a href="{{ a.links.blocks }}">Block diagrams{% if a.links.sub_title %}: {{ a.links.sub_title }}{% endif %}</a> · <a href="{{ a.links.cross_sell }}">Cross-sell for it</a> · <a href="{{ a.links.map }}">On the Automotive map</a></p>
@@ -30,8 +33,9 @@
   {% endfor %}
 </section>
 {% endfor %}
-<p class="small muted">The car is a simple shape built in code, not a real model. Letters, functions and block-diagram counts come from today's <a href="/business/automotive">Automotive map</a>; calls a reviewer rejected there are left out here too. →C / →D = a next step is proposed on a function we already sell; ✓ = accepted by a reviewer. Click a function for the reasoning on the map.</p>
+<p class="small muted">The car is a simple shape built in code, not a real model. Letters, functions and car block-diagram counts come from today's <a href="/business/automotive">Automotive map</a>; calls a reviewer rejected there are left out here too. →C / →D = a next step is proposed on a function we already sell; ✓ = accepted by a reviewer. Click a function for the reasoning on the map.</p>
 
+<script src="/static/lv_tabs.js" defer></script>
 <script type="application/json" id="ce-data">{{ car|tojson }}</script>
 <script type="importmap">{"imports": {"three": "/static/vendor/three/three.module.min.js"}}</script>
 <script>

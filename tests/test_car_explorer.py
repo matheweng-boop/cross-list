@@ -27,7 +27,7 @@ def test_mapping_is_the_approved_one():
     """The mockup the owner approved, area by area, with its three notes."""
     got = {z["id"]: z["apps"] for z in ce.config()["areas"]}
     assert got == {"seat": ["seat", "incabin"], "rear-seats": ["incabin"], "dashboard": ["infotainment"],
-                   "roof": ["telematics", "v2x", "satellite"], "front": ["adas"], "lights": ["body"],
+                   "roof": ["telematics", "v2x", "satellite"], "front": ["adas"], "lights": [],
                    "battery": ["bms"], "motor": ["traction"], "charge-port": ["onboard", "charging"],
                    "doors": ["access", "body"]}  # fmt: skip
     assert {z["id"] for z in ce.config()["areas"] if z.get("note")} == {"seat", "lights", "charge-port"}
@@ -67,14 +67,25 @@ def test_areas_show_the_map_letters_six_at_a_time(session):
                 continue
             want = au.by_level(m, a["id"], m["columns"])  # what the map holds, rejected calls left out
             assert [r["level"] for r in a["rows"]] == [lv for lv in au.LEVELS if lv in want]
-            assert a["n_diagrams"] == len(apps[a["id"]]["diagrams"])
+            assert a["n_diagrams"] == len(apps[a["id"]]["car"])  # car diagrams only
             for r in a["rows"]:
                 chips = r["shown"] + r["more"]
                 assert [c["fn"] for c in chips] == [c["fn"] for c in want[r["level"]]]
                 assert r["n"] == len(chips) and len(r["shown"]) == min(ce.SHOWN, r["n"])
                 assert all(c["href"].startswith("/business/automotive?view=apps&cell=") for c in chips)
                 seen += len(r["more"])
+        assert z["counts"] == {lv: sum(r["n"] for a in z["apps"] for r in a["rows"] if r["level"] == lv)
+                               for lv in au.LEVELS}  # fmt: skip
     assert seen  # some letter has more than six functions: "+N more"
+
+
+def test_lights_say_there_is_no_lighting_application(client, session):
+    lights = next(z for z in ce.areas(session) if z["id"] == "lights")
+    assert lights["apps"] == [] and "no lighting application" in lights["note"]
+    html = client.get("/business/car-explorer?area=lights").text
+    panel = html[html.index('id="ce-area-lights"') :]
+    panel = panel[: panel.index("</section>")]
+    assert "no lighting application" in panel and "lv-tabs" not in panel and "Body" not in panel
 
 
 def test_a_rejected_call_leaves_the_explorer_too(client, session):
@@ -121,13 +132,15 @@ def test_links_follow_the_application_diagrams(client, session):
 
 def test_page_lists_the_areas_and_loads_three_from_this_site(client):
     html = client.get("/business/car-explorer").text
+    assert html.count('class="lv-tabs"') == sum(1 for z in ce.config()["areas"] if z["apps"])  # letter tabs per area
+    assert "/static/lv_tabs.js" in html and 'data-lv="gap"' in html
     assert "<title>Car explorer – Systems &amp; applications – BizDev</title>" in html
     assert '{"imports": {"three": "/static/vendor/three/three.module.min.js"}}' in html
     assert "/static/car_explorer.js" in html and "jsdelivr" not in html and "unpkg" not in html
     assert html.count(" data-area=") == len(ce.config()["areas"])
-    assert '<section class="ce-panel" id="ce-area-battery" aria-labelledby="ce-h-battery" hidden>' in html
+    assert '<section class="ce-panel" data-lv-scope id="ce-area-battery" aria-labelledby="ce-h-battery" hidden>' in html
     opened = client.get("/business/car-explorer?area=battery").text  # also without JavaScript
-    assert '<section class="ce-panel" id="ce-area-battery" aria-labelledby="ce-h-battery">' in opened
+    assert '<section class="ce-panel" data-lv-scope id="ce-area-battery" aria-labelledby="ce-h-battery">' in opened
     assert 'aria-current="true">High-voltage battery</a>' in opened
     assert client.get("/business/car-explorer?area=nowhere").status_code == 200
     assert 'href="/business/car-explorer"' in client.get("/business/automotive").text  # the map links here

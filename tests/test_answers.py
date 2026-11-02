@@ -220,11 +220,11 @@ def test_internal_answers_are_in_no_shareable_and_no_export(client, session):
             "/manage/feedback/digest.txt", "/business/quality/todo.txt", "/requests.txt",
             "/business/capabilities/feedback.txt", "/blocks/feedback.txt", f"/business/reports/{CASE}/background",
             "/cross-list.xlsx?parts=SR8641"}  # fmt: skip
-    for route in client.app.routes:
-        path = getattr(route, "path", "")
-        if "GET" in (getattr(route, "methods", None) or ()) and "{" not in path and (
+    for path, ops in client.get("/openapi.json").json()["paths"].items():  # every route, also in included routers
+        if "get" in ops and "{" not in path and (
                 path.startswith(("/shareable", "/api/")) or re.search(r"\.(txt|xlsx|csv|md|json|pdf|pptx)$", path)):
             urls.add(path)
+    assert len(urls) > 20
     seen = 0
     for url in sorted(urls):
         r = client.get(url)

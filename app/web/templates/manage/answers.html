@@ -4,7 +4,7 @@
 <h1>Answers</h1>
 <p class="subtitle muted">Every answer to the Questions to ask on Research &amp; ideas, newest first. 🔒 Internal only answers are yours alone: never shown to guests, never in a Shareable, an export or the daily inbox (it gets a count). ✅ Can be shared answers go to the inbox in full for the next revision, after the data-protection check. Kept 12 months after the last change.</p>
 
-<form method="get" action="/manage/answers" class="qa-filter" role="search">
+<form method="get" action="/manage/answers" class="aq-filter" role="search">
   <label>Sharing <select name="sharing">
     <option value=""{{ ' selected' if not sharing }}>All ({{ c.all }})</option>
     <option value="internal"{{ ' selected' if sharing == 'internal' }}>{{ labels.internal }} ({{ c.internal }})</option>
@@ -18,7 +18,7 @@
 <section id="open-questions" aria-labelledby="open-t">
   <h2 id="open-t">Still open <span class="badge muted">{{ ov.n_open }} of {{ ov.n_questions }}</span></h2>
   {% if not ov.open %}<p class="ov-none">Every question{{ ' of this report' if report }} has an answer.</p>{% endif %}
-  {% for g in ov.open %}<details class="qa-open"{{ ' open' if report }}><summary><b>{{ g.title }}</b> <span class="badge muted">{{ g.rows|length }} open</span></summary>
+  {% for g in ov.open %}<details class="aq-open"{{ ' open' if report }}><summary><b>{{ g.title }}</b> <span class="badge muted">{{ g.rows|length }} open</span></summary>
     <ul>{% for q in g.rows %}<li><a href="/business/reports/{{ g.slug }}#i-{{ q.id }}">{% if q.opener %}Start here: {% endif %}{{ q.text }}</a> <small class="muted">{{ groups.get(q.group, q.group) }}{% if q.ask %} · ask: {{ q.ask }}{% endif %}</small></li>{% endfor %}</ul>
   </details>{% endfor %}
 </section>
@@ -27,9 +27,9 @@
   <h2 id="ans-t">Answers <span class="badge muted">{{ ov.answers|length }}</span></h2>
   {% if not ov.answers %}<p class="ov-none">{{ 'No answer yet.' if not c.all else 'No answer matches the filter.' }}</p>{% endif %}
   {% set qa = {"owner": true, "sharing": labels, "warning": warning} %}
-  <ol class="qa-list">{% for a in ov.answers %}
-    <li><p class="qa-where small"><a href="/business/reports/{{ a.slug }}#i-{{ a.question }}">{{ ov.titles.get(a.slug, a.slug) }}</a>{% if (a.slug, a.question) in ov.gone %} <span class="badge muted" title="The question is no longer on the page; the answer keeps its wording">question removed</span>{% endif %}</p>
-      <p class="qa-q"><b>{{ a.question_text }}</b></p>
+  <ol class="aq-list">{% for a in ov.answers %}
+    <li><p class="aq-where small"><a href="/business/reports/{{ a.slug }}#i-{{ a.question }}">{{ ov.titles.get(a.slug, a.slug) }}</a>{% if (a.slug, a.question) in ov.gone %} <span class="badge muted" title="The question is no longer on the page; the answer keeps its wording">question removed</span>{% endif %}</p>
+      <p class="aq-q"><b>{{ a.question_text }}</b></p>
       {{ answer_card(a, qa, here) }}</li>{% endfor %}</ol>
 </section>
 {% endblock %}

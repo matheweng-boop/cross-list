@@ -47,10 +47,11 @@ def _file() -> dict:
     return (yamlio.load(FILE.read_text()) or {}).get("reports") or {} if FILE.exists() else {}
 
 
-def groups() -> tuple[tuple[str, str], ...]:
+def groups(case: bool = True) -> tuple[tuple[str, str], ...]:
+    """The question groups with their headings: a case asks OEMs and Tier-1s, a research report also partners."""
     from app.services import prelim
 
-    return prelim.QUESTION_GROUPS
+    return prelim.QUESTION_GROUPS if case else (prelim.QUESTION_GROUPS[0], ("customer", "Customers and partners"))
 
 
 def questions(slug: str) -> list[dict]:
@@ -207,8 +208,11 @@ def page(session: Session, request, slug: str) -> dict:
     by_q: dict[str, list[View]] = {}
     for v in views(session, for_slug(session, slug), owner):
         by_q.setdefault(v.question, []).append(v)
+    from app.services import prelim
+
     return {"owner": owner, "guest": bool(p and p.is_guest), "by_q": by_q, "questions": questions(slug),
-            "warning": WARNING, "sharing": SHARING, "slug": slug}  # fmt: skip
+            "warning": WARNING, "sharing": SHARING, "slug": slug,
+            "groups": groups(prelim.raw(slug) is not None)}  # fmt: skip
 
 
 # ---- writing ---------------------------------------------------------------------------------------------------------

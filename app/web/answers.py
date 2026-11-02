@@ -94,7 +94,7 @@ def answers_overview(request: Request, sharing: str = "", report: str = "", sess
     sharing = sharing if sharing in (*answers.SHARING, "held") else ""
     report = report if rp.report(report) else ""
     ctx = {"ov": answers.overview(session, sharing, report), "sharing": sharing, "report": report,
-           "labels": answers.SHARING, "groups": dict(answers.groups()), "warning": answers.WARNING,
+           "labels": answers.SHARING, "groups": dict(answers.groups(case=False)), "warning": answers.WARNING,
            "here": str(request.url.path) +
            (f"?{request.url.query}" if request.url.query else "")}  # fmt: skip
     return templates.TemplateResponse(request, "manage/answers.html", ctx)

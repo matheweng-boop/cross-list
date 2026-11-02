@@ -99,6 +99,11 @@ def c_report_react(o, s):
                                                                          "comment": "Two dies", "author": ""}}
 
 
+def c_report_answer(o, s):  # an answer to a question to ask (2 Nov 2026): lands internal once approved
+    return "post", "/business/reports/auto-uwb-15-4ab/answers", {"data": {"key": "q-bu-ab", "text": "No project",
+                                                                         "who": "UWB BU", "sharing": "shared"}}
+
+
 def c_report_ask(o, s):
     return "post", "/business/reports/filters-1-11ghz/ask", {"data": {"text": "Which ceramic filters?", "author": ""}}
 
@@ -252,6 +257,7 @@ def test_every_post_route_is_covered(client):
                   "/invite/{token}/verify"}  # fmt: skip
     covered = {"/site-feedback", "/feedback", "/requests", "/reviews/request", "/reviews/requests/{rid}",
                "/reviews/{slug}/react", "/library/{key}/react", "/business/reports/{slug}/react",
+               "/business/reports/{slug}/answers",
                "/business/reports/{slug}/ask", "/business/reports/questions/{qid}", "/blocks/area-request",
                "/api/blocks/feedback", "/api/blocks/designs", "/api/blocks/designs/{design_id}",
                "/blocks/{design_id}/delete", "/blocks/verify", "/api/broadcast/configs",

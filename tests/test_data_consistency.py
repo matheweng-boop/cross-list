@@ -51,12 +51,17 @@ def test_manufacturer_defined_the_same_everywhere():
 
 
 def test_ordinal_values_are_known_levels():
-    # a value outside the levels compares as unknown, which counts as a deviation against every reference
+    # a value outside the levels compares as unknown, which counts as a deviation against every reference.
+    # Known exception: a space-grade (QML Level V) part is "space" on purpose; against it every candidate is unknown
+    # and fails the must-meet qualification, so it is never offered an automotive or industrial part as equivalent.
     rules = load_all_rules()
+    allowed = {("qualification", "space")}
     bad = []
     for name, spec in _parts():
         for p in rules[spec["family"]].params:
             v = spec["params"].get(p.key)
+            if p.key == "qualification" and (p.key, v) in allowed:
+                continue
             if p.kind == "ordinal" and v is not None and str(v).lower() not in {x.lower() for x in p.levels}:
                 bad.append((name, spec["mpn"], p.key, v))
     assert not bad, bad[:10]

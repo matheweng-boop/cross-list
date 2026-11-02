@@ -25,6 +25,7 @@ An engineer can reject a drop-in; it is then listed as a package equivalent.
 import re
 from dataclasses import dataclass, field
 
+from app.matching import pinroles
 from app.matching.rules import BAND_SUFFIX, FamilyRules, ParamDef
 from app.models import FeedbackVerdict, LifecycleStatus, Package, Part
 
@@ -32,6 +33,7 @@ EQUAL, BETTER, WORSE, DIFFERENT, UNKNOWN = "equal", "better", "worse", "differen
 PRIORITY_WEIGHT = {1: 100.0, 2: 10.0, 3: 1.0}
 UNKNOWN_SEVERITY = 0.25
 PREFERRED_SIDE_WEIGHT = 0.25  # a "match" value off on the preferred side (see ParamDef.prefer) weighs a quarter
+CONDITION_SEVERITY = 0.1  # a pinout that fits on one board wiring of a control pin (pinroles): close, not equal
 CATEGORY_ORDER = ("fff", "functional", "package")
 CATEGORY_LABELS = {
     "fff": "Drop-in (FFF)",
@@ -81,13 +83,29 @@ class Diff:
 class Fit:
     same_package: bool
     package_relation: str  # same | smaller | larger | similar
-    same_pinout: bool
+    same_pinout: bool  # every pin takes the other part's board wiring, some maybe only on a condition (conditions)
     pin_diffs: list[tuple[int, str, str]] = field(default_factory=list)
     positions_unknown: bool = False  # same body, different pin counts, pin positions not known
+    # control pins compared by role (app/matching/pinroles.py, owner 2 Nov 2026):
+    conditions: list[tuple[int, str, str, str]] = field(default_factory=list)  # (pin, theirs, ours, note template)
+    role_diffs: list[tuple[int, str, str]] = field(default_factory=list)  # (pin, their role, our role): mismatches
+    board_default: list[int] = field(default_factory=list)  # pins setting their default output, ours ignore them
 
     @property
     def fits(self) -> bool:
-        return self.same_package and self.same_pinout
+        """Same package and pinout with no condition on the board wiring: a full drop-in fit."""
+        return self.same_package and self.same_pinout and not self.conditions
+
+    @property
+    def condition_note(self) -> str:
+        """The deciding note of a conditional fit in plain words ("Works if pins 7 and 10 are tied high or left open
+        on the board; tied low, our outputs switch off")."""
+        from app.matching.pinroles import pins_phrase
+
+        notes: dict[str, list[int]] = {}
+        for pos, _, _, note in self.conditions:
+            notes.setdefault(note, []).append(pos)
+        return "; ".join(n.replace("{pins}", pins_phrase(ps)) for n, ps in notes.items())
 
 
 SPEC_LABELS = {"exact": "Exact", "over": "Better", "under": "Worse", "mixed": "Mixed"}
@@ -409,10 +427,21 @@ def check_fit(ref: Part, cand: Part) -> Fit:
         return Fit(same_pkg, relation, False, pin_diffs, positions_unknown=same_pkg)
     if len(ref_pos) != len(cand_pos):
         return Fit(same_pkg, relation, False, pin_diffs)
+    conditions, role_diffs, board_default = [], [], []
     for i, (r, c) in enumerate(zip(ref_pos, cand_pos, strict=True), 1):
-        if not pins_compatible(r, c, ref.family if ref.family == cand.family else None):
+        j = pinroles.judge(ref, cand, r, c)  # control pins by what they do (data/pin_roles.yaml)
+        if j is None:
+            if not pins_compatible(r, c, ref.family if ref.family == cand.family else None):
+                pin_diffs.append((i, r, c))
+        elif j.result == pinroles.CONDITIONAL:
+            conditions.append((i, r, c, j.note or "Works only on one board wiring of pin {pins}"))
+        elif j.result == pinroles.MISMATCH:
             pin_diffs.append((i, r, c))
-    return Fit(same_pkg, relation, not pin_diffs, pin_diffs)
+            role_diffs.append((i, j.ref_role, j.cand_role))
+        elif j.default_variants:
+            board_default.append(i)
+    return Fit(same_pkg, relation, not pin_diffs, pin_diffs, conditions=conditions, role_diffs=role_diffs,
+               board_default=board_default)  # fmt: skip
 
 
 def pin_positions(part: Part) -> list[str] | None:
@@ -447,7 +476,10 @@ def _fit_diffs(ref: Part, cand: Part, fit: Fit) -> list[Diff]:
         cand_display=f"{cp.code} ({cp.body_length_mm:g}×{cp.span_mm:g} mm)",
         severity=0.0 if pkg_status == EQUAL else 0.5 if pkg_status == BETTER else 1.0,
     )
-    if fit.same_pinout:
+    if fit.same_pinout and fit.conditions:  # control pins that take only one board wiring (pinroles)
+        pin = Diff("pinout", "Pinout", 1, DIFFERENT, "reference pinout", f"fits on a condition: {fit.condition_note}",
+                   CONDITION_SEVERITY)  # fmt: skip
+    elif fit.same_pinout:
         pin = Diff("pinout", "Pinout", 1, EQUAL, "matches", "matches")
     elif not ref.pinout or not cand.pinout:
         pin = Diff(

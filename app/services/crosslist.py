@@ -312,8 +312,19 @@ def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult |
     c1 = min(fits, key=drop_in_key) if fits else None
     c2 = min(pool, key=functional_key) if pool else None
     if c1 is not None and c2 is not None and c2.candidate.id == c1.candidate.id:
-        c2 = None
+        c2 = _conditional_fit(c1, pool)
     return c1, c2
+
+
+def _conditional_fit(c1: CrossResult, pool: list) -> CrossResult | None:
+    """When the drop-in is also the best functional fit, the functional column shows the best conditional fit of the
+    drop-in's family instead (same package, a control pin that fits one board wiring only, shown with its deciding
+    note; owner, 2 Nov 2026: ADuM1411 -> Si86SS41 drop-in, Si86S641 and Si8641 "shown with the deciding note"); the
+    other family keeps its own row. None when there is no such part."""
+    fam = isolator_family(c1.candidate.mpn)
+    conds = [r for r in pool if r.candidate.id != c1.candidate.id and getattr(r.fit, "conditions", None)
+             and r.fit.same_package and r.fit.same_pinout and isolator_family(r.candidate.mpn) == fam]  # fmt: skip
+    return min(conds, key=functional_key) if conds else None
 
 
 def is_si86s(mpn: str) -> bool:
@@ -425,10 +436,14 @@ def comment(r: CrossResult, column: int) -> str:
     data gaps, a must-meet lower-priority difference ("also: …"), lifecycle and engineer notes."""
     bits = []
     ref, cand = r.reference, r.candidate
+    lead = ""  # the deciding note of a conditional fit, said first (owner, 2 Nov 2026)
     if r.fit.fits:
         bits.append("Same package and pinout")
+    elif r.fit.same_package and r.fit.same_pinout and r.fit.conditions:  # fits on one board wiring of a control pin
+        lead = r.fit.condition_note + ". "
+        bits.append("Same package and pinout otherwise")
     elif r.fit.same_package:
-        bits.append(f"Same package ({cand.package.code}), different pinout")
+        bits.append(f"Same package ({cand.package.code}), different pinout{_role_diffs(r.fit)}")
     else:
         bits.append(f"Package {ref.package.code} vs {cand.package.code}"
                     + ("" if r.fit.same_pinout else ", different pinout"))  # fmt: skip
@@ -455,10 +470,46 @@ def comment(r: CrossResult, column: int) -> str:
         bits.append(f"engineer note: {notes[0]['verdict_label'].lower()}")
     if not get_rules(ref.family).by_priority(1):
         bits.append("(no priority list yet)")
-    return "; ".join(bits) + "."
+    return lead + "; ".join(bits) + "."
 
 
+def _role_diffs(fit) -> str:
+    """Control pins with another job at the same position (pin roles): " (pins 7, 10: their refresh enable, our
+    output enable)"."""
+    from app.matching.pinroles import label
+
+    by: dict[tuple, list[int]] = {}
+    for pos, theirs, ours in getattr(fit, "role_diffs", None) or []:
+        by.setdefault((theirs, ours), []).append(pos)
+    parts = [f"pin{'s' if len(ps) > 1 else ''} {', '.join(map(str, ps))}: their {label(t)}, our {label(o)}"
+             for (t, o), ps in by.items()]  # fmt: skip
+    return f" ({'; '.join(parts)})" if parts else ""
+
+
+def default_variants_note(session: Session, r: CrossResult) -> str:
+    """Their default output follows their board wiring (pins such as ADuM141x CTRL1 / CTRL2) while ours is fixed by the
+    ordering code, and our pins there ignore the wiring: name the other default-output variant of our part too (owner,
+    2 Nov 2026: the drop-in "offered in both default-output variants"; alternates.output_variants)."""
+    from app.matching.pinroles import pins_phrase
+    from app.services.alternates import output_variants
+
+    pins = getattr(r.fit, "board_default", None)
+    if not pins or not r.fit.fits:
+        return ""
+    mine = r.candidate.param_map().get("default_output")
+    others = [p for p in output_variants(session, r.candidate) if p.param_map().get("default_output") != mine]
+    if not mine or not others:
+        return ""
+    other = others[0].param_map().get("default_output")
+    when = {"high": "tied high or left open", "low": "tied low"}
+    phrase = pins_phrase(pins).replace(" is", "").replace(" are", "")
+    return (f"their default output follows {phrase} on the board: {r.candidate.mpn} (default {mine}) when "
+            f"{when.get(mine, mine)}, {others[0].mpn} (default {other}) when {when.get(other, other)}")
+
+
+CONDITIONAL_TYPE = "Conditional fit · same package"  # owner, 2 Nov 2026: "a conditional fit, not a full drop-in"
 TYPE_KIND = {"Direct package equivalent": "pe", "Package drop-in, deviations": "di"}  # chip colours; others "fn"
+TYPE_KIND.update({CONDITIONAL_TYPE + s: "di" for s in ("", " · upgrade", " · downgrade")})
 
 
 def cross_type(r: CrossResult, column: int) -> str:
@@ -470,6 +521,8 @@ def cross_type(r: CrossResult, column: int) -> str:
         return "Direct package equivalent"
     if column == 1 or r.fit.fits:
         return "Package drop-in, deviations"
+    if r.fit.same_package and getattr(r.fit, "conditions", None):  # a control pin takes one board wiring only
+        return CONDITIONAL_TYPE + {"over": " · upgrade", "under": " · downgrade"}.get(v.spec, "")
     base = "Functional · other package" if not r.fit.same_package else "Functional · other pinout"
     return base + {"over": " · upgrade", "under": " · downgrade"}.get(v.spec, "")
 
@@ -681,6 +734,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
                 continue
             a = said.get((normalize_pn(part.mpn), normalize_pn(r.candidate.mpn)))
             note = comment(r, col) if col < 3 else f"{alt[0]} family · {comment(r, col)}"
+            if variants := default_variants_note(session, r):  # their default output is set on the board
+                note = f"{note[:-1]}; {variants}."
             c = Column(r, cross_type(r, col), note, (part.id, r.candidate.id) in verified, a.verdict if a else None)
             if c.answer == "wrong":
                 c.verified = False

@@ -25,6 +25,17 @@ Edit a file and restart the app to apply changes.
 
 Rules that live in code rather than in these files:
 
+- **Control pins by what they do** (owner, 2 Nov 2026: "pins 7 and 10 (control pins), as one rule"). Pins with a
+  role in `data/pin_roles.yaml` (one entry per datasheet pin, with its page: not connected, output enable,
+  default-output control, refresh enable, input disable) are compared by role, not by name
+  (`app/matching/pinroles.py`). Our NC pin takes any wiring of theirs. Our output enable (pulled up; tied low = outputs
+  off) against their default-output control or NC pin is a **conditional fit**: never a drop-in, shown with the note
+  "Works if pins 7 and 10 are tied high or left open on the board; tied low, our outputs switch off". Against their
+  refresh enable (tied to ground in use) or input disable (opposite polarity) it is a pin mismatch, even with the same
+  name. Where their default output follows the board (CTRL pins) and ours ignores those pins, the drop-in names both of
+  our default-output variants. On Cross a list a conditional fit shows in the functional column (when the drop-in is
+  also the best functional fit, the drop-in family's best conditional fit takes that column).
+
 - **Both Skyworks isolator families** (owner, 27 Oct 2026: "always offer both families if both families are
   available"; "add a third option which shows the family equivalent and same goes if there is a package equivalent
   in another family"). When the parts offered for a cross are all Si86S or all Si86 (non-S), the other family's

@@ -1,0 +1,100 @@
+# Pin roles: what a datasheet's control pins do, so the cross engine compares them by function, not by name (owner,
+# 2 Nov 2026: "pins 7 and 10 (control pins), as one rule"; app/matching/pinroles.py).
+#
+# pins: one entry per datasheet pin, keyed by the datasheet file and the pin name as stored in the part's pinout
+#   (data/real/*.yaml), with the page it is read from. A part takes the entries of the datasheet its pinout was read
+#   from (its pinout source), else of its own datasheet.
+# pairs: how our pin (the candidate) takes the board wiring of the competitor's pin (the part being crossed), by role.
+#   match = no pin deviation; conditional = a fit for one board wiring only, shown with its note (never a full drop-in);
+#   mismatch = a pin deviation. "any" = any pin with a role here. Two roles with no pair: the same role matches,
+#   different roles do not (the pin name never decides then: "same name, different job" is a mismatch).
+#   default_variants: our default output is fixed by the ordering code while theirs follows the board wiring, so the
+#   drop-in is offered in both default-output variants (B/F = low, E/H = high; app/services/alternates.output_variants).
+
+roles:
+  nc: not connected inside the part; any board wiring is harmless
+  output_enable: output enable, active high, pulled up inside (open = on); tied low, the outputs go high impedance
+  default_output_control: sets the outputs' state while the other side is unpowered (open = high); no effect otherwise
+  refresh_enable: refresh and watchdog enable; tied to ground in normal use
+  input_disable: input disable, active high (outputs go to the fail-safe state); low or open in normal use
+
+pairs:
+  - {ours: nc, theirs: default_output_control, result: match, default_variants: true}
+  - {ours: nc, theirs: any, result: match}
+  - {ours: output_enable, theirs: output_enable, result: match}
+  - {ours: output_enable, theirs: default_output_control, result: conditional,
+     note: "Works if {pins} tied high or left open on the board; tied low, our outputs switch off"}
+  - {ours: output_enable, theirs: nc, result: conditional,
+     note: "Works if {pins} tied high or left open on the board; tied low, our outputs switch off"}
+  - {ours: output_enable, theirs: refresh_enable, result: mismatch}
+  - {ours: output_enable, theirs: input_disable, result: mismatch}
+
+pins:
+  # ---------------------------------------------------------------- Skyworks
+  si864x-datasheet.pdf:
+    EN1: {role: output_enable, source: "si864x-datasheet.pdf p.29 (pin 7: side 1 active high enable), p.9 (Table 3.2 note 1: internally pulled up, may float; note 3: EN = 0 drives the outputs high impedance)"}
+    EN2: {role: output_enable, source: "si864x-datasheet.pdf p.29 (pin 10: side 2 active high enable), p.9 (Table 3.2 notes 1, 3)"}
+    NC: {role: nc, source: "si864x-datasheet.pdf p.29 (note 2: not internally connected; may float or be tied to VDD or GND), p.8 (Table 3.1 note 4)"}
+  si863x-datasheet.pdf:
+    EN1: {role: output_enable, source: "si863x-datasheet.pdf p.26 (pin 7: side 1 active high enable), p.7-8 (internally pulled up; EN = 0: outputs high impedance)"}
+    EN2: {role: output_enable, source: "si863x-datasheet.pdf p.26 (pin 10: side 2 active high enable), p.7-8"}
+    NC: {role: nc, source: "si863x-datasheet.pdf p.26 (note 2: not internally connected; may float or be tied to VDD or GND)"}
+  si865x-datasheet.pdf:
+    EN1: {role: output_enable, source: "si865x-datasheet.pdf p.26 (pin 7: side 1 active high enable), p.7-8 (pulled up by a 2 µA source; EN = 0: outputs high impedance)"}
+    EN2: {role: output_enable, source: "si865x-datasheet.pdf p.26 (pin 10: side 2 active high enable), p.7-8"}
+    NC: {role: nc, source: "si865x-datasheet.pdf p.26 (note 1: not internally connected; may float or be tied to VDD or GND)"}
+  si86xx-1Mbps-datasheet.pdf:
+    EN1: {role: output_enable, source: "si86xx-1Mbps-datasheet.pdf p.31-32 (pin 7: side 1 active high enable), p.6-7 (pulled up by a 2 µA source; EN = 0: outputs high impedance)"}
+    EN2: {role: output_enable, source: "si86xx-1Mbps-datasheet.pdf p.31-32 (pin 10: side 2 active high enable), p.6-7"}
+    NC: {role: nc, source: "si86xx-1Mbps-datasheet.pdf p.30-32 (not internally connected; may float or be tied to VDD or GND)"}
+  si86s6xx-datasheet.pdf:
+    EN1: {role: output_enable, source: "si86s6xx-datasheet.pdf p.4 (Table 1: side A active high output enable), p.8 (Table 4: H or open = normal operation, L = outputs Hi-Z)"}
+    EN2: {role: output_enable, source: "si86s6xx-datasheet.pdf p.4 (Table 1: side B active high output enable), p.8 (Table 4)"}
+    NC: {role: nc, source: "si86s6xx-datasheet.pdf p.4 (Table 1: not connected), p.5 (Table 2: NC (Si86SS41), not connected)"}
+
+  # ---------------------------------------------------------------- Analog Devices
+  adum1410_1411_1412.pdf:
+    CTRL1: {role: default_output_control, source: "adum1410_1411_1412.pdf p.15-16 (Tables 11, 12: default output control; outputs high when CTRL1 is high or disconnected and VDD2 is off, low when CTRL1 is low; no effect when VDD2 is on)"}
+    CTRL2: {role: default_output_control, source: "adum1410_1411_1412.pdf p.15-16 (Tables 10-12: default output control; high when CTRL2 is high or disconnected and VDD1 is off; no effect when VDD1 is on)"}
+    DISABLE: {role: input_disable, source: "adum1410_1411_1412.pdf p.15 (Table 10, ADuM1410 pin 7: input disable; outputs take the CTRL2 state), p.16 (Table 13: L or NC = normal operation)"}
+  adum1400_1401_1402.pdf:
+    VE1: {role: output_enable, source: "adum1400_1401_1402.pdf p.24-25 (output enable 1, active high: enabled when high or disconnected, disabled when low)"}
+    VE2: {role: output_enable, source: "adum1400_1401_1402.pdf p.24-25 (output enable 2, active high: enabled when high or disconnected, disabled when low)"}
+    NC: {role: nc, source: "adum1400_1401_1402.pdf p.24 (ADuM1400 pin 7: no connect)"}
+  adum140d_140e_141d_141e_142d_142e.pdf:
+    VE1: {role: output_enable, source: "adum140d_140e_141d_141e_142d_142e.pdf p.21-22 (output enable 1, active high: enabled when high or disconnected; low = high-Z), p.19 (Table 21)"}
+    VE2: {role: output_enable, source: "adum140d_140e_141d_141e_142d_142e.pdf p.20-22 (output enable 2, active high: enabled when high or disconnected; low = high-Z), p.19 (Table 21)"}
+    DISABLE1: {role: input_disable, source: "adum140d_140e_141d_141e_142d_142e.pdf p.20-22 (input disable 1: outputs take the fail-safe state), p.19 (Table 20: L or NC = normal operation, H = inputs disabled)"}
+    DISABLE2: {role: input_disable, source: "adum140d_140e_141d_141e_142d_142e.pdf p.21-22 (input disable 2), p.19 (Table 20)"}
+    NC: {role: nc, source: "adum140d_140e_141d_141e_142d_142e.pdf p.20 (NIC: no internal connection; leave floating)"}
+  adum240d_240e_241d_241e_242d_242e.pdf:
+    VE1: {role: output_enable, source: "adum240d_240e_241d_241e_242d_242e.pdf p.17-18 (output enable 1, active high: enabled when high or disconnected; low = high-Z)"}
+    VE2: {role: output_enable, source: "adum240d_240e_241d_241e_242d_242e.pdf p.17-18 (output enable 2, active high: enabled when high or disconnected; low = high-Z)"}
+    DISABLE1: {role: input_disable, source: "adum240d_240e_241d_241e_242d_242e.pdf p.17-18 (input disable 1: outputs take the fail-safe state)"}
+    DISABLE2: {role: input_disable, source: "adum240d_240e_241d_241e_242d_242e.pdf p.18 (input disable 2: outputs take the fail-safe state)"}
+    NC: {role: nc, source: "adum240d_240e_241d_241e_242d_242e.pdf p.17 (NIC: no internal connection; leave floating)"}
+  adum340e_341e_342e.pdf:
+    VE1: {role: output_enable, source: "adum340e_341e_342e.pdf p.19-20 (output enable 1, active high: enabled when high or disconnected; low = high-Z)"}
+    VE2: {role: output_enable, source: "adum340e_341e_342e.pdf p.19-20 (output enable 2, active high: enabled when high or disconnected; low = high-Z)"}
+    NC: {role: nc, source: "adum340e_341e_342e.pdf p.19 (ADuM340E pin 7 NIC: no internal connection; leave floating)"}
+  adum130d_130e_131d_131e.pdf:
+    VE1: {role: output_enable, source: "adum130d_130e_131d_131e.pdf p.17 (output enable 1, active high: enabled when high or disconnected; low = high-Z)"}
+    VE2: {role: output_enable, source: "adum130d_130e_131d_131e.pdf p.16-17 (output enable 2, active high: enabled when high or disconnected; low = high-Z)"}
+    DISABLE1: {role: input_disable, source: "adum130d_130e_131d_131e.pdf p.16-17 (input disable 1: outputs take the fail-safe state)"}
+    DISABLE2: {role: input_disable, source: "adum130d_130e_131d_131e.pdf p.17 (input disable 2: outputs take the fail-safe state)"}
+    NC: {role: nc, source: "adum130d_130e_131d_131e.pdf p.16-17 (NIC: no internal connection; leave floating)"}
+  adum150n_151n_152n.pdf:
+    NC: {role: nc, source: "adum150n_151n_152n.pdf p.15-16 (pins 7 and 10 NIC: no internal connection; leave floating)"}
+  adum141es.pdf:
+    VE1: {role: output_enable, source: "adum141es.pdf p.1-2 (pin 7: output enable for side 1, active high)"}
+    VE2: {role: output_enable, source: "adum141es.pdf p.1-2 (pin 10: output enable for side 2, active high)"}
+  adum1240_1241_1245_1246.pdf:
+    EN1: {role: refresh_enable, source: "adum1240_1241_1245_1246.pdf p.13-14 (20-lead SSOP pin 7: refresh and watchdog enable 1; connecting it to GND1 enables refresh)"}
+    EN2: {role: refresh_enable, source: "adum1240_1241_1245_1246.pdf p.13-14 (20-lead SSOP pin 14: refresh and watchdog enable 2; connecting it to GND2 enables refresh)"}
+    NC: {role: nc, source: "adum1240_1241_1245_1246.pdf p.13-14 (NIC: not internally connected; leave floating)"}
+  adum1440_1441_1442_1445_1446_1447.pdf:
+    EN1: {role: refresh_enable, source: "adum1440_1441_1442_1445_1446_1447.pdf p.15-17 (pin 7: refresh/watchdog enable 1; connecting it to GND1 enables refresh for standard iCoupler operation, VDD1 disables it)"}
+    EN2: {role: refresh_enable, source: "adum1440_1441_1442_1445_1446_1447.pdf p.15-17 (pin 10: refresh/watchdog enable 2; GND2 = refresh on, VDD2 = off)"}
+  adum5410_5411_5412.pdf:
+    VE1: {role: output_enable, source: "adum5410_5411_5412.pdf p.18-19 (pin 7: output enable 1; enabled when high or disconnected, disabled when low)"}
+    VE2: {role: output_enable, source: "adum5410_5411_5412.pdf p.17-19 (pin 18: output enable 2; enabled when high or disconnected, disabled when low)"}

@@ -185,6 +185,31 @@ gnssiono:
   try: "Raise the electron content as on a stormy day and compare L1 + L5 with L1 + L2 for the noise penalty."
   why: "This is the main reason cars and phones move from L1-only to L1 + L5 front ends, which needs a second LNA path and a diplexer."
 
+# owner, 2 Nov 2026: UWB positioning methods (static/vz/uwb_positioning.js), also on /engineering/uwb_positioning
+uwbtwr:
+  shows: "A two-way ranging exchange between a tag and an anchor drawn as a timing ladder, and how far off the distance comes out when each crystal runs a few ppm fast or slow."
+  read: "Time runs downwards: the slanted arrows are the poll, response and final messages, the brackets are the round-trip and reply times each side measures, and the chart plots the distance error against the reply time for single-sided ranging (red, rising) and double-sided ranging (blue, flat)."
+  try: "Give the two crystals opposite errors and lengthen the anchor's reply time, then compare the single-sided error with the double-sided one."
+  why: "Car keys and door locks range this way, and the reply time, the crystals and the number of messages decide accuracy, battery life and how many devices one anchor can serve."
+
+uwbtdoa:
+  shows: "A floor plan with anchors and a tag, the hyperbolas on which the measured time differences put the tag, and how anchor synchronisation error widens each line into a band."
+  read: "Each coloured curve is one time difference against anchor 1 and its shaded band the 1-sigma uncertainty from the sync error; the orange ellipse and dots, drawn five times larger, show where position estimates land, and the dashed arrows show who transmits in uplink or downlink mode."
+  try: "Drag the tag outside the anchors or raise the sync error to 1 ns, and watch the bands widen and the position spread grow."
+  why: "Factories, hospitals and venues use TDoA because one short message per tag scales to thousands of tags, and synchronising the anchors is the job the infrastructure has to do."
+
+uwbltdoa:
+  shows: "Our reading of lightweight TDoA, which is not a standard name: a tag that only sends one short blink per fix, compared with tags that also listen or range, in battery life and in how many tags share the air."
+  read: "Each row shows what one kind of tag does in one fix (grey wake-up, orange transmit, blue receive) with its estimated coin-cell life on the right, and the strips below show random blinks colliding in red against tags in scheduled slots."
+  try: "Raise the number of tags and the update rate until blinks start to collide, then set the classic tag's listen window to zero and compare the battery lives."
+  why: "Tag cost and battery life decide the business case for asset tracking: the lighter the tag, the longer it lasts, while the anchors carry the receivers, the synchronisation and most of the front-end content."
+
+uwbpdoa:
+  shows: "How one receiver with two antennas turns the phase difference of an arriving UWB signal into an angle, and where that goes wrong."
+  read: "The tag sits on the arc at the chosen angle; the red extra path to the far antenna sets the phase difference, red rings appear when the spacing is more than half a wavelength, and the small chart plots the angle error, which grows sharply towards ±90°."
+  try: "Widen the antenna spacing past half a wavelength to see the ambiguity, then move the tag towards the side and watch the angle error and the position error grow."
+  why: "Phone-to-tag finding and car anchors need direction as well as distance, which takes a two-port UWB chip or an antenna switch, plus calibration."
+
 # owner, 28 Oct 2026: animated circuits (static/vz/circuit.js). Moving dots are current: faster means more current,
 # the direction of travel is the direction of flow, each loop or phase has its own colour. Numbers name their source.
 bootstrap:

@@ -17,7 +17,8 @@ OLD_NAMES = ("Opportunity explorer", "Cross-sell & gaps", "Cross-sell &amp; gaps
 PAGES = ("/", "/parts", "/portfolio", "/library", "/blocks", "/blocks/cross-sell", "/business/opportunities",
          "/business/explorer/table", "/business/risks", "/business/reports", "/business/shortlist", "/business/tam",
          "/business/quality", "/business/validation", "/business/method", "/business/markets", "/manage/schedule",
-         "/manage/overview", "/shareable/technology-overview", "/reviews/qorvo-dw3000-uwb", "/rf-notes")  # fmt: skip
+         "/manage/overview", "/shareable/technology-overview", "/reviews/qorvo-dw3000-uwb", "/rf-notes",
+         "/engineering/uwb_positioning")  # fmt: skip
 
 
 @pytest.mark.parametrize("path", PAGES)

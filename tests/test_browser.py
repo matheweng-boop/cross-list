@@ -519,6 +519,74 @@ def test_ip3_trade_off_meter_scenarios_and_textbook_chart(page):
     expect(fold.locator(".vz-chart polyline")).to_have_count(2)
 
 
+def test_uwb_positioning_page_visuals_follow_sliders_drags_taps_and_keys(page):
+    """Owner 2 Nov 2026: two-way ranging, TDoA, lightweight TDoA and PDoA on one page, each with a live visual that
+    works with a mouse, a finger (tap) and the keyboard; the same visuals are on Interactive visuals under UWB."""
+    go(page, "/engineering/uwb_positioning")
+    slide = "(r, v) => { r.value = v; r.dispatchEvent(new Event('input', {bubbles: true})); }"
+    kpi = lambda box, label: box.locator(".vz-kpi", has_text=re.compile(label)).locator("b")  # noqa: E731
+    for vid in ("uwbtwr", "uwbtdoa", "uwbltdoa", "uwbpdoa"):
+        expect(page.locator(f'[data-uwp="{vid}"] .vz-kpi').first).to_be_visible()
+
+    twr = page.locator('[data-uwp="uwbtwr"]')  # longer reply: single-sided error grows, double-sided stays tiny
+    ss = kpi(twr, "^Single-sided error")
+    before = ss.inner_text()
+    twr.locator('input[data-k="r1"]').evaluate(slide, 1000)
+    expect(ss).not_to_have_text(before)
+    expect(kpi(twr, "^Double-sided error")).to_contain_text("µm")
+    twr.locator(".uwp-play").click()
+    expect(twr.locator(".uwp-play")).to_have_text("▶ Play again", timeout=15000)
+    expect(twr.locator(".uwp-ladder text", has_text="t6")).to_be_attached()
+
+    tdoa = page.locator('[data-uwp="uwbtdoa"]')
+    where = kpi(tdoa, "^Tag")
+    start = where.inner_text()
+    tdoa.locator('[data-h="tag"]').focus()
+    page.keyboard.press("ArrowRight")
+    expect(where).not_to_have_text(start)
+    expect(tdoa.locator('[data-h="tag"]')).to_be_focused()  # the redraw keeps the keyboard focus
+    after_key = where.inner_text()
+    plan = tdoa.locator(".uwp-plan").bounding_box()
+    page.mouse.click(plan["x"] + plan["width"] * 0.75, plan["y"] + plan["height"] * 0.55)  # a tap places the tag
+    expect(where).not_to_have_text(after_key)
+    pair = kpi(tdoa, "^Anchor 2 − anchor 1")
+    first = pair.inner_text()
+    a2 = tdoa.locator('[data-h="a1"] rect').bounding_box()
+    page.mouse.move(a2["x"] + a2["width"] / 2, a2["y"] + a2["height"] / 2)
+    page.mouse.down()
+    page.mouse.move(a2["x"] - 60, a2["y"] + 40, steps=6)
+    page.mouse.up()
+    expect(pair).not_to_have_text(first)
+    spread = kpi(tdoa, "^Position spread")
+    s0 = spread.inner_text()
+    tdoa.locator('input[data-k="sync"]').evaluate(slide, 2)
+    expect(spread).not_to_have_text(s0)
+    tdoa.locator('select[data-k="mode"]').select_option("dl")
+    expect(kpi(tdoa, "^Computes the position")).to_have_text("the tag itself")
+
+    light = page.locator('[data-uwp="uwbltdoa"]')
+    got = kpi(light, "^Blinks that get through")
+    g0 = got.inner_text()
+    light.locator('input[data-k="tags"]').evaluate(slide, 1000)
+    expect(got).not_to_have_text(g0)
+    expect(light.locator(".uwp-light text", has_text="slots full")).to_be_attached()
+
+    pd = page.locator('[data-uwp="uwbpdoa"]')
+    pd.locator('input[data-k="d"]').evaluate(slide, 40)
+    expect(kpi(pd, "^Spacing d / λ")).to_contain_text("ambiguous")
+    expect(pd.locator(".uwp-pdoa text", has_text="also fits").first).to_be_attached()
+    pd.locator('[data-h="tag"]').focus()
+    page.keyboard.press("ArrowRight")
+    expect(pd.locator('input[data-k="th"]')).to_have_value("31")
+    expect(kpi(pd, "^Angle read back")).to_be_visible()
+
+    go(page, "/visuals#uwbpdoa")  # the same visual inside the engine on /visuals
+    expect(page.locator("#vz-panel h2")).to_contain_text("phase difference of arrival")
+    expect(page.locator("#vz-panel .uwp-pdoa")).to_be_attached()
+    page.locator('#vz-panel input[data-k="th"]').evaluate(slide, 70)
+    expect(page.locator("#vz-panel .vz-kpi", has_text="Angle read back")).to_contain_text("70")
+
+
 # --- Data management --------------------------------------------------------------------------------------------------
 def test_verify_next_answer_one_with_a_comment(page):
     go(page, "/manage/verify")

@@ -197,6 +197,44 @@ def test_unstated_values_are_info_not_deviations(gd):
     assert "CMTI not stated by Analog Devices (info)" in cl.comment(r, 2)
 
 
+# ---------------------------------------------------------------- rule 12: the size of a shortfall counts
+
+
+def test_shortfall_size_is_a_ratio_or_margin():
+    from app.matching.engine import WORSE, shortfall_size
+    from app.matching.rules import get_rules
+
+    iso = get_rules("digital_isolator")
+    rate, temp = iso.get("data_rate_mbps"), iso.get("temp_range_c")
+    assert round(shortfall_size(rate, 150, 1, WORSE), 2) == 7.23  # 1 Mbps for a 150 Mbps socket
+    assert round(shortfall_size(rate, 25, 10, WORSE), 2) == 1.32  # 2.5x short: more than an option difference (1)
+    assert shortfall_size(rate, 25, 20, WORSE) < 1  # a small shortfall stays below an option difference
+    assert round(shortfall_size(temp, [-40, 125], [-40, 85], WORSE), 3) == round(40 / 165, 3)
+    assert shortfall_size(rate, 150, 1, "equal") is None
+
+
+@pytest.mark.parametrize("ref, slow, option", [
+    ("ISO7220CDR", "SI8423AB-IS", "SI8620BB-IS"),  # 25 Mbps: a 1 Mbps part against one with another default output
+    ("ISO7220MDR", "SI8423AB-IS", "SI8620BB-IS"),  # 150 Mbps
+    ("ISO7841FDW", "SI8641AB-IS", "SI8641ED-IS"),  # 100 Mbps
+    ("ISO721MDR", "SI8410AB-IS", "SI8410BB-IS"),  # 150 Mbps
+    ("ISO7341CDW", "SI86S641HE-IS2", "SI8641BD-IS"),  # 25 Mbps against our 10 Mbps deglitch code
+])  # fmt: skip
+def test_a_far_slower_part_ranks_below_an_option_difference(session, load, ref, slow, option):
+    """Owner, 2 Nov 2026 (rule 12): with as many deviations, a shortfall ranks by its size. The data rates are read
+    from the datasheet pages (TI data rates, branch update-2026-11-02-I; Si84xx / Si86xx / Si86S A = 1 Mbps, H = 10
+    Mbps deglitch, B / E = 150 Mbps): the far slower part ranks below the one whose difference is an option (the
+    default output state), on the part page and among the package equivalents."""
+    from app.matching.engine import ranked
+    from app.services.queries import crosses_for
+
+    get = load("ti_digital_isolators", "skyworks_si86", "skyworks_isolators_more")
+    order = [r.candidate.mpn for r in ranked(crosses_for(session, get(ref)))]
+    rate = {m: get(m).param_map().get("data_rate_mbps") for m in (ref, slow, option)}
+    assert rate[slow] < rate[ref] <= rate[option], rate
+    assert order.index(option) < order.index(slow), (ref, order[:8])
+
+
 # ---------------------------------------------------------------- rule 6: isolation below theirs ranks last
 
 

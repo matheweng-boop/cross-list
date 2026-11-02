@@ -297,15 +297,15 @@ def drop_in_key(r: CrossResult):
     """A candidate with a lower isolation rating (``downgrade``), then one without the reference's short-circuit
     protection (``steer_miss``), ranks last (owner, 2 Nov 2026)."""
     return (getattr(r, "downgrade", False), getattr(r, "steer_miss", False), r.category != "fff", _devs(r),
-            getattr(r, "unverified_worse", 0), _worse_score(r), len(r.exceptions), r.closeness,
-            r.candidate.mpn)  # fmt: skip
+            getattr(r, "shortfall", 0.0), getattr(r, "unverified_worse", 0), _worse_score(r), len(r.exceptions),
+            r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
     return (getattr(r, "downgrade", False), getattr(r, "steer_miss", False), _devs(r),
-            getattr(r, "unverified_worse", 0), p1_off, len(r.exceptions), not r.fit.same_package,
-            not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
+            getattr(r, "unverified_worse", 0), getattr(r, "shortfall", 0.0), p1_off, len(r.exceptions),
+            not r.fit.same_package, not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def _devs(r) -> int:

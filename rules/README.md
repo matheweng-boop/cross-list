@@ -41,6 +41,11 @@ Rules that live in code rather than in these files:
   name. Where their default output follows the board (CTRL pins) and ours ignores those pins, the drop-in names both of
   our default-output variants. On Cross a list a conditional fit shows in the functional column (when the drop-in is
   also the best functional fit, the drop-in family's best conditional fit takes that column).
+- **The size of a shortfall counts** (owner, 2 Nov 2026, rule 12). With as many deviations, a candidate that falls
+  less short ranks first: a worse number counts log2 of the ratio (2x short = 1, the weight of an option difference
+  such as the default output state; a 1 Mbps part for a 150 Mbps socket = 7.2), a worse range its uncovered share.
+  It sits after the deviation count (and, on the part page, after "same package" and "pin-to-pin"), below the
+  isolation and protection tiers.
 - **Ranges compared as numbers, the uncovered part named** (owner, 2 Nov 2026). An isolated amplifier's stated input
   range ("±250 mV", "0.25 to 4.3 V") is read as numbers (`input_range_v`, derived from `input_range`): ours covering
   theirs is fine, a narrower one is a deviation. A priority 1 range deviation says what is not covered ("partial: not

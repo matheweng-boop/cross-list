@@ -23,6 +23,7 @@ the part does: they never count as a deviation, a mismatch is not listed at all.
 An engineer can reject a drop-in; it is then listed as a package equivalent.
 """
 
+import math
 import re
 from dataclasses import dataclass, field
 
@@ -63,6 +64,14 @@ class Diff:
     exception: bool = False  # worse = an exception to list, not a deviation
     unknown_ok: bool = False  # an unknown value is shown but not counted as a deviation
     unverified: bool = False  # a ``datasheet_only`` value not from a datasheet page on one side: shown, never decides
+    # how far short a worse value falls, unbounded (rule 12, owner 2 Nov 2026): log2 of the ratio for a number (a 1 Mbps
+    # part for a 150 Mbps socket: 7.2), the uncovered share of a range; None: the severity (an option difference: 1)
+    size: float | None = None
+
+    @property
+    def shortfall(self) -> float:
+        """The size of this difference for the order among candidates with as many deviations (rule 12)."""
+        return self.severity if self.size is None else self.size
 
     @property
     def score(self) -> float:
@@ -180,6 +189,13 @@ class CrossResult:
     def deviations(self) -> list[Diff]:
         """Priority 1 parameters that are worse or different (exceptions and unstated values excluded)."""
         return _deviations(self.diffs)
+
+    @property
+    def shortfall(self) -> float:
+        """The summed size of the priority 1 deviations (rule 12, owner 2 Nov 2026): with as many deviations, the
+        candidate falling less short ranks first; a 1 Mbps part for a 150 Mbps socket ranks below one whose only
+        difference is an option such as the default output state."""
+        return round(sum(d.shortfall for d in self.deviations), 6)
 
     @property
     def unstated_ours(self) -> int:
@@ -613,6 +629,7 @@ def cross(
                 p.exception,
                 p.unknown_ok,
                 unverified,
+                shortfall_size(p, rv.get(p.key), cv.get(p.key), status),
             )
         )
 
@@ -655,6 +672,29 @@ def cross(
     )
 
 
+SHORTFALL_CAP = 10.0  # a shortfall of 2**10 or more (or against a zero value) counts as 10
+
+
+def shortfall_size(p: ParamDef, ref, cand, status: str) -> float | None:
+    """How far a worse number or range falls short, unbounded (owner, 2 Nov 2026, rule 12: "a numeric shortfall on a
+    must-meet spec ranks by its size, as a ratio or margin"): log2 of the ratio for a number (2x short = 1, the weight
+    of an option difference such as the default output; 1 Mbps for 150 Mbps = 7.2), the uncovered share of the
+    reference's range for a range. None for anything else (its severity stands)."""
+    if status != WORSE or ref is None or cand is None:
+        return None
+    if p.kind == "number" and p.direction in ("higher", "lower"):
+        r, c = abs(float(ref)), abs(float(cand))
+        hi, lo = (r, c) if p.direction == "higher" else (c, r)
+        if lo <= 0:
+            return SHORTFALL_CAP
+        return min(math.log2(hi / lo), SHORTFALL_CAP) if hi > lo else 0.0
+    if p.kind == "range":
+        (a, b), (c, d) = sorted(map(float, ref)), sorted(map(float, cand))
+        width = b - a if b > a else max(abs(a), abs(b), 1e-12)
+        return min((max(0.0, c - a) + max(0.0, b - d)) / width, SHORTFALL_CAP)
+    return None
+
+
 def _any_of(values, items) -> bool:
     """A set value holds at least one of ``items`` (case-insensitive)."""
     return bool({_norm(x) for x in values or []} & {_norm(x) for x in items})
@@ -665,10 +705,11 @@ def sort_key(category: str):
 
     def key(r: CrossResult):
         devs = len(r.deviations) + getattr(r, "unstated_ours", 0)  # a value we do not state ranks like a deviation
+        short = getattr(r, "shortfall", 0.0)  # with as many deviations, the smaller shortfall first (rule 12)
         if category == "functional":
-            main = (devs, r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
+            main = (devs, short, r.unverified_worse, len(r.exceptions), r.closeness)  # fewest deviations first
         elif category == "package":
-            main = (devs, r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
+            main = (devs, r.unverified_worse, not r.fit.same_pinout, short, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
         return (r.lifecycle_risk, getattr(r, "downgrade", False), getattr(r, "steer_miss", False), main,
@@ -699,6 +740,7 @@ def rank_key(r: CrossResult):
         len(r.deviations) + getattr(r, "unstated_ours", 0),  # a value we do not state ranks like a deviation
         pkg and not r.fit.same_package,
         pkg and not r.fit.same_pinout,
+        getattr(r, "shortfall", 0.0),  # how far short, not only how often (rule 12, owner 2 Nov 2026)
         r.unverified_worse,  # an unverified data rate only breaks ties (owner, 26 Oct 2026)
         len(r.exceptions),
         r.closeness,

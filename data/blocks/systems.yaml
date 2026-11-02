@@ -184,7 +184,7 @@ systems:
           - "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
   - key: drones
     title: "Drones"
-    summary: "Flight control, motors and the radio links to the pilot and the network."
+    summary: "Flight control, motors, radio, cellular and satellite links, navigation and anti-jamming."
     subsystems:
       - key: flight
         title: "Flight control and motors"
@@ -226,6 +226,49 @@ systems:
           - "Drone with 4G / 5G link (beyond visual line of sight)"
           - "Drone cellular link module for BVLOS (LTE / 5G RedCap with NTN fallback, eSIM, GNSS and broadcast Remote ID)"
         topics: [drone_cellular]
+      # owner, 2 Nov 2026: "For Drones: add NTN/DTC, drone connectivity, drone navigation"; "drone disturbance" =
+      # anti-jamming (the drone resisting interference).
+      - key: satellite-link
+        title: "Satellite link (NTN / direct-to-cell)"
+        summary: "Satellite telemetry and control where no cell reaches: 3GPP NTN, direct-to-cell and satellite modems."
+        elements:
+          - "IoT-NTN module (L / S band)"
+          - "Direct-to-cell (phone bands to LEO)"
+          - "Satellite modem (Iridium / L-band MSS)"
+          - "GNSS coexistence"
+        diagrams:
+          - "Drone satellite IoT module (NB-IoT / LTE-M over NTN, 3GPP Rel-17/18, L-band n255 and S-band n256)"
+          - "Drone direct-to-cell (DTC) link (standard LTE / 5G phone-band radio to LEO satellites under supplemental coverage from space)"
+          - "Drone dedicated satellite modem for command and control (Iridium-class LEO or L-band MSS, with GNSS protection)"
+        topics: [drone_satellite_link]
+      - key: navigation
+        title: "Navigation"
+        summary: "Multi-band GNSS with RTK, and the sensors that keep position when GNSS is weak."
+        elements:
+          - "Multi-band GNSS and RTK"
+          - "IMU, magnetometer, barometer"
+          - "Optical flow, visual odometry, rangefinder"
+          - "UWB for docking and indoor"
+        diagrams:
+          - "Drone multi-band GNSS receiver with RTK (L1 / L5, optional L2 / E6, corrections over the radio link, cellular or L-band)"
+          - "Drone navigation sensor-fusion unit (IMU, magnetometer, barometer, optical flow / visual odometry, rangefinder, GNSS, UWB)"
+          - "UWB positioning for mobile robots and drones (AGV / AMR navigation, follow-me, return to base, landing where GPS is missing) (after MobileKnowledge)"
+        topics: [drone_navigation]
+      - key: anti-jamming
+        title: "Anti-jamming and anti-spoofing"
+        summary: "Keeping position and control when GNSS or the radio links are disturbed."
+        elements:
+          - "CRPA antenna array and nulling"
+          - "Interference filters and high-linearity LNA"
+          - "Spoofing detection"
+          - "Inertial / visual fallback"
+          - "Resilient control link"
+        diagrams:
+          - "Drone CRPA anti-jam GNSS (controlled-reception-pattern antenna array with a nulling / beamforming front end)"
+          - "Drone hardened GNSS front end (multi-band, multi-constellation, interference and notch filters, high-linearity LNA, jamming and spoofing monitor)"
+          - "Drone resilient command-and-control link (FHSS control radio with antenna diversity, cellular and NTN fallback, link manager)"
+          - "Drone navigation sensor-fusion unit (IMU, magnetometer, barometer, optical flow / visual odometry, rangefinder, GNSS, UWB)"
+        topics: [drone_antijam]
   - key: cellular
     title: "Cellular"
     summary: "Phones, wearables and devices, and the network that serves them."

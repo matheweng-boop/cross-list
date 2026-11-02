@@ -1511,3 +1511,20 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
     expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
     go(page, "/clocks/plans")
     expect(page.locator("main")).to_contain_text("Browser clock plan")
+
+
+def test_drones_show_satellite_navigation_and_anti_jamming(page):
+    """Owner, 2 Nov 2026 (worker P): Drones gets "Satellite link (NTN / direct-to-cell)", "Navigation" and
+    "Anti-jamming and anti-spoofing", each with diagrams and a deep dive; the radio-links deep dive shows "Which link
+    when"."""
+    go(page, "/blocks?system=drones")
+    for sub in ("satellite-link", "navigation", "anti-jamming"):
+        card = page.locator(f"#card-drones-{sub}")
+        expect(card).to_have_count(1)
+        expect(card.locator(".sys-btn-deep")).to_have_count(1)
+    go(page, "/library/drone_satellite_link")
+    expect(page.locator("h1")).to_contain_text("satellite link")
+    go(page, "/library/drone_radio_links")
+    expect(page.locator("#k-drone_link_choice table")).to_be_visible()
+    go(page, "/library/drone_antijam")
+    expect(page.locator('a[href="/library/drone_navigation"]').first).to_be_visible()

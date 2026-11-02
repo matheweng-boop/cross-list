@@ -449,3 +449,22 @@ def test_presentation_topics_include_the_new_systems():
     groups = {t["group"] for t in presentation.topics()}
     for k in NEW_SYSTEMS:
         assert sy.get(k)["title"] in groups, k
+
+
+def test_v2x_background_sources_from_5gaa(client):
+    """5GAA documents read as background: listed under the V2X topic's references with page-cited points, the source
+    registered, and the C-V2X case background and automotive map citing them."""
+    t = library.topic("v2x_frontend")
+    bg = t["background_references"]
+    assert len(t["references"]) == 6 and 1 <= len(bg) <= 5
+    assert all(r["url"].startswith("https://5gaa.org/content/uploads/") and 3 <= len(r["points"]) <= 6 for r in bg)
+    assert all(any(re.search(r"\bpp?\. \d", p) for p in r["points"]) for r in bg)
+    assert all(any("(est)" in p for p in r["points"]) for r in bg)
+    page = client.get("/library/v2x_frontend").text
+    assert "Background sources" in page and "5gaa-annual-report-2025.pdf" in page
+    src = next(s for s in library.sources() if s["id"] == "5gaa")
+    assert "summaries" in src["licence"] and src["access"].startswith("Allowed")
+    case_bg = client.get("/business/reports/auto-cv2x-fe/background").text
+    assert all(r["url"] in case_bg for r in bg)
+    reach = (library.FOLDER.parent / "business" / "auto_reach.yaml").read_text()
+    assert all(r["url"] in reach for r in bg)

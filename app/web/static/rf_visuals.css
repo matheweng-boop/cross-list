@@ -55,3 +55,84 @@
 .vz-sf { position: absolute; top: 0; bottom: 18px; width: 2px; margin-left: -1px; background: #c2410c; }
 .vz-sax { position: relative; display: flex; justify-content: space-between; border-top: 1px solid #8a94a3; padding: 1px 4px; font-size: .7rem; height: 18px; }
 .vz-sax .vz-sfl { position: absolute; transform: translateX(-50%); color: #c2410c; font-weight: 600; background: #fcfcfd; padding: 0 3px; }
+
+/* dBm ladder as ranges (owner 2 Nov 2026): one row per rung, a band from the low to the high end with a dark tick at
+   the typical value; dashed bands are estimates; fixed definitions are lines across all rows; your power in orange */
+.dl { margin: .2rem 0 .6rem; } .dl figcaption { margin-bottom: .3rem; }
+.dl-plot { position: relative; padding: 1.2rem 0 0; background: #fcfcfd; border: 1px solid #e3e6ea; border-radius: 4px; color: #3a4450; overflow: hidden; }
+.dl-head { position: absolute; top: 0; left: 0; right: 0; height: 1.2rem; }
+.dl-head span { position: absolute; top: .15rem; transform: translateX(-50%); font-size: .66rem; color: #5b6573; white-space: nowrap; }
+.dl-ln { position: absolute; top: 1.2rem; bottom: 1.3rem; width: 0; border-left: 1.5px dashed #8a94a3; pointer-events: none; }
+.dl-ln.you { border-left: 2px solid #c2410c; z-index: 1; }
+.dl-row { position: relative; padding: 0 2px .2rem; }
+.dl-lab { position: relative; z-index: 2; display: block; font-size: .72rem; line-height: 1.05rem;
+  text-shadow: 0 0 2px #fcfcfd, 0 0 2px #fcfcfd, 0 0 3px #fcfcfd; }  /* readable across the dashed lines */
+.dl-lab .dl-r { color: #5b6573; font-variant-numeric: tabular-nums; }
+.dl-tr { position: relative; z-index: 2; display: block; height: 16px; }
+.dl-b { position: absolute; top: 0; bottom: 0; min-width: 6px; width: auto; height: auto; margin: 0; padding: 0; font: inherit; line-height: 0;
+  border: 1.5px solid #1f5fa8; border-radius: 3px; background: rgba(31, 95, 168, .25); cursor: pointer; }
+.dl-b::before { content: ""; position: absolute; inset: -5px -3px; }  /* a larger target for a finger */
+.dl-b.est { border-style: dashed; border-color: #6b7280; background: rgba(138, 148, 163, .25); }
+.dl-b.on { border-color: #c2410c; background: rgba(194, 65, 12, .28); box-shadow: 0 0 0 2px rgba(194, 65, 12, .25); }
+.dl-b i { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; background: #12315a; border-radius: 1px; }
+.dl-b:focus-visible { outline: 2px solid var(--pico-primary); outline-offset: 2px; }
+@media (pointer: coarse) { .dl-tr { height: 22px; } }
+.dl-ax { position: relative; height: 1.3rem; border-top: 1px solid #8a94a3; font-size: .66rem; color: #5b6573; }
+.dl-ax span { position: absolute; top: .15rem; transform: translateX(-50%); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dl-ax span.mn { display: none; }
+.dl-ax span.you { color: #c2410c; font-weight: 700; background: #fcfcfd; padding: 0 2px; z-index: 1; }
+@media (min-width: 700px) { .dl-ax span.mn { display: inline; } }
+.dl-axl { margin: .15rem 0 .4rem; }
+.dl-est { font-size: .64rem; font-weight: 700; color: #4b5563; border: 1px solid #c5cbd3; border-radius: .5rem; padding: 0 .3rem; white-space: nowrap; }
+.dl-info { margin: .2rem 0 .6rem; padding: .5rem .7rem; border-left: 4px solid #c2410c; background: #fff8f2; border-radius: .3rem; color: #23304a; }
+.dl-info h4 { margin: 0 0 .3rem; font-size: .95rem; color: inherit; }
+.dl-info dl { margin: .2rem 0 0; display: grid; grid-template-columns: minmax(6rem, max-content) 1fr; gap: .15rem .6rem; font-size: .88rem; }
+.dl-info dt { font-weight: 600; color: #3a4450; } .dl-info dd { margin: 0; overflow-wrap: anywhere; }
+.vz-rung dd { overflow-wrap: anywhere; }
+.dl-pts { margin: 0; padding-left: 1rem; } .dl-pts li { margin: 0; list-style: disc; } .dl-pts b { font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .dl-info dl { grid-template-columns: 1fr; } .dl-info dd { margin-bottom: .25rem; } }
+
+/* FM intermodulation and IP3 (owner 2 Nov 2026): the FM band with stations to drag and their ghosts, the one-line
+   verdict, "How to fix it", the IP3 spectrum and its trade-off meter; the textbook chart folded underneath */
+.fm-fig, .ip-fig { margin: 0 0 .3rem; }
+.fm-svg, .ip-svg { display: block; max-width: 100%; height: auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.fm-plot, .ip-plot { fill: #fcfcfd; stroke: #e3e6ea; }
+.fm-grid { stroke: #eceff3; } .fm-tk { fill: #5b6573; font-size: 11px; } .fm-ax { fill: #3a4450; font-size: 11px; font-weight: 600; }
+.fm-ch { fill: #2e7d4f; opacity: .16; }
+.fm-sens { stroke: #6b46c1; stroke-dasharray: 3 3; } .fm-sl { fill: #6b46c1; font-size: 10px; }
+.fm-st { fill: #1f5fa8; } .fm-hit { fill: transparent; cursor: ew-resize; }
+.fm-drag { outline: none; } .fm-drag:hover .fm-hit, .fm-drag:focus-visible .fm-hit { fill: rgba(11, 107, 116, .12); }
+.fm-drag:focus-visible .fm-st, .fm-drag:focus-visible .fm-yt { stroke: #0b6b74; stroke-width: 3; }
+.fm-yl { stroke: #2e7d4f; stroke-width: 3; } .fm-yt { fill: #2e7d4f; }
+.fm-gh { fill: rgba(194, 65, 12, .18); stroke: #c2410c; stroke-width: 1.5; stroke-dasharray: 3 2; }
+.fm-gh.hit { fill: rgba(180, 35, 24, .32); stroke: #b42318; } .fm-gh.adj { fill: rgba(194, 122, 0, .25); stroke: #c27a00; }
+.fm-lb, .fm-lg, .fm-ly, .ip-lost { font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #fcfcfd; stroke-width: 3px; stroke-linejoin: round; fill: #1d2228; }
+.fm-lg { fill: #b42318; } .fm-ly { fill: #2e7d4f; } .ip-lost { fill: #b42318; font-size: 12px; }
+.fm-vals { margin: .2rem 0 .4rem; color: var(--pico-muted-color); }
+.fm-verdict, .ip-verdict { margin: .3rem 0 .7rem; padding: .55rem .8rem; border-left: 5px solid #8a94a3; border-radius: .35rem; background: #f6f7f9; color: #23304a; font-size: 1rem; }
+.fm-verdict.t-bad, .ip-verdict.t-bad { border-color: #b42318; background: #fdecec; }
+.fm-verdict.t-warn, .ip-verdict.t-warn { border-color: #c27a00; background: #fff6e5; }
+.fm-verdict.t-ok, .ip-verdict.t-ok { border-color: #2e7d4f; background: #ecf7f0; }
+.fm-fix h3, .fm-list h3 { font-size: 1rem; margin: .3rem 0 .4rem; }
+.fx-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: .5rem; margin-bottom: .7rem; }
+.fx-card { display: grid; gap: .3rem; align-content: start; border: 1px solid var(--pico-muted-border-color); border-top: 4px solid #1f5fa8; border-radius: .4rem;
+  padding: .45rem .6rem; background: #fff; color: #23304a; font-size: .86rem; }
+.fx-card.on { border-top-color: #2e7d4f; background: #f3faf6; }
+.fx-card p { margin: 0; } .fx-card .fx-cost { color: #8a3b0a; }
+.fx-try { width: auto; margin: .1rem 0 0; padding: .25rem .8rem; font-size: .82rem; justify-self: start; }
+.fm-list { margin: 0 0 .8rem; } .fm-list label { display: block; } .fm-list input { margin: .2rem 0 .3rem; }
+.fm-pairs p { margin: .1rem 0; } .fm-pairs ul { margin: .1rem 0 .3rem; padding-left: 1.1rem; }
+.vz-fold { margin: .7rem 0 .3rem; } .vz-fold > summary { cursor: pointer; font-weight: 600; }
+.ip-noise { fill: #8a94a3; opacity: .22; } .ip-w { fill: #1f5fa8; } .ip-w.lost { fill: #b42318; }
+.ip-n { fill: #8a94a3; } .ip-im { fill: rgba(194, 65, 12, .3); stroke: #c2410c; stroke-width: 1.5; stroke-dasharray: 3 2; }
+.ip-lim { stroke: #b42318; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ip-try { margin: .1rem 0 .7rem; padding: .35rem .7rem; border-left: 3px solid var(--pico-primary); background: #f3f8f8; border-radius: .3rem; color: #23304a; }
+.tm { display: grid; gap: .5rem; margin: 0 0 .5rem; }
+.tm-row { display: grid; grid-template-columns: minmax(9rem, 13rem) 1fr; gap: .1rem .6rem; align-items: center; font-size: .86rem; }
+.tm-l { font-weight: 600; } .tm-l small { display: block; font-weight: 400; color: var(--pico-muted-color); font-size: .74rem; }
+.tm-tr { position: relative; height: 14px; border-radius: 3px; background: #eef1f5; }
+.tm-tr b { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: #2e7d4f; }
+.tm-row.t-warn .tm-tr b { background: #c27a00; } .tm-row.t-bad .tm-tr b { background: #b42318; } .tm-row.t-cur .tm-tr b { background: #6b46c1; }
+.tm-z { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: #23304a; }
+.tm-v { grid-column: 2; font-size: .8rem; color: var(--pico-muted-color); }
+@media (max-width: 560px) { .tm-row { grid-template-columns: 1fr; } .tm-v { grid-column: 1; } }

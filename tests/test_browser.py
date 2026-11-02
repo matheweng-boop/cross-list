@@ -1511,3 +1511,20 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
     expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
     go(page, "/clocks/plans")
     expect(page.locator("main")).to_contain_text("Browser clock plan")
+
+
+def test_data_center_shows_timing_sub_system_deep_dive_and_diagrams(page):
+    """Owner, 2 Nov 2026: timing solutions in the data center: the Data center system has a "Timing and
+    synchronization" sub-system with its deep dive (which links the Clock planner) and its block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-timing")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Timing and synchronization")
+    with page.expect_navigation():
+        card.locator("a.sys-btn-deep").click()
+    assert page.url.endswith("/library/dc_timing")
+    expect(page.locator("main h1")).to_contain_text("Timing in the AI data center")
+    expect(page.locator('main a[href="/clocks"]').first).to_be_visible()
+    go(page, "/blocks?system=datacenter&sub=timing#sub-timing")
+    expect(page.locator("details#area-datacenter[open]")).to_have_count(1)
+    expect(page.locator("main")).to_contain_text("AI / GPU server clock tree")

@@ -449,3 +449,19 @@ def test_presentation_topics_include_the_new_systems():
     groups = {t["group"] for t in presentation.topics()}
     for k in NEW_SYSTEMS:
         assert sy.get(k)["title"] in groups, k
+
+
+# ---- owner, 2 Nov 2026: timing solutions in the data center (worker N) ---------------------------------------------
+def test_data_center_timing_sub_system_diagrams_and_deep_dive(client):
+    x = sy.sub("datacenter", "timing")
+    tpls = [blocks.templates()[i] for i in x["idx"]]
+    assert len(tpls) >= 4 and any("PCIe" in t["name"] for t in tpls) and any("OCP Time Card" in t["name"] for t in tpls)
+    assert sy.topic_place("dc_timing") == ("datacenter", "timing") and ("Clock planner", "/clocks") in x["links"]
+    fns = {b["fn"] if isinstance(b, dict) else b.split()[0] for t in tpls for g in t["groups"] for b in g["blocks"]}
+    assert {"clock_generator", "pcie_buffer", "jitter_attenuator", "crystal_oscillator", "clock_buffer"} <= fns
+    card = _card(client.get("/library").text, "datacenter", "timing")
+    assert "Timing and synchronization" in card and 'href="/library/dc_timing"' in card and 'href="/clocks"' in card
+    deep = client.get("/library/dc_timing").text
+    assert 'href="/clocks"' in deep and "Clock planner" in deep and "Si5332" in deep
+    one = client.get(f"/blocks/new?template={x['idx'][0]}").text  # the server clock tree shows our timing parts
+    assert "Si5332" in one and "Si532" in one

@@ -15775,3 +15775,127 @@
   - {id: board_net, question: Board net, choices: [12 V, 48 V]}
   - {id: motor_type, question: Motor type, choices: [brushed DC (H-bridge), BLDC (3-phase)]}
   - {id: motors, question: Motors per seat, choices: [2-4, 6-8, 10 or more (massage, lumbar)]}
+
+- name: AI / GPU server clock tree (100 MHz PCIe Gen 5 / 6 reference clocks from a clock generator and LP-HCSL fanout buffers to the CPU, GPUs, NICs and retimers, with spread spectrum) (after TI and Skyworks public material)
+  category: Enterprise & data center
+  note: "Drawn by us from TI SNAA386 (PCIe clocking) and the Skyworks Si5332 and Si532xx data sheets. Every PCIe device gets a 100 MHz HCSL / LP-HCSL REFCLK; in the common-clock architecture one clock generator feeds the CPU root complex and, through fanout buffers, every GPU, NIC, switch and retimer slot. PCIe Gen 6 allows 100 fs RMS REFCLK jitter after the PCIe filters (Gen 5: 150 fs) and ±100 ppm; down-spread SSC (0 to -0.5 %, 30-33 kHz) cuts EMI. A NIC or DPU that sits in another box (SRIS) runs from its own XO plus its own 156.25 / 312.5 MHz Ethernet SerDes reference. The number of buffers per server (4 to 8 GPUs, 8 to 12 NICs and retimers on an AI tray) is our estimate (est)."
+  sources:
+  - {doc: TI-SNAA386, title: 'TI SNAA386, Clocking for PCIe Applications (Nov 2023)', url: 'https://www.ti.com/lit/an/snaa386/snaa386.pdf'}
+  - {doc: SKY-SI532XX, title: 'Skyworks Si53204 / Si53208 / Si53212 PCIe Gen 1-6 LP-HCSL fanout buffers, data sheet 206658A', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si532xx-datasheet.pdf'}
+  groups:
+  - {id: ref, label: 25 MHz crystal or XO (frequency reference), col: 0, row: 0, blocks: [{fn: crystal_oscillator, label: 25 MHz crystal / XO}]}
+  - {id: clkgen, label: 'Clock generator: 100 MHz PCIe REFCLK (optional -0.5 % down-spread) plus 25 / 33 / 48 MHz platform clocks, I2C configured', col: 1, row: 0, blocks: [clock_generator]}
+  - {id: fanout, label: 'PCIe fanout buffers (LP-HCSL, 85 or 100 Ω, Gen 6 additive jitter ≤ 20 fs; one per GPU / NIC group)', col: 2, row: 0, blocks: [pcie_buffer x2]}
+  - {id: cpu, label: CPU (PCIe root complex) and memory, col: 1, row: 1, blocks: [{fn: soc, label: Host CPU}, ddr_flash]}
+  - {id: switch, label: PCIe switches and retimers (to GPUs and NIC slots), col: 2, row: 1, blocks: [pcie_switch, {fn: redriver, label: PCIe retimer / redriver}]}
+  - {id: gpu, label: GPU / accelerator modules (PCIe REFCLK per module), col: 3, row: 0, blocks: [{fn: soc, label: GPU / AI accelerator x4-8}]}
+  - {id: nic, label: 'NIC / DPU (scale-out network): own XO for SRIS and 156.25 / 312.5 MHz Ethernet SerDes reference', col: 3, row: 1, blocks: [{fn: ethernet_phy, label: NIC / DPU}, {fn: crystal_oscillator, label: 156.25 / 312.5 MHz differential XO}]}
+  - {id: bmc, label: Board management controller (clock enables and configuration), col: 0, row: 1, blocks: [{fn: mcu, label: BMC}]}
+  - {id: pwr, label: Low-noise LDOs for the clock supplies (1.5 / 1.8 / 3.3 V), col: 0, row: 2, blocks: [pol_ldo]}
+  links:
+  - [ref, clkgen, 25 MHz]
+  - [clkgen, cpu, 100 MHz REFCLK + platform clocks]
+  - [clkgen, fanout, 100 MHz (SSC on or off)]
+  - [fanout, switch, 100 MHz LP-HCSL]
+  - [fanout, gpu, 100 MHz LP-HCSL]
+  - [fanout, nic, 100 MHz LP-HCSL (common clock) or none (SRIS)]
+  - [cpu, switch, PCIe Gen 5 / 6 lanes]
+  - [switch, gpu, PCIe lanes]
+  - [switch, nic, PCIe lanes]
+  - [bmc, clkgen, I2C / output enables]
+  - [pwr, clkgen, clean supply]
+  - [pwr, fanout, clean supply]
+  questions:
+  - {id: pcie_gen, question: PCIe generation, choices: [Gen 5 (150 fs), Gen 6 (100 fs), 'Gen 7 (67 fs, TI LMK3H0102-Q1 data sheet)'], source: TI SNAA386 Table 4-1}
+  - {id: architecture, question: Clocking architecture, choices: [common clock (CC), common clock with spread (CCS), separate reference no spread (SRNS), separate reference independent spread (SRIS)], source: TI SNAA386 section 3}
+  - {id: ssc, question: Spread spectrum, choices: ['off', '-0.5 % down-spread (common clock)', '-0.3 % down-spread (SRIS)'], source: TI SNAA386 section 3.3}
+  - {id: termination, question: Board impedance, choices: [100 Ω, 85 Ω], source: Skyworks Si532xx data sheet (A01 / A02)}
+
+- name: Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)
+  category: Enterprise & data center
+  note: "Drawn by us from the Skyworks timing reference design for Broadcom switch SoCs (May 2026), AN1432 (112G / 224G SerDes) and AN1077 (synchronization clocks). The switch ASIC needs a very clean reference for its SerDes: <35 fs RMS with a 4 MHz high-pass filter at 312.5 MHz for the newest 224G-class chips, <90 fs (12 kHz-20 MHz) at 312.5 MHz for 112G-class chips, <150 fs at 156.25 MHz one generation earlier. Where the switch also carries SyncE and PTP (AI back-end fabrics, edge data centers that host 5G fronthaul), a network synchronizer with a TCXO / OCXO tracks the recovered line clock and the 1 PPS / time of day, and a jitter attenuator or fanout buffer cleans and distributes the SerDes references. A 1U / 2U switch is AN1077's centralized 'pizza box' timing architecture."
+  sources:
+  - {doc: SKY-RD-BCM, title: 'Skyworks, Timing Solutions for Broadcom SOCs (reference design, May 2026)', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf'}
+  - {doc: SKY-AN1432, title: 'Skyworks AN1432, Using the Si536x, Si540x and SKY6310x in 112G and 224G SerDes applications (Oct 2025)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1432_112G_224G_SerDes_Applications.pdf'}
+  - {doc: SKY-AN1077, title: 'Skyworks AN1077, Selecting the right clocks for timing synchronization applications', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/application-notes/an1077-selecting-clocks-for-timing-synchronization.pdf'}
+  groups:
+  - {id: ports, label: 'Front-panel ports: 400G / 800G / 1.6T optics and copper (SyncE recovered clocks)', col: 0, row: 0, blocks: [{fn: external_block, label: Optical modules / DAC cables}]}
+  - {id: asic, label: 'Switch ASIC: 112G / 224G PAM4 SerDes (recovered clocks out, 156.25 / 312.5 MHz reference in), PTP timestamping', col: 1, row: 0, w: 2, blocks: [{fn: soc, label: Switch ASIC}, serdes]}
+  - {id: sync, label: 'Network synchronizer (DPLL: SyncE G.8262, IEEE 1588 phase / frequency steering, hitless switching, holdover)', col: 0, row: 1, blocks: [{fn: jitter_attenuator, label: Network synchronizer}]}
+  - {id: osc, label: 'Stability reference (TCXO / OCXO) and crystal for the low-jitter core', col: 0, row: 2, blocks: [{fn: crystal_oscillator, label: TCXO / OCXO}, {fn: crystal_oscillator, label: 48-54 MHz crystal}]}
+  - {id: ja, label: 'SerDes reference clocks: jitter attenuator and any-format fanout (<35 fs with 4 MHz HPF at 312.5 MHz)', col: 1, row: 1, blocks: [jitter_attenuator, clock_buffer]}
+  - {id: cpu, label: 'Control-plane CPU: PTP stack (ptp4l), PHC, PCIe to the ASIC', col: 2, row: 1, blocks: [{fn: soc, label: Control-plane CPU}, {fn: clock_generator, label: CPU / PCIe / platform clock generator}, pcie_buffer]}
+  - {id: tod, label: 1 PPS / time of day from a time card or GNSS (grandmaster or boundary clock), col: 1, row: 2, blocks: [{fn: external_block, label: Time card / GNSS 1 PPS + ToD}]}
+  - {id: pwr, label: Low-noise LDOs for the timing devices, col: 2, row: 2, blocks: [pol_ldo]}
+  links:
+  - [ports, asic, 112G / 224G lanes]
+  - [asic, sync, recovered SyncE clocks]
+  - [osc, sync, TCXO / OCXO + XTAL]
+  - [tod, sync, 1 PPS + ToD]
+  - [sync, ja, clean frequency- and phase-locked clock]
+  - [ja, asic, 156.25 / 312.5 MHz SerDes reference + 1 PPS]
+  - [cpu, sync, I2C / SPI (1588 steering)]
+  - [cpu, asic, PCIe + PTP timestamps]
+  - [pwr, ja, clean supply]
+  questions:
+  - {id: serdes, question: SerDes class, choices: ['224G (<35 fs, 4 MHz HPF, 312.5 MHz)', '112G (<90 fs at 312.5 MHz)', '56G (<150 fs at 156.25 MHz)'], source: Skyworks timing reference design for Broadcom SOCs}
+  - {id: sync, question: Network synchronization, choices: [none (free-running), SyncE only, SyncE + IEEE 1588 PTP (boundary clock), PTP grandmaster input (time card)], source: Skyworks AN1077}
+  - {id: holdover, question: Holdover reference, choices: [TCXO, OCXO, none], source: Skyworks AN1077 sections 2.4 and 3}
+  - {id: loop_bw, question: Synchronizer loop bandwidth, choices: [1-10 Hz (G.8262 EEC option 1), below 0.1 Hz (option 2)], source: Skyworks AN1077 Table 4.1}
+
+- name: Optical transceiver module reference clock (400G / 800G / 1.6T pluggable or coherent module - PAM4 or coherent DSP clocked from a low-jitter XO or jitter attenuator) (after Skyworks public material)
+  category: Enterprise & data center
+  note: "Drawn by us from Skyworks AN1432 and our Si545 / Si549 and Si5344H data. The module DSP retimes the host's 112G / 224G electrical lanes onto the optical lanes; its PLLs need a 156.25 / 312.5 MHz class reference. AN1432 budgets 10 % of the transmit jitter for the reference clock: 115 fs RMS for 400GBASE-FR4 and 140 fs for 800GAUI-8 chip-to-module, integrated from 4 MHz with aliasing included. Direct-detect modules usually take a low-jitter differential XO; coherent modules (ZR / ZR+) use a jitter attenuator (Si5344H class, 2 inputs, 4 outputs, 0.1 ps). Module internals beyond the clock (drivers, TIAs, CMIS MCU) are generic and drawn by us (est)."
+  sources:
+  - {doc: SKY-AN1432, title: 'Skyworks AN1432, Using the Si536x, Si540x and SKY6310x in 112G and 224G SerDes applications (Oct 2025)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1432_112G_224G_SerDes_Applications.pdf'}
+  - {doc: SKY-SI545, title: 'Skyworks Si545 any-frequency differential XO data sheet', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si545-datasheet.pdf'}
+  groups:
+  - {id: host, label: 'Host connector: 8 x 112G or 8 x 224G electrical lanes (OSFP / QSFP-DD)', col: 0, row: 0, blocks: [{fn: external_block, label: Switch / NIC host}]}
+  - {id: dsp, label: 'PAM4 or coherent DSP: host SerDes, CDR, FEC, line SerDes / DAC-ADC', col: 1, row: 0, blocks: [{fn: soc, label: PAM4 / coherent DSP}, serdes]}
+  - {id: clk, label: 'Reference clock: low-jitter differential XO (156.25 / 312.5 MHz) or jitter attenuator (coherent)', col: 1, row: 1, blocks: [{fn: crystal_oscillator, label: Low-jitter differential XO}, {fn: jitter_attenuator, label: Coherent-optics jitter attenuator}]}
+  - {id: tx, label: Laser / modulator drivers, col: 2, row: 0, blocks: [optical_driver]}
+  - {id: rx, label: Photodiodes and TIAs, col: 2, row: 1, blocks: [optical_tia]}
+  - {id: optics, label: 'Lasers, modulators and fiber (DR / FR / LR / ZR)', col: 3, row: 0, blocks: [{fn: external_block, label: Optical engine}]}
+  - {id: mgmt, label: Module MCU (CMIS management) and power, col: 0, row: 1, blocks: [mcu, pol_buck, pol_ldo]}
+  links:
+  - [host, dsp, 112G / 224G electrical lanes]
+  - [clk, dsp, 156.25 / 312.5 MHz reference]
+  - [dsp, tx, PAM4 / coherent drive]
+  - [tx, optics, modulated light]
+  - [optics, rx, received light]
+  - [rx, dsp, analog receive]
+  - [mgmt, dsp, I2C / MDIO]
+  - [mgmt, clk, clean supply]
+  - [host, mgmt, CMIS over I2C]
+  questions:
+  - {id: rate, question: Module rate, choices: [400G (8 x 56G), 800G (8 x 112G), 1.6T (8 x 224G)], source: Skyworks AN1432 Table 1}
+  - {id: modulation, question: Optics, choices: [direct-detect PAM4 (DR / FR / LR), coherent (ZR / ZR+)]}
+  - {id: refclk_budget, question: 'Reference-clock jitter budget (4 MHz to TX bandwidth, with aliasing)', choices: [115 fs (400GBASE-FR4), 140 fs (800GAUI-8 C2M), 125 fs (CEI-112G-VSR)], source: Skyworks AN1432 Table 2}
+
+- name: Data center PTP time card / grandmaster (OCP Time Card - GNSS timing receiver, atomic clock or OCXO holdover, FPGA bridge, PCIe PHC to the server, 1 PPS / 10 MHz outputs) (after OCP Time Appliances Project)
+  category: Enterprise & data center
+  note: "Drawn by us from the OCP Time Card specification (rev 1.0, Time Appliances Project, OWFa 1.0). A PCIe card turns a server into a PTP grandmaster (Open Time Server): a GNSS timing receiver gives 1 PPS and time of day, an atomic clock (±1 µs holdover) or high-quality OCXO (±22 µs) holds time when GNSS is jammed or lost, and an FPGA timestamps the PPS edges, steers the oscillator and exposes a PTP hardware clock (/dev/ptp) to ptp4l / phc2sys / chrony, which then discipline the NIC. The clock synthesizer that makes the FPGA clocks from the 10 MHz is our assumption (est): the specification does not name one."
+  sources:
+  - {doc: OCP-TIMECARD, title: 'OCP Time Appliances Project, Time Card specification rev 1.0 (README)', url: 'https://github.com/Time-Appliances-Project/Time-Card/blob/master/README.md'}
+  groups:
+  - {id: ant, label: GNSS antenna input (SMA) and front end, col: 0, row: 0, blocks: [antenna, gnss_lna]}
+  - {id: gnss, label: 'GNSS timing receiver (1 PPS + time of day; e.g. a u-blox F9T class module)', col: 1, row: 0, blocks: [{fn: external_block, label: GNSS timing module}]}
+  - {id: osc, label: 'Holdover oscillator: miniature atomic clock (±1 µs) or OCXO (±22 µs)', col: 1, row: 1, blocks: [{fn: crystal_oscillator, label: Atomic clock / OCXO (10 MHz)}]}
+  - {id: fpga, label: 'FPGA bridge: PPS timestamping, oscillator steering, PTP hardware clock, IRIG-B / DCF77', col: 2, row: 0, blocks: [{fn: soc, label: FPGA}]}
+  - {id: clk, label: Clock synthesis from the 10 MHz (FPGA and output clocks) (est), col: 2, row: 1, blocks: [{fn: jitter_attenuator, label: Jitter attenuator / clock generator}, clock_buffer]}
+  - {id: io, label: '4 SMA in / out: 1 PPS, 10 MHz, IRIG-B, DCF77', col: 3, row: 1, blocks: [{fn: external_block, label: SMA connectors}, tvs_esd]}
+  - {id: host, label: 'Server host: PCIe x1, ptp4l / phc2sys / chrony, NIC with PTP hardware clock', col: 3, row: 0, blocks: [{fn: soc, label: Host CPU}, {fn: ethernet_phy, label: PTP NIC}]}
+  - {id: pwr, label: Card power from the PCIe slot (low-noise rails), col: 0, row: 1, blocks: [pol_buck, pol_ldo]}
+  links:
+  - [ant, gnss, GNSS RF]
+  - [gnss, fpga, 1 PPS + ToD (UART)]
+  - [osc, fpga, '10 MHz + 1 PPS, steering']
+  - [osc, clk, 10 MHz]
+  - [clk, fpga, FPGA clocks]
+  - [fpga, io, 1 PPS / 10 MHz / IRIG-B out and in]
+  - [fpga, host, 'PCIe x1 (PHC, PPS)']
+  - [pwr, osc, supply]
+  questions:
+  - {id: holdover, question: Holdover oscillator, choices: [miniature atomic clock (±1 µs), OCXO (±22 µs)], source: 'OCP Time Card spec, Clock section'}
+  - {id: role, question: Role in the network, choices: [PTP grandmaster, boundary clock, NTP server], source: 'OCP Time Card spec, General'}
+  - {id: gnss_security, question: GNSS protection, choices: [holdover only, signed GNSS messages + jump detection], source: 'OCP Time Card spec, Security'}

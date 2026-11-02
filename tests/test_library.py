@@ -468,3 +468,32 @@ def test_v2x_background_sources_from_5gaa(client):
     assert all(r["url"] in case_bg for r in bg)
     reach = (library.FOLDER.parent / "business" / "auto_reach.yaml").read_text()
     assert all(r["url"] in reach for r in bg)
+
+
+# ---- owner, 2 Nov 2026: timing solutions in the data center (worker N) ---------------------------------------------
+def test_data_center_timing_sub_system_diagrams_and_deep_dive(client):
+    x = sy.sub("datacenter", "timing")
+    tpls = [blocks.templates()[i] for i in x["idx"]]
+    assert len(tpls) >= 4 and any("PCIe" in t["name"] for t in tpls) and any("OCP Time Card" in t["name"] for t in tpls)
+    assert sy.topic_place("dc_timing") == ("datacenter", "timing") and ("Clock planner", "/clocks") in x["links"]
+    fns = {b["fn"] if isinstance(b, dict) else b.split()[0] for t in tpls for g in t["groups"] for b in g["blocks"]}
+    assert {"clock_generator", "pcie_buffer", "jitter_attenuator", "crystal_oscillator", "clock_buffer"} <= fns
+    card = _card(client.get("/library").text, "datacenter", "timing")
+    assert "Timing and synchronization" in card and 'href="/library/dc_timing"' in card and 'href="/clocks"' in card
+    deep = client.get("/library/dc_timing").text
+    assert 'href="/clocks"' in deep and "Clock planner" in deep and "Si5332" in deep
+    one = client.get(f"/blocks/new?template={x['idx'][0]}").text  # the server clock tree shows our timing parts
+    assert "Si5332" in one and "Si532" in one
+
+
+def test_data_center_timing_market_by_socket_is_an_estimate(client, session):
+    """Owner, 2 Nov 2026 ("Yes to all"): units x content per socket in the deep dive, and the total as a TAM entry
+    marked est (no fn, so it does not set a function's market size)."""
+    from app.services import tam
+
+    segs = [m["segment"] for m in library.topic("dc_timing")["market"]]
+    for socket in ("Servers", "Switches", "Optical modules", "Time cards", "Total"):
+        assert any(s.startswith(socket) and "est" in s for s in segs), socket
+    e = next(x for x in tam.estimates(session) if x["key"] == "dc-timing-sockets-est")
+    assert "(est)" in e["value"] and e["usd"] == 170_000_000 and not e["fn"]
+    assert "dc-timing-sockets-est" in client.get("/library/dc_timing").text

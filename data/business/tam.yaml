@@ -4,6 +4,8 @@
 # (app/web/templates/business/reports/<case>.background.html and data/business/cases/<case>.yaml). Nothing is
 # estimated here and nothing was fetched again. They are EXAMPLES to review: the owner marks each one agree or
 # disagree, with a comment, on the TAM estimates page; new estimates added on that page are stored in the database.
+# Exception (owner, 2 Nov 2026, "Yes to all"): dc-timing-sockets-est is our own units x content estimate, marked est
+# in its value, source and quality, with no link (the biweekly check marks it unverifiable).
 #
 # Fields
 #   id        short, unique and stable: reviews are stored against it
@@ -195,3 +197,22 @@ estimates:
       date: "2026-09-29 (report code SE 6985, as printed on the page)"
     quality: "Analyst press release read on 23 Oct 2026 and confirmed by the biweekly check (25 Oct); the paid report (300 pages, 180 tables) was not read. Names the segments with the largest share or fastest growth, the drivers and the players (Asahi Kasei, Infineon, Allegro, LEM, Melexis, TDK, Honeywell, TI, Tamura, Omron, ST, Yageo, ADI, Broadcom, Aceinna), but no dollar split by application or region, so the automotive or charging share cannot be read from it. One analyst house only; a second public figure would turn it into a low-high band. Scope is wider than our parts: Hall sensors, modules and shunt-based sensing are all in, so the share open to isolated amplifiers and integrated isolated sensors is a part of it (est)."
     origin: "Integrated isolated current-sensing case (iso-current-sense-charging), background notes 3.1"
+  - id: dc-timing-sockets-est
+    gist: "Our own estimate: data-center timing chips at about $170–400 M a year (2026), from units x content per socket; no analyst figure behind it (est)."
+    abstract:
+      - "Servers and NICs $90-170 M, switches $40-90 M, optical modules $40-120 M, time cards $2-10 M (est)."
+      - "It sizes the data-center Timing and synchronization deep dive (/library/dc_timing)."
+      - "Agree to use it as a rough anchor, or comment with better unit figures."
+    product: Data-center timing chips (clock generators, PCIe buffers, jitter attenuators, network synchronizers, XOs)
+    value: "$170–400 M (est)"
+    usd: 170000000
+    year: 2026
+    region: Global
+    scope: "Our estimate (est), chips only: units a year x timing content per unit, by socket. Servers 11-13 M a year (about 2 M AI / GPU servers) at $4-6 (general) and $20-50 (AI) of clocks; data-center switches 2-3 M at $15-35; optical modules 40-60 M at $1-2 (XO) or $5-10 (coherent); time cards 50-150 k at $20-60. TCXO / OCXO and atomic clocks not counted."
+    source:
+      title: "BizDev estimate in the Systems library deep dive 'Timing in the AI data center' (units x content)"
+      publisher: BizDev (own estimate)
+      url: ""
+      date: 2026-11-02
+    quality: "Not a market study: our own units x content estimate (est). Unit counts are from general knowledge, not from a source read in this run; content per unit is counted from the four data-center timing block diagrams at estimated selling prices. Wide band on purpose."
+    origin: "Systems library > Data center > Timing and synchronization (dc_timing), Market"

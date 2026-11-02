@@ -182,6 +182,24 @@ systems:
         diagrams:
           - "Enterprise / premium Wi-Fi access point (Dragonwing NPro A8 Elite, Wi-Fi 8) (Qualcomm)"
           - "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
+      - key: timing
+        title: "Timing and synchronization"
+        summary: "Clean clocks for PCIe and SerDes, and SyncE / PTP time across the AI cluster."
+        elements:
+          - "PCIe clock generator and fanout buffers"
+          - "Network synchronizer (SyncE / IEEE 1588 PTP)"
+          - "SerDes jitter attenuator"
+          - "Low-jitter XO for optical modules"
+          - "PTP time card / grandmaster"
+        diagrams:
+          - "AI / GPU server clock tree (100 MHz PCIe Gen 5 / 6 reference clocks from a clock generator and LP-HCSL fanout buffers to the CPU, GPUs, NICs and retimers, with spread spectrum) (after TI and Skyworks public material)"
+          - "Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)"
+          - "Optical transceiver module reference clock (400G / 800G / 1.6T pluggable or coherent module - PAM4 or coherent DSP clocked from a low-jitter XO or jitter attenuator) (after Skyworks public material)"
+          - "Data center PTP time card / grandmaster (OCP Time Card - GNSS timing receiver, atomic clock or OCXO holdover, FPGA bridge, PCIe PHC to the server, 1 PPS / 10 MHz outputs) (after OCP Time Appliances Project)"
+          - "Cell site gateway router (switch ASIC, 10G / 25G / 100G optical ports, IEEE 1588 / SyncE timing, N+1 PSU) (TI)"
+        topics: [dc_timing]
+        links:
+          - ["Clock planner", "/clocks"]
   - key: drones
     title: "Drones"
     summary: "Flight control, motors and the radio links to the pilot and the network."

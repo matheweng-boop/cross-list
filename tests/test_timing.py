@@ -95,8 +95,11 @@ def test_twelve_output_pcie_buffers_and_the_20_output_gap(session, timing):
     assert [d.key for d in to_ti["LMKDB1112"].deviations] == [] and "LMKDB1104" in to_ti
     assert [d.key for d in to_ti["LMKDB1104"].deviations] == ["outputs"]
     assert _get(session, "LMKDB1112").param_map()["jitter_fs"] == 3.3  # its own jitter table (p28)
-    assert set(_crosses(session, "LMKDB1112")) == {"Si53212-A01", "Si53212-A02"}
-    assert _crosses(session, "LMKDB1120") == {}  # no Skyworks PCIe buffer has 20 outputs
+    # 2 Nov 2026: the PCIe Gen 7 SKY535x2 buffers (10 / 8 / 4 outputs) are candidates too
+    assert {"Si53212-A01", "Si53212-A02", "SKY53512"} <= set(_crosses(session, "LMKDB1112"))
+    to_20 = _crosses(session, "LMKDB1120")  # no Skyworks PCIe buffer has 20 outputs: any candidate falls short
+    assert set(to_20) <= {"SKY53512", "SKY53582", "SKY53542"}
+    assert all("outputs" in [d.key for d in r.deviations] for r in to_20.values())
     assert _get(session, "LMKDB1102").param_map()["control"] == ["pin"]  # no SMBus
 
 
@@ -180,7 +183,7 @@ def test_summary_names_the_function():
 def test_part_page_and_walk_through(client, session, timing):
     comp = ids(client, "LMKDB1104")
     page = client.get(f"/parts/{comp}").text
-    assert "Si53204-A01" in page and "PCIe clock buffer" in page
+    assert "SKY53542" in page and "PCIe clock buffer" in page  # 4 outputs, PCIe Gen 7 like LMKDB1104
     assert "Function" in page and "Output formats" in page
     walk = client.get(f"/parts/{comp}/walk").text
     assert 'id="step-2"' in walk and "PCIe clock buffer" in walk
@@ -204,3 +207,27 @@ def test_schedule_page_counts_timing_datasheets(client, session):
     q = runs.queue(session)
     assert q["timing_left"] > 0 and q["timing_done"] > 0
     assert f"<b>{q['timing_left']}</b> timing datasheets left" in client.get("/manage/schedule").text
+
+
+def test_pcie_gen7_parts_only_where_the_datasheet_states_it(session, timing):
+    """Owner, 2 Nov 2026 ("Yes to all"): our PCIe Gen 7 parts from their datasheets; older parts keep their gen."""
+    p = lambda m: _get(session, m).param_map()  # noqa: E731
+    assert p("SKY62101")["pcie_gen"] == "gen7" and p("SKY62101")["function_type"] == "clock_generator"
+    for m, n in (("SKY53582", 8), ("SKY53512", 10), ("SKY53542", 4)):
+        assert p(m)["pcie_gen"] == "gen7" and p(m)["outputs"] == n and p(m)["function_type"] == "pcie_buffer"
+    assert (p("Si5332A-GM1")["pcie_gen"], p("Si53204-A01")["pcie_gen"]) == ("gen6", "gen6")
+
+
+def test_network_synchronizers_show_on_the_switch_timing_diagram(client, session, timing):
+    """Owner, 2 Nov 2026 ("Yes to all"): Si5403 and SKY69002 (recommended in the Skyworks reference design for switch
+    SoCs) are in our timing data and fill the network-synchronizer block of the data center switch diagram."""
+    p = lambda m: _get(session, m).param_map()  # noqa: E731
+    assert (p("Si5403A")["outputs"], p("Si5403A")["jitter_fs"]) == (18, 51)
+    assert (p("SKY69002")["outputs"], p("SKY69002")["jitter_fs"]) == (16, 47)
+    assert all(p(m)["function_type"] == "jitter_attenuator" for m in ("Si5403A", "SKY69002"))
+    i = next(i for i, t in enumerate(blocks.templates()) if t["name"].startswith("Data center Ethernet switch timing"))
+    assert any("Si5403" in str(b) for g in blocks.templates()[i]["groups"] for b in g["blocks"])
+    found = blocks.parts_for(session, "jitter_attenuator")["manufacturers"]
+    sky = next(m for m in found if m["manufacturer"] == "Skyworks")
+    assert {"Si5403A", "SKY69002"} <= {c["mpn"] for c in sky["all"]}  # block coverage of the function lists them
+    assert client.get(f"/blocks/new?template={i}").status_code == 200

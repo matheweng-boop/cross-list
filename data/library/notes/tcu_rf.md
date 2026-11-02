@@ -13,6 +13,17 @@ Researched 2026-10-21. The summaries are our own wording. Short quotes are marke
 | r5 | arXiv:2203.05634, *Overview of 3GPP Rel-17 RedCap* (Ericsson authors, 2022) | paper | RedCap reductions and what they cost in coverage | Full |
 | r6 | arXiv:2412.16611, *A Tutorial on Non-Terrestrial Networks: towards 6G* (2024) | paper | NTN roadmap from Rel-17 to Rel-19 and the step to 6G | §I-A (3GPP releases), skimmed the rest |
 
+Background, not in the six: Nisshinbo Micro Devices, eCall application block diagram (read 2 Nov 2026, HTML page
+https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/ecall.html; our summary; the library diagram
+"eCall module (after Nisshinbo)" is drawn from it):
+- A small eCall module: an LTE module and a GPS module (GNSS IC, SAW, front-end module with LNA + SAW) share two
+  antennas through one RF switch. The parts named are high-power SPDT and DPDT switches.
+- The second antenna fits the NG-eCall need to keep calling when the roof antenna is lost (est; the page does not say why).
+- Audio is a big part of the box: an ECM microphone with a microphone amplifier, an audio codec, and a speaker
+  amplifier under 3 W (3 W class-D or 500 mW parts).
+- Power: DC/DC, LDOs, a watchdog timer and window voltage detectors, then 3.3 V for the MCU and codec and 5 V for the
+  speaker amplifier.
+
 URLs are in the YAML. Caveat on r6: its band text has errors. It gives the n255 downlink as "1525 - 1659 MHz" and swaps the Ka uplink and downlink ranges. We took band numbers only from r1.
 
 ## Block diagram (our drawing, based on r1–r6)

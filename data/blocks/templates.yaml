@@ -2004,10 +2004,11 @@
     source: TI-SOL-TCU 'Wireless connectivity'
 - name: Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB) (TI)
   category: Automotive systems
-  note: 'From TI public material: TI-SOL-HEADUNIT, TI-SOL-RADIO'
+  note: 'From TI public material: TI-SOL-HEADUNIT, TI-SOL-RADIO. The last three groups (GNSS front end and RF switches, microphone amplifier, analog camera video amplifier) are added after Nisshinbo public material: NISSHINBO-AUTO-AV (Entertainment (Car AV) block diagram: GNSS front-end module with LNA + SAW filter on the radio / GPS antenna, PA, LNA and RF switch on the LTE antenna, RF switch on the Bluetooth / Wi-Fi antenna, microphone amplifier ahead of the audio codec, video isolation amplifier from the camera).'
   sources:
   - {doc: TI-SOL-HEADUNIT, title: Automotive head unit, url: 'https://www.ti.com/solution/automotive-head-unit'}
   - {doc: TI-SOL-RADIO, title: Automotive radio tuner, url: 'https://www.ti.com/solution/automotive-radio-tuners'}
+  - {doc: NISSHINBO-AUTO-AV, title: 'Nisshinbo Micro Devices application block diagram (automotive): Entertainment (Car AV)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/entertainment.html'}
   groups:
   - id: off_battery
     label: Off-battery power
@@ -2079,6 +2080,21 @@
     blocks: [voltage_translator]
     col: 1
     row: 3
+  - id: gnss_rf
+    label: 'GNSS front end (LNA + SAW) and RF switches on the LTE and Bluetooth / Wi-Fi antennas (after Nisshinbo)'
+    blocks: [gnss_lna, filter_saw_baw, rf_switch, lna]
+    col: 2
+    row: 3
+  - id: mic_amp
+    label: Microphone amplifier ahead of the codec (after Nisshinbo)
+    blocks: [{fn: amplifier, label: Microphone amplifier}]
+    col: 3
+    row: 3
+  - id: video_amp
+    label: Analog camera input, video isolation amplifier (after Nisshinbo)
+    blocks: [{fn: amplifier, label: Video isolation amplifier}]
+    col: 0
+    row: 4
   links:
   - [off_battery, system_power, '']
   - [system_power, app_proc, '']
@@ -2094,6 +2110,9 @@
   - [camera, app_proc, '']
   - [app_proc, display, '']
   - [ui, app_proc, I2C]
+  - [gnss_rf, wireless, RF]
+  - [mic_amp, anc, mic signal]
+  - [video_amp, camera, analog video]
   questions:
   - id: broadcast_standards
     question: Broadcast standards
@@ -7106,9 +7125,10 @@
     source: BMS page text (ISO 26262 up to ASIL D)
 - name: 'Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD) (NXP)'
   category: Automotive systems
-  note: 'From NXP public material: NXP_CLUSTER'
+  note: 'From NXP public material: NXP_CLUSTER. The watchdog and voltage detector group is added after Nisshinbo public material: NISSHINBO-AUTO-INFO (Instrument Panel block diagram: PMIC with DC/DC and LDOs, a separate watchdog timer and voltage detector watching the MCU, CAN transceiver, op-amp / audio amplifier to the speaker).'
   sources:
   - {doc: NXP_CLUSTER, title: NXP Instrument Cluster application page, url: 'https://www.nxp.com/applications/INSTRUMENT-CLUSTER'}
+  - {doc: NISSHINBO-AUTO-INFO, title: 'Nisshinbo Micro Devices application block diagram (automotive): Information (Head Up Display (HUD), Instrument Panel)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/information.html'}
   groups:
   - id: mcu
     label: MCU / MPU
@@ -7165,8 +7185,14 @@
     blocks: [led_driver]
     col: 2
     row: 2
+  - id: wdt_vd
+    label: Watchdog timer and voltage detector next to the PMIC (after Nisshinbo)
+    blocks: [watchdog, supervisor]
+    col: 3
+    row: 2
   links:
   - [memory, mcu, '']
+  - [wdt_vd, mcu, reset]
   - [eth, mcu, '']
   - [gpio, mcu, '']
   - [can_lin, mcu, '']
@@ -14913,9 +14939,10 @@
 
 - name: V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)
   category: Automotive systems
-  note: "Owner, 23 Oct 2026: Autotalks as the reference for the V2X applications. Autotalks (Qualcomm since Jun 2025) sold a V2X chipset in two set-ups: standalone, with the V2X stack on the chipset's own processor, and companion, attached to the telematics unit's processor; both with an external 5.9 GHz front end per antenna path for diversity or a second channel (est, from public product descriptions; autotalks.com is no longer online, checked 23 Oct 2026). Skyworks' automotive material paired SKY5A2105 with Autotalks parts."
+  note: "Owner, 23 Oct 2026: Autotalks as the reference for the V2X applications. Autotalks (Qualcomm since Jun 2025) sold a V2X chipset in two set-ups: standalone, with the V2X stack on the chipset's own processor, and companion, attached to the telematics unit's processor; both with an external 5.9 GHz front end per antenna path for diversity or a second channel (est, from public product descriptions; autotalks.com is no longer online, checked 23 Oct 2026). Skyworks' automotive material paired SKY5A2105 with Autotalks parts. The watchdog and voltage detector group is added after Nisshinbo public material: NISSHINBO-AUTO-V2X (V2X block diagram: RF block with PA, LNA, RF switch and filter to one antenna; power management with an LDO with watchdog, buck DC/DC, watchdog timer and voltage detector; a second LDO + DC/DC feeding the MCU, DDR, security and the LIN / CAN interface to the BCM / IVI)."
   sources:
   - {doc: 5GAA_FAQ_59, title: '5GAA FAQ on the 5.9 GHz band', url: 'https://5gaa.org/content/uploads/2025/02/faq-5.9-ghz.pdf'}
+  - {doc: NISSHINBO-AUTO-V2X, title: 'Nisshinbo Micro Devices application block diagram (automotive): Vehicle to Everything (V2X)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/vehicle-to-everything.html'}
   groups:
   - {id: ant, label: V2X antennas (roof and second position), col: 0, row: 0, blocks: [antenna x2]}
   - {id: fe1, label: "5.9 GHz front end, path 1 (PA / LNA / switch + filter)", col: 1, row: 0, blocks: [v2x_fem, filter_saw_baw]}
@@ -14926,6 +14953,7 @@
   - {id: gnss, label: GNSS (position and time for every message), col: 2, row: 1, blocks: [gnss_lna, filter_saw_baw]}
   - {id: pwr, label: Power, col: 0, row: 2, blocks: [pmic, pol_ldo]}
   - {id: net, label: Vehicle network, col: 1, row: 2, blocks: [can_transceiver, ethernet_phy]}
+  - {id: wdt_vd, label: Watchdog timer and voltage detector (after Nisshinbo), col: 2, row: 2, blocks: [watchdog, supervisor]}
   links:
   - [ant, fe1, 5.9 GHz]
   - [ant, fe2, 5.9 GHz]
@@ -14936,6 +14964,7 @@
   - [host, hsm, '']
   - [host, net, CAN / Ethernet]
   - [pwr, chip, rails]
+  - [wdt_vd, host, reset]
   questions:
   - {id: v2x_mode, question: Set-up, choices: [standalone V2X unit, companion to the telematics unit, inside a smart antenna module]}
   - {id: v2x_tech, question: Radio technology, choices: [802.11p / ITS-G5, LTE-V2X (PC5), NR-V2X, dual mode 802.11p + C-V2X]}
@@ -15775,3 +15804,94 @@
   - {id: board_net, question: Board net, choices: [12 V, 48 V]}
   - {id: motor_type, question: Motor type, choices: [brushed DC (H-bridge), BLDC (3-phase)]}
   - {id: motors, question: Motors per seat, choices: [2-4, 6-8, 10 or more (massage, lumbar)]}
+
+# ---- Nisshinbo Micro Devices automotive application block diagrams (owner, 2 Nov 2026: "Check Nisshinbo Micro
+# Devices for automotive block diagrams"). HTML pages only (robots.txt disallows PDFs and CSVs); each diagram is an
+# inline SVG on the page, redrawn here with our function ids. Read 2 Nov 2026.
+- name: eCall module (LTE module, GNSS front end, RF switch to a backup antenna, microphone and speaker amplifiers) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-ECALL (eCall block diagram: LTE module and a GPS module with GNSS IC, SAW and a front-end module (LNA + SAW filter) both reach two antennas through an RF switch; power management with DC/DC, two LDOs, watchdog timer and voltage detector fed from the battery; two low-voltage LDOs make 3.3 V for the MCU and audio codec and 5 V for the speaker amplifier; ECM microphone with a microphone amplifier into the codec; speaker amplifier under 3 W). The page lists SPDT and DPDT high-power switches for the RF switch and a GNSS front-end module (est: the switch moves the call to a second antenna when the roof antenna is lost in a crash, as NG-eCall asks; the page does not say so)."
+  sources:
+  - {doc: NISSHINBO-AUTO-ECALL, title: 'Nisshinbo Micro Devices application block diagram (automotive): eCall', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/ecall.html'}
+  groups:
+  - {id: lte, label: LTE module, col: 0, row: 0, blocks: [modem]}
+  - {id: gnss, label: 'GPS module: GNSS IC, SAW, front-end module (LNA + SAW filter)', col: 0, row: 1, blocks: [gnss_lna, filter_saw_baw x2]}
+  - {id: rfsw, label: RF switch (SPDT or DPDT) to the two antennas, col: 1, row: 0, blocks: [rf_switch]}
+  - {id: ant, label: 'Two antennas (main and backup, est)', col: 2, row: 0, blocks: [antenna x2]}
+  - {id: batt, label: Battery input, col: 0, row: 2, blocks: [external_block]}
+  - {id: pwr, label: 'Power management: DC/DC, LDOs, watchdog timer, voltage detector', col: 1, row: 2, blocks: [wide_vin_buck, pol_ldo x2, watchdog, supervisor]}
+  - {id: lvldo, label: 'Low-voltage LDOs: 3.3 V (MCU, codec) and 5 V (speaker amplifier)', col: 2, row: 2, blocks: [pol_ldo x2]}
+  - {id: mcu, label: MCU, col: 2, row: 1, blocks: [mcu]}
+  - {id: mic, label: ECM microphone and microphone amplifier, col: 0, row: 3, blocks: [acoustic_transducer, amplifier]}
+  - {id: codec, label: Audio codec, col: 1, row: 3, blocks: [audio_codec]}
+  - {id: spk, label: Speaker amplifier (under 3 W) and speaker, col: 2, row: 3, blocks: [audio_amp, acoustic_transducer]}
+  links:
+  - [lte, rfsw, cellular]
+  - [gnss, rfsw, GNSS]
+  - [rfsw, ant, '']
+  - [batt, pwr, '']
+  - [pwr, lvldo, '']
+  - [lvldo, mcu, 3.3 V]
+  - [lvldo, codec, 3.3 V]
+  - [lvldo, spk, 5 V]
+  - [mic, codec, mic signal]
+  - [codec, spk, audio]
+  questions:
+  - {id: backup_antenna, question: Second (backup) antenna, choices: ['yes, through the RF switch', 'no'], source: NISSHINBO-AUTO-ECALL (two antennas behind the RF switch)}
+  - {id: speaker_amp, question: Speaker amplifier, choices: ['class-D, filter-less, up to 3 W', 'small speaker amplifier, about 0.5 W'], source: NISSHINBO-AUTO-ECALL product list (3 W class-D and 500 mW speaker amplifiers)}
+
+- name: Head-up display (picture generation with laser or LED, mirror motor, color compensation) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-INFO (Head Up Display (HUD) block diagram: battery into a PMIC with buck DC/DC, boost DC/DC and LDOs, plus a watchdog timer and voltage detector; the vehicle interface (CAN, LIN, MOST) and the graphic engine (MCU, video processor) drive an LCoS or LED picture source lit by red, green and blue laser diodes with a laser diode driver; a photodiode and op-amp measure the light for color compensation; an H-bridge motor driver turns the mirror that throws the picture onto the windshield). The instrument panel half of the same page is added to the instrument cluster diagram."
+  sources:
+  - {doc: NISSHINBO-AUTO-INFO, title: 'Nisshinbo Micro Devices application block diagram (automotive): Information (Head Up Display (HUD), Instrument Panel)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/information.html'}
+  groups:
+  - {id: batt, label: Battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pmic, label: 'PMIC: buck DC/DC, boost DC/DC, LDOs', col: 1, row: 0, blocks: [pmic, pol_buck, pre_regulator, pol_ldo x2]}
+  - {id: wdt_vd, label: Watchdog timer and voltage detector, col: 2, row: 0, blocks: [watchdog, supervisor]}
+  - {id: vif, label: 'Vehicle interface (CAN, LIN, MOST)', col: 0, row: 1, blocks: [can_transceiver, lin_transceiver]}
+  - {id: ge, label: 'Graphic engine (MCU, video processor)', col: 1, row: 1, blocks: [mcu]}
+  - {id: pgu, label: 'Picture source: LCoS or LED with RGB laser diodes and the laser diode driver', col: 2, row: 1, blocks: [display, optical_driver]}
+  - {id: color, label: 'Color compensation: photodiode and op-amp', col: 1, row: 2, blocks: [amplifier]}
+  - {id: mirror, label: Mirror motor (H-bridge driver) and mirror to the windshield, col: 2, row: 2, blocks: [motor_driver_brushed]}
+  links:
+  - [batt, pmic, '']
+  - [pmic, vif, '']
+  - [pmic, ge, '']
+  - [pmic, pgu, boost for the laser diodes]
+  - [wdt_vd, ge, reset]
+  - [vif, ge, vehicle data]
+  - [ge, pgu, picture]
+  - [pgu, color, light level]
+  - [color, ge, color correction]
+  - [ge, mirror, mirror angle]
+  questions:
+  - {id: light_source, question: Light source, choices: [RGB laser diodes, LEDs], source: NISSHINBO-AUTO-INFO (L-COS / LED with laser diode and LDD)}
+  - {id: vehicle_bus, question: Vehicle interface, choices: [CAN, LIN, MOST], source: "NISSHINBO-AUTO-INFO ('I/F (CAN, LIN, MOST)')"}
+
+- name: Parking-assist camera ECU with four analog cameras (video amplifier in each camera, video isolation amplifiers at the ECU input, PMIC) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-CAMERA (Camera Sensing (Parking Assist System) block diagram: front, two side and rear cameras, each with a video amplifier driving the cable; in the ECU one video isolation amplifier per input ahead of the MCU; a PMIC with two DC/DCs and two LDOs from the battery, also feeding the CAN transceiver and DDR memory). Here 'isolation amplifier' means a video amplifier that rejects the ground difference between camera and ECU, not galvanic isolation (est, from the part names on the page). A digital surround-view ECU over SerDes links is in the background diagrams (TI)."
+  sources:
+  - {doc: NISSHINBO-AUTO-CAMERA, title: 'Nisshinbo Micro Devices application block diagram (automotive): Camera Sensing (Parking Assist System)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/camera-sensing-adas.html'}
+  groups:
+  - {id: cams, label: 'Front, two side and rear cameras', col: 0, row: 0, blocks: [camera_radar]}
+  - {id: camamp, label: Video amplifier (cable driver) in each camera, col: 1, row: 0, blocks: [amplifier x4]}
+  - {id: iso, label: Video isolation amplifier at each ECU input, col: 2, row: 0, blocks: [amplifier x4]}
+  - {id: mcu, label: MCU (image processing), col: 3, row: 0, blocks: [mcu]}
+  - {id: batt, label: Battery, col: 0, row: 1, blocks: [external_block]}
+  - {id: pmic, label: 'PMIC: two DC/DCs and two LDOs', col: 1, row: 1, blocks: [pmic, pol_buck x2, pol_ldo x2]}
+  - {id: can, label: CAN transceiver, col: 2, row: 1, blocks: [can_transceiver]}
+  - {id: ddr, label: DDR memory, col: 3, row: 1, blocks: [ddr_flash]}
+  links:
+  - [cams, camamp, '']
+  - [camamp, iso, analog video over cable]
+  - [iso, mcu, '']
+  - [batt, pmic, '']
+  - [pmic, mcu, rails]
+  - [pmic, can, '']
+  - [pmic, ddr, '']
+  - [mcu, can, CAN]
+  questions:
+  - {id: camera_link, question: Camera link, choices: [analog video (as drawn), digital SerDes link], source: NISSHINBO-AUTO-CAMERA (video amplifiers); TI surround view background diagram (FPD-Link)}
+  - {id: cameras, question: Cameras, choices: [rear only, four (surround view)], source: 'NISSHINBO-AUTO-CAMERA (front, side, side, rear)'}

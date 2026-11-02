@@ -17,6 +17,16 @@ under 25 words and cited. Files are in `research/dl/deep/gnss_frontend/`; the SK
 Competitor context reused from the case file and earlier downloads (not counted as references): TI TRF3302-Q1, a Grade 1
 LNA covering 1165–1630 MHz (`dl/gn/ti_trf3302.txt`), and the u-blox ZED-X20K product summary (`dl/gn/zedx20k.txt`).
 
+Background, not in the six: Nisshinbo Micro Devices automotive block diagrams, Entertainment (Car AV) and eCall (read
+2 Nov 2026, HTML pages under https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/; our summary):
+- Both diagrams put a GNSS front-end module (LNA + SAW filter) between the antenna and the receiver, with one more SAW
+  filter in front of the GNSS IC. That matches our drawing: filter, LNA, filter.
+- In the car AV unit the same front end also feeds the radio tuner and the Japanese VICS traffic receiver.
+- The GNSS parts listed are several GNSS LNAs, a high-gain LNA, two wideband GNSS LNAs still in development, a
+  GPS / GLONASS front-end module, and SAW filters for GPS / GLONASS / BeiDou L1, GPS L2 and GPS L6. They are a
+  competitor for multi-band GNSS front ends (est).
+- PDFs (datasheets) are disallowed by their robots.txt, so we have no noise figure or gain numbers from them.
+
 ## Block diagram explained (our drawing, from r2, r3, r6)
 
 ```

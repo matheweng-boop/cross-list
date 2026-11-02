@@ -449,3 +449,51 @@ def test_presentation_topics_include_the_new_systems():
     groups = {t["group"] for t in presentation.topics()}
     for k in NEW_SYSTEMS:
         assert sy.get(k)["title"] in groups, k
+
+
+# ---- Nisshinbo Micro Devices automotive block diagrams (2 Nov 2026) ----
+NISSHINBO_NEW = {  # name prefix -> (system, sub-system, functions the source diagram shows)
+    "eCall module": ("automotive", "telematics-v2x", {"modem", "gnss_lna", "rf_switch", "amplifier", "audio_amp"}),
+    "Head-up display": ("automotive", "cockpit", {"optical_driver", "motor_driver_brushed", "watchdog", "supervisor"}),
+    "Parking-assist camera ECU": ("automotive", "adas", {"camera_radar", "amplifier", "pmic", "can_transceiver"}),
+}
+
+
+def test_nisshinbo_diagrams_are_drawn_after_their_page_and_sit_in_their_sub_system():
+    fns = blocks.catalogue()["functions"]
+    for prefix, (system, sub, want) in NISSHINBO_NEW.items():
+        i = _index(prefix)
+        t = blocks.templates()[i]
+        assert t["name"].endswith("(after Nisshinbo)") and t["note"].startswith("After Nisshinbo")
+        assert all(s["url"].startswith("https://www.nisshinbo-microdevices.co.jp/en/") for s in t["sources"])
+        assert all(not s["url"].endswith(".pdf") for s in t["sources"])  # robots.txt disallows their PDFs
+        ids = {g["id"] for g in t["groups"]}
+        assert len(ids) == len(t["groups"]) >= 5
+        used = {b.split()[0] for g in t["groups"] for b in g["blocks"]}
+        assert used <= set(fns) and want <= used, prefix
+        assert all(a in ids and b in ids for a, b, _ in t["links"]), prefix
+        assert (system, sub) in sy.place_of(i), (prefix, sy.place_of(i))
+
+
+def test_nisshinbo_is_a_reference_on_the_matching_library_diagrams():
+    src = next(s for s in library.sources() if s["id"] == "nisshinbo")
+    assert "PDFs disallowed" in src["access"] and src["kind"] == "block_diagram"
+    added = {  # existing diagram -> the group added after Nisshinbo
+        "Automotive infotainment head unit": ("NISSHINBO-AUTO-AV", "gnss_rf", {"gnss_lna", "rf_switch"}),
+        "Automotive instrument cluster": ("NISSHINBO-AUTO-INFO", "wdt_vd", {"watchdog", "supervisor"}),
+        "V2X unit with two antenna paths": ("NISSHINBO-AUTO-V2X", "wdt_vd", {"watchdog", "supervisor"}),
+    }
+    for prefix, (doc, gid, want) in added.items():
+        t = blocks.templates()[_index(prefix)]
+        assert doc in {s["doc"] for s in t["sources"]} and doc in t["note"], prefix
+        g = next(g for g in t["groups"] if g["id"] == gid)
+        assert "after Nisshinbo" in g["label"] and want <= {b if isinstance(b, str) else b["fn"] for b in g["blocks"]}
+        assert any(gid in lk[:2] for lk in t["links"]), prefix
+    for key in ("tcu_rf", "v2x_frontend", "gnss_frontend"):
+        assert "Nisshinbo" in library.notes(key) and len(library.topic(key)["references"]) == 6
+
+
+def test_nisshinbo_diagrams_open_with_their_source(client):
+    for prefix in NISSHINBO_NEW:
+        r = client.get(f"/blocks/new?template={_index(prefix)}")
+        assert r.status_code == 200 and "nisshinbo-microdevices.co.jp" in r.text, prefix

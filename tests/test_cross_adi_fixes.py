@@ -235,6 +235,31 @@ def test_a_far_slower_part_ranks_below_an_option_difference(session, load, ref, 
     assert order.index(option) < order.index(slow), (ref, order[:8])
 
 
+# ---------------------------------------------------------------- rule 13: the nearest part, marked
+
+
+def test_no_cross_shows_the_nearest_part_marked(client, session, gd):
+    """ADuM4177W drives 40 A / 30 A (ADuM4177 datasheet; adi_gate_drivers.yaml): no Skyworks driver is within the
+    deviation limit. Owner, 2 Nov 2026 (rule 13): the row stays red, shows the nearest part marked "Nearest (not a
+    drop-in): differs in ...", and an AEC-Q100 part only ever gets an automotive part."""
+    row = cl.cross_list(session, cl.parse("ADUM4177WBRNZ")[0])[0]
+    assert row.light == "red" and row.drop_in is None and row.functional is None
+    assert row.nearest.type == cl.NEAREST_TYPE and row.nearest.comment.startswith("Nearest (not a drop-in): differs in")
+    assert "peak source current" in row.nearest.comment
+    assert cl._qual(row.nearest.part) == "automotive"
+    assert not cl.crossed(row)  # never counted as a cross
+    html = client.post("/cross-list", data={"parts": "ADUM4177WBRNZ"}).text
+    assert "cx-nearest" in html and cl.NEAREST_TYPE in html and row.nearest.part.mpn in html
+
+
+def test_automotive_part_never_gets_an_industrial_nearest(session, load):
+    """ADuM6421AW is an automotive isoPower isolator (adum6420a...pdf ordering guide); our integrated-power Si86P
+    parts are industrial only: no cross and no nearest part."""
+    load("adi_digital_isolators", "skyworks_si86")
+    row = cl.cross_list(session, cl.parse("ADuM6421AWBRNZ5")[0])[0]
+    assert row.light == "red" and row.nearest is None
+
+
 # ---------------------------------------------------------------- rule 6: isolation below theirs ranks last
 
 

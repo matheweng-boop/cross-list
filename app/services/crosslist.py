@@ -33,6 +33,7 @@ from sqlalchemy.orm import Session
 
 from app.matching.engine import (
     BETTER,
+    DEFAULT_MAX_DEVIATIONS,
     DIFFERENT,
     EQUAL,
     UNKNOWN,
@@ -243,7 +244,7 @@ class Crosser:
             self._values[p.id] = rules.values(p)
         return self._values[p.id]
 
-    def crosses(self, ref: Part) -> dict[str, list[CrossResult]]:
+    def crosses(self, ref: Part, max_deviations: int | None = None) -> dict[str, list[CrossResult]]:
         rules = get_rules(ref.family)
         ck = (ref.family, ref.is_reference, ref.manufacturer_id if ref.is_reference else None)
         if ck not in self._cands:
@@ -267,7 +268,8 @@ class Crosser:
                 if not fail:
                     keep.append(c)
             cands = keep
-        return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id))
+        return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id),
+                            DEFAULT_MAX_DEVIATIONS if max_deviations is None else max_deviations)
 
 
 def _p1(r: CrossResult) -> list:
@@ -696,6 +698,7 @@ class Row:
     reason_link: str | None = None
     checked_on: list[str] = field(default_factory=list)
     other: Column | None = None  # third column: the other Skyworks isolator family's best part (Si86 / Si86S)
+    nearest: Column | None = None  # no cross within the deviation limit: the nearest part, marked (rule 13)
 
     @property
     def maker(self) -> str:
@@ -718,6 +721,26 @@ class Row:
     def main_verified(self) -> bool:
         """The part's own row (drop-in or functional fit) confirmed."""
         return any(c and c.verified for c in (self.drop_in, self.functional))
+
+
+NEAREST_TYPE = "Nearest (not a drop-in)"
+NEAREST_LIMIT = 99  # deviations: no limit
+
+
+def nearest(crosser: "Crosser", part: Part) -> CrossResult | None:
+    """No candidate within the deviation limit: the nearest one by the usual order (owner, 2 Nov 2026, rule 13: "show
+    the nearest candidate, with the differences marked"). It passed the function-defining and must-meet checks, so an
+    automotive part never gets an industrial one, not even as nearest; a package-locked part only its own package."""
+    pool = [r for r in _pool(part, crosser.crosses(part, NEAREST_LIMIT)) if not r.hard_fail]
+    if _qual(part) == "automotive":
+        pool = [r for r in pool if _qual(r.candidate) == "automotive"]
+    return min(pool, key=functional_key) if pool else None
+
+
+def nearest_note(r: CrossResult) -> str:
+    """'Nearest (not a drop-in): differs in output configuration, peak source current; ...' and the usual comment."""
+    diff = ", ".join(dict.fromkeys(_short(d.label).lower() for d in r.deviations)) or "package or pinout"
+    return f"{NEAREST_TYPE}: differs in {diff}. {comment(r, 2)}"
 
 
 # Grades above the rules' levels that we do not make: the red row says so (owner, 2 Nov 2026: ADuM141ES, QML Level V)
@@ -789,6 +812,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
         if c1 is None and c2 is None:
             row.reason, row.reason_link = _no_cross(session, part, bool(crosser._cands.get(
                 (part.family, False, None))))  # fmt: skip
+            if (n := nearest(crosser, part)) is not None:
+                row.nearest = Column(n, NEAREST_TYPE, nearest_note(n))
         elif any(c is not None and c.category == "fff" and not data_gaps(c) and not c.lifecycle_risk
                  for c in (c1, alt[1] if alt else None)):  # fmt: skip
             row.light = "green"
@@ -810,6 +835,8 @@ def export_cells(r: Row) -> list:
 
     if r.drop_in is None and r.functional is None:
         first, second = ["No drop-in", "", "", ""], ["No functional fit", "", "", r.reason]
+        if r.nearest:  # rule 13: the nearest part, marked as not a cross
+            second = [r.nearest.part.mpn, r.nearest.part.manufacturer.name, r.nearest.type, r.nearest.comment]
     else:
         first = col(r.drop_in) if r.drop_in else ["No drop-in", "", "", ""]
         second = col(r.functional) if r.functional else ["= Drop-in", "", "", ""]

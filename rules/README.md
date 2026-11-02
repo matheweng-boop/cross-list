@@ -41,6 +41,10 @@ Rules that live in code rather than in these files:
   name. Where their default output follows the board (CTRL pins) and ours ignores those pins, the drop-in names both of
   our default-output variants. On Cross a list a conditional fit shows in the functional column (when the drop-in is
   also the best functional fit, the drop-in family's best conditional fit takes that column).
+- **Nearest part when there is no cross** (owner, 2 Nov 2026, rule 13). When no candidate is within the deviation
+  limit, Cross a list keeps the row red and shows the nearest candidate (the usual order, no limit), marked
+  "Nearest (not a drop-in): differs in …"; it never counts as a cross. It must pass the function-defining and
+  must-meet checks: an AEC-Q100 part never gets an industrial one, not even as nearest.
 - **The size of a shortfall counts** (owner, 2 Nov 2026, rule 12). With as many deviations, a candidate that falls
   less short ranks first: a worse number counts log2 of the ratio (2x short = 1, the weight of an option difference
   such as the default output state; a 1 Mbps part for a 150 Mbps socket = 7.2), a worse range its uncovered share.

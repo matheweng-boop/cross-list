@@ -46,11 +46,12 @@
 {% endif %}
 
 <h2>Gaps and thin spots applications need <small class="muted">{{ gaps|length }}</small></h2>
-{% if gaps %}<div class="table-wrap"><table class="striped small">
-  <thead><tr><th scope="col">Function</th><th scope="col">Band</th><th scope="col" class="n">Applications</th><th scope="col">Our position</th><th scope="col">Others</th></tr></thead>
+{% if gaps %}<div class="table-wrap rf-gaps-wrap"><table class="striped small rf-gaps">
+  <thead><tr><th scope="col">Function</th><th scope="col">Band</th><th scope="col" class="n">Applications</th><th scope="col">Our position</th><th scope="col">Others</th><th scope="col">Why it could matter</th></tr></thead>
   <tbody>{% for g in gaps %}<tr><td><a href="/business/rf-coverage?fn={{ g.fn }}&band={{ g.band.id }}#slot">{{ g.label }}</a>{% if g.power_label %} <small class="muted">{{ g.power_label }}</small>{% endif %}</td><td>{{ g.band.label }}</td><td class="n">{{ g.need }}</td>
     <td>{% if g.kind == 'none' %}<span class="lg lg-opp">no part of ours</span>{% elif g.kind == 'risk' %}<span class="lg lg-opp">only {{ g.risk }} obsolete / NRND part{{ 's' if g.risk != 1 }}</span>{% elif g.kind == 'thin' %}<span class="lg lg-have">thin: {{ g.n }} active part{{ 's' if g.n != 1 }}</span>{% else %}<span class="lg lg-ext">this power class missing; other classes exist</span>{% endif %}</td>
-    <td>{% if g.market == 'nobody' %}<span class="muted">nobody in BizDev</span>{% elif g.market == 'crowded' %}<span class="lg lg-ext" title="{% for m, k in g.rivals %}{{ m }} {{ k }}; {% endfor %}">crowded: {{ g.rivals|length }} makers</span>{% else %}<span class="lg lg-opp" title="{% for m, k in g.rivals %}{{ m }} {{ k }}; {% endfor %}">competitors only: {% for m, k in g.rivals[:3] %}{{ m }}{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}</td></tr>{% endfor %}</tbody>
+    <td>{% if g.market == 'nobody' %}<span class="muted">nobody in BizDev</span>{% elif g.market == 'crowded' %}<span class="lg lg-ext" title="{% for m, k in g.rivals %}{{ m }} {{ k }}; {% endfor %}">crowded: {{ g.rivals|length }} makers</span>{% else %}<span class="lg lg-opp" title="{% for m, k in g.rivals %}{{ m }} {{ k }}; {% endfor %}">competitors only: {% for m, k in g.rivals[:3] %}{{ m }}{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}</td>
+    {%- set w = g.why %}<td class="rf-why">{% if w.apps %}Needed by {% for a in w.apps %}<a href="/business/applications/{{ a.i }}">{{ a.name }}</a>{{ (' and ' if loop.revindex == 2 and not w.more else ', ') if not loop.last }}{% endfor %}{% if w.more %} and {{ w.more }} more{% endif %}{% if w.use %} ({{ w.use }}){% endif %}. {% endif %}{{ w.competition }} {{ w.start }}</td></tr>{% endfor %}</tbody>
 </table></div>{% else %}<p class="small muted">No slot that an application needs is empty.</p>{% endif %}
 
 <details class="small rf-method"><summary>How this is measured, and its limits</summary>

@@ -290,12 +290,99 @@ def gaps(rs: list[dict]) -> list[dict]:
                 kind = "power"  # other power classes exist in this band
             else:
                 kind = "risk" if c["risk"] else "none"
-            out.append({"fn": r["fn"], "label": r["label"], "power_label": r["power_label"], "band": bands[bid],
+            out.append({"fn": r["fn"], "label": r["label"], "power": r["power"], "power_label": r["power_label"],
+                        "band": bands[bid],
                         "need": c["need"], "kind": kind, "risk": c["risk"], "n": c["n"], "comp": c["comp"],
                         "rivals": c["rivals"].most_common(), "market": market(c)})  # fmt: skip
     order = {"none": 0, "risk": 1, "thin": 2, "power": 3}
     seen = {"competitors": 0, "crowded": 1, "nobody": 2}  # competitors only = proven demand, the strongest signal
     return sorted(out, key=lambda g: (order[g["kind"]], seen[g["market"]], -g["need"], g["label"]))
+
+
+# ---- "Why it could matter" (owner, 2 Nov 2026): one short generated sentence per gap row, from our data only --------
+def needed_by(fn: str, band: str, power: str | None = None) -> list[dict]:
+    """The applications behind a slot's demand count (as demand() counts them): {i, name, reason, background}, library
+    diagrams first, then those whose block states a reason, then by name. `i` indexes library + background diagrams
+    (the /business/applications/<i> pages); power amplifiers of a class also count blocks whose power is not stated."""
+    fset, limits = set(config()["functions"]), config().get("function_bands") or {}
+    lib = blocks.templates()
+    out = []
+    for i, t in enumerate([*lib, *blocks.background_templates()]):
+        if fn not in _fns_of(t):
+            continue
+        stated = _block_needs(t, fset)
+        if stated is not None:
+            hits = [why for f, b, p, why in stated if f == fn and b == band and (not power or not p or p == power)]
+            if not hits:
+                continue
+            reason = next((h for h in hits if h), "")
+        elif band in application_bands(t["name"]) and (fn not in limits or band in limits[fn]):
+            reason = ""
+        else:
+            continue
+        out.append({"i": i, "name": blocks.title_parts(t)[0], "reason": reason, "background": i >= len(lib)})
+    return sorted(out, key=lambda a: (a["background"], not a["reason"], a["name"]))
+
+
+_SOURCE_IDS = re.compile(r"\s*\((?:[A-Z0-9][A-Z0-9_\-]*[A-Z0-9_](?:,\s*)?)+\)")
+
+
+def short_reason(text: str) -> str:
+    """A block's stated reason (rf_block_bands.yaml) cut to what the band is used for: the first clause that says
+    something ("band not stated" clauses dropped), without source ids or remarks in brackets."""
+    for clause in (text or "").split(";"):
+        c = _SOURCE_IDS.sub("", clause)
+        c = re.sub(r"\s*\([^)]*\)", "", c).strip(" ,.")
+        if c and "not stated" not in c:
+            return re.sub(r"(?<=\d)-(?=\d)", "–", c)
+    return ""
+
+
+def _names(xs: list[str]) -> str:
+    return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+
+
+def why_it_matters(g: dict, rs: list[dict]) -> dict:
+    """The pieces of the "Why it could matter" sentence of a gap row: the applications that need it (top three, the
+    rest counted), what the band is used for there, the competition, and our starting point."""
+    apps = needed_by(g["fn"], g["band"]["id"], g.get("power"))
+    use = next((short_reason(a["reason"]) for a in apps[:3] if short_reason(a["reason"])), "")
+    rivals = [m for m, _ in g["rivals"]]
+    if g["market"] == "competitors":
+        comp = f"{_names(rivals)} sell{'s' if len(rivals) == 1 else ''} it, so the demand is proven."
+    elif g["market"] == "crowded":
+        names = ", ".join(rivals[:4]) + (" …" if len(rivals) > 4 else "")
+        comp = f"{len(rivals)} makers sell it ({names}): hard to enter."
+    else:
+        comp = "Nobody in our data serves it: new ground, demand unproven."
+    bid = g["band"]["id"]
+    if g["kind"] == "power":
+        have = [r["power_label"] for r in rs if r["fn"] == g["fn"] and r["power"] != g.get("power")
+                and r["cells"][bid]["n"]]  # fmt: skip
+        start = (f"We have the {' and '.join(have)} class{'es' if len(have) > 1 else ''} here; "
+                 f"this is only the {g['power_label']} step.")
+    elif g["kind"] == "risk":
+        st = {lifecycle.status_class(p["status"]) for p in slot_parts(g["fn"], bid, g.get("power")) if p["risk"]}
+        word = "NRND" if st == {"nrnd"} else "end-of-life" if st == {"obsolete"} else "NRND or end-of-life"
+        start = (f"Our only part is {word}" if g["risk"] == 1 else f"Our only {g['risk']} parts are {word}") + (
+            ": customers will need a successor.")
+    elif g["kind"] == "thin":
+        act = [p["mpn"] for p in slot_parts(g["fn"], bid, g.get("power")) if not p["risk"]]
+        start = f"Only {g['n']} active part{'s' if g['n'] != 1 else ''} of ours ({', '.join(act[:2])})" + (
+            f", plus {g['risk']} NRND or end-of-life." if g["risk"] else ".")
+    else:  # none: the nearest band where we have this function
+        ids = [b["id"] for b in config()["bands"]]
+        row = next(r for r in rs if r["fn"] == g["fn"] and r["power"] == g.get("power"))
+        near = [(abs(ids.index(b) - ids.index(bid)), b) for b in ids if b != bid and row["cells"][b]["n"]]
+        if near:
+            d, b = min(near)
+            label = next(x["label"] for x in config()["bands"] if x["id"] == b)
+            n = row["cells"][b]["n"]
+            start = (f"Nearest of ours: {n} active part{'s' if n != 1 else ''} in {label}"
+                     + (" (the next band)." if d == 1 else "."))  # fmt: skip
+        else:
+            start = "We have no active part of this kind in any band."
+    return {"apps": apps[:3], "more": max(len(apps) - 3, 0), "use": use, "competition": comp, "start": start}
 
 
 def slot_parts(fn: str, band: str, power: str | None = None, competitors: bool = False) -> list[dict]:

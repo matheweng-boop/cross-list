@@ -1101,7 +1101,10 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
     """RF functions by frequency band and output power: where our parts are, and where applications need one."""
     rs = rf.rows()
     need, apps, unknown, n_rf = rf.demand()
-    ctx = {"rows": rs, "gaps": rf.gaps(rs), "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
+    gaps = rf.gaps(rs)
+    for g in gaps:  # "Why it could matter" (owner, 2 Nov 2026)
+        g["why"] = rf.why_it_matters(g, rs)
+    ctx = {"rows": rs, "gaps": gaps, "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
            "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
            "fn": fn, "band": band, "power": power,
            "slot": rf.slot_parts(fn, band, power or None) if fn and band else None,

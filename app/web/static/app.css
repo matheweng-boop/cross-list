@@ -2260,3 +2260,16 @@ form.xs-partbox { display: block; max-width: 40rem; margin: .5rem 0 .9rem; paddi
 .xs-you .aec-chip { outline: 2px solid #b45309; outline-offset: 1px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(.xs-note, .xs-compact tr.xs-hl > *) { background: #3a2a12; } }
 :root[data-theme="dark"] :is(.xs-note, .xs-compact tr.xs-hl > *) { background: #3a2a12; }
+/* Worker C, item 9 (2 Nov 2026): RF coverage, "Gaps and thin spots": a "Why it could matter" sentence per row; a
+   column on wide screens, a second line under the row on phones (no wide table). */
+.rf-gaps .rf-why { min-width: 18rem; line-height: 1.35; }
+@media (max-width: 600px) {
+  .rf-gaps-wrap { overflow-x: visible; }
+  .rf-gaps, .rf-gaps tbody { display: block; width: 100%; }
+  .rf-gaps thead { display: none; }
+  .rf-gaps tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .5rem; padding: .45rem 0;
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .rf-gaps td { display: inline; padding: 0 !important; border: 0; position: static !important; }
+  .rf-gaps td.n::after { content: " apps"; color: var(--pico-muted-color); }
+  .rf-gaps td.rf-why { display: block; flex-basis: 100%; min-width: 0; font-size: .82rem; }
+}

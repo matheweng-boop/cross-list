@@ -380,6 +380,28 @@ def test_cross_sell_parts_table_and_automotive_filter(page):
         expect(page.locator(target)).to_be_in_viewport()
 
 
+def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
+    """Owner, 2 Nov 2026: each gap row says why it could matter, with the applications linked; on a phone the sentence
+    is a second line under the row and the table is not wider than the screen."""
+    go(page, "/business/rf-coverage")
+    why = page.locator("table.rf-gaps td.rf-why").first
+    expect(why).to_contain_text("Needed by")
+    link = why.locator("a").first
+    with page.expect_navigation():
+        link.click()
+    assert "/business/applications/" in page.url
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/business/rf-coverage", wait_until="load")
+    row = tab.locator("table.rf-gaps tbody tr").first
+    first, sentence = row.locator("td").first.bounding_box(), row.locator("td.rf-why").bounding_box()
+    assert sentence["y"] > first["y"] + 5 and sentence["x"] < 40  # its own line, from the left edge
+    box = tab.locator("table.rf-gaps").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert overflow(tab) <= 1
+    ctx.close()
+
+
 # --- Engineering knowledge --------------------------------------------------------------------------------------------
 def test_rf_bands_type_and_application_chips_change_the_chart(page):
     go(page, "/rf-bands")

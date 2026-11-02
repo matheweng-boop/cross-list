@@ -229,3 +229,78 @@ def test_feedback_pages(client):
     radio = client.get("/broadcast").text
     assert 'class="fm-note"' not in radio
     assert client.get("/rf-bands?band=fm").status_code == 200
+
+
+# ---- "Why it could matter" (owner, 2 Nov 2026) -----------------------------------------------------------------------
+# Each gap row gets one short generated sentence from our data only: the top applications that need it (linked), what
+# the band is used for there (the per-block reasons), the competition, and our starting point.
+
+
+def test_short_reason_keeps_what_the_band_is_used_for():
+    assert rc.short_reason("tuning LO for 2-18 GHz coverage (RFE-ART-EW)") == "tuning LO for 2–18 GHz coverage"
+    lo = "LO / sample clock (LMX1860-SEP); LO follows payload band, not stated"
+    assert rc.short_reason(lo) == "LO / sample clock"
+    assert rc.short_reason("band not stated; comms payloads L/S (MSS) to Ku/Ka; power not stated") == (
+        "comms payloads L/S to Ku/Ka")
+    assert rc.short_reason("RF LO for 6-42 GHz or E-band links (TI-SOL-ODU, RFE-BD-P2P)") == (
+        "RF LO for 6–42 GHz or E-band links")
+    assert rc.short_reason("band not stated") == "" and rc.short_reason("") == ""
+
+
+def test_needed_by_matches_the_demand_count():
+    rows = rc.rows()
+    gaps = rc.gaps(rows)
+    assert gaps
+    for g in gaps:
+        apps = rc.needed_by(g["fn"], g["band"]["id"], g["power"])
+        assert len(apps) == g["need"], (g["fn"], g["band"]["id"], g["power"])
+        order = [(a["background"], not a["reason"], a["name"]) for a in apps]
+        assert order == sorted(order)
+
+
+def _gap(kind: str, market: str = "", **kw) -> dict:
+    return {"fn": "rf_synthesizer", "label": "RF synthesizer", "power": None, "power_label": "",
+            "band": {"id": "Ka", "label": "K / Ka 18–40 GHz"}, "need": 3, "kind": kind, "risk": 0, "n": 0,
+            "comp": 0, "rivals": [], "market": market or "nobody", **kw}  # fmt: skip
+
+
+def test_why_it_matters_competition_and_starting_point(monkeypatch):
+    rows = rc.rows()
+    monkeypatch.setattr(rc, "needed_by", lambda *a: [])
+    w = rc.why_it_matters(_gap("none", "competitors", rivals=[("MACOM", 3), ("Lark", 1)]), rows)
+    assert w["competition"] == "MACOM and Lark sell it, so the demand is proven."
+    assert w["apps"] == [] and w["more"] == 0
+    crowd = [("A", 1), ("B", 1), ("C", 1), ("D", 1), ("E", 1)]
+    assert rc.why_it_matters(_gap("none", "crowded", rivals=crowd), rows)["competition"] == (
+        "5 makers sell it (A, B, C, D …): hard to enter.")
+    nobody = rc.why_it_matters(_gap("none"), rows)
+    assert nobody["competition"] == "Nobody in our data serves it: new ground, demand unproven."
+    assert nobody["start"].startswith(("Nearest of ours: ", "We have no active part"))
+    # thin: the active parts named; only ageing parts: a successor is needed; a missing power class: the other classes
+    for g in rc.gaps(rows):
+        w = rc.why_it_matters(g, rows)
+        if g["kind"] == "thin":
+            assert w["start"].startswith(f"Only {g['n']} active part") and "(" in w["start"]
+        elif g["kind"] == "risk":
+            assert w["start"].startswith("Our only") and w["start"].endswith("customers will need a successor.")
+            assert re.search(r"(NRND|end-of-life)", w["start"])
+        elif g["kind"] == "power":
+            assert re.fullmatch(r"We have the .+ class(es)? here; this is only the .+ step\.", w["start"])
+            assert g["power_label"] in w["start"]
+
+
+def test_gap_rows_carry_the_sentence(client):
+    html = client.get("/business/rf-coverage").text
+    table = html[html.index('class="striped small rf-gaps"') :]
+    table = table[: table.index("</table>")]
+    assert "<th scope=\"col\">Why it could matter</th>" in table
+    cells = re.findall(r'<td class="rf-why">(.*?)</td>', table, re.S)
+    assert cells and len(cells) == table.count("<tr>") - 1  # one per gap row
+    linked = 0
+    for cell in cells:
+        assert re.search(r"(demand is proven|hard to enter|demand unproven)\.", cell)
+        assert re.search(r"(Nearest of ours|We have no active part|Our only|Only \d+ active|We have the )", cell)
+        for i in re.findall(r'<a href="/business/applications/(\d+)">', cell):
+            linked += 1
+            assert client.get(f"/business/applications/{i}").status_code == 200
+    assert linked >= len(cells)

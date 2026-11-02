@@ -146,6 +146,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.blocks import router as blocks_router
     from app.web.broadcast import router as broadcast_router
     from app.web.business import router as business_router
+    from app.web.clocks import router as clocks_router
     from app.web.competitors import router as competitors_router
     from app.web.digest import router as digest_router
     from app.web.feedback import router as feedback_router
@@ -227,6 +228,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(presentation_router)  # before shareable: /shareable/{slug} would take /shareable/presentation
     app.include_router(shareable_router)
     app.include_router(broadcast_router)
+    app.include_router(clocks_router)
     app.include_router(requests_router)
     app.include_router(blocks_router)
     app.include_router(business_router)

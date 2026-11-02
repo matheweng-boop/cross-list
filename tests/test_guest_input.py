@@ -148,6 +148,23 @@ def c_config_delete(o, s):
     return "post", f"/broadcast/configurations/{cid}/delete", {}
 
 
+CLOCK_PLAN = {"in1": "25", "in1_kind": "crystal", "f": ["100"], "n": ["8"], "fmt": ["HCSL"], "v": ["1.8"]}
+
+
+def c_clock_plan_create(o, s):
+    return "post", "/api/clocks/plans", {"json": {"name": "Guest clocks", "data": CLOCK_PLAN}}
+
+
+def c_clock_plan_update(o, s):
+    pid = o.post("/api/clocks/plans", json={"name": "Mine", "data": CLOCK_PLAN}).json()["id"]
+    return "put", f"/api/clocks/plans/{pid}", {"json": {"name": "Renamed", "data": {}}}
+
+
+def c_clock_plan_delete(o, s):
+    pid = o.post("/api/clocks/plans", json={"name": "Mine", "data": CLOCK_PLAN}).json()["id"]
+    return "post", f"/clocks/plans/{pid}/delete", {}
+
+
 def c_shortlist(o, s):
     return "post", "/business/shortlist", {"data": {"origin": "idea", "key": "Wireless audio for e-bikes"}}
 
@@ -256,6 +273,7 @@ def test_every_post_route_is_covered(client):
                "/api/blocks/feedback", "/api/blocks/designs", "/api/blocks/designs/{design_id}",
                "/blocks/{design_id}/delete", "/blocks/verify", "/api/broadcast/configs",
                "/api/broadcast/configs/{config_id}", "/broadcast/configurations/{config_id}/delete",
+               "/api/clocks/plans", "/api/clocks/plans/{plan_id}", "/clocks/plans/{plan_id}/delete",
                "/business/shortlist", "/business/shortlist/{item_id}", "/business/schedule",
                "/business/schedule/{item_id}", "/business/cases", "/business/cases/{case_id}", "/business/decision",
                "/business/capabilities/feedback", "/api/business/review", "/business/evidence/{fn}/mapping",

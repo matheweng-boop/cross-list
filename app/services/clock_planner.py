@@ -80,7 +80,8 @@ def parts() -> tuple[dict, ...]:
                     values[p.key] = p.default
             out.append({"mpn": spec["mpn"], "manufacturer": spec["manufacturer"],
                         "description": spec.get("description", ""), "values": values,
-                        "product_url": spec.get("product_url"), "datasheet_url": spec.get("datasheet_url")})  # fmt: skip
+                        "product_url": spec.get("product_url"),
+                        "datasheet_url": spec.get("datasheet_url")})  # fmt: skip
     return tuple(out)
 
 
@@ -283,13 +284,13 @@ def check_part(part: dict, req: dict) -> dict:
         outside = [o for o in req["outputs"] if not (rng[0] - 1e-9 <= float(o["f"]) <= rng[1] + 1e-9)]
         lim = (arch or {}).get("format_max_mhz") or {}
         over = [o for o in req["outputs"] if o["fmt"] in lim and float(o["f"]) > lim[o["fmt"]]]
+        span = f"{fmt_mhz(Fraction(str(rng[0])))}–{fmt_mhz(Fraction(str(rng[1])))} MHz"
         if outside:
-            add("Frequency", False, f"{', '.join(fmt_mhz(o['f']) for o in outside)} MHz outside "
-                                    f"{fmt_mhz(Fraction(str(rng[0])))}–{fmt_mhz(Fraction(str(rng[1])))} MHz")  # fmt: skip
+            add("Frequency", False, f"{', '.join(fmt_mhz(o['f']) for o in outside)} MHz outside {span}")
         elif over:
             add("Frequency", False, "; ".join(f"{o['fmt']} only to {lim[o['fmt']]} MHz" for o in over))
         else:
-            add("Frequency", True, f"all within {fmt_mhz(Fraction(str(rng[0])))}–{fmt_mhz(Fraction(str(rng[1])))} MHz")
+            add("Frequency", True, f"all within {span}")
     if ftype in ("clock_buffer", "pcie_buffer"):
         ins = {x for x in (req.get("in1"), req.get("in2")) if x}
         if req.get("in1_kind") == "crystal":
@@ -330,24 +331,37 @@ def check_part(part: dict, req: dict) -> dict:
     if req.get("pcie", "none") != "none":
         status, _ = compare_param(rules.get("pcie_gen"), req["pcie"], v.get("pcie_gen", "none"))
         have = v.get("pcie_gen", "none")
-        add("PCIe", status in (EQUAL, BETTER),
-            f"compliant to {'Gen ' + have[3:] if have != 'none' else 'no generation stated'}")
+        add(
+            "PCIe",
+            status in (EQUAL, BETTER),
+            f"compliant to {'Gen ' + have[3:] if have != 'none' else 'no generation stated'}",
+        )
     if req.get("automotive"):
         status, _ = compare_param(rules.get("qualification"), "automotive", v.get("qualification"))
-        add("Automotive", status in (EQUAL, BETTER),
-            "AEC-Q100" if status in (EQUAL, BETTER) else f"{v.get('qualification')} grade, not AEC-Q100")
+        add(
+            "Automotive",
+            status in (EQUAL, BETTER),
+            "AEC-Q100" if status in (EQUAL, BETTER) else f"{v.get('qualification')} grade, not AEC-Q100",
+        )
     fails = sum(1 for _, ok, _ in checks if ok is False)
     over_spec = not req.get("automotive") and v.get("qualification") == "automotive"  # an industrial part does
-    return {"part": part, "arch": arch, "checks": checks, "fails": fails, "fits": fails == 0, "over_spec": over_spec,
-            "type_label": FUNCTION_LABELS.get(ftype, ftype)}
+    return {
+        "part": part,
+        "arch": arch,
+        "checks": checks,
+        "fails": fails,
+        "fits": fails == 0,
+        "over_spec": over_spec,
+        "type_label": FUNCTION_LABELS.get(ftype, ftype),
+    }
 
 
 def _rank(r: dict):
     """Fits first; then parts without a caveat (None checks), the lowest jitter, the fewest outputs."""
     typ = r["part"]["values"].get("jitter_fs")
     caveats = sum(1 for _, ok, _ in r["checks"] if ok is None)
-    return (r["fails"], caveats, r["over_spec"], typ if typ is not None else 1e9, r["part"]["values"].get("outputs") or 0,
-            r["part"]["mpn"])
+    outputs = r["part"]["values"].get("outputs") or 0
+    return (r["fails"], caveats, r["over_spec"], typ if typ is not None else 1e9, outputs, r["part"]["mpn"])
 
 
 def match(req: dict) -> dict:
@@ -575,7 +589,7 @@ def jitter(req: dict, arch: dict | None, the_plan: dict, part: dict | None = Non
     target = req.get("jitter_fs")
     arch = arch or {}
     if arch.get("kind") == "buffer":
-        typ, mx = (arch.get("additive_fs") or [None, None])
+        typ, mx = arch.get("additive_fs") or [None, None]
         rows.append({"what": "Additive jitter (the buffer's own), 12 kHz–20 MHz", "typ": typ, "max": mx,
                      "source": arch.get("jitter_source", ""), "est": False})  # fmt: skip
         rows.append({"what": "Output = √(input² + additive²): your source's jitter decides", "typ": None, "max": None,
@@ -683,8 +697,10 @@ def diagram(req: dict, the_plan: dict, part_label: str) -> str:
         if r and kind not in ("buffer", "xo"):
             p.append(f'<text x="{(src_x + 440) / 2 - 10:.0f}" y="{y + 10}" font-size="10">÷{r}</text>')
         v = f" {o['v']:g} V" if o["v"] else ""
-        p.append(f'<rect x="440" y="{y}" width="196" height="26" rx="6" class="cp-out"/>'
-                 f'<text x="446" y="{y + 17}">{escape(fmt_mhz(o["f"]))} MHz {escape(o["fmt"])} ×{o["n"]}{v}</text>')
+        p.append(
+            f'<rect x="440" y="{y}" width="196" height="26" rx="6" class="cp-out"/>'
+            f'<text x="446" y="{y + 17}">{escape(fmt_mhz(o["f"]))} MHz {escape(o["fmt"])} ×{o["n"]}{v}</text>'
+        )
     p.append("</g></svg>")
     return "".join(p)
 

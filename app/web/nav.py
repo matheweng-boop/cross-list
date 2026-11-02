@@ -13,6 +13,8 @@ NAV = (
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),
+        # owner, 2 Nov 2026 (item 18): "something similar to ClockBuilder Pro", in the browser
+        ("Clock planner", "/clocks", "Input and output clocks: which timing parts fit, a frequency plan, the jitter"),
     )),
     # owner, 23 Oct 2026: Systems & applications = parts and knowledge we have; Opportunities = gaps and new
     # technology; Future growth = the business side. Systems first, then applications, workspace, designs, cross-sell.
@@ -92,6 +94,7 @@ PLACES = {
     "/pricing/": ("products", "/"),
     "/parts": ("products", "/"),  # owner, 24 Oct 2026: Browse products off the menu (too long); reachable by link
     "/compare": ("products", "/compare"),
+    "/clocks": ("products", "/clocks"),
     "/portfolio": ("systems", "/blocks/cross-sell"),  # owner, 25 Oct 2026: the portfolio is a Cross-sell tab
     "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application
     "/blocks/feedback": ("manage", "/manage/verify"),
@@ -184,6 +187,7 @@ TABS = (
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),
     (("All visuals", "/visuals"), ("RF bands", "/rf-bands")),
     (("Tuners & demodulators", "/broadcast"), ("Radio configurations", "/broadcast/configurations")),
+    (("Clock planner", "/clocks"), ("Saved plans", "/clocks/plans")),
     (
         ("Overview", "/knowledge"),
         ("RF fundamentals", "/rf-notes"),

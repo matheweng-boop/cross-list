@@ -260,6 +260,17 @@ class BroadcastConfig(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class ClockPlan(Base):
+    """A saved Clock planner request: inputs, outputs, jitter target, the part chosen (app/services/clock_planner)."""
+
+    __tablename__ = "clock_plans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 class CrossRequest(Base):
     """A part someone wants crossed that the database does not cover yet."""
 

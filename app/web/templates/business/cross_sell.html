@@ -9,33 +9,42 @@
     {% if r.same %}both in <b>{{ r.same|join(', ') }}</b>{% else %}{{ a_label }} in <i>{{ r.a_blocks|join(', ') }}</i>, {{ b_label }} in <i>{{ r.b_blocks|join(', ') }}</i>{% endif %}</li>{% endfor %}
     {% if w.more %}<li class="muted">and {{ w.more }} more</li>{% endif %}</ul>
 </details>{% endmacro %}
+{# one cell of the parts table: three chips, the rest folded under "+N more" (owner, 2 Nov 2026; works without JS) #}
+{% macro cell(r, l) %}{% set ps = r.cells[l] %}{% set k = l|lower %}<div class="xs-chips">{% for p in ps[:3] %}{% if p.you %}<span class="xs-you" title="The part you started from">{{ chip(p, k) }}</span>{% else %}{{ chip(p, k) }}{% endif %} {% else %}<span class="muted small">{{ 'no AEC-Q part' if aec else '–' }}</span>{% endfor %}
+  {%- set rest = ps[3:]|length + r.more[l] %}{% if rest %}<details class="xs-more"><summary>+{{ rest }} more</summary>{% for p in ps[3:] %}{{ chip(p, k) }} {% endfor %}
+    {%- if r.more[l] %}{% set q = {'sub': r.browse, 'company': l} if r.browse else {'company': l} %}<a class="small xs-all" href="/parts?{{ q|urlencode }}">and {{ r.more[l] }} more in Browse products</a>{% endif %}</details>{% endif %}</div>{% endmacro %}
 {% block content %}
 <h1>Cross-sell</h1>
-<p class="subtitle muted">Bottom up: pick a system, a sub-system or one diagram from the <a href="/blocks">Application library</a> and see which of {{ co_label }}'s parts go together in it.
+<p class="subtitle muted">Bottom up: pick a system, a sub-system or one diagram from the <a href="/blocks">Block diagram library</a> and see which of {{ co_label }}'s parts go together in it.
   Modeled from the reference diagrams (two functions in the same design), not from sales. Gaps and new technology are under <a href="/business/opportunities">Opportunities</a>.</p>
 {% set extra = ('&system=' ~ system if system else '') ~ ('&sub=' ~ sub if sub else '') ~ ('&template=' ~ template if template is not none else '') ~ ('&aec=' ~ aec_param if aec_param else '') %}
 <div class="scope-bar small">{{ company_switch('/blocks/cross-sell', co, companies, extra) }}</div>
-<form method="get" action="/blocks/cross-sell" class="sys-select small">
-  <input type="hidden" name="co" value="{{ co }}">{% if aec_param %}<input type="hidden" name="aec" value="{{ aec_param }}">{% endif %}
-  <label>System or sub-system <select name="sel" onchange="this.form.submit()"><option value="">– pick one –</option>
-    {% for s in tree %}<optgroup label="{{ s.title }}"><option value="{{ s.key }}"{{ ' selected' if system == s.key and not sub }}>{{ s.title }}: all</option>
-      {% for x in s.subsystems %}<option value="{{ s.key }}:{{ x.key }}"{{ ' selected' if system == s.key and sub == x.key }}>{{ x.title }} ({{ x.idx|length }})</option>{% endfor %}</optgroup>{% endfor %}</select></label>
-  {% if in_sel and in_sel|length > 1 %}<label>One diagram <small class="muted">optional</small> <select name="template" onchange="this.form.submit()"><option value="">– all {{ in_sel|length }} diagrams –</option>
-    {% for i in in_sel %}<option value="{{ i }}"{{ ' selected' if template == i }}>{{ names[i]|truncate(70) }}</option>{% endfor %}</select></label>{% endif %}
+{% if not xs %}<h2>Pick a system</h2>{% endif %}
+<nav class="xs-pick" aria-label="Pick a system">
+  <div class="xs-sys-grid">{% for s in tree %}<a class="xs-sys{{ ' on' if system == s.key }}" href="{{ url(system=s.key, sub='', template=none) }}"{% if system == s.key %} aria-current="true"{% endif %}>{{ s.title }} <small>{{ sys_n[s.key] }}</small></a>{% endfor %}</div>
+  {% if system %}{% set s = tree|selectattr('key', 'equalto', system)|first %}<div class="chip-row xs-subs"><span class="chip-lbl">Sub-system</span><a class="fchip{{ ' on' if not sub }}" href="{{ url(sub='', template=none) }}"{% if not sub %} aria-current="true"{% endif %}>All of {{ s.title }}</a>
+    {%- for x in s.subsystems %}<a class="fchip{{ ' on' if sub == x.key }}" href="{{ url(sub=x.key, template=none) }}"{% if sub == x.key %} aria-current="true"{% endif %}>{{ x.title }} <small>{{ x.idx|length }}</small></a>{% endfor %}</div>{% endif %}
+</nav>
+{% if in_sel and in_sel|length > 1 %}<form method="get" action="/blocks/cross-sell" class="sys-select small xs-diagram">
+  <input type="hidden" name="co" value="{{ co }}"><input type="hidden" name="system" value="{{ system }}">{% if sub %}<input type="hidden" name="sub" value="{{ sub }}">{% endif %}{% if aec_param %}<input type="hidden" name="aec" value="{{ aec_param }}">{% endif %}
+  <label>One diagram <small class="muted">optional</small> <select name="template" onchange="this.form.submit()"><option value="">– all {{ in_sel|length }} diagrams –</option>
+    {% for i in in_sel %}<option value="{{ i }}"{{ ' selected' if template == i }}>{{ names[i]|truncate(70) }}</option>{% endfor %}</select></label>
   <noscript><button type="submit" class="small-btn">Show</button></noscript>
-</form>
+</form>{% endif %}
 
-{% if xs %}{% set sel_q = 'system=' ~ system ~ ('&sub=' ~ sub if sub else '') %}
-<h2>{{ picked.label }} <small class="muted">· {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }}</small></h2>
-{% if template is not none %}<p class="small"><a href="/blocks/new?template={{ template }}">Open the diagram</a>{% if system %} · <a href="/blocks/cross-sell?co={{ co }}&amp;system={{ system }}{{ '&sub=' ~ sub if sub }}">back to all diagrams of the selection</a>{% endif %}</p>
-{% elif system and sub %}<p class="small"><a href="/blocks?system={{ system }}&amp;sub={{ sub }}#sub-{{ sub }}">See the diagrams in the Application library</a></p>{% endif %}
+{% if xs %}{% set sel_q = 'system=' ~ system ~ ('&sub=' ~ sub if sub else '') %}{% set n_all = xs.apps|length %}
+<h2>{{ picked.label }} <small class="muted">· {{ n_all }} diagram{{ 's' if n_all != 1 }}</small></h2>
+{% if template is not none %}<p class="small"><a href="/blocks/new?template={{ template }}">Open the diagram</a>{% if system %} · <a href="{{ url(template=none) }}">back to all diagrams of the selection</a>{% endif %}</p>
+{% elif system and sub %}<p class="small"><a href="/blocks?system={{ system }}&amp;sub={{ sub }}#sub-{{ sub }}">See the diagrams in the Block diagram library</a></p>{% endif %}
 {{ toggle(aec, aec_base) }}
-{% if table.rows %}<section class="xs-lines" id="parts-here" aria-labelledby="xs-lines-h">
+{% if table.rows %}{% set one = table.lines|length == 1 %}<section class="xs-lines" id="parts-here" aria-labelledby="xs-lines-h">
   <h3 id="xs-lines-h">{{ table.lines|join(' and ') }} parts here <small class="muted">· {{ table.rows|length }} function{{ 's' if table.rows|length != 1 }}, most used first</small></h3>
-  <div class="table-wrap"><table class="xs-lines-table">
-    <thead><tr>{% for l in table.lines %}<th scope="col" class="ln-{{ l|lower }}">{{ l }} <small class="muted">· {{ table.count[l] }} part{{ 's' if table.count[l] != 1 }} in {{ table.fns[l] }} function{{ 's' if table.fns[l] != 1 }}</small></th>{% endfor %}</tr></thead>
-    {% for r in table.rows %}<tbody{% if r.pairs.values()|select|list %} class="xs-syn"{% endif %}><tr class="xs-fn"><th scope="rowgroup" colspan="{{ table.lines|length }}">{{ r.label }} <small class="muted">· in {{ r.n_apps }} of {{ xs.apps|length }} diagram{{ 's' if xs.apps|length != 1 }}</small></th></tr>
-      <tr>{% for l in table.lines %}<td class="ln-{{ l|lower }}">{% for p in r.cells[l] %}{{ chip(p, l|lower) }} {% else %}<span class="muted small">{{ 'no AEC-Q part' if aec else '–' }}</span>{% endfor %}{% for pr in r.pairs[l] %} <a class="xs-pair small" href="#pair-{{ pr.j }}" title="Synergy pair: see the card below">↓ pair with {{ pr.other }}</a>{% endfor %}</td>{% endfor %}</tr></tbody>{% endfor %}
+  <div class="table-wrap"><table class="xs-lines-table xs-compact{{ ' xs-one' if one }}">
+    <thead><tr><th scope="col" class="xs-c-fn">Function</th>{% for l in table.lines %}<th scope="col" class="ln-{{ l|lower }}">{{ l }} <small class="muted">· {{ table.count[l] }} part{{ 's' if table.count[l] != 1 }} in {{ table.fns[l] }} function{{ 's' if table.fns[l] != 1 }}</small></th>{% endfor %}<th scope="col" class="xs-c-used">Used in</th></tr></thead>
+    <tbody>{% for r in table.rows %}<tr id="fn-{{ r.fn }}" class="xs-row{{ ' xs-syn' if r.pairs.values()|select|list }}">
+      <th scope="row">{{ r.label }}{% for l in table.lines %}{% for pr in r.pairs[l] %} <a class="xs-pair small" href="#pair-{{ pr.j }}" title="Synergy pair: the {{ l }} {{ r.label }} with the {{ 'Qorvo' if l == 'Skyworks' else 'Skyworks' }} {{ pr.other }}; see the card below">↓ pair with {{ pr.other }}</a>{% endfor %}{% endfor %}</th>
+      {%- for l in table.lines %}<td class="ln-{{ l|lower }}" data-label="{{ l }}">{{ cell(r, l) }}</td>{% endfor %}
+      <td class="xs-used">{{ r.n_apps }} of {{ n_all }} diagram{{ 's' if n_all != 1 }}</td></tr>{% endfor %}</tbody>
   </table></div>
   {{ hidden(table.hidden) }}
 </section>{% endif %}
@@ -66,9 +75,6 @@
 </section>{% endif %}
 <p class="small muted">{{ xs.n_gaps }} function{{ 's' if xs.n_gaps != 1 }} here {{ 'have' if xs.n_gaps != 1 else 'has' }} no part of ours: see <a href="/business/opportunities">Gaps &amp; new technology</a>. Start from one part number instead: <a href="/business/attach">Cross-sell by part</a>.</p>
 {% else %}
-<h2>Pick a system</h2>
-<div class="sys-grid">{% for s in tree %}<article class="sys-sub"><a class="sys-sub-title" href="/blocks/cross-sell?co={{ co }}&amp;system={{ s.key }}"><b>{{ s.title }}</b></a>
-  <small class="sys-links">{% for x in s.subsystems %}<a href="/blocks/cross-sell?co={{ co }}&amp;system={{ s.key }}&amp;sub={{ x.key }}">{{ x.title }} <span class="muted">· {{ x.idx|length }}</span></a>{% endfor %}</small></article>{% endfor %}</div>
 <h2>Sell what we have <small class="muted">· across the whole library</small></h2>
 <p class="small muted">We have parts for these functions; offer them in every design that uses them. Gaps and new technology moved to <a href="/business/opportunities">Opportunities › Gaps &amp; new technology</a>.</p>
 <div class="csg-grid">{% for e in sell[:12] %}<article class="csg-card"><b>{{ e.label }}</b>

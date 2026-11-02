@@ -136,8 +136,10 @@ def test_cross_sell_is_bottom_up_per_system(client):
 
     html = client.get("/blocks/cross-sell").text
     assert "Pick a system" in html and 'id="gaps"' not in html and 'href="/business/opportunities"' in html
-    assert 'href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio"' in html
-    page = client.get("/blocks/cross-sell?system=automotive&sub=car-radio").text
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=automotive"' in html  # a system button
+    auto = client.get("/blocks/cross-sell?system=automotive").text  # then its sub-systems as chips
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio"' in auto
+    page =client.get("/blocks/cross-sell?system=automotive&sub=car-radio").text
     assert "Automotive › Car radio" in page and "Our parts that go together" in page
     assert f"{len(sy.sub('automotive', 'car-radio')['idx'])} diagrams" in page
     same = client.get("/blocks/cross-sell?sel=automotive:car-radio").text  # the picker's form

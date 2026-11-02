@@ -122,14 +122,115 @@ def test_skyworks_and_qorvo_parts_table_tops_the_selection(client):
     head = _section(table, "<thead>", "</thead>")
     assert re.search(r"Skyworks <small[^>]*>· \d+ parts? in \d+ functions?", head)
     assert re.search(r"Qorvo <small[^>]*>· \d+ parts? in \d+ functions?", head)
-    groups = re.findall(r'<th scope="rowgroup" colspan="2">([^<]+)<', table)
-    assert len(groups) == len(set(groups)) >= 3  # one group per function
+    groups = re.findall(r'<th scope="row">([^<]+)<', table)
+    assert len(groups) == len(set(groups)) >= 3  # one row per function
     # synergy pairs: a small link from the table to the card below, and the card has that anchor
     links = re.findall(r'href="#pair-(\d+)"', table)
     assert links and all(f'id="pair-{j}"' in _section(html, 'id="together"', "</section>") for j in links)
     # no duplication: the parts are listed in the table, not again in "Our parts that go together"
     ours = _section(html, "Our parts that go together", "</table>")
     assert "aec-chip" not in ours and "Our parts</th>" not in ours
+
+
+# ---- compact parts table and system chooser (owner, 2 Nov 2026) ------------------------------------------------------
+# "After picking a system, the table uses two rows per function: with 30-40 functions a very long page." One compact row
+# per function (Function | Skyworks | Qorvo | Used in), at most three chips per cell and the rest under "+N more" (a
+# <details>, no script), the synergy markers kept in the row; one line only: three columns. The "Pick a system" chooser
+# is a grid of system buttons; the sub-systems appear as chips once a system is picked.
+
+ROW = re.compile(r'<tr id="fn-([a-z0-9_]+)" class="xs-row([^"]*)">(.*?)</tr>', re.S)
+
+
+def _cells(row: str) -> list[str]:
+    return re.findall(r'<td class="ln-(?:skyworks|qorvo)" data-label="[^"]+">(.*?)</td>', row, re.S)
+
+
+def test_compact_table_one_row_per_function_three_chips_then_more(client):
+    html = client.get(f"{URL}?system=cellular&aec=0").text
+    table = _section(html, 'id="parts-here"', "</section>")
+    head = _section(table, "<thead>", "</thead>")
+    assert re.findall(r"<th scope=\"col\"[^>]*>(Function|Skyworks|Qorvo|Used in)\b", head) == [
+        "Function", "Skyworks", "Qorvo", "Used in"]  # fmt: skip
+    rows = ROW.findall(table)
+    n_all = len(sy.selection("cellular")["idx"])
+    assert len(rows) >= 20 and table.count("<tr id=") == len(rows) and "rowgroup" not in table
+    folded = 0
+    for fn, _cls, row in rows:
+        assert row.count('<th scope="row">') == 1, fn
+        used = re.search(r'<td class="xs-used">(\d+) of (\d+) diagrams?</td>', row)
+        assert used and int(used.group(2)) == n_all and 1 <= int(used.group(1)) <= n_all, fn
+        for cell in _cells(row):
+            before, _, more = cell.partition('<details class="xs-more">')
+            assert before.count('aec-chip"') <= 3, fn
+            if more:  # "+N more": the chips folded away plus the series not listed
+                folded += 1
+                n = int(re.search(r"<summary>\+(\d+) more</summary>", more).group(1))
+                rest = re.search(r"and (\d+) more in Browse products", more)
+                assert n == more.count('aec-chip"') + (int(rest.group(1)) if rest else 0) > 0, fn
+                assert before.count('aec-chip"') == 3, fn
+    assert folded >= 5
+    # the rows keep the order of "most used first"
+    counts = [int(re.search(r'<td class="xs-used">(\d+) of', r).group(1)) for _, _, r in rows]
+    assert counts == sorted(counts, reverse=True)
+
+
+def test_compact_table_keeps_the_pair_markers_and_the_filter(client):
+    html = client.get(f"{URL}?system=automotive&sub=powertrain&aec=0").text
+    rows = ROW.findall(_section(html, 'id="parts-here"', "</section>"))
+    marked = [(cls, row) for _, cls, row in rows if 'class="xs-pair small"' in row]
+    assert marked
+    for cls, row in marked:  # the marker sits in the row's own function cell, and the row says it is a synergy pair
+        assert re.search(r'<th scope="row">[^<]+ <a class="xs-pair small" href="#pair-\d+"', row)
+        assert cls == " xs-syn"
+    on = client.get(f"{URL}?system=automotive&sub=powertrain").text  # the AEC-Q filter is on for Automotive
+    table = _section(on, 'id="parts-here"', "</section>")
+    assert "aec-no" not in table and "aec-yes" in table
+    for _fn, _cls, row in ROW.findall(table):
+        for cell in _cells(row):
+            assert cell.partition("<details")[0].count('aec-chip"') <= 3
+
+
+def test_compact_table_with_one_line_has_three_columns(client, session):
+    mine = op.company("combined")[2]
+    i = next(i for x in sy.systems() for s in x["subsystems"] for i in s["idx"]
+             if len(sy.parts_table(session, sy.bottom_up(session, [i], mine)["ours"], mine)["lines"]) == 1)  # fmt: skip
+    system, sub = sy.place_of(i)[0]
+    html = client.get(f"{URL}?system={system}&sub={sub}&template={i}&aec=0").text
+    table = _section(html, 'id="parts-here"', "</section>")
+    head = _section(table, "<thead>", "</thead>")
+    assert head.count('<th scope="col"') == 3 and "xs-one" in table
+    line = re.findall(r'<th scope="col" class="ln-(skyworks|qorvo)">', head)
+    assert len(line) == 1
+    other = "qorvo" if line[0] == "skyworks" else "skyworks"
+    assert f'class="ln-{other}"' not in table
+    assert all(row.count("<td") == 2 for _, _, row in ROW.findall(table))  # one parts cell and "Used in"
+    # the service keeps both lines when both have parts, and only the lines that have one
+    t = sy.parts_table(session, sy.bottom_up(session, sy.selection("cellular")["idx"], mine)["ours"], mine)
+    assert t["lines"] == ["Skyworks", "Qorvo"]
+    assert sy.parts_table(session, [], mine)["lines"] == ["Skyworks", "Qorvo"]  # nothing here: nothing dropped
+
+
+def test_system_chooser_is_a_grid_of_buttons_then_sub_system_chips(client):
+    html = client.get(URL).text
+    pick = _section(html, '<nav class="xs-pick"', "</nav>")
+    buttons = re.findall(r'<a class="xs-sys" href="/blocks/cross-sell\?co=combined&amp;system=([\w-]+)">', pick)
+    assert buttons == [s["key"] for s in sy.systems()]
+    assert "xs-subs" not in pick and "sub=" not in pick  # no sub-system before a system is picked
+    assert 'name="sel"' not in html  # the old drop-down is gone; ?sel= links still work
+    auto = client.get(f"{URL}?system=automotive").text
+    pick = _section(auto, '<nav class="xs-pick"', "</nav>")
+    on = '<a class="xs-sys on" href="/blocks/cross-sell?co=combined&amp;system=automotive" aria-current="true">'
+    assert on in pick
+    chips = re.findall(r'href="/blocks/cross-sell\?co=combined&amp;system=automotive&amp;sub=([\w-]+)"', pick)
+    assert chips == [x["key"] for x in sy.get("automotive")["subsystems"]]
+    assert f"Automotive <small>{len(sy.selection('automotive')['idx'])}</small>" in pick
+    one = client.get(f"{URL}?system=automotive&sub=car-radio&aec=1").text
+    pick = _section(one, '<nav class="xs-pick"', "</nav>")
+    chip = 'class="fchip on" href="/blocks/cross-sell?co=combined&amp;system=automotive&amp;sub=car-radio&amp;aec=1"'
+    assert chip in pick
+    assert 'href="/blocks/cross-sell?co=combined&amp;system=datacenter&amp;aec=1"' in pick  # the filter choice is kept
+    old = _section(client.get(f"{URL}?sel=automotive:car-radio").text, '<nav class="xs-pick"', "</nav>")
+    assert old.count(' on"') == 2 and "sub=car-radio\" aria-current" in old  # old picker links: system and sub
 
 
 def test_table_on_a_single_line_and_on_one_diagram(client):

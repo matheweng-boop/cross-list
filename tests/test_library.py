@@ -386,7 +386,7 @@ def test_pages_pick_up_the_new_systems(client, key):
     one = client.get(f"/blocks?system={key}&sub={x['key']}").text
     assert f'id="sub-{x["key"]}"' in one
     xs = client.get(f"/blocks/cross-sell?sel={key}:{x['key']}").text
-    assert x["title"] in xs and f'value="{key}:{x["key"]}"' in xs
+    assert x["title"] in xs and f'sub={x["key"]}" aria-current="true"' in xs  # its chip in the system chooser
 
 
 def test_presentation_topics_include_the_new_systems():

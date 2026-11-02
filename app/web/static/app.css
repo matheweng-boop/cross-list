@@ -2190,3 +2190,57 @@ form.qs-ask { display: block; max-width: none; margin: 1rem 0; } .qs-ask .row { 
 details.qs-note { border-bottom: 1px solid var(--pico-muted-border-color); padding: .35rem 0; } details.qs-note summary { cursor: pointer; }
 .bk-practice { border-left: 3px solid var(--card-line); padding-left: .5rem; }
 
+/* Worker C, item 7 (2 Nov 2026): Cross-sell › By system. The system chooser (a grid of system buttons that fit side
+   by side; the sub-systems as chips once a system is picked) and the compact parts table (one row per function:
+   Function | Skyworks | Qorvo | Used in, three chips per cell, the rest under "+N more"). Phones: the function and
+   "Used in" on one line, the line cells side by side under it. */
+.xs-pick { display: block; margin: .3rem 0 .7rem; }  /* a <nav>: not Pico's flex row */
+.xs-sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(6.5rem, 100%), 1fr)); gap: .35rem; }
+.xs-sys { display: flex; align-items: center; justify-content: space-between; gap: .3rem; min-height: 2.5rem; padding: .3rem .55rem;
+  border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; font-size: .82rem; line-height: 1.2; text-decoration: none;
+  color: inherit; overflow-wrap: break-word; }
+.xs-sys small { flex: none; white-space: nowrap; color: var(--pico-muted-color); font-size: .72rem; }
+.xs-diagram label { flex: 0 1 34rem; }
+.xs-sys:hover, .xs-sys:focus-visible { border-color: var(--pico-primary); }
+.xs-sys.on { background: var(--pico-primary); border-color: var(--pico-primary); color: #fff; font-weight: 600; }
+.xs-sys.on small { color: #ffffffcc; }
+.xs-subs { margin: .5rem 0 0; }
+.xs-compact .xs-c-fn { width: 17%; }
+.xs-compact .xs-c-used { width: 7.8rem; }
+/* chips in this table: the AEC-Q mark under the part number (both kept), so three chips fit on one line */
+.xs-compact .aec-chip { display: inline-flex; flex-direction: column; align-items: flex-start; padding: .08rem .32rem;
+  border-radius: .45rem; font-size: .74rem; line-height: 1.2; }
+.xs-compact .aec-mark { margin: .05rem 0 0; font-size: .54rem; padding: 0 .22rem; line-height: 1.35; letter-spacing: -.01em; }
+.xs-compact .aec-mark.aec-no { font-weight: 400; }
+.xs-compact tbody th[scope=row] { font-weight: 600; }
+.xs-compact tbody tr > * { border-bottom: 1px solid var(--pico-muted-border-color); }
+.xs-compact tr.xs-syn > th[scope=row] { border-left: 4px solid var(--pico-primary); }
+.xs-compact .xs-used { color: var(--pico-muted-color); font-size: .8rem; }
+.xs-compact .xs-pair { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-size: .72rem; font-weight: 400; }  /* one small line each; the whole pair is on its card below */
+.xs-chips { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; }
+.xs-chips .aec-chip { margin: 0; }
+.xs-more { margin: 0; }
+.xs-more > summary { cursor: pointer; list-style: none; color: var(--pico-primary); font-size: .74rem; white-space: nowrap; }
+.xs-more > summary::-webkit-details-marker { display: none; }
+.xs-more > summary::after { display: none !important; }
+.xs-more[open] { flex-basis: 100%; }
+.xs-more[open] > summary { margin-bottom: .2rem; }
+.xs-more .aec-chip { margin: 0 .25rem .2rem 0; }
+.xs-all { display: block; }
+@media (pointer: coarse) { .xs-sys { min-height: 44px; } .xs-more > summary { padding: .35rem .1rem; } }
+@media (max-width: 600px) {
+  .xs-compact, .xs-compact tbody, .xs-compact thead { display: block; width: 100%; }
+  .xs-compact tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .1rem .5rem; padding: .35rem 0;
+    border-bottom: 1px solid var(--pico-muted-border-color); }
+  .xs-compact tr > * { display: block; padding: 0 .1rem !important; position: static !important; min-width: 0; }
+  .xs-compact tbody tr > * { border: 0 !important; }
+  .xs-compact thead th.xs-c-fn, .xs-compact thead th.xs-c-used { display: none; }
+  .xs-compact tbody th[scope=row] { grid-row: 1; grid-column: 1; }
+  .xs-compact tbody td.xs-used { grid-row: 1; grid-column: 2; text-align: right; font-size: .75rem; }
+  .xs-compact tr.xs-syn > th[scope=row] { padding-left: .35rem !important; border-left: 4px solid var(--pico-primary) !important; }
+  .xs-compact.xs-one tbody td:not(.xs-used), .xs-compact.xs-one thead th { grid-column: 1 / -1; }
+  .xs-compact .aec-chip { font-size: .68rem; padding: .06rem .3rem; }
+  .xs-compact .aec-mark { font-size: .52rem; }
+  .xs-chips { gap: .2rem; }
+}

@@ -290,6 +290,19 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
     c.update(tree=sy.systems(), system=system if sy.get(system) else "", sub=sub if sy.sub(system, sub) else "",
              template=template if picked["level"] == "application" else None, picked=picked,
              names={i: blocks.display_name(t) for i, t in enumerate(blocks.templates())})  # fmt: skip
+    # the chooser (owner, 2 Nov 2026): a compact grid of system buttons, the sub-systems as chips once one is picked
+    c["sys_n"] = {s["key"]: len(sy.selection(s["key"])["idx"]) for s in c["tree"]}
+    c["aec_param"] = aec if aec in ("0", "1") else ""
+    here = {"co": c["co"], "system": c["system"], "sub": c["sub"], "template": c["template"], "aec": c["aec_param"]}
+
+    def url(**kw) -> str:
+        """This page with the current selection, changed by kw ("" or None drops a parameter)."""
+        from urllib.parse import urlencode
+
+        q = {**here, **kw}
+        return "/blocks/cross-sell?" + urlencode([(k, q[k]) for k in here if q.get(k) not in ("", None)])
+
+    c["url"] = url
     if picked["idx"]:
         c["xs"] = sy.bottom_up(session, picked["idx"], mine)
         # Skyworks + Qorvo together here (owner, 25 Oct 2026): each pair is shown once. A synergy pair leaves the
@@ -322,10 +335,8 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
                              "markets": sorted(by, key=lambda m: (-len(by[m]), m)),
                              "requalify": e["requalify"]})  # fmt: skip
         c["sell"] = sorted(sell, key=lambda e: (-e["n_apps"], e["label"]))
-    c["aec"], c["aec_param"] = aec_on, aec if aec in ("0", "1") else ""
-    c["aec_base"] = (f"/blocks/cross-sell?co={op.company(co)[0]}" + (f"&system={system}" if sy.get(system) else "")
-                     + (f"&sub={sub}" if sy.sub(system, sub) else "")
-                     + (f"&template={template}" if c["template"] is not None else ""))  # fmt: skip
+    c["aec"] = aec_on
+    c["aec_base"] = url(aec="")  # the filter toggle adds its own aec=
     return templates.TemplateResponse(request, "business/cross_sell.html", c)
 
 

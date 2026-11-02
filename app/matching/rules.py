@@ -41,6 +41,9 @@ class ParamDef:
     # the value decides only when both sides took it from a datasheet (a page reference); a product-table or
     # estimated value is shown with "check datasheet" and never decides the ranking (owner, 26 Oct 2026, data rate)
     datasheet_only: bool = False
+    # set: items that steer the pick (owner, 2 Nov 2026: a gate driver's DESAT, overcurrent or short-circuit
+    # protection). When the reference has any of them, a candidate with none ranks below every candidate with one.
+    steer: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -183,9 +186,12 @@ def parse_rules(data: dict) -> FamilyRules:
             band=raw.get("band"),
             prefer=raw.get("prefer"),
             datasheet_only=bool(raw.get("datasheet_only", False)),
+            steer=tuple(raw.get("steer", ())),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")
+        if p.steer and p.kind != "set":
+            raise ValueError(f"{p.key}: steer goes with a set")
         if p.priority not in (1, 2, 3):
             raise ValueError(f"{p.key}: priority must be 1, 2 or 3")
         if p.kind == "number" and p.direction not in ("higher", "lower", "match"):

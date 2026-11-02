@@ -152,6 +152,9 @@ class CrossResult:
     incomplete: bool
     fff_status: str | None = None
     feedback: object | None = None  # CrossFeedback row, if any
+    # the reference has an item of a ``steer`` set (a gate driver's DESAT, overcurrent or short-circuit protection) and
+    # the candidate has none of them: it ranks below every candidate that has one (owner, 2 Nov 2026)
+    steer_miss: bool = False
 
     @property
     def all_diffs(self) -> list[Diff]:
@@ -610,10 +613,18 @@ def cross(
     else:
         category = None
     cats = [category] if category else []
+    steer_miss = any(p.steer and _any_of(rv.get(p.key), p.steer) and not _any_of(cv.get(p.key), p.steer)
+                     for p in rules.params)  # fmt: skip
 
     return CrossResult(
-        ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback
+        ref, cand, fit, diffs, _fit_diffs(ref, cand, fit), cats, hard_fail, incomplete, fff_status, feedback,
+        steer_miss,
     )
+
+
+def _any_of(values, items) -> bool:
+    """A set value holds at least one of ``items`` (case-insensitive)."""
+    return bool({_norm(x) for x in values or []} & {_norm(x) for x in items})
 
 
 def sort_key(category: str):
@@ -626,7 +637,7 @@ def sort_key(category: str):
             main = (len(r.deviations), r.unverified_worse, not r.fit.same_pinout, len(r.exceptions), r.closeness)
         else:
             main = (len(r.exceptions), r.closeness)
-        return (r.lifecycle_risk, main, r.candidate.label)
+        return (r.lifecycle_risk, getattr(r, "steer_miss", False), main, r.candidate.label)
 
     return key
 
@@ -641,10 +652,12 @@ def _functional_focus(family: str | None) -> bool:
 def rank_key(r: CrossResult):
     """The order of preference across cross types (owner, 21 Oct 2026): a drop-in with the same function always comes
     first; then the fewest priority 1 deviations; with as many deviations, the same package before another package and
-    pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom."""
+    pin-to-pin before another pinout. Lifecycle-risk parts sink to the bottom; so does a candidate without the
+    reference's short-circuit protection (``steer_miss``; owner, 2 Nov 2026)."""
     pkg = not _functional_focus(r.reference.family)  # timing: package and pinout never decide the order
     return (
         r.lifecycle_risk,
+        getattr(r, "steer_miss", False),
         r.category != "fff",
         len(r.deviations),
         pkg and not r.fit.same_package,

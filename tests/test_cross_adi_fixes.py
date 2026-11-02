@@ -145,3 +145,25 @@ def test_a_conditional_fit_is_never_the_drop_in(session, iso):
     assert row.drop_in is None and row.light == "amber"
     assert row.functional.type.startswith(cl.CONDITIONAL_TYPE) and row.functional.comment.startswith("Works if pins 7")
 
+
+# ---------------------------------------------------------------- 3. gate drivers: protection steers the pick
+
+
+@pytest.fixture
+def gd(load):
+    return load("adi_gate_drivers", "skyworks_gate_drivers_more")
+
+
+def test_desat_reference_ranks_unprotected_candidates_last(session, gd):
+    """ADuM4136 detects desaturation, with soft shutdown (ADuM4136.pdf p.1, p.7: DESAT pin 14). Si8286 has DESAT and
+    soft shutdown too; Si82B28 has neither. Every candidate without DESAT, overcurrent or short-circuit protection
+    ranks below every candidate with one, so Si8286 is the pick."""
+    ref = gd("ADuM4136BRWZ")
+    pool = cl._pool(ref, cl.Crosser(session).crosses(ref))
+    misses = [r.steer_miss for r in sorted(pool, key=cl.functional_key)]
+    assert misses == sorted(misses) and not misses[0] and any(misses)
+    row = cl.cross_list(session, cl.parse("ADuM4136BRWZ")[0])[0]
+    assert (row.drop_in or row.functional).part.mpn.startswith("SI8286")
+    plain = next(r for r in pool if r.candidate.mpn.startswith("SI82B28"))
+    assert plain.steer_miss and "ours has no desaturation protection" in cl.comment(plain, 2)
+

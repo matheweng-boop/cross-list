@@ -20,6 +20,7 @@ One YAML file per product family. Each parameter has:
 | `x_unit` | `curve` only: unit of the condition |
 | `unknown_ok` | an unknown value (stated by neither part, not derivable) is shown as unknown but not counted as a deviation |
 | `must_meet` | one-way requirement: a candidate below the reference (or without a value) is not listed; a better one is fine. Used for the automotive grade: an AEC-Q100 reference only gets AEC-Q100 candidates |
+| `steer` | `set` only: items that steer the pick. When the reference has any of them, a candidate with none ranks below every candidate with one (gate drivers: `desaturation`, `overcurrent`, `short-circuit`; owner, 2 Nov 2026) |
 
 Edit a file and restart the app to apply changes.
 

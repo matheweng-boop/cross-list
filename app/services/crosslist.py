@@ -293,15 +293,15 @@ def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
 
 
 def drop_in_key(r: CrossResult):
-    return (r.category != "fff", len(r.deviations), getattr(r, "unverified_worse", 0), _worse_score(r),
-            len(r.exceptions), r.closeness,
-            r.candidate.mpn)  # fmt: skip
+    """A candidate without the reference's short-circuit protection (``steer_miss``) ranks last (owner, 2 Nov 2026)."""
+    return (getattr(r, "steer_miss", False), r.category != "fff", len(r.deviations), getattr(r, "unverified_worse", 0),
+            _worse_score(r), len(r.exceptions), r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
-    return (len(r.deviations), getattr(r, "unverified_worse", 0), p1_off, len(r.exceptions), not r.fit.same_package,
-            not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
+    return (getattr(r, "steer_miss", False), len(r.deviations), getattr(r, "unverified_worse", 0), p1_off,
+            len(r.exceptions), not r.fit.same_package, not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult | None]:
@@ -462,6 +462,13 @@ def comment(r: CrossResult, column: int) -> str:
     must = [d for d in r.diffs if d.priority > 1 and (d.hard or d.must_meet) and d.status in (WORSE, DIFFERENT)]
     if must:
         bits.append("also: " + ", ".join(f"{_short(d.label)} {d.ref_display} vs {d.cand_display}" for d in must))
+    if getattr(r, "steer_miss", False):  # their short-circuit protection, ours none: ranked lower (owner, 2 Nov 2026)
+        rules = get_rules(ref.family)
+        for p in (p for p in rules.params if p.steer):
+            steer = {x.lower() for x in p.steer}
+            theirs = sorted(str(x) for x in rules.values(ref).get(p.key) or [] if str(x).lower() in steer)
+            if theirs:
+                bits.append(f"also: ours has no {' or '.join(theirs)} protection (ranked lower)")
     bits += data_gaps(r)
     if r.lifecycle_risk:
         bits.append(f"our part is {lifecycle.badge(cand)[0]}")

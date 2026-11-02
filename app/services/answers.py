@@ -334,16 +334,15 @@ def migrate(session: Session) -> int:
                                                         DataReview.key.in_(list(qs)),
                                                         DataReview.verdict == "answered")
                                .order_by(DataReview.id)).all()  # fmt: skip
-        for row in rows:
-            if session.scalar(select(Answer.id).where(Answer.from_review == row.id)) is None:
-                when = aware(row.created_at) or datetime.now(UTC)
-                text = (row.comment or "").strip()[:TEXT_MAX] or NO_TEXT
-                session.add(Answer(slug=r["slug"], question=row.key, question_text=qs[row.key]["text"], text=text,
-                                   sharing=INTERNAL, flags=screen(text) or None, author=row.author,
-                                   from_review=row.id, created_at=when, updated_at=when))  # fmt: skip
-                moved += 1
+        for row in rows:  # added and removed in one transaction, so a row is moved exactly once
+            when = aware(row.created_at) or datetime.now(UTC)
+            text = (row.comment or "").strip()[:TEXT_MAX] or NO_TEXT
+            session.add(Answer(slug=r["slug"], question=row.key, question_text=qs[row.key]["text"], text=text,
+                               sharing=INTERNAL, flags=screen(text) or None, author=row.author, from_review=row.id,
+                               created_at=when, updated_at=when))  # fmt: skip
             session.delete(row)
-    if moved or session.new or session.deleted:
+            moved += 1
+    if moved:
         session.commit()
     return moved
 

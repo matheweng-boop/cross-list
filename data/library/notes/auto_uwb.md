@@ -22,6 +22,16 @@ Also read, as background and not counted in the six:
 - The FiRa press release on 4ab (2025). It says FiRa will add 4ab features "building upon FiRa's existing IEEE 802.15.4z features" with backward compatibility.
 - Earlier-run pages in `dl/uwb/` (cnx-software on ST64UWB, an MTT-S in-cabin radar review page, Wireless Design Online on Qorvo CPD). We use these only as med/low context.
 
+Background, not in the six: Nisshinbo Micro Devices, Body Control Module block diagram (read 2 Nov 2026, HTML page
+https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/body-control-module.html; our summary):
+- The smart key receiver sits in the body control module: two body antennas, an RF switch that picks one, a SAW filter
+  and an RF receiver into the MCU. The page does not give the band (est: sub-GHz remote keyless entry).
+- The RF switches listed are SPDT GaAs switches; Nisshinbo does not list the receiver itself (grey block).
+- The same MCU drives the door lock, answer-back and room lamp through a switch driver, with an op-amp for current
+  detection.
+- This is the older key path that UWB and BLE digital keys add to. In the library it is a new "after Nisshinbo"
+  diagram in this sub-system.
+
 ## 2. Block diagram (explained)
 
 Phone-as-key car access. We drew this from the references; it is not copied from any of them.

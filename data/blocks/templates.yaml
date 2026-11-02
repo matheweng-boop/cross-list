@@ -9,7 +9,9 @@
 
 - name: ADAS domain controller
   category: Automotive systems
-  note: Layout after a reference ADAS block diagram the user shared; every block is a function to fill.
+  note: "Layout after a reference ADAS block diagram the user shared; every block is a function to fill. The camera video amplifier group is added after Nisshinbo public material: NISSHINBO-AUTO-SAFETY (ADAS sensor ECU block diagram: ultrasonic, radar and camera module with a video amplifier into a sensor block with MCU, flash, EEPROM, DDR and CAN; power management with buck DC/DC, LDO with watchdog, watchdog timer and voltage detector; link to the ADAS ECU)."
+  sources:
+  - {doc: NISSHINBO-AUTO-SAFETY, title: 'Nisshinbo Micro Devices application block diagram (automotive): Safety (Advanced Driving Assistant System (ADAS), Parking Assist System)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/safety.html'}
   groups:
     - {id: protection, label: Protection, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd]}
     - {id: power, label: Power rail, col: 1, row: 0, w: 2, blocks: [buck_boost, wide_vin_buck, pol_buck, pol_ldo, ldo_tracker, supervisor, sequencer, voltage_reference, multiphase]}
@@ -22,7 +24,9 @@
     - {id: proc, label: Processing, col: 4, row: 1, blocks: [mcu, adas_processor]}
     - {id: net, label: Networking, col: 5, row: 1, blocks: [can_transceiver, ethernet_phy, pcie_buffer, tvs_esd]}
     - {id: ext, label: Camera / lidar / radar, col: 6, row: 0, blocks: [camera_radar]}
+    - {id: video_amp, label: Camera module video amplifier (after Nisshinbo), col: 6, row: 1, blocks: [amplifier]}
   links:
+    - [video_amp, ext, analog video]
     - [protection, power, "+12 V"]
     - [power, proc, MCU / processor power]
     - [power, memory, ""]
@@ -56,7 +60,9 @@
 
 - name: EV traction inverter
   category: Power & isolation
-  note: Three half-bridges with isolated gate drivers, phase-current sensing and isolated power.
+  note: "Three half-bridges with isolated gate drivers, phase-current sensing and isolated power. Resolver amplifier and HV voltage monitor added after Nisshinbo public material: NISSHINBO-AUTO-EAXLE (e-Axle inverter block diagram: HV battery, gate driver and six IGBTs, high-voltage monitor and HV-side power management with a transformer, isolator to the MCU, op-amps on two phase-current sensors, resolver with RDC and a resolver excitation amplifier, flyback power management from +B, CAN interface)."
+  sources:
+  - {doc: NISSHINBO-AUTO-EAXLE, title: 'Nisshinbo Micro Devices application block diagram (automotive): e-Axle (inverter)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/e-axle.html'}
   groups:
     - {id: ctrl, label: Control, col: 0, row: 0, blocks: [mcu, crystal_oscillator, supervisor]}
     - {id: iso, label: Isolation, col: 1, row: 0, blocks: [digital_isolator, isolated_dcdc]}
@@ -64,7 +70,9 @@
     - {id: sense, label: Sensing, col: 2, row: 1, blocks: [current_sensor x2, isolated_amplifier, temperature_sensor]}
     - {id: power, label: Power rail, col: 0, row: 1, blocks: [reverse_polarity, wide_vin_buck, pol_ldo]}
     - {id: net, label: Vehicle network, col: 1, row: 1, blocks: [can_transceiver, tvs_esd]}
+    - {id: resolver, label: Resolver excitation amplifier and RDC; HV voltage monitor (after Nisshinbo), col: 0, row: 2, blocks: [position_interface, amplifier]}
   links:
+    - [resolver, ctrl, rotor angle / HV voltage]
     - [ctrl, iso, PWM / SPI]
     - [iso, drive, ""]
     - [sense, ctrl, phase current]
@@ -1123,11 +1131,12 @@
 # ---- converted from data/blocks/research/ti_block_diagrams.yaml by tools/research_to_templates.py
 - name: HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)
   category: Power & isolation
-  note: 'From TI public material: TI-SOL-OBC, SLUAAS6, STDA010'
+  note: 'From TI public material: TI-SOL-OBC, SLUAAS6, STDA010 The HV-side op-amp and comparator group is added after Nisshinbo public material: NISSHINBO-AUTO-OBC (OBC block diagram: AC input with ZCT and earth leakage sensor, PFC, full-bridge DC/DC to an 800 V battery, high-voltage monitors on the PFC and battery sides, an op-amp AFE on the PFC current shunt, a comparator in the bridge driver circuits, flyback power management, isolator to the LV MCU and CAN).'
   sources:
   - {doc: TI-SOL-OBC, title: Onboard charger (OBC) - block diagram + subsystems, url: 'https://www.ti.com/solution/onboard-charger'}
   - {doc: SLUAAS6, title: Isolated Bias Power Supply Architecture for HEV and EV Onboard Chargers, url: 'https://www.ti.com/lit/pdf/sluaas6'}
   - {doc: STDA010, title: Isolated Bias Power Supply Architecture for HEV/EV Single Stage Onboard Chargers, url: 'https://www.ti.com/lit/pdf/stda010'}
+  - {doc: NISSHINBO-AUTO-OBC, title: 'Nisshinbo Micro Devices application block diagram (automotive): On Board Charger (OBC)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/onboard-charger.html'}
   groups:
   - id: ac_input
     label: AC/DC EMI filter
@@ -1230,7 +1239,13 @@
     blocks: [motor_controller, load_switch]
     col: 3
     row: 4
+  - id: hv_afe
+    label: HV voltage monitors, op-amp AFE on the PFC shunt, comparator in the bridge driver (after Nisshinbo)
+    blocks: [amplifier x2, comparator]
+    col: 0
+    row: 5
   links:
+  - [hv_afe, pfc_controller, voltage / current]
   - [ac_input, pfc_stage, AC power from grid]
   - [pfc_stage, dcdc_primary, PFC bus]
   - [dcdc_primary, transformer, '']
@@ -1297,10 +1312,11 @@
     source: TI-SOL-OBC 'HEV/EV safety', 'MCU diagnostics/monitoring'
 - name: HEV/EV HV-to-LV DC/DC converter (phase-shifted full bridge, HV battery to 12 V) (TI)
   category: Power & isolation
-  note: 'From TI public material: TI-SOL-HVLVDCDC, SLUAB19'
+  note: 'From TI public material: TI-SOL-HVLVDCDC, SLUAB19 The op-amp AFE group is added after Nisshinbo public material: NISSHINBO-AUTO-DCDC (DC/DC converter block diagram: 800 V battery through fuse and filter to a full bridge, transformer and synchronous rectifier to the 14 V battery; high-voltage monitor, an op-amp AFE on the primary current transformer and another on the 14 V shunt, voltage regulator and flyback power management, isolator and isolated gate driver, CAN).'
   sources:
   - {doc: TI-SOL-HVLVDCDC, title: DC/DC converter system (HEV/EV HV-to-LV) - block diagram + subsystems, url: 'https://www.ti.com/solution/dc-dc-converter'}
   - {doc: SLUAB19, title: Isolated Bias Power Supply Architecture for HEV/EV HVLV DCDC Converters, url: 'https://www.ti.com/lit/pdf/sluab19'}
+  - {doc: NISSHINBO-AUTO-DCDC, title: 'Nisshinbo Micro Devices application block diagram (automotive): DC / DC Converter', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/dc-dc-converter.html'}
   groups:
   - id: hv_input
     label: HV battery + HV supply monitoring
@@ -1353,7 +1369,13 @@
     blocks: [hv_flyback, isolated_dcdc, wide_vin_buck, pmic, reverse_polarity]
     col: 1
     row: 2
+  - id: afe
+    label: Op-amp AFEs on the primary current transformer and the 14 V shunt; HV voltage monitor (after Nisshinbo)
+    blocks: [amplifier x3]
+    col: 2
+    row: 2
   links:
+  - [afe, mcu, current / voltage]
   - [hv_input, primary_bridge, HV battery]
   - [primary_bridge, transformer, '']
   - [transformer, secondary_rect, '']
@@ -1394,10 +1416,11 @@
     source: TI-SOL-HVLVDCDC 'Circuit breaker'
 - name: EV high-voltage battery system (wired cell supervision, BDU, BMU) (TI)
   category: Power & isolation
-  note: 'From TI public material: TI-SOL-HVBATT, SLYY197A'
+  note: 'From TI public material: TI-SOL-HVBATT, SLYY197A The HV-side op-amp group is added after Nisshinbo public material: NISSHINBO-AUTO-BMS (BMS block diagram: cell monitoring AFE, an op-amp AFE on the pack current shunt, earth leakage sensor and high-voltage monitor into an HV-side MCU that drives the contactor gate driver; isolator to the LV MCU with RTC and CAN; flyback and LV power management from +B).'
   sources:
   - {doc: TI-SOL-HVBATT, title: High-voltage battery system (wired) - block diagram + subsystems, url: 'https://www.ti.com/solution/high-voltage-battery-system'}
   - {doc: SLYY197A, title: Wired vs. Wireless Communications In EV Battery Management, url: 'https://www.ti.com/lit/pdf/slyy197'}
+  - {doc: NISSHINBO-AUTO-BMS, title: 'Nisshinbo Micro Devices application block diagram (automotive): Battery Management System (BMS)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/battery-management-system.html'}
   groups:
   - id: cell_supervision
     label: Cell supervision (CSC, per module)
@@ -1459,7 +1482,13 @@
     blocks: [pmic, reverse_polarity, watchdog, supervisor, can_transceiver, ethernet_phy, tvs_esd]
     col: 3
     row: 2
+  - id: hv_afe
+    label: Op-amp AFE on the pack current shunt and HV voltage monitor (after Nisshinbo)
+    blocks: [amplifier x2]
+    col: 0
+    row: 3
   links:
+  - [hv_afe, bdu_controller, pack current / voltage]
   - [cell_supervision, daisy_chain, daisy chain]
   - [daisy_chain, bmu_controller, via daisy-chain bridge]
   - [hv_sensing, bdu_controller, '']
@@ -8893,9 +8922,10 @@
 # ---- imported by tools/import_diagrams.py
 - name: Automotive HVAC e-compressor drive (HV battery, isolated CAN/LIN, 3-phase IGBT/MOSFET inverter) (TI)
   category: Automotive systems
-  note: 'From TI public material: TI-SOL-ECOMP'
+  note: 'From TI public material: TI-SOL-ECOMP The tracking regulator and comparator group is added after Nisshinbo public material: NISSHINBO-AUTO-ECOMP (electric compressor block diagram: LV block with LDO, flyback DC/DC, watchdog and voltage detector, CAN to the BCM and a comparator voltage sensor; isolator; HV block with LDO, voltage detector, watchdog, high-voltage monitor, MCU, six-IGBT bridge and op-amp phase-current sensing; a tracking regulator for an off-board sensor).'
   sources:
   - {doc: TI-SOL-ECOMP, title: 'HVAC compressor - high voltage, isolated communication - block diagram + subsystems', url: 'https://www.ti.com/solution/automotive-hvac-e-compressor'}
+  - {doc: NISSHINBO-AUTO-ECOMP, title: 'Nisshinbo Micro Devices application block diagram (automotive): Electric Compressor', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/electric-compressor.html'}
   groups:
   - id: mcu
     label: MCU
@@ -8952,7 +8982,13 @@
     blocks: [power_module, motor, hv_battery]
     col: 2
     row: 2
+  - id: tracker
+    label: Tracking regulator for the off-board sensor; comparator voltage sensor on the 12 V side (after Nisshinbo)
+    blocks: [ldo_tracker, comparator]
+    col: 3
+    row: 2
   links:
+  - [tracker, mcu, sensor supply / voltage]
   - [isolated_power_supply, power_supply, isolated supply from 12 V car battery]
   - [power_supply, mcu, '']
   - [reference_voltage_source, mcu, ADC reference]
@@ -15895,3 +15931,146 @@
   questions:
   - {id: camera_link, question: Camera link, choices: [analog video (as drawn), digital SerDes link], source: NISSHINBO-AUTO-CAMERA (video amplifiers); TI surround view background diagram (FPD-Link)}
   - {id: cameras, question: Cameras, choices: [rear only, four (surround view)], source: 'NISSHINBO-AUTO-CAMERA (front, side, side, rear)'}
+
+- name: Electric power steering ECU (buck DC/DC and LDO with watchdog, pre-driver and 3-phase MOSFET bridge, torque sensor with voltage tracker, resolver) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-EPS (Electronic Power Steering block diagram: +B through a switching driver to a buck DC/DC and an LDO with watchdog for the MCU; MCU to a pre-driver and a six-MOSFET bridge driving the assist motor; op-amps on the motor current (current transformer) and on the steering torque sensor; a voltage tracker supplies the torque sensor from 5 V under MCU control; resolver with RDC and a resolver excitation amplifier; CAN interface). EPS ECU diagrams from TI and NXP are in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-EPS, title: 'Nisshinbo Micro Devices application block diagram (automotive): Electronic Power Steering (EPS)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/electronic-power-steering.html'}
+  groups:
+  - {id: batt, label: +B battery and switching driver, col: 0, row: 0, blocks: [external_block, load_switch]}
+  - {id: power, label: Buck DC/DC and LDO with watchdog, col: 0, row: 1, blocks: [wide_vin_buck, pol_ldo, watchdog]}
+  - {id: mcu, label: MCU, col: 1, row: 1, blocks: [mcu]}
+  - {id: predrv, label: Pre-driver and six-MOSFET bridge, col: 1, row: 0, blocks: [three_phase_gate_driver, power_fets]}
+  - {id: motor, label: Steering assist motor with resolver and steering torque sensor, col: 2, row: 0, blocks: [motor, position_sensor]}
+  - {id: sense, label: 'Op-amps: motor current (current transformer) and steering torque', col: 2, row: 1, blocks: [amplifier x2]}
+  - {id: tracker, label: Voltage tracker supplying the torque sensor from 5 V, col: 3, row: 1, blocks: [ldo_tracker]}
+  - {id: resolver, label: RDC and resolver excitation amplifier, col: 3, row: 0, blocks: [position_interface]}
+  - {id: can, label: CAN interface, col: 0, row: 2, blocks: [can_transceiver]}
+  links:
+  - [batt, power, '+B']
+  - [batt, predrv, '+B']
+  - [power, mcu, '']
+  - [mcu, predrv, PWM]
+  - [predrv, motor, 3 phases]
+  - [motor, sense, current / torque]
+  - [sense, mcu, '']
+  - [mcu, tracker, enable]
+  - [tracker, motor, torque sensor supply]
+  - [motor, resolver, resolver signals]
+  - [resolver, mcu, angle]
+  - [mcu, can, CAN]
+  questions:
+  - {id: position, question: Motor position sensor, choices: [resolver with RDC (as drawn), magnetic angle sensor], source: NISSHINBO-AUTO-EPS (resolver and RDC)}
+  - {id: sensor_supply, question: Torque sensor supply, choices: [voltage tracker following the 5 V rail (as drawn), separate LDO], source: NISSHINBO-AUTO-EPS (voltage tracker)}
+
+- name: LED headlight ECU (boost / buck supply, LED string with switching driver, current and voltage sensing, leveling motors with tracking supply) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-LED (LED Headlight ECU block diagram: battery into power management with boost DC/DC, buck DC/DC, LDO with watchdog, watchdog timer and voltage detector, and a tracking regulator for the off-board position sensors; supply monitor and the BCM into the MCU; an LED string switched by a switching driver (gate driver) and FET; a comparator voltage sensor and an op-amp current sensor on the LED string; motor drivers and beam control for two leveling motors with position sensors). A TI LED headlight module and an NXP exterior lighting diagram are in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-LED, title: 'Nisshinbo Micro Devices application block diagram (automotive): LED Headlight ECU', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/led-headlight-ecu.html'}
+  groups:
+  - {id: batt, label: Battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pm, label: 'Power management: boost DC/DC, buck DC/DC, LDO with watchdog, watchdog timer, voltage detector', col: 1, row: 0, blocks: [pre_regulator, pol_buck, pol_ldo, watchdog, supervisor]}
+  - {id: tracker, label: Tracking regulator for the off-board position sensors, col: 2, row: 0, blocks: [ldo_tracker]}
+  - {id: bcm, label: Body control module and supply monitor, col: 0, row: 1, blocks: [external_block]}
+  - {id: mcu, label: MCU, col: 1, row: 1, blocks: [mcu]}
+  - {id: sense, label: 'Comparator voltage sensor and op-amp current sensor on the LED string', col: 2, row: 1, blocks: [comparator, amplifier]}
+  - {id: led, label: LED string with switching driver (gate driver) and FET, col: 3, row: 1, blocks: [led_driver, power_fets]}
+  - {id: level, label: 'Motor drivers / beam control: two leveling motors with position sensors', col: 3, row: 0, blocks: [motor_driver_brushed x2, position_sensor x2]}
+  links:
+  - [batt, pm, '']
+  - [pm, mcu, '']
+  - [pm, led, LED supply]
+  - [pm, tracker, '']
+  - [tracker, level, sensor supply]
+  - [bcm, mcu, light request]
+  - [mcu, led, switching]
+  - [led, sense, voltage / current]
+  - [sense, mcu, '']
+  - [level, mcu, position]
+  questions:
+  - {id: leveling, question: Beam leveling motors, choices: ['none', 'two (as drawn)'], source: NISSHINBO-AUTO-LED (motor drivers and position sensors)}
+  - {id: led_supply, question: LED supply, choices: [boost then buck (as drawn), single buck-boost], source: NISSHINBO-AUTO-LED (boost and buck DC/DC)}
+
+- name: Acoustic vehicle alerting system (AVAS - MCU, op-amp filter, two-channel audio amplifier and speakers on LIN / CAN) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-AVAS (Acoustic Vehicle Alerting System block diagram: B+ into power management with LDO, watchdog timer, voltage detector, DC/DC and a tracking regulator for an off-board sensor; a LIN / CAN interface to the MCU; two MCU outputs through op-amps and an audio amplifier to two speakers). An electric car must make this sound at low speed (est: UN R138 in Europe, FMVSS 141 in the US; the page does not cite the rules)."
+  sources:
+  - {doc: NISSHINBO-AUTO-AVAS, title: 'Nisshinbo Micro Devices application block diagram (automotive): Acoustic Vehicle Alerting System (AVAS)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/acoustic-vehicle-alerting-system.html'}
+  groups:
+  - {id: batt, label: B+ battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pm, label: 'Power management: LDO, watchdog timer, voltage detector, DC/DC, tracking regulator', col: 1, row: 0, blocks: [pol_ldo, watchdog, supervisor, wide_vin_buck, ldo_tracker]}
+  - {id: bus, label: LIN / CAN interface, col: 0, row: 1, blocks: [lin_transceiver, can_transceiver]}
+  - {id: mcu, label: MCU (sound generation), col: 1, row: 1, blocks: [mcu]}
+  - {id: opamp, label: Op-amps (two channels), col: 2, row: 1, blocks: [amplifier x2]}
+  - {id: amp, label: Audio amplifier (two channels), col: 3, row: 1, blocks: [audio_amp x2]}
+  - {id: spk, label: Two speakers, col: 3, row: 0, blocks: [acoustic_transducer x2]}
+  links:
+  - [batt, pm, '']
+  - [pm, bus, LDO]
+  - [pm, mcu, LDO]
+  - [pm, amp, DC/DC]
+  - [bus, mcu, LIN / CAN]
+  - [mcu, opamp, sound]
+  - [opamp, amp, '']
+  - [amp, spk, '']
+  questions:
+  - {id: channels, question: Speakers, choices: [one, two (as drawn)], source: NISSHINBO-AUTO-AVAS}
+  - {id: bus, question: Vehicle bus, choices: [LIN, CAN], source: NISSHINBO-AUTO-AVAS ('Interface LIN / CAN')}
+
+- name: Corner sensor ECU (corner sensors with ASIC and op-amp, buzzer driver, LIN / CAN to the navigation / IVI) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-CORNER (Corner Sensor ECU block diagram: battery into power management with an LDO with watchdog, an LDO, watchdog timer and voltage detector; LIN / CAN interface to the navigation monitor / IVI; MCU talking to the corner sensors, each with an ASIC / ASSP and an op-amp, supplied by their own LDO; a switching driver / audio amplifier drives a warning speaker). The sensors are drawn as transducers (est: ultrasonic, as in park assist; the page does not say). A TI ultrasonic park assist sensor is in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-CORNER, title: 'Nisshinbo Micro Devices application block diagram (automotive): Corner Sensor ECU', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/corner-sensor-ecu.html'}
+  groups:
+  - {id: batt, label: Battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pm, label: 'Power management: LDO with watchdog, LDO, watchdog timer, voltage detector', col: 1, row: 0, blocks: [pol_ldo x2, watchdog, supervisor]}
+  - {id: ivi, label: Navigation monitor / IVI, col: 0, row: 1, blocks: [external_block]}
+  - {id: bus, label: LIN / CAN interface, col: 1, row: 1, blocks: [lin_transceiver, can_transceiver]}
+  - {id: mcu, label: MCU, col: 2, row: 1, blocks: [mcu]}
+  - {id: sldo, label: LDO supplying the corner sensors, col: 3, row: 0, blocks: [pol_ldo]}
+  - {id: sensor, label: 'Corner sensors: ASIC / ASSP and op-amp per sensor (ultrasonic, est)', col: 3, row: 1, blocks: [ultrasonic_afe, amplifier]}
+  - {id: buzzer, label: Switching driver / audio amplifier and warning speaker, col: 2, row: 2, blocks: [audio_amp, acoustic_transducer]}
+  links:
+  - [batt, pm, '']
+  - [batt, sldo, '']
+  - [pm, bus, '']
+  - [pm, mcu, '']
+  - [ivi, bus, '']
+  - [bus, mcu, LIN / CAN]
+  - [sldo, sensor, sensor supply]
+  - [mcu, sensor, sensor data]
+  - [mcu, buzzer, warning]
+  questions:
+  - {id: sensors, question: Corner sensors, choices: [four (as drawn), more], source: NISSHINBO-AUTO-CORNER}
+  - {id: warning, question: Driver warning, choices: [buzzer from this ECU (as drawn), sound and picture on the IVI], source: NISSHINBO-AUTO-CORNER (speaker and IVI link)}
+
+- name: Body control module with a smart key receiver (two antennas, RF switch, SAW filter, RF receiver; switch drivers for locks and lamps) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-BCM (Body Control Module block diagram: the smart key's signal reaches two body antennas, an RF switch picks one, then a SAW filter and an RF receiver into the MCU; power management with two DC/DCs, an LDO, watchdog timer and voltage detector from the battery; an op-amp for current detection; a switch driver for the door lock, answer back, room lamp and more). The page lists SPDT GaAs switches for the RF switch. A TI body control module and an NXP TPMS / RKE receiver are in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-BCM, title: 'Nisshinbo Micro Devices application block diagram (automotive): Body Control Module (BCM)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/body-control-module.html'}
+  groups:
+  - {id: key, label: Smart key, col: 0, row: 0, blocks: [external_block]}
+  - {id: ant, label: Two body antennas, col: 1, row: 0, blocks: [antenna x2]}
+  - {id: rfsw, label: RF switch (antenna select), col: 2, row: 0, blocks: [rf_switch]}
+  - {id: rx, label: SAW filter and RF receiver, col: 3, row: 0, blocks: [filter_saw_baw, rf_transceiver]}
+  - {id: mcu, label: MCU, col: 4, row: 0, blocks: [mcu]}
+  - {id: batt, label: Battery, col: 0, row: 1, blocks: [external_block]}
+  - {id: pm, label: 'Power management: DC/DCs, LDO, watchdog timer, voltage detector', col: 1, row: 1, blocks: [wide_vin_buck, pol_buck, pol_ldo, watchdog, supervisor]}
+  - {id: cur, label: Op-amp current detection, col: 3, row: 1, blocks: [amplifier]}
+  - {id: drv, label: 'Switch driver: door lock, answer back, room lamp and more', col: 4, row: 1, blocks: [load_switch, relay_driver]}
+  links:
+  - [key, ant, RF]
+  - [ant, rfsw, '']
+  - [rfsw, rx, '']
+  - [rx, mcu, key data]
+  - [batt, pm, '']
+  - [pm, mcu, '']
+  - [cur, mcu, load current]
+  - [mcu, drv, '']
+  questions:
+  - {id: antennas, question: Receive antennas, choices: [one, two with an RF switch (as drawn)], source: NISSHINBO-AUTO-BCM}
+  - {id: key_type, question: Key, choices: [remote keyless entry (button), passive smart key, phone as a key (BLE / UWB)], source: NISSHINBO-AUTO-BCM ('Smart Key'); car access diagrams in this library}

@@ -456,6 +456,11 @@ NISSHINBO_NEW = {  # name prefix -> (system, sub-system, functions the source di
     "eCall module": ("automotive", "telematics-v2x", {"modem", "gnss_lna", "rf_switch", "amplifier", "audio_amp"}),
     "Head-up display": ("automotive", "cockpit", {"optical_driver", "motor_driver_brushed", "watchdog", "supervisor"}),
     "Parking-assist camera ECU": ("automotive", "adas", {"camera_radar", "amplifier", "pmic", "can_transceiver"}),
+    "Electric power steering ECU": ("automotive", "powertrain", {"three_phase_gate_driver", "ldo_tracker"}),
+    "LED headlight ECU": ("automotive", "cockpit", {"led_driver", "comparator", "ldo_tracker", "motor_driver_brushed"}),
+    "Acoustic vehicle alerting system": ("automotive", "cockpit", {"audio_amp", "amplifier", "lin_transceiver"}),
+    "Corner sensor ECU": ("automotive", "adas", {"ultrasonic_afe", "amplifier", "audio_amp"}),
+    "Body control module with a smart key receiver": ("automotive", "car-access", {"rf_switch", "filter_saw_baw"}),
 }
 
 
@@ -482,12 +487,20 @@ def test_nisshinbo_is_a_reference_on_the_matching_library_diagrams():
         "Automotive infotainment head unit": ("NISSHINBO-AUTO-AV", "gnss_rf", {"gnss_lna", "rf_switch"}),
         "Automotive instrument cluster": ("NISSHINBO-AUTO-INFO", "wdt_vd", {"watchdog", "supervisor"}),
         "V2X unit with two antenna paths": ("NISSHINBO-AUTO-V2X", "wdt_vd", {"watchdog", "supervisor"}),
+        "EV traction inverter": ("NISSHINBO-AUTO-EAXLE", "resolver", {"position_interface", "amplifier"}),
+        "HEV/EV on-board charger": ("NISSHINBO-AUTO-OBC", "hv_afe", {"amplifier", "comparator"}),
+        "HEV/EV HV-to-LV DC/DC": ("NISSHINBO-AUTO-DCDC", "afe", {"amplifier"}),
+        "EV high-voltage battery system": ("NISSHINBO-AUTO-BMS", "hv_afe", {"amplifier"}),
+        "Automotive HVAC e-compressor drive": ("NISSHINBO-AUTO-ECOMP", "tracker", {"ldo_tracker", "comparator"}),
+        "ADAS domain controller": ("NISSHINBO-AUTO-SAFETY", "video_amp", {"amplifier"}),
     }
+    names = [t["name"] for t in blocks.templates()]
     for prefix, (doc, gid, want) in added.items():
-        t = blocks.templates()[_index(prefix)]
+        t = blocks.templates()[names.index(prefix) if prefix in names else _index(prefix)]
         assert doc in {s["doc"] for s in t["sources"]} and doc in t["note"], prefix
         g = next(g for g in t["groups"] if g["id"] == gid)
-        assert "after Nisshinbo" in g["label"] and want <= {b if isinstance(b, str) else b["fn"] for b in g["blocks"]}
+        fns = {b.split()[0] if isinstance(b, str) else b["fn"] for b in g["blocks"]}
+        assert "after Nisshinbo" in g["label"] and want <= fns, prefix
         assert any(gid in lk[:2] for lk in t["links"]), prefix
     for key in ("tcu_rf", "v2x_frontend", "gnss_frontend"):
         assert "Nisshinbo" in library.notes(key) and len(library.topic(key)["references"]) == 6

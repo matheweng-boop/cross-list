@@ -735,20 +735,22 @@ reports:
       Built-in shunt: only for small currents, where integrated Hall sensors already serve (TI TMCS1123, 80 A, ±1.4 %
       uncalibrated, about $2); no isolated amplifier with a built-in shunt found. Our Si8921BD die matches TI's accuracy and
       beats it on noise (82 vs 71 dB) and bandwidth (600 vs 334 kHz), total static error about ±0.5 % RSS (AN1270), but
-      needs a separate high-side supply and has 50 kV/µs CMTI. Proposal: Si89xx die + Si86Px power stage in one reinforced
-      automotive package, about $1.5–1.9 (est). Market: current sensors $3.35 B in 2026 to $6.39 B by 2032 (analyst PR).
-    tags: [isolated amplifier, current sensing, shunt, integrated DC-DC, isolated power, EV charging, on-board charger, DC fast charger, wallbox, AMC3301, AMC3302, TMCS1123, Si8921, Si8941, Si86Px, error budget, pricing]
-    sources: "BizDev parts database (Skyworks and TI isolated amplifiers), Skyworks AN1270 and the Si86Px datasheet (cache); TI product pages AMC3301 and TMCS1123 and a MarketsandMarkets press release (read 23 Oct 2026); TI reference designs and IEA figures recorded for the extra-wide isolation case; every figure in the background notes"
+      needs a separate high-side supply and has 50 kV/µs CMTI, against 150 kV/µs on TI's newest automotive parts. Proposal:
+      Si89xx die + Si86Px power stage in one reinforced automotive package, about $1.5–1.9 (est). Market: current sensors
+      $3.35 B in 2026 to $6.39 B by 2032 (analyst PR). In depth (2 Nov 2026, owner's comment): the sockets are in on-board
+      chargers, the HV-to-LV DC-DC and fast-charger modules; in the battery, pack monitors now measure the pack current.
+    tags: [isolated amplifier, current sensing, shunt, integrated DC-DC, isolated power, EV charging, on-board charger, DC fast charger, wallbox, AMC3301, AMC3302, AMC0302D-Q1, TMCS1123, BQ79631-Q1, coreless current sensor, Si8921, Si8941, Si86Px, error budget, pricing]
+    sources: "BizDev parts database (Skyworks and TI isolated amplifiers), Skyworks AN1270 and the Si86Px datasheet (cache); TI product pages AMC3301 and TMCS1123 and a MarketsandMarkets press release (read 23 Oct 2026); TI reference designs and IEA figures recorded for the extra-wide isolation case; for the in-depth part (2 Nov 2026) the cached Si89xx and TI AMC datasheets, the block-diagram library, TI's BQ79631-Q1 and Infineon's current-sensor pages (read) and an IEA snippet; every figure in the background notes"
     decision: Should we combine an Si89xx sensing die with the Si86Px isolated power stage into one reinforced automotive
       part (Si89xx-P) for EV chargers, and is a built-in shunt worth it?
     answer:
-      text: 'Yes for built-in power: TI proves the demand and our die is as accurate and quieter. Not yet for the built-in
-        shunt, since Hall sensors already serve small currents. It hinges on Si86Px reaching a reinforced, automotive rating
-        (est).'
+      text: 'Yes for built-in power: TI proves the demand and our die is as accurate at 25 °C and quieter. Not yet for the
+        built-in shunt, since Hall sensors already serve small currents. It hinges on Si86Px reaching a reinforced, automotive
+        rating and on CMTI reaching 150 kV/µs; aim it at chargers and DC-DC, not the battery pack current (est).'
       conf: med
     needed_now:
     - 'Isolation BU: can the Si86Px power stage share a package with the Si892x / Si894x die and reach reinforced and AEC-Q100?'
-    - 'Isolation BU: what it takes to raise CMTI from 50 to at least 100 kV/µs'
+    - 'Isolation BU: what it takes to raise CMTI from 50 to at least 150 kV/µs, the level of TI''s newest automotive parts'
     - 'One charger customer: the current error needed per sense point, and how they power the high side today'
     say_externally: In 800 V chargers every current measurement across the barrier needs an isolated amplifier and its own
       floating supply. Skyworks sells reinforced, automotive isolated amplifiers (Si89xx) and isolated bias supplies today.
@@ -776,7 +778,7 @@ reports:
       - Sold with our gate drivers, isolators and isolated bias in the same charger
       cons:
       - TI has sold integrated-power isolated amplifiers since 2019, at a low list price ($1.65 at 1k)
-      - 'CMTI 50 kV/µs on our die vs 85 kV/µs (TI) and 100+ for SiC: needs a die change'
+      - 'CMTI 50 kV/µs on our die vs 85–150 kV/µs (TI) and 100+ for SiC: needs a die change'
       - Below about 80 A integrated Hall sensors (TMCS1123, Allegro, Melexis, Infineon) need no shunt and no supply at all
       vs: TI AMC3301 / AMC3302-Q1 / AMC3306M05-Q1 and TMCS1123; ADI; Allegro; Infineon; Melexis; LEM modules
     learn:

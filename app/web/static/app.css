@@ -2190,3 +2190,8 @@ form.qs-ask { display: block; max-width: none; margin: 1rem 0; } .qs-ask .row { 
 details.qs-note { border-bottom: 1px solid var(--pico-muted-border-color); padding: .35rem 0; } details.qs-note summary { cursor: pointer; }
 .bk-practice { border-left: 3px solid var(--card-line); padding-left: .5rem; }
 
+/* 16b (worker G, 2 Nov 2026): a case's "In depth" tables (business/_case_depth.html): on phones each cell shows its column name */
+.pc-depth .pc-table td { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .pc-depth .pc-table td[data-label]:not([data-label=""])::before { content: attr(data-label) ": "; font-weight: 600; color: var(--pico-muted-color); }
+}

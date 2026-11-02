@@ -875,3 +875,21 @@ def test_charging_report_own_pd_controller_section_on_a_phone(page):
               "Build, partner or license"):  # fmt: skip
         expect(sec.locator("h3", has_text=h)).to_have_count(1)
     assert overflow(page) <= 1
+
+
+# --- Research: isolated current sensing case, In depth (worker G, 2 Nov 2026) -----------------------------------------
+def test_current_sense_case_in_depth_reads_on_a_phone(page):
+    """Owner, 27 Oct 2026 ("Look more into it"): the case's In depth tables; on a 390 px phone each row is a block and
+    each cell shows its column name, nothing scrolls sideways; a link in the table list jumps to its table."""
+    page.set_viewport_size(PHONE)
+    page.request.get("/business/reports/iso-current-sense-charging", timeout=90_000)  # a case's first render is slow
+    go(page, "/business/reports/iso-current-sense-charging")
+    sec = page.locator("#in-depth")
+    expect(sec.locator("h3")).to_have_count(7)  # six tables and "Next step"
+    cell = sec.locator("#depth-where + .table-wrap td[data-label='How it is done']").first
+    expect(cell).to_be_visible()
+    label = cell.evaluate("e => getComputedStyle(e, '::before').content")
+    assert "How it is done" in label, label
+    sec.locator("a[href='#depth-needs']").click()
+    expect(page.locator("#depth-needs")).to_be_in_viewport()
+    assert overflow(page) <= 1

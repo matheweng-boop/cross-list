@@ -279,7 +279,7 @@ v2x:
       pwr.pol_ldo: "LDO"
       net.can_transceiver: "CAN"
       net.ethernet_phy: "Ethernet"
-    drop: [net]
+    drop: [net, wdt_vd]  # wdt_vd: watchdog + voltage detector added to the library diagram after Nisshinbo (2 Nov 2026), not in this brief
     place: {ant: [0, 0], fe1: [1, 0], chip: [2, 0], host: [3, 0], pwr: [0, 1], fe2: [1, 1], gnss: [2, 1], hsm: [3, 1]}
     links: [[ant, fe1], [ant, fe2], [fe1, chip], [fe2, chip], [chip, host], [gnss, chip], [host, hsm]]
   parts:

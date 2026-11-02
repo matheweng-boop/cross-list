@@ -25,6 +25,7 @@ systems:
           - "Interior radar for child presence detection (60 GHz radar + MCU on CAN, with optional 3D ToF camera and microphone modules) (after Infineon)"
           - "UWB radar in the car - child presence, intrusion and kick / gesture sensing (UWB SoC in radar mode on the interior and rear anchors) (after Infineon AIROC UWB and ST)"
           - "UWB between the car and its surroundings - parking garage gate, driverless valet parking, ride sharing pick-up, paying from the car (after FiRa)"
+          - "Body control module with a smart key receiver (two antennas, RF switch, SAW filter, RF receiver; switch drivers for locks and lamps) (after Nisshinbo)"
         topics: [auto_uwb]
       - key: car-radio
         title: "Car radio"
@@ -58,6 +59,7 @@ systems:
           - "V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)"
           - "Automotive telematics (Dimensity Auto Connect MT2739: 5G-Advanced + NTN satellite) (MediaTek)"
           - "Automotive telematics / connectivity (Snapdragon Auto 5G Modem-RF Gen 2, QCA6696 Wi-Fi/BT, C-V2X 9150) (Qualcomm)"
+          - "eCall module (LTE module, GNSS front end, RF switch to a backup antenna, microphone and speaker amplifiers) (after Nisshinbo)"
         topics: [tcu_rf, v2x_frontend, gnss_frontend, roof_coexistence]
       - key: adas
         title: "ADAS and sensing"
@@ -66,12 +68,15 @@ systems:
           - "Front and corner radar (77 GHz)"
           - "Camera"
           - "Lidar"
+          - "Corner sensors"
           - "Domain controller"
         diagrams:
           - "ADAS domain controller"
           - "ADAS domain controller (camera / radar / lidar fusion) (TI)"
           - "Automotive 77 GHz radar (transceiver + radar MCU / one-chip SoC) (NXP)"
           - "Automotive LiDAR module (laser driver, TIA / ADC / TDC receive chain, beam steering, processor + FPGA) (TI)"
+          - "Parking-assist camera ECU with four analog cameras (video amplifier in each camera, video isolation amplifiers at the ECU input, PMIC) (after Nisshinbo)"
+          - "Corner sensor ECU (corner sensors with ASIC and op-amp, buzzer driver, LIN / CAN to the navigation / IVI) (after Nisshinbo)"
       - key: powertrain
         title: "Electric powertrain"
         summary: "Traction inverter and the controls and drives around it."
@@ -81,6 +86,7 @@ systems:
           - "E-compressor"
           - "Vehicle control unit"
           - "Fuel cell control"
+          - "Electric power steering"
         diagrams:
           - "EV traction inverter"
           - "HEV/EV traction inverter (TI reference)"
@@ -92,6 +98,7 @@ systems:
           - "Fuel cell control unit (FCCU: FC boost DC/DC control + fuel control system, cell monitoring) (TI)"
           - "Three-level T-type traction inverter (SiC + GaN bidirectional switches, 800 V) (Renesas)"
           - "xEV traction inverter with inductive position sensor (IPS) or resolver (Renesas)"
+          - "Electric power steering ECU (buck DC/DC and LDO with watchdog, pre-driver and 3-phase MOSFET bridge, torque sensor with voltage tracker, resolver) (after Nisshinbo)"
         topics: [traction_asil_d]
       - key: battery-power
         title: "Battery and power distribution"
@@ -132,11 +139,17 @@ systems:
         elements:
           - "Instrument cluster"
           - "Head-unit display"
+          - "Head-up display"
+          - "LED headlights"
+          - "Sound for pedestrians (AVAS)"
           - "Power liftgate and doors"
         diagrams:
           - "Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD) (NXP)"
           - "Automotive smart power closure (power liftgate, sliding doors, trunk and frunk motors) (after Infineon)"
           - "Automotive seat adjustment and comfort actuators on 12 V or 48 V (BLDC motor drives with a motor control SoC, non-safety-critical) (after Infineon)"
+          - "Head-up display (picture generation with laser or LED, mirror motor, color compensation) (after Nisshinbo)"
+          - "Acoustic vehicle alerting system (AVAS - MCU, op-amp filter, two-channel audio amplifier and speakers on LIN / CAN) (after Nisshinbo)"
+          - "LED headlight ECU (boost / buck supply, LED string with switching driver, current and voltage sensing, leveling motors with tracking supply) (after Nisshinbo)"
   - key: datacenter
     title: "Data center"
     summary: "Power into and through the rack, backup, compute and the network."

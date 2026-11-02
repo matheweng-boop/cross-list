@@ -21,6 +21,17 @@ Supplementary, read but not in the six:
 - SKY5A1005 / SKY5A1006 product summaries (Dec 2025).
 - arXiv 2501.17878 (SL-U and Wi-Fi coexistence, 2025): this is about the MAC/LBT and IIoT, not automotive RF, so we did not select it.
 
+Background, not in the six: Nisshinbo Micro Devices, V2X application block diagram (read 2 Nov 2026, HTML page
+https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/vehicle-to-everything.html; our summary):
+- One antenna and one RF block: PA, LNA, RF switch and filter. No second antenna path, unlike the Autotalks-style
+  diagram in the library.
+- The parts named for the RF block are discrete: SPDT switches (one rated 10 W) and a 5 GHz LNA with a bypass mode.
+  There is no integrated V2X front-end module, so Nisshinbo sells parts around the FEM socket, not the FEM itself.
+- Power is a separate block: an LDO with a watchdog, a buck DC/DC, a watchdog timer and a voltage detector. A second
+  LDO and DC/DC feed the MCU, DDR memory and a security block.
+- The unit talks to the body control module or the infotainment unit over LIN or CAN.
+- In the library this adds the watchdog and voltage detector group to the V2X unit diagram.
+
 ## Block diagram explained
 
 The drawing is ours, built from r1–r5. One V2X path is a T/R switch (SP4T in SKY5A2105, which also has a BAW-bypass state), a

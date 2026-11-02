@@ -641,6 +641,9 @@ def cross(
         or (d.must_meet and (d.is_negative or (d.status == UNKNOWN and rv.get(d.key) is not None)))
         for d in diffs
     )
+    # a candidate rated for something the reference does not ask for (ASIL D): not offered (owner, 2 Nov 2026)
+    hard_fail = hard_fail or any(p.only_if_stated and cv.get(p.key) not in (None, "", []) and rv.get(p.key) in
+                                 (None, "", []) for p in rules.params)  # fmt: skip
     incomplete = any(d.status == UNKNOWN for d in diffs if d.priority in (1, 2))
     deviations = _deviations(diffs)
     rejected = feedback is not None and feedback.verdict == FeedbackVerdict.reject

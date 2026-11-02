@@ -49,6 +49,9 @@ class ParamDef:
     # else differs (owner, 2 Nov 2026: isolation below the competitor's rating ranks below any output-option or
     # feature difference)
     downgrade_tier: bool = False
+    # a candidate with a value here is offered only when the reference states one too (owner, 2 Nov 2026: an ASIL D
+    # gate driver is crossed only where the competitor states a functional-safety rating)
+    only_if_stated: bool = False
 
 
 @dataclass(frozen=True)
@@ -221,6 +224,7 @@ def parse_rules(data: dict) -> FamilyRules:
             datasheet_only=bool(raw.get("datasheet_only", False)),
             steer=tuple(raw.get("steer", ())),
             downgrade_tier=bool(raw.get("downgrade_tier", False)),
+            only_if_stated=bool(raw.get("only_if_stated", False)),
         )
         if p.kind not in KINDS:
             raise ValueError(f"{p.key}: unknown kind {p.kind!r}")

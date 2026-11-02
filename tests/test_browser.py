@@ -860,3 +860,35 @@ def test_describe_your_system_builds_blocks_at_ipad_size(page):
     expect(page.locator("#bk-words-echo")).to_contain_text("MCU → Microcontroller")
     expect(page.locator("#bk-status")).to_contain_text("built from your description")
     assert overflow(page) <= 1
+
+
+# --- Products > Clock planner (owner, 2 Nov 2026, item 18) ------------------------------------------------------------
+def test_clock_planner_preset_parts_plan_save_reopen(page):
+    """Preset → the parts that fit → plan with another part → add an output row → save → the link reopens the plan
+    (iPad held upright; 390 px checked after the test)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/clocks")
+    expect(page.locator("#cp-cbpro a")).to_have_attribute("href", re.compile("Clockbuilder-Pro-Software"))
+    with page.expect_navigation():
+        page.get_by_role("link", name="Mixed with fractional outputs").click()
+    expect(page.locator("#cp-parts")).to_contain_text("Si5332A-GM1")
+    expect(page.locator("#cp-plan h2")).to_contain_text("Frequency plan for")
+    expect(page.locator("#cp-plan")).to_contain_text("fractional divider")
+    with page.expect_navigation():
+        page.locator("#cp-parts tr", has_text="Si5332A-GM1").get_by_role("link", name="Plan with this part").click()
+    expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
+    expect(page.locator("#cp-plan")).to_contain_text("All outputs come from one VCO with integer dividers")
+    expect(page.locator(".cp-diagram svg .cp-out")).to_have_count(3)
+    rows = page.locator("#cp-rows .cp-row:not(.cp-row-head)")
+    before = rows.count()
+    page.locator("#cp-add").click()
+    expect(rows).to_have_count(before + 1)
+    page.locator("#cp-name").fill("Browser clock plan")
+    page.locator("#cp-save-btn").click()
+    expect(page.locator("#cp-status")).to_contain_text("Saved. Link:")
+    assert re.search(r"/clocks/plans/\d+$", page.url)
+    go(page, page.url)
+    expect(page.locator("main h1")).to_have_text("Browser clock plan")
+    expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
+    go(page, "/clocks/plans")
+    expect(page.locator("main")).to_contain_text("Browser clock plan")

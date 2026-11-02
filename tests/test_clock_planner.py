@@ -97,6 +97,7 @@ def test_output_outside_every_parts_range():
     pick = cp.chosen(r, m)
     pl = cp.plan(r, pick["arch"], pick["part"])
     assert any("outside this part's output range" in p for p in pl["problems"]) and not pl["rows"]
+    assert cp.fmt_low(0.0001) == "100 Hz" and cp.fmt_low(0.024) == "24 kHz" and cp.fmt_low(5) == "5"
 
 
 def test_multi_pll_and_buffer_and_oscillator():

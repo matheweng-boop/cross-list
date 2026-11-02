@@ -145,6 +145,16 @@ def fmt_mhz(v: Fraction | float | None) -> str:
     return f"{float(f):.6g}"
 
 
+def fmt_low(mhz: float) -> str:
+    """The low end of a frequency range, readable below 1 MHz (100 Hz, not 1e-04): '0.5 Hz', '100 Hz', '24 kHz'."""
+    v = float(mhz)
+    if v >= 1:
+        return fmt_mhz(Fraction(str(v)))
+    if v >= 0.001:
+        return f"{v * 1000:g} kHz"
+    return f"{v * 1e6:g} Hz"
+
+
 def build_request(form: dict) -> dict:
     """The planner request from the form (or a saved plan), every field optional: blank or unreadable values are
     dropped with a plain message, never an error page. ``form`` maps names to a value or a list of values."""
@@ -284,7 +294,7 @@ def check_part(part: dict, req: dict) -> dict:
         outside = [o for o in req["outputs"] if not (rng[0] - 1e-9 <= float(o["f"]) <= rng[1] + 1e-9)]
         lim = (arch or {}).get("format_max_mhz") or {}
         over = [o for o in req["outputs"] if o["fmt"] in lim and float(o["f"]) > lim[o["fmt"]]]
-        span = f"{fmt_mhz(Fraction(str(rng[0])))}–{fmt_mhz(Fraction(str(rng[1])))} MHz"
+        span = f"{fmt_low(rng[0])}–{fmt_mhz(Fraction(str(rng[1])))} MHz"
         if outside:
             add("Frequency", False, f"{', '.join(fmt_mhz(o['f']) for o in outside)} MHz outside {span}")
         elif over:
@@ -493,7 +503,7 @@ def plan(req: dict, arch: dict | None, part: dict | None = None) -> dict:
         outside = sorted({f for f in freqs if not (rng[0] - 1e-9 <= float(f) <= rng[1] + 1e-9)})
         if outside:
             out["problems"].append(f"{', '.join(fmt_mhz(f) for f in outside)} MHz is outside this part's output "
-                                   f"range ({rng[0]:g}–{rng[1]:g} MHz).")  # fmt: skip
+                                   f"range ({fmt_low(rng[0])}–{rng[1]:g} MHz).")  # fmt: skip
             freqs = [f for f in freqs if f not in outside]
             if not freqs:
                 return out

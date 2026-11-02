@@ -36,6 +36,7 @@ KINDS = (
     (r"^/reviews/requests/", "Status of a technology review request"),
     (r"^/(reviews|library)/[^/]+/react$", "Agree / disagree"),
     (r"^/business/reports/questions/", "Answer to a report question"),
+    (r"^/business/reports/[^/]+/answers$", "Answer to a question to ask"),
     (r"^/business/reports/[^/]+/react$", "Agree / disagree"),
     (r"^/business/reports/[^/]+/ask$", "Question on a report"),
     (r"^/blocks/area-request$", "Application area request"),
@@ -57,6 +58,8 @@ KINDS = (
     (r"^/pipeline", "Business case path"),
 )
 _FILE_PATH = re.compile(r"^/site-feedback/r(\d+)/file$")
+# answers to the Questions to ask land as internal: never quoted in the daily inbox (app/services/answers.py)
+_ANSWER, _REACT = re.compile(r"^/business/reports/[^/]+/answers$"), re.compile(r"^/business/reports/[^/]+/react$")
 _HIDDEN_FIELDS = {"client"}
 
 
@@ -258,6 +261,8 @@ def inbox_lines(session: Session, start: datetime) -> list[str]:
            "that is not listed here.\n"]  # fmt: skip
     for r in rows:
         text = " · ".join(f"{k}: {' '.join(v.split())[:400]}" for k, v in shown(r) if k != "data")
+        if _ANSWER.search(r.target) or (_REACT.search(r.target) and ("verdict", "answer") in shown(r)):
+            text = "an answer to a question to ask, kept internal: the text stays on the site"  # owner, 2 Nov 2026
         out.append(f"- {r.reviewed_at:%Y-%m-%d %H:%M} {r.author} · {r.kind} · {r.target}"
                    f"{' · page ' + r.page if r.page else ''}{' · ' + text if text else ''}"
                    f"{' · owner note: ' + r.owner_note if r.owner_note else ''}")  # fmt: skip

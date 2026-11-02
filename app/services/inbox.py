@@ -173,6 +173,13 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
                     f"{_one_line(q.text)}{' · answer: ' + _one_line(q.answer) if q.answer else ''}"
                     for q in [*asked, *answered]])  # fmt: skip
 
+    # answers to the Questions to ask (owner, 2 Nov 2026): shareable ones in full, internal ones as a count only
+    from app.services import answers
+
+    qa = answers.inbox_lines(session, start)
+    out += qa
+    qa_new = answers.changed_since(session, start)
+
     # every open request (the run writes the review), and those closed since the last pull
     from app.services import reviews as rv
 
@@ -251,6 +258,6 @@ def collect(session: Session, since: date, until: date | None = None) -> str:
     n_site = session.scalar(select(SiteFeedback.id).where(SiteFeedback.created_at >= start).limit(1))
     # open requests are work too
     if not any([n_site, crosses, blocks, tech, reviews, dq_open, src, asked, answered, rq, areas, ideas, approved,
-                overview, tam_changes, tc_comments, cx_new, flow_new, words_new]):
+                overview, tam_changes, tc_comments, cx_new, flow_new, words_new, qa_new]):
         out.append("\nNothing new since the last pull.")
     return "\n".join(out) + "\n"

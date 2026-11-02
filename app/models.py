@@ -519,6 +519,43 @@ class ReportQuestion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
+class Answer(Base):
+    """An answer to one of the "Questions to ask" (business unit or customer) of a research report or case (owner,
+    2 Nov 2026; app/services/answers.py). Internal only unless the owner switches it to "Can be shared"; edits keep
+    the earlier versions (AnswerVersion). Deleted 12 months after its last change."""
+
+    __tablename__ = "answers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(100), index=True)  # the report or case
+    question: Mapped[str] = mapped_column(String(120))  # the question's id (q-bu-opener: the business unit's first)
+    question_text: Mapped[str] = mapped_column(Text, default="")  # the question as it read when it was answered
+    text: Mapped[str] = mapped_column(Text)
+    who: Mapped[str | None] = mapped_column(String(200))  # who answered: name, role or company (optional)
+    sharing: Mapped[str] = mapped_column(String(10), default="internal")  # internal | shared
+    flags: Mapped[list | None] = mapped_column(JSON)  # the data-protection screen's reasons (held while shared)
+    released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # the owner released a flagged one
+    author: Mapped[str | None] = mapped_column(String(100))  # a guest who sent it (approved by the owner)
+    from_review: Mapped[int | None] = mapped_column(Integer)  # the DataReview row it was moved from (before 2 Nov)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class AnswerVersion(Base):
+    """An earlier version of an Answer, kept when the owner edits it or switches its sharing."""
+
+    __tablename__ = "answer_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    answer_id: Mapped[int] = mapped_column(ForeignKey("answers.id", ondelete="CASCADE"), index=True)
+    text: Mapped[str] = mapped_column(Text)
+    who: Mapped[str | None] = mapped_column(String(200))
+    sharing: Mapped[str] = mapped_column(String(10))
+    change: Mapped[str] = mapped_column(String(60), default="")  # what the next save changed, in words
+    saved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))  # when this version was saved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)  # when it was replaced
+
+
 class Upload(Base):
     """A picture, block diagram, document or written explanation added on Data management > Uploads, kept for use in
     the library and the knowledge pages. The file itself is stored under the data directory (uploads/)."""

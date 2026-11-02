@@ -1,0 +1,57 @@
+# Questions to ask for research reports (owner, 2 Nov 2026): what the business unit and customers should be asked to
+# settle what public data cannot. Each is answered on the report page under "Questions to ask" (the answer, who
+# answered, the date, and the owner's switch Internal only / Can be shared; app/services/answers.py).
+# A business case (kind: idea) keeps its questions in data/business/cases/<slug>.yaml instead; the business unit's
+# first question of every report is bu_opener in reports.yaml (shown first, id q-bu-opener).
+#
+# Per report slug:
+#   bu:        [{id, text, who?, why?}]   to the Skyworks business unit or another internal team (internal)
+#   customer:  [{id, text, who, why?}]    to OEMs, Tier-1s, module makers or partners; who = e.g. "Tier-1 antenna team"
+# Ids are unique per report and never change or get reused (answers are stored by id); the text may be edited. Taken
+# from the report's needed_now items and next steps; public wording only (the questions show to guests).
+reports:
+  auto-48v-motor-control:
+    bu:
+      - {id: q-bu-aec, who: "Power management BU (Qorvo motor control)", text: "Is any PAC55xx or ACT72350 qualified or qualifiable to AEC-Q100 (Grade 1), with PPAP, and at what cost and time?"}
+    customer:
+      - {id: q-c-actuators, who: "Tier-1 thermal-management or seating team", text: "Which 48 V actuators are in your next platform, and does a one-chip controller save you a part?"}
+  auto-charging-power:
+    bu:
+      - {id: q-bu-buckboost, who: "Power BU (Qorvo ACT line)", text: "Is an automotive ACT4751M-class buck-boost (6–36 V in, 3.3–21 V out, 100 W) feasible on the existing process, and does any PD firmware from the ACT4751 / ACT4752 programme still exist?"}
+    customer:
+      - {id: q-c-ports, who: "Car-charger Tier-1", text: "Do you buy one-chip ports (TPS25772-Q1, CCG7D) or a separate buck-boost plus PD controller, and would you take a second source?"}
+      - {id: q-c-pd-partner, who: "PD controller maker (partner)", text: "Would you pair an automotive PD controller with our buck-boost in one reference design?"}
+  auto-wireless-audio:
+    bu:
+      - {id: q-bu-grade3, who: "Audio BU", text: "Can the SKY76360/76361 and SKY76303 dies run at −40 to 85 °C (AEC-Q100 Grade 3), and what would it cost?"}
+      - {id: q-bu-audio-clock, who: "Timing BU", text: "Can ZoneClock outputs carry audio-rate references, so zones and wireless speakers play in sync?"}
+    customer:
+      - {id: q-c-link, who: "Head-unit or rear-seat Tier-1", text: "Which link do your next headphones use (Bluetooth Classic, LE Audio, Auracast, proprietary), and where is the front end?"}
+  auto-hv-hot-swap:
+    bu:
+      - {id: q-bu-reinforced, who: "Isolation BU", text: "Can the Si875x power transfer cross a reinforced 5 kVrms barrier with 12–18 V gate drive (SiC MOSFETs need 18 V), and at what cost?"}
+      - {id: q-bu-efuse, who: "Qorvo power team", text: "Can the eFuse block of ACT4910 / ACT85610 be sold on its own, and how far does its process go in voltage (12 V only, or 48–80 V)?"}
+    customer:
+      - {id: q-c-precharge, who: "Battery-junction-box team or 800 V rack power maker, through our FAE", text: "Which isolated driver and sensing do you use for pre-charge and hot-swap, and from which year?"}
+  radio-auto-fit:
+    bu:
+      - {id: q-bu-die, who: "Radio BU", text: "Is the Si468x die the same as the AEC-Q100 Si462x, and is Si47992 already automotive grade?"}
+      - {id: q-bu-aec-run, who: "Switch and timing BUs", text: "What would an AEC-Q100 run (Grade 3 or 2) for AS183/SKY13374 and Si510/511 cost, and how long would it take?"}
+    customer:
+      - {id: q-c-kit, who: "Head-unit or antenna Tier-1", text: "Would you take our switch and oscillator with the tuner?"}
+  auto-wifi-antenna:
+    bu:
+      - {id: q-bu-grade2, who: "Wi-Fi BU", text: "Can SKY85639-11 / SKY85509-11 (or QPF4659 / QPF4507) dies pass AEC-Q100 Grade 2 at 105 °C without a redesign?"}
+      - {id: q-bu-filters, who: "Filter BU", text: "What are the production dates for SKY5A1005/1006/1008, and how steep a 5.925 GHz edge can BAW make?"}
+    customer:
+      - {id: q-c-module, who: "Wi-Fi module maker or roof-antenna Tier-1, through our FAE", text: "Would you place a non-Qualcomm front-end module or our coexistence filter, and which front end and filters do you use for Wi-Fi 7 multi-link?"}
+  iso7821dww-isolation:
+    bu:
+      - {id: q-bu-ultrawide, who: "Isolation BU", text: "When is the ultra-wide SOIC released, which dies go in first, and at what working voltage?"}
+      - {id: q-bu-asked, who: "Sales", text: "Which customers asked for ISO7821DWW or 15 mm parts, in which product?"}
+  filters-1-11ghz:
+    bu:
+      - {id: q-bu-passband, who: "Filter BU", text: "What is the widest BAW and BAW + IPD passband we can make at 3–7 GHz (full n77, the 1.2 GHz Wi-Fi 6 GHz band), and what is the release plan for SKY85929/31/32 and QPQ4701 as one family?"}
+      - {id: q-bu-standalone, who: "Filter BU", text: "Does the post-merger plan keep low-volume standalone filters?"}
+    customer:
+      - {id: q-c-filterbank, who: "Defense EW or test-equipment maker, through our FAE", text: "Which band split, channel count and size do you buy in a switched filter bank today?"}

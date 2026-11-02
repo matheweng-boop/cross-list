@@ -72,6 +72,8 @@ UTILITY = ("manage", "Data management", (
     # owner, 23 Oct 2026: Verify next, requests, site feedback and guest input as one item with tabs
     ("Site data", "/manage/verify", "Verify next, review queue, requests, site feedback and guest input"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
+    # owner, 2 Nov 2026: every answer to the Questions to ask, internal or shareable, with the open questions first
+    ("Answers", "/manage/answers", "Answers to the Questions to ask: internal or shareable, open questions first"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("People & invites", "/manage/people", "Invite guests, see their passkeys, remove someone"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
@@ -143,6 +145,7 @@ PLACES = {
     "/manage/schedule": ("manage", "/manage/schedule"),
     "/manage/data-flow": ("manage", "/manage/data-flow"),
     "/manage/to-confirm": ("manage", "/manage/to-confirm"),
+    "/manage/answers": ("manage", "/manage/answers"),
     "/manage/ai-services": ("manage", "/manage/ai-services"),
     "/manage": ("manage", "/manage/overview"),
     "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications

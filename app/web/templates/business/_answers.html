@@ -1,0 +1,54 @@
+{# Answers to the Questions to ask (app/services/answers.py, owner 2 Nov 2026). `qa` comes from answers.page(): the
+   owner sees every answer with its sharing switch, edit and earlier versions; anyone else only the shareable answers
+   the screen let through, without who answered. Every question keeps a visible answer box. #}
+{% macro answer_form(qa, action, key='', a=none, back='') %}
+<form method="post" action="{{ action }}" class="qa-form">
+  {% if key %}<input type="hidden" name="key" value="{{ key }}">{% endif %}{% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
+  <p class="qa-warn small" role="note">{{ qa.warning }}</p>
+  <label class="qa-l">{{ 'Answer' if not a else 'The answer' }}<textarea name="text" rows="3" maxlength="4000" required>{{ a.text if a }}</textarea></label>
+  <label class="qa-l">Who answered <small class="muted">(optional: name, role or company)</small><input name="who" maxlength="200" value="{{ a.who if a }}" autocomplete="off"></label>
+  {% if qa.owner %}<fieldset class="qa-share"><legend class="small">Sharing</legend>
+    {% for k, label in qa.sharing.items() %}<label><input type="radio" name="sharing" value="{{ k }}"{{ ' checked' if (a.sharing if a else 'internal') == k }}> {{ label }}</label>{% endfor %}
+  </fieldset>{% else %}<p class="small muted">The owner reviews your answer first; it stays internal unless the owner shares it.</p>{% endif %}
+  <p class="qa-go"><button class="small-btn">{{ 'Save changes' if a else 'Save answer' }}</button> <small class="muted">{{ 'The earlier version is kept.' if a else 'Dated automatically.' }}</small></p>
+</form>
+{% endmacro %}
+
+{% macro answer_card(a, qa, back) %}
+<article class="qa-a qa-{{ a.sharing }}{{ ' qa-held' if a.held }}" id="ans-{{ a.id }}">
+  <p class="qa-text">{{ a.text }}</p>
+  <p class="qa-meta small">{% if a.who %}<b>{{ a.who }}</b> · {% endif %}<time datetime="{{ a.created.isoformat() }}">{{ a.created|date }}</time>{% if a.edited %} · <span class="qa-edited">edited {{ a.updated|date }}</span>{% endif %}{% if a.author %} · <span class="muted">sent by {{ a.author }}</span>{% endif %}</p>
+  {% if qa.owner %}
+  {% if a.held %}<div class="qa-hold small" role="note"><p><b>Held for your look</b> ({{ a.flags|join('; ') }}). Guests and the daily inbox do not get its text until you release it.</p>
+    <form method="post" action="/manage/answers/{{ a.id }}/release"><input type="hidden" name="back" value="{{ back }}#ans-{{ a.id }}"><button class="small-btn">Release: it may be shared</button></form></div>{% endif %}
+  <form method="post" action="/manage/answers/{{ a.id }}/sharing" class="qa-switch" role="group" aria-label="Sharing of this answer">
+    <input type="hidden" name="back" value="{{ back }}#ans-{{ a.id }}">
+    {% for k, label in qa.sharing.items() %}<button name="sharing" value="{{ k }}" class="small-btn{{ '' if a.sharing == k else ' outline secondary' }}" aria-pressed="{{ 'true' if a.sharing == k else 'false' }}">{{ label }}</button>{% endfor %}
+  </form>
+  <details class="qa-more"><summary>Edit</summary>{{ answer_form(qa, '/manage/answers/' ~ a.id ~ '/edit', a=a, back=back ~ '#ans-' ~ a.id) }}</details>
+  {% if a.versions %}<details class="qa-more"><summary>Earlier versions ({{ a.versions|length }})</summary>
+    <ol class="qa-vers">{% for v in a.versions %}<li><small class="muted">{{ v.saved|date('stamp') }} · {{ qa.sharing[v.sharing] }}{% if v.who %} · {{ v.who }}{% endif %} · then {{ v.change }} {{ v.replaced|date('short') }}</small><br>{{ v.text }}</li>{% endfor %}</ol></details>{% endif %}
+  {% endif %}
+</article>
+{% endmacro %}
+
+{# under one question: its answers, then the answer box (open when nothing is answered yet, else "Add another answer") #}
+{% macro qa_box(q, qa, back) %}{% set rows = qa.by_q.get(q.id, []) %}
+<div class="qa" id="i-{{ q.id }}">
+  {% for a in rows %}{{ answer_card(a, qa, back) }}{% endfor %}
+  {% if rows %}<details class="qa-add"><summary class="small">Add another answer</summary>{{ answer_form(qa, '/business/reports/' ~ qa.slug ~ '/answers', q.id) }}</details>
+  {% else %}{{ answer_form(qa, '/business/reports/' ~ qa.slug ~ '/answers', q.id) }}{% endif %}
+</div>
+{% endmacro %}
+
+{# a research report's own section (a case has it as section 8 of its body, business/_prelim.html) #}
+{% macro questions_section(qa, back, groups) %}{% if qa.questions %}
+<section class="qa-sec" id="questions-to-ask" aria-labelledby="qa-title">
+  <h2 id="qa-title">Questions to ask</h2>
+  <p class="small muted">What this report cannot settle from public data. Record each answer under its question. Answers stay internal (owner only) unless the owner marks one “Can be shared”; shareable answers feed the next revision.</p>
+  <div class="pc-grid">{% for key, title in groups %}{% set qs = qa.questions|selectattr('group', 'equalto', key)|list %}{% if qs %}
+    <section class="pc-box pc-q"><h3>{{ title }}</h3><ol>{% for q in qs %}
+      <li{% if q.opener %} class="pc-opener"{% endif %}><span>{% if q.opener %}<b>Start here:</b> {% endif %}{{ q.text }}</span>{% if q.ask %} <small class="muted">ask: {{ q.ask }}</small>{% endif %}{% if q.why %}<br><small class="muted">Why: {{ q.why }}</small>{% endif %}
+        {{ qa_box(q, qa, back) }}</li>{% endfor %}</ol></section>{% endif %}{% endfor %}
+  </div>
+</section>{% endif %}{% endmacro %}

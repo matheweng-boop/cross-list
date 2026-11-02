@@ -361,6 +361,21 @@ def test_asil_d_driver_only_where_the_competitor_states_asil(session, gd):
     assert not cross(gd("ADUM4177WBRNZ"), gd("SI82900AA-AU"), rules).hard_fail
 
 
+def test_ti_control_pins_compare_by_role(load):
+    """Owner, 2 Nov 2026: pin roles for TI datasheets too, from the cached datasheets. ISO7041 EN1 / EN2 are refresh
+    enables (iso7041.pdf p.5: refresh is enabled when EN1 is connected to GND1), a mismatch against our output
+    enables; ISO7741 EN1 / EN2 are output enables (iso7741.pdf pin table): against Si86SS41 NC pins a match with the
+    note; ISO7240CF DISABLE / CTRL (iso7240cf.pdf p.4: input disable, failsafe output control) work like ADuM1410's."""
+    get = load("ti_digital_isolators", "skyworks_si86")
+    assert pinroles.role(get("ISO7041DBQ"), "EN1")["role"] == "refresh_enable"
+    fit = check_fit(get("ISO7041DBQ"), get("SI86S641EB-IU"))
+    assert (7, "refresh_enable", "output_enable") in fit.role_diffs
+    fit = check_fit(get("ISO7741DWR"), get("SI86SS41EE-IS2"))
+    assert fit.fits and "switches the outputs off" in fit.info_note
+    assert pinroles.role(get("ISO7240CFDWR"), "CTRL")["role"] == "default_output_control"
+    assert pinroles.role(get("ISO7240CFDWR"), "DISABLE")["role"] == "input_disable"
+
+
 def test_their_enable_facing_our_nc_carries_a_note(iso):
     """Owner: "yes" to the note. ADuM1401 VE1 / VE2 are output enables (adum1400_1401_1402.pdf p.24); Si86SS41 has NC
     there (si86s6xx-datasheet.pdf p.5): a match, with a plain note."""

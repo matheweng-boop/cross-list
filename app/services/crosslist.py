@@ -714,10 +714,17 @@ class Row:
         return any(c and c.verified for c in (self.drop_in, self.functional))
 
 
+# Grades above the rules' levels that we do not make: the red row says so (owner, 2 Nov 2026: ADuM141ES, QML Level V)
+GRADES_WE_LACK = {"space": "space-grade (QML)"}
+
+
 def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | None]:
     from app.models import Case
     from app.services import pipeline, vocab
 
+    grade = next((pv.value for pv in part.params if pv.key == "qualification"), None)
+    if grade in GRADES_WE_LACK:
+        return f"No {GRADES_WE_LACK[grade]} part in our portfolio.", "/business/opportunities"
     fn = pipeline.fn_for_part(part)
     what = vocab.fn_label(fn) if fn else vocab.family_title(part.family)
     if not any_ours:  # e.g. an isolated DC-DC module (owner, 26 Oct 2026: UCC12051QDVERQ1)

@@ -212,3 +212,12 @@ def test_isolation_shortfall_ranks_below_an_output_option_difference(session, gd
     assert order[0].candidate.mpn.startswith("SI82B47") and not order[0].downgrade
     assert all(r.downgrade for r in pool if r.candidate.mpn.startswith("SI82B28"))
 
+
+# ---------------------------------------------------------------- rule 10: space grade says why
+
+
+def test_space_grade_red_row_says_why(session, iso):
+    """ADuM141ES is QML Level V space grade (adum141es.pdf p.1): we have no space-grade part, and the red row says so."""
+    row = cl.cross_list(session, cl.parse("ADuM141E1L703F")[0])[0]
+    assert row.light == "red" and row.reason == "No space-grade (QML) part in our portfolio."
+

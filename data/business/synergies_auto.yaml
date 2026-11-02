@@ -7,7 +7,7 @@
 # Key: "<Skyworks function> + <Qorvo function>". source: the library diagram and block the reason is read from
 # (data/blocks/templates.yaml). weak: true = the diagram only links the two by a supply rail or a generic connection;
 # shown as such, never as a strong bundle. No estimates are stated as facts here.
-updated: 2026-10-25
+updated: 2026-11-03
 
 pairs:
   # --- Car radio ---
@@ -133,3 +133,20 @@ pairs:
     reason: "On the phone-as-a-key BLE module the Qorvo buck makes the rail for the BLE radio and its Skyworks front end; a supply link only."
     source: "Library diagram: Automotive phone-as-a-key (PaaK) module with BLE satellite modules (Power supply to RF interface)"
     weak: true
+  # --- added 3 Nov 2026 with the Nisshinbo-based groups and the AVAS diagram ---
+  "gnss_lna + lna":
+    reason: "Same head-unit RF front end: the Skyworks GNSS LNA on the GNSS antenna and a Qorvo LNA on the LTE or Bluetooth / Wi-Fi antenna."
+    source: "Library diagram: Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB), block GNSS front end (LNA + SAW) and RF switches on the LTE and Bluetooth / Wi-Fi antennas (after Nisshinbo)"
+  "gnss_lna + rf_switch":
+    reason: "Same head-unit RF front end: the Skyworks GNSS LNA next to the Qorvo RF switches that route the LTE and Bluetooth / Wi-Fi antennas."
+    source: "Library diagram: Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB), block GNSS front end (LNA + SAW) and RF switches on the LTE and Bluetooth / Wi-Fi antennas (after Nisshinbo)"
+  "rf_frontend + lna":
+    reason: "Same cellular / wireless front-end block of the telematics unit: a Skyworks front end on one path and a Qorvo LNA on a receive path (cellular, GNSS or SDARS)."
+    source: "Library diagrams: Automotive telematics & infotainment RF (Cellular front end); Automotive telematics control unit (TCU) / V2X module (Wireless connectivity)"
+  "audio_amp + wide_vin_buck":
+    reason: "In the AVAS sound unit the Qorvo buck makes the rail for the Skyworks-side audio amplifier; a supply link only."
+    source: "Library diagram: Acoustic vehicle alerting system (AVAS), Power management to Audio amplifier (DC/DC)"
+    weak: true
+  "single_chip_radio + lna":
+    reason: "The Qorvo LNA is the active-antenna amplifier feeding RF into the Skyworks single-chip radio receiver."
+    source: "Library diagram: Automotive connected radio / entry infotainment, RF amplifier (active antenna LNA) to Radio chipset"

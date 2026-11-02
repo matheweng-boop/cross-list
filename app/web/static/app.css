@@ -1198,16 +1198,12 @@ a.am-cell:hover { outline: 2px solid var(--pico-primary); }
 .am-detail p { margin-bottom: .45rem; }
 .am-next { border-top: 1px dashed var(--pico-muted-border-color); margin-top: .6rem; }
 .am-moves td { vertical-align: top; }
-/* Automotive map: by application */
-.am-apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr)); gap: .8rem; margin: .6rem 0 .4rem; }
+/* Automotive map: by application (layout of the cards and letter rows: "Item 10" block at the end) */
 .am-app { border: 1px solid var(--pico-muted-border-color); border-radius: .5rem; padding: .7rem .9rem; margin: 0; }
 .am-app h3 { font-size: 1rem; margin: 0 0 .5rem; }
-.am-row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; margin: .3rem 0; }
-.am-row > .am-cell { margin-right: .2rem; }
 .am-fnchip { font-size: .82rem; padding: .1rem .5rem; border: 1px solid var(--pico-muted-border-color); border-radius: 1rem; text-decoration: none; color: inherit; }
 .am-fnchip:hover, .am-fnchip.am-sel { border-color: var(--pico-primary); color: var(--pico-primary); }
 .am-nx { font-size: .75rem; font-weight: 600; color: #8a6d00; }
-@media (max-width: 600px) { .am-apps { grid-template-columns: 1fr; } }
 /* Preliminary cases */
 .pc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr)); gap: .7rem; margin: .4rem 0 .8rem; }
 .pc-box { border: 1px solid var(--pico-muted-border-color); border-top: 3px solid; border-radius: .4rem; padding: .5rem .8rem; margin: 0; }
@@ -2289,3 +2285,56 @@ details.vz-sub[open] > summary { margin: 0; background: var(--cl-base-bg); borde
 .vz-hint { margin: 0; color: var(--pico-muted-color); }
 @media (min-width: 901px) { .vz { grid-template-columns: 17rem minmax(0, 1fr); } }
 @media (max-width: 900px) { .vz-nav { display: block; } }
+
+/* Item 10 (2 Nov 2026): Automotive map, By application. The letter sits in its own left column with its meaning, the
+   function chips wrap only in the right column, a thin line separates the letter groups; about two cards per row on
+   a PC (wide window, mouse), full width on an iPad and a phone. */
+.am-apps { display: grid; grid-template-columns: minmax(0, 1fr); gap: .9rem; margin: .6rem 0 .4rem; }
+@media (min-width: 1100px) and (hover: hover) and (pointer: fine) { .am-apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.am-app { scroll-margin-top: 1rem; }
+.am-app:target { outline: 2px solid var(--pico-primary); outline-offset: 2px; }
+.am-row { display: grid; grid-template-columns: 11.5rem minmax(0, 1fr); gap: .3rem .7rem; align-items: start; margin: 0; padding: .45rem 0; }
+.am-row + .am-row { border-top: 1px solid var(--pico-muted-border-color); }
+.am-lv { display: flex; align-items: center; gap: .45rem; font-size: .8rem; font-weight: 600; line-height: 1.25; min-height: 1.5rem; }
+.am-lv .am-cell { flex: 0 0 auto; }
+.am-fns { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; min-width: 0; }
+.am-fns .am-fnchip { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .am-row { grid-template-columns: 5.4rem minmax(0, 1fr); gap: .3rem .5rem; }
+  .am-lv { flex-direction: column; align-items: flex-start; gap: .15rem; font-size: .72rem; }
+}
+
+/* Item 11 (2 Nov 2026): Car explorer (Systems & applications). The 3D stage, its tooltip and bar, the area buttons
+   below the car (an iPad has no hover) and one list per area; the letter rows reuse the Automotive map's .am-row. */
+.ce-stage { position: relative; height: min(62vh, 560px); margin: .4rem 0 .6rem; overflow: hidden;
+  border: 1px solid var(--card-line); border-radius: var(--radius-card); background: var(--pico-card-background-color); }
+.ce-stage[hidden], .ce-note[hidden] { display: none; }
+#ce-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.ce-tip { position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0; white-space: nowrap; transition: opacity .12s;
+  background: var(--pico-color); color: var(--pico-background-color); font-size: .8rem; padding: .2rem .5rem; border-radius: .4rem; }
+.ce-bar { position: absolute; left: .6rem; right: .6rem; bottom: .6rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+  font-size: .82rem; pointer-events: none; }
+.ce-bar > * { pointer-events: auto; }
+.ce-back { width: auto; margin: 0; padding: .35rem .85rem; font-size: .85rem; min-height: 40px; }
+.ce-hint { background: var(--pico-card-background-color); border: 1px solid var(--card-line); border-radius: .4rem; padding: .15rem .55rem;
+  color: var(--pico-muted-color); }
+.ce-note { margin: .4rem 0 .6rem; }
+.ce-areas { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .4rem; margin: .5rem 0 .9rem; }
+.ce-area { display: inline-flex; align-items: center; min-height: 40px; padding: .35rem .85rem; border: 1px solid var(--pico-muted-border-color);
+  border-radius: 2rem; font-size: .88rem; text-decoration: none; color: inherit; }
+.ce-area:hover { border-color: var(--pico-primary); color: var(--pico-primary); }
+.ce-area.on { background: var(--pico-primary-background); border-color: var(--pico-primary-background); color: var(--pico-primary-inverse); font-weight: 600; }
+.ce-panel { border: 1px solid var(--card-line); border-radius: var(--radius-card); padding: .8rem 1rem .4rem; margin: 0 0 1rem; }
+.ce-panel[hidden] { display: none; }
+.ce-panel h2 { font-size: 1.15rem; margin: 0 0 .2rem; }
+.ce-app { border-top: 1px solid var(--pico-muted-border-color); padding: .6rem 0 .1rem; }
+.ce-app h3 { font-size: 1rem; margin: 0 0 .25rem; }
+.ce-links { margin: .3rem 0 .4rem; }
+details.ce-more { margin: 0; }
+details.ce-more > summary { display: inline-block; list-style: none; cursor: pointer; line-height: 1.4; font-size: .82rem; padding: .1rem .5rem;
+  border: 1px dashed var(--pico-primary); border-radius: 1rem; color: var(--pico-primary); }
+details.ce-more > summary::-webkit-details-marker { display: none; }
+details.ce-more > summary::after { display: none; }
+details.ce-more[open] { flex-basis: 100%; }
+details.ce-more[open] > summary { display: none; }
+@media (max-width: 600px) { .ce-stage { height: min(48vh, 420px); } }

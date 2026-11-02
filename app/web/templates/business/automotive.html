@@ -13,7 +13,7 @@
 {% macro badge(st) %}<span class="badge {{ 'ok' if st == 'accepted' else ('bad' if st == 'rejected' else 'unknown') }}">{{ st }}</span>{% endmacro %}
 {% block content %}
 <h1>Automotive map</h1>
-<p class="subtitle muted">For each automotive application: which functions we already sell in automotive grade, which we sell but would have to qualify, and which our technology could reach. Click a letter for the reasoning.</p>
+<p class="subtitle muted">For each automotive application: which functions we already sell in automotive grade, which we sell but would have to qualify, and which our technology could reach. Click a letter for the reasoning. <a href="/business/car-explorer">See it on a 3D car: Car explorer →</a></p>
 
 <nav class="am-bar" aria-label="Map view">
   <span class="am-views">{% for v, label in (('apps', 'By application'), ('rf', 'Table: RF, radio & timing'), ('all', 'Table: all functions')) %}<a href="?view={{ v }}" class="chip{{ ' on' if view == v }}"{% if view == v %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</span>
@@ -22,10 +22,10 @@
 
 {% if view == 'apps' %}
 <div class="am-apps">{% for a in m.apps %}
-  <section class="am-app"><h3>{{ a.label }}{% if a.diagrams %} <small class="muted" title="{{ a.diagrams|join(' · ') }}">{{ a.diagrams|length }} diagram{{ 's' if a.diagrams|length != 1 }}</small>{% endif %}</h3>
+  <section class="am-app" id="app-{{ a.id }}"><h3>{{ a.label }}{% if a.diagrams %} <small class="muted" title="{{ a.diagrams|join(' · ') }}">{{ a.diagrams|length }} diagram{{ 's' if a.diagrams|length != 1 }}</small>{% endif %}</h3>
   {% for lv in levels %}{% set cs = by_app[a.id].get(lv) %}{% if cs %}
-    <div class="am-row"><span class="am-cell am-{{ lv }}" title="{{ level_label[lv] }}">{{ 'G' if lv == 'gap' else lv }}</span>
-    {% for c in cs %}<a href="?view=apps&cell={{ c.key }}#detail" class="am-fnchip{{ ' am-sel' if sel and sel.key == c.key }}">{{ c.label }}{% if c.next and c.next.level %} <span class="am-nx" title="next: {{ level_label[c.next.level] }}">→{{ c.next.level }}</span>{% endif %}{% if c.status == 'accepted' %} ✓{% endif %}</a>{% endfor %}</div>
+    <div class="am-row"><span class="am-lv"><span class="am-cell am-{{ lv }}">{{ 'G' if lv == 'gap' else lv }}</span> {{ level_label[lv] }}</span>
+    <span class="am-fns">{% for c in cs %}<a href="?view=apps&cell={{ c.key }}#detail" class="am-fnchip{{ ' am-sel' if sel and sel.key == c.key }}">{{ c.label }}{% if c.next and c.next.level %} <span class="am-nx" title="next: {{ level_label[c.next.level] }}">→{{ c.next.level }}</span>{% endif %}{% if c.status == 'accepted' %} ✓{% endif %}</a>{% endfor %}</span></div>
   {% endif %}{% endfor %}
   </section>{% endfor %}
 </div>

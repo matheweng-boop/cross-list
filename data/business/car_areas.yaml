@@ -1,0 +1,60 @@
+# Car explorer (Systems & applications > Car explorer, owner, 2 Nov 2026): the areas of the 3D car and the Automotive
+# map applications that sit in each. The page shows, per application, its letters and functions live from the
+# Automotive map (app/services/automotive.py build(), rejected calls hidden), its block-diagram count and links to
+# its block diagrams, to Cross-sell and to its card on the map.
+#
+#   areas:        the car's areas, in button order. `id` must match an area of the 3D car in
+#                 app/web/static/car_explorer.js; `apps` are application ids from data/business/auto_reach.yaml or a
+#                 diagram row below; `note` (optional) is shown under the area's title.
+#   diagram_rows: rows built from one library diagram instead of a map application: the diagram's blocks (the
+#                 customer's own parts left out), each with the letter the map gives it under `letters_from`.
+#                 `diagram` is the start of the diagram's name in data/blocks/templates.yaml.
+#   subs:         Block diagram library sub-system (system automotive) for an application whose diagrams sit in no
+#                 automotive sub-system; every other application links to the sub-system that holds most of its
+#                 diagrams.
+
+areas:
+  - id: seat
+    title: Front seat
+    apps: [seat, incabin]
+    note: >-
+      Seat motors sit under Body in the Automotive map. The seat row lists the blocks of the seat adjustment block
+      diagram, each with the letter the map gives it under Body.
+  - id: rear-seats
+    title: Rear seats
+    apps: [incabin]
+  - id: dashboard
+    title: Dashboard and cockpit
+    apps: [infotainment]
+  - id: roof
+    title: Roof antenna (shark fin)
+    apps: [telematics, v2x, satellite]
+  - id: front
+    title: Front radar and camera
+    apps: [adas]
+  - id: lights
+    title: Lights
+    apps: [body]
+    note: Lighting has no entry of its own in the Automotive map yet; shown under Body.
+  - id: battery
+    title: High-voltage battery
+    apps: [bms]
+  - id: motor
+    title: Electric drive (rear axle)
+    apps: [traction]
+  - id: charge-port
+    title: Charging port and on-board charger
+    apps: [onboard, charging]
+    note: EV charging stations sit outside the car; listed here because they meet the car at this port.
+  - id: doors
+    title: Doors, mirrors and access
+    apps: [access, body]
+
+diagram_rows:
+  - id: seat
+    label: Seat adjustment and comfort actuators (12 V / 48 V)
+    diagram: Automotive seat adjustment and comfort actuators
+    letters_from: body
+
+subs:
+  satellite: telematics-v2x

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% macro chip(c) %}{% if c.href %}<a class="am-fnchip" href="{{ c.href }}">{% else %}<span class="am-fnchip">{% endif %}{{ c.label }}{% if c.next %} <span class="am-nx" title="next step proposed">→{{ c.next }}</span>{% endif %}{% if c.accepted %} ✓{% endif %}{% if c.href %}</a>{% else %}</span>{% endif %}{% endmacro %}
+{% block content %}
+<h1>Car explorer</h1>
+<p class="subtitle muted">The <a href="/business/automotive">Automotive map</a> on a car: pick an area to see the applications that sit there, what we sell in automotive grade today and what we could qualify or build. Drag to turn the car, pinch or scroll to zoom, click or tap an area to fly in.</p>
+
+<div class="ce-stage" id="ce-stage" hidden>
+  <canvas id="ce-canvas" role="img" aria-label="See-through 3D car. The buttons below open the same areas."></canvas>
+  <div class="ce-tip" id="ce-tip" aria-hidden="true"></div>
+  <div class="ce-bar"><button type="button" class="ce-back" id="ce-back" hidden>← Whole car</button><span class="ce-hint" id="ce-hint" aria-live="polite">Drag to turn · click or tap an area</span></div>
+</div>
+<p class="ce-note small muted" id="ce-no3d" hidden>The 3D car cannot run here: it needs WebGL and a recent browser. The areas and their lists below work the same.</p>
+<noscript><p class="ce-note small muted">The 3D car needs JavaScript. The areas and their lists below work the same.</p></noscript>
+
+<nav class="ce-areas" aria-label="Areas of the car">{% for z in areas %}<a href="?area={{ z.id }}#ce-area-{{ z.id }}" class="ce-area{{ ' on' if sel == z.id }}" data-area="{{ z.id }}"{% if sel == z.id %} aria-current="true"{% endif %}>{{ z.title }}</a>{% endfor %}</nav>
+
+{% for z in areas %}
+<section class="ce-panel" id="ce-area-{{ z.id }}" aria-labelledby="ce-h-{{ z.id }}"{% if sel != z.id %} hidden{% endif %}>
+  <h2 id="ce-h-{{ z.id }}">{{ z.title }}</h2>
+  <p class="small muted">{{ z.apps|length }} application{{ 's' if z.apps|length != 1 }} of the Automotive map sit{{ 's' if z.apps|length == 1 }} here.{% if z.note %} {{ z.note }}{% endif %}</p>
+  {% for a in z.apps %}
+  <div class="ce-app">
+    <h3>{{ a.label }} <small class="muted">· {{ a.n_diagrams }} block diagram{{ 's' if a.n_diagrams != 1 }}</small></h3>
+    {% for r in a.rows %}
+    <div class="am-row"><span class="am-lv"><span class="am-cell am-{{ r.level }}">{{ 'G' if r.level == 'gap' else r.level }}</span> <span>{{ r.label }} <small class="muted">({{ r.n }})</small></span></span>
+      <span class="am-fns">{% for c in r.shown %}{{ chip(c) }}{% endfor %}{% if r.more %}<details class="ce-more"><summary>+{{ r.more|length }} more</summary><span class="am-fns">{% for c in r.more %}{{ chip(c) }}{% endfor %}</span></details>{% endif %}</span></div>
+    {% else %}<p class="small muted">No functions on the map yet.</p>{% endfor %}
+    <p class="ce-links small"><a href="{{ a.links.blocks }}">Block diagrams{% if a.links.sub_title %}: {{ a.links.sub_title }}{% endif %}</a> · <a href="{{ a.links.cross_sell }}">Cross-sell for it</a> · <a href="{{ a.links.map }}">On the Automotive map</a></p>
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}
+<p class="small muted">The car is a simple shape built in code, not a real model. Letters, functions and block-diagram counts come from today's <a href="/business/automotive">Automotive map</a>; calls a reviewer rejected there are left out here too. →C / →D = a next step is proposed on a function we already sell; ✓ = accepted by a reviewer. Click a function for the reasoning on the map.</p>
+
+<script type="application/json" id="ce-data">{{ car|tojson }}</script>
+<script type="importmap">{"imports": {"three": "/static/vendor/three/three.module.min.js"}}</script>
+<script>
+  // The area buttons and lists work on their own. The 3D car (/static/car_explorer.js, three.js served from this site)
+  // is loaded only when the browser has WebGL and import maps; otherwise a short note says so (older devices,
+  // headless browsers) and nothing more is downloaded.
+  (() => {
+    const stage = document.getElementById("ce-stage"), note = document.getElementById("ce-no3d");
+    const buttons = [...document.querySelectorAll(".ce-area")];
+    const ui = window.carExplorer = {
+      areas: JSON.parse(document.getElementById("ce-data").textContent),
+      selected: (buttons.find(b => b.classList.contains("on")) || {dataset: {}}).dataset.area || "",
+      fly: null,  // set by the 3D car: fly to an area ("" = the whole car)
+      show(id) {
+        ui.selected = id;
+        buttons.forEach(b => {
+          b.classList.toggle("on", b.dataset.area === id);
+          if (b.dataset.area === id) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
+        });
+        document.querySelectorAll(".ce-panel").forEach(p => { p.hidden = p.id !== "ce-area-" + id; });
+        try { history.replaceState(null, "", id ? "?area=" + encodeURIComponent(id) : location.pathname); } catch (e) { /* not essential */ }
+      },
+      no3d() { stage.hidden = true; note.hidden = false; },
+    };
+    buttons.forEach(b => b.addEventListener("click", e => {
+      e.preventDefault();
+      ui.show(b.dataset.area);
+      if (ui.fly) ui.fly(b.dataset.area);
+    }));
+    let gl = null;
+    try { const c = document.createElement("canvas"); gl = c.getContext("webgl2") || c.getContext("webgl"); } catch (e) { gl = null; }
+    const maps = !!(window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports("importmap"));
+    if (!gl || !maps) { ui.no3d(); return; }
+    stage.hidden = false;
+    const s = document.createElement("script");
+    s.type = "module";
+    s.src = "/static/car_explorer.js";
+    document.body.append(s);
+  })();
+</script>
+{% endblock %}

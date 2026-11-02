@@ -268,7 +268,7 @@ def test_radio_is_an_application_not_a_menu_item(client):
 def test_menu_tree_23_oct():
     menu = {k: [i[0] for i in items] for k, _, items in nav.NAV}
     assert menu["systems"] == ["Systems library", "Block diagram library", "Application workspace",
-                               "Cross-sell", "RF coverage", "Automotive map"]  # fmt: skip
+                               "Cross-sell", "RF coverage", "Automotive map", "Car explorer"]  # fmt: skip
     assert menu["opportunities"] == ["Gaps & new technology", "Competitive analytics", "Risks"]
     assert menu["growth"][-1] == "TAM estimates"
     # owner, 24 Oct 2026: a section for shareable content, after Engineering knowledge, with its own landing page

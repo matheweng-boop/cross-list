@@ -85,3 +85,21 @@ def test_own_pd_controller_closer_look(client):
     assert "6. Closer look at our own PD controller" in bg and "www.usb.org/usbc" in bg
     chk = quality.checked()[("digest", f"report:{SLUG}")]
     assert chk["comment_at"] == "2026-11-02 16:21" and "feasibility" in chk["note"]
+
+
+def test_active_semi_pd_heritage_follow_up(client):
+    """Owner's follow-up, 2 Nov 2026 ("research this"): what Active-Semi had for USB PD and Quick Charge, in the PD
+    section, the answer and "Needed now", with public sources; the recommendation stays."""
+    page = html.unescape(client.get(f"/business/reports/{SLUG}").text)
+    start = page.index('id="own-pd-controller"')
+    end = page.index("</section>", start)
+    sec = page[start:end]
+    for t in ("Active-Semi charging heritage", "Cypress CCG3PA", "Quick Charge 2.0",
+              "certified USB PD 3.0 by the USB-IF", "none found in public sources",
+              "keeps the recommendation"):  # fmt: skip
+        assert t in sec, t
+    r = rp.report(SLUG)
+    assert "Cypress" in r["needed_now"][0] and "none" in r["needed_now"][0]
+    bg = html.unescape(client.get(f"/business/reports/{SLUG}/background").text)
+    assert "businesswirechina.com/en/news/40094.html" in bg and "electronicdesign.com" in bg
+    assert "qorvo.com/" not in (rp.BODIES / f"{SLUG}.background.html").read_text()

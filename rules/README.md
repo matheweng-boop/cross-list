@@ -36,6 +36,9 @@ Rules that live in code rather than in these files:
   name. Where their default output follows the board (CTRL pins) and ours ignores those pins, the drop-in names both of
   our default-output variants. On Cross a list a conditional fit shows in the functional column (when the drop-in is
   also the best functional fit, the drop-in family's best conditional fit takes that column).
+- **Isolated-amplifier sides** (owner, 2 Nov 2026). We and TI number the input (sensing) side 1 / A; a datasheet in
+  `data/pin_roles.yaml` `input_side` that numbers it 2 (Analog Devices ADuM3195 / 4195 / 4195-1) has its side-1 and
+  side-2 supply and ground pins swapped before the pins are compared.
 
 - **Both Skyworks isolator families** (owner, 27 Oct 2026: "always offer both families if both families are
   available"; "add a third option which shows the family equivalent and same goes if there is a package equivalent

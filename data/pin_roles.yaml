@@ -10,6 +10,8 @@
 #   different roles do not (the pin name never decides then: "same name, different job" is a mismatch).
 #   default_variants: our default output is fixed by the ordering code while theirs follows the board wiring, so the
 #   drop-in is offered in both default-output variants (B/F = low, E/H = high; app/services/alternates.output_variants).
+# input_side: isolated amplifiers whose datasheet numbers the input (sensing) side 2, where we and TI call it side 1 /
+#   A: their side-1 and side-2 supply and ground pins swap before the pins are compared (owner, 2 Nov 2026).
 
 roles:
   nc: not connected inside the part; any board wiring is harmless
@@ -98,3 +100,7 @@ pins:
   adum5410_5411_5412.pdf:
     VE1: {role: output_enable, source: "adum5410_5411_5412.pdf p.18-19 (pin 7: output enable 1; enabled when high or disconnected, disabled when low)"}
     VE2: {role: output_enable, source: "adum5410_5411_5412.pdf p.17-19 (pin 18: output enable 2; enabled when high or disconnected, disabled when low)"}
+
+input_side:
+  adum3195_adum4195.pdf: {side: 2, source: "adum3195_adum4195.pdf p.11 (pins 9-16 on side 2: VIN+, VIN-, the input op amp, VDD2 and GND2; the isolated output VOUT1 on side 1)"}
+  adum4195-1.pdf: {side: 2, source: "adum4195-1.pdf p.8 (VDD2, VIN, SHTD and GND2 on side 2, the input side; VOUT, VDD1 and GND1 on side 1)"}

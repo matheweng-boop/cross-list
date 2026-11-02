@@ -26,6 +26,7 @@ def data() -> dict:
     d["pins"] = {sheet.lower(): {str(k).upper(): v for k, v in (pins or {}).items()}
                  for sheet, pins in (d.get("pins") or {}).items()}  # fmt: skip
     d["names"] = frozenset(n for pins in d["pins"].values() for n in pins)
+    d["input_side"] = {sheet.lower(): v for sheet, v in (d.get("input_side") or {}).items()}
     return d
 
 
@@ -71,6 +72,25 @@ def judge(ref, cand, ref_pin: str, cand_pin: str) -> Judgement | None:
     if rr is None or cr is None:
         return None
     return Judgement(MATCH if rr == cr else MISMATCH, rr, cr)
+
+
+_SIDE_PIN = re.compile(r"^(VDD|GND|VCC|VSS|VEE)([12])$", re.I)
+
+
+def input_side(part) -> int | None:
+    """The side number a datasheet gives the input (sensing) side of an isolated amplifier, when it is not side 1
+    (data/pin_roles.yaml ``input_side``: Analog Devices numbers it 2, Skyworks A and TI 1)."""
+    sheet = sheet_of(part)
+    entry = (data().get("input_side") or {}).get(sheet) if sheet else None
+    return int(entry["side"]) if entry else None
+
+
+def by_side(part, pins: list[str]) -> list[str]:
+    """Pin names with the input side numbered 1: a part whose datasheet calls it side 2 has its side-1 and side-2
+    supply and ground pins swapped (VDD2 -> VDD1, GND1 -> GND2), so pins compare by function (owner, 2 Nov 2026)."""
+    if input_side(part) != 2:
+        return pins
+    return [_SIDE_PIN.sub(lambda m: m.group(1) + ("1" if m.group(2) == "2" else "2"), p) for p in pins]
 
 
 def label(role_name: str | None) -> str:

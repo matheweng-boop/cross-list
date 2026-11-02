@@ -431,10 +431,12 @@ def check_fit(ref: Part, cand: Part) -> Fit:
     if len(ref_pos) != len(cand_pos):
         return Fit(same_pkg, relation, False, pin_diffs)
     conditions, role_diffs, board_default = [], [], []
-    for i, (r, c) in enumerate(zip(ref_pos, cand_pos, strict=True), 1):
+    # isolated amplifiers: the input side numbered 1 on both parts (ADI calls it side 2; data/pin_roles.yaml)
+    ref_side, cand_side = pinroles.by_side(ref, ref_pos), pinroles.by_side(cand, cand_pos)
+    for i, (r, c, rs, cs) in enumerate(zip(ref_pos, cand_pos, ref_side, cand_side, strict=True), 1):
         j = pinroles.judge(ref, cand, r, c)  # control pins by what they do (data/pin_roles.yaml)
         if j is None:
-            if not pins_compatible(r, c, ref.family if ref.family == cand.family else None):
+            if not pins_compatible(rs, cs, ref.family if ref.family == cand.family else None):
                 pin_diffs.append((i, r, c))
         elif j.result == pinroles.CONDITIONAL:
             conditions.append((i, r, c, j.note or "Works only on one board wiring of pin {pins}"))

@@ -167,3 +167,16 @@ def test_desat_reference_ranks_unprotected_candidates_last(session, gd):
     plain = next(r for r in pool if r.candidate.mpn.startswith("SI82B28"))
     assert plain.steer_miss and "ours has no desaturation protection" in cl.comment(plain, 2)
 
+
+# ---------------------------------------------------------------- 4. isolated amplifiers: input side
+
+
+def test_adum4195_1_sides_compare_by_function(load):
+    """ADuM4195-1 has its input on side 2 (adum4195-1.pdf p.8: VDD2, VIN, SHTD, GND2 | GND1, NC, VOUT, VDD1); Si8932D
+    calls the input side A (VDDA, VIN, NC, GNDA | GNDB, GNDB, AO, VDDB). With the sides normalised only pin 3 (their
+    shutdown input, our NC) and pin 6 (their NC, to be tied to GND1 or VDD1; our GNDB) differ: it was 7 of 8."""
+    get = load("adi_isolated_amplifiers", "skyworks_isolated_amplifiers")
+    ref = get("ADUM4195-1BRIZ")
+    assert [p[0] for p in check_fit(ref, get("SI8932D-IS4")).pin_diffs] == [3, 6]
+    assert pinroles.by_side(ref, ["VDD2", "GND1", "VIN", "VOUT"]) == ["VDD1", "GND2", "VIN", "VOUT"]
+    assert pinroles.by_side(get("SI8932D-IS4"), ["VDDA", "GNDB"]) == ["VDDA", "GNDB"]  # ours: side A is the input

@@ -101,3 +101,94 @@ def test_ladder_draws_bands_ticks_lines_and_an_info_box():
     for s in (".dl-b.est", ".dl-b i", ".dl-ln", ".dl-info", "@media (pointer: coarse)"):
         assert s in CSS, s
     assert '{k: "p", label: "Power", min: -170, max: 90' in JS
+
+
+# ---- item 13: IP3 and FM intermodulation -----------------------------------------------------------------------------
+def _imx(body: str):
+    maths = _block("  // ---- intermodulation maths", "  // ---- end of the intermodulation maths")
+    return _run(f"{maths}\n{body}")
+
+
+@node
+def test_third_order_products_frequencies_and_levels():
+    r = _imx("""console.log(JSON.stringify({
+      eq: IMX.im3(91.0, -30, 89.5, -30, -8), uneq: IMX.im3(100, -20, 101, -30, 0),
+      up: IMX.im3(91.0, -29, 89.5, -29, -8)[0].p - IMX.im3(91.0, -30, 89.5, -30, -8)[0].p,
+      lin: IMX.fm({ft: 92.5, pt: -80, fa: 91, pa: -30, fb: 89.5, pb: -30, iip3: -8}, {lin: 10}),
+      att: IMX.fm({ft: 92.5, pt: -80, fa: 91, pa: -30, fb: 89.5, pb: -30, iip3: -8}, {att: 10}),
+      base: IMX.fm({ft: 92.5, pt: -80, fa: 91, pa: -30, fb: 89.5, pb: -30, iip3: -8}),
+      filt: IMX.fm({ft: 92.5, pt: -80, fa: 91, pa: -30, fb: 89.5, pb: -30, iip3: -8}, {bw: 4}),
+      tr: [IMX.tracking(1.5, 4), IMX.tracking(0, 4), IMX.tracking(20, 4), IMX.tracking(3, 0)],
+      near: [IMX.near(92.5, 92.5), IMX.near(2 * 91 - 89.4, 92.5), IMX.near(92.7, 92.5), IMX.near(93, 92.5)]}));""")
+    (a, b), (c, d) = r["eq"], r["uneq"]
+    assert (a["k"], a["f"], b["k"], b["f"]) == ("2A − B", 92.5, "2B − A", 88.0)  # 2f1 − f2 and 2f2 − f1
+    assert a["p"] == b["p"] == 3 * -30 - 2 * -8 == -74  # equal tones: 3·P − 2·IIP3
+    assert (c["f"], c["p"], d["f"], d["p"]) == (99, 2 * -20 - 30, 102, 2 * -30 - 20)  # the doubled tone counts twice
+    assert r["up"] == 3  # 1 dB more of both stations: 3 dB more ghost
+    g0, gl, ga = r["base"]["ghosts"][0], r["lin"]["ghosts"][0], r["att"]["ghosts"][0]
+    assert g0["at"] == "on" and g0["over"] == 6  # the default: the ghost 6 dB above the station
+    assert gl["p"] - g0["p"] == -20 and r["lin"]["pt"] == -80  # +10 dB IIP3: ghost -20 dB, station unchanged
+    assert ga["p"] - g0["p"] == -30 and r["att"]["pt"] == -90 and ga["over"] - g0["over"] == -20  # 10 dB attenuator
+    ra, rb = r["filt"]["ra"], r["filt"]["rb"]
+    assert round(ra, 2) == 1.94 and round(rb, 2) == 5.12  # close neighbours pass a 4 MHz tracking filter
+    assert abs((r["filt"]["ghosts"][0]["p"] - g0["p"]) + (2 * ra + rb)) < 1e-9
+    assert r["tr"][1] == 0 and r["tr"][2] > 20 and r["tr"][3] == 0  # far-away stations are removed, none: no filter
+    assert r["near"] == ["on", "near", "adjacent", ""]
+
+
+@node
+def test_fm_verdict_in_plain_words_with_the_arithmetic():
+    r = _imx("""
+      const s = (ft, fa, fb, o = {}) => ({ft, pt: -80, fa, pa: -30, fb, pb: -30, iip3: -8, ...o});
+      const v = (x, fx) => IMX.verdict(x, IMX.fm(x, fx), 50, -112);
+      console.log(JSON.stringify([v(s(92.5, 91, 89.5)), v(s(94.3, 91, 89.5)), v(s(92.5, 91.1, 89.5, {pa: -25})),
+        v(s(92.5, 91, 89.4)), v(s(91, 91, 89.5)), v(s(92.5, 91, 89.5), {lin: 10, att: 10}),
+        v(s(94.3, 91, 89.5, {pt: -105}), {att: 10})]));""")
+    on, clear, adj, near, own, fixed, weak = r
+    assert on["text"] == ("Yes, this is an intermod product: 2 × 91.0 − 89.5 = 92.5 MHz, exactly your station. "
+                          "The ghost is 6 dB louder than your station → you'll hear stations A and B mixed in, "
+                          "or a whistle.") and on["tone"] == "bad"  # fmt: skip
+    assert clear["text"] == "No: the products land on 88.0 and 92.5 MHz; your 94.3 MHz is clear."
+    assert clear["tone"] == "ok"
+    assert adj["text"].startswith("Next door: 2 × 91.1 − 89.5 = 92.7 MHz, on the adjacent channel 200 kHz")
+    assert "50 dB" in adj["text"]
+    assert near["text"].startswith("Yes, close: 2 × 91.0 − 89.4 = 92.6 MHz, 100 kHz from your 92.5 MHz")
+    assert near["tone"] == "bad"
+    assert "tuned to station A itself" in own["text"]
+    assert "34 dB below your station → harmless" in fixed["text"] and fixed["tone"] == "ok"  # -74 - 20 - 30 vs -90
+    assert "too weak to hear" in weak["text"] and weak["tone"] == "warn"  # the attenuator took the station below −112
+
+
+@node
+def test_ip3_trade_off_gain_against_linearity():
+    r = _imx("""
+      const c = {pw: -90, bw: 1, snr: 10, nf1: 2, nf2: 15}, rx = o => IMX.rx({...c, g: 15, oip3: 20, pn: -40, ...o});
+      console.log(JSON.stringify({d: rx({}), g0: rx({g: 0}), g32: rx({g: 32}), g32ip: rx({g: 32, oip3: 30}),
+        loud: rx({pn: -39}), friis: IMX.friis(2, 15, 15), n: IMX.noise(0, 1e6), sum: IMX.sum(-100, -100)}));""")
+    d, g0, g32, fix = r["d"], r["g0"], r["g32"], r["g32ip"]
+    assert d["iip3"] == 5 and d["im"] == 3 * -40 - 2 * 5 == -130 and not d["lost"]  # IIP3 = OIP3 − gain
+    assert round(r["friis"], 2) == 4.07 and round(r["n"], 1) == -114.0 and round(r["sum"], 2) == -96.99
+    assert round(d["mNoise"], 1) == 9.9 and d["mIm"] == 30
+    assert g0["mNoise"] < 0 and g0["lost"]  # no gain: too weak to hear (the stages behind are noisy)
+    assert g32["mIm"] < 0 and g32["lost"] and g32["mNoise"] > d["mNoise"]  # much gain: drowned by distortion
+    assert not fix["lost"] and fix["im"] - g32["im"] == -20 and fix["ma"] == 2 * g32["ma"] == 20  # +10 dB IP3: 2x mA
+    assert r["loud"]["im"] - d["im"] == 3  # 1 dB more neighbours: 3 dB more false tone
+
+
+def test_fm_and_ip3_visuals_are_built_as_the_owner_asked():
+    fm = _block("  // FM intermodulation (owner 23 Oct 2026", '    id: "vswr", group:')
+    for s in ('role="slider"', "ArrowLeft", "PageUp", "setPointerCapture", "How to fix it",
+              "Better linearity: +10 dB IIP3", "Turn the input down: AGC or a 10 dB attenuator",
+              "Filter before the amplifier", "about twice the front-end current (est)",
+              "not close neighbours", "My local stations", "aria-pressed", "Half-IF spur", "Image (LO + IF)",
+              "Show the whole picture"):  # fmt: skip
+        assert s in fm, s
+    ip3 = _block('    id: "ip3", group:', '  // FM intermodulation (owner 23 Oct 2026')
+    for s in ("BLE next to Wi-Fi", "Car FM next to a strong local station", "5G phone near a base station",
+              "loudspeaker turned up too far",
+              "raise the gain until the red appears, then raise IP3 and see what it costs",
+              "Show the textbook IP3 chart", "Too weak to hear", "Drowned by distortion", "your signal is lost",
+              "(est)"):  # fmt: skip
+        assert s in ip3 or s in JS, s
+    for s in (".fm-gh.hit", ".fx-card", ".tm-tr", ".vz-fold", "touch-action: pan-y", ".fm-drag:focus-visible"):
+        assert s in CSS, s

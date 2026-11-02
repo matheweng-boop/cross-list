@@ -438,6 +438,87 @@ def test_dbm_ladder_bands_explain_what_moves_them(page):
     expect(panel.locator(".dl-b")).to_have_count(0)
 
 
+def test_fm_intermod_answers_yes_or_no_and_shows_the_fixes(page):
+    """Owner 2 Nov 2026: "here's the tuned station, here's strong station A and strong station B; is this an intermod
+    product of that?" The verdict gives the arithmetic; A and B move by keyboard and by dragging; a fix is tried."""
+    go(page, "/visuals#fmim")
+    panel = page.locator("#vz-panel")
+    verdict = panel.locator(".fm-verdict")
+    expect(verdict).to_contain_text("Yes, this is an intermod product: 2 × 91.0 − 89.5 = 92.5 MHz, exactly your")
+    expect(verdict).to_contain_text("6 dB louder than your station")
+    expect(panel.locator(".fm-svg .fm-gh.hit")).to_have_count(1)
+    expect(panel.locator(".fm-pairs")).to_contain_text("2 × 91.0 − 89.5 = 92.5 MHz")
+    a = panel.locator('.fm-svg [data-fk="f1"]')
+    expect(a).to_have_attribute("role", "slider")
+    a.focus()
+    page.keyboard.press("ArrowRight")  # A to 91.1 MHz: the ghost moves to the next channel
+    expect(verdict).to_contain_text("Next door: 2 × 91.1 − 89.5 = 92.7 MHz")
+    expect(panel.locator('input[data-k="f1"]')).to_have_value("91.1")
+    expect(panel.locator('.fm-svg [data-fk="f1"]')).to_be_focused()  # the keyboard keeps its place
+    page.keyboard.press("ArrowLeft")
+    expect(verdict).to_contain_text("exactly your station")
+    b = panel.locator('.fm-svg [data-fk="f2"] .fm-st')
+    box, svg = b.bounding_box(), panel.locator(".fm-svg").bounding_box()
+    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    page.mouse.down()
+    page.mouse.move(svg["x"] + svg["width"] * 0.8, box["y"] + box["height"] / 2, steps=5)
+    page.mouse.up()
+    expect(verdict).to_contain_text("No: the products land on")
+    assert float(panel.locator('input[data-k="f2"]').input_value()) > 100
+    panel.locator(".vz-pre", has_text="A ghost on your station").click()
+    expect(verdict).to_contain_text("exactly your station")
+    lin = panel.locator('[data-fix="lin"]')
+    lin.click()
+    expect(panel.locator('[data-fix="lin"]')).to_have_attribute("aria-pressed", "true")
+    expect(panel.locator('[data-fix="lin"]')).to_be_focused()
+    expect(verdict).to_contain_text("14 dB below your station")
+    panel.locator('[data-fix="att"]').click()
+    expect(verdict).to_contain_text("34 dB below your station → harmless")
+    expect(panel.locator(".fx-card.on")).to_have_count(2)
+    expect(panel.locator(".fm-fix")).to_contain_text("not close neighbours")
+    panel.locator(".vz-fmlist").fill("90.0, 91.0, 92.0")
+    expect(panel.locator(".fm-pairs")).to_contain_text("2 × 91.0 − 89.5 = 92.5 MHz")
+    fold = panel.locator("details.vz-fold")
+    expect(fold.locator("summary")).to_have_text(
+        "Show the whole picture: every product, the image and the FM band by region")
+    fold.locator("summary").click()
+    expect(fold.locator(".vz-chart")).to_be_visible()
+    expect(panel.locator(".vz-im")).to_contain_text("Half-IF spur")
+
+
+def test_ip3_trade_off_meter_scenarios_and_textbook_chart(page):
+    """Owner 2 Nov 2026: "what am I actually trading off with linearity?" More gain: the signal turns red (drowned by
+    distortion); more IP3 brings it back and costs current; ready-made scenarios; the textbook chart folded."""
+    go(page, "/visuals#ip3")
+    panel = page.locator("#vz-panel")
+    verdict = panel.locator(".ip-verdict")
+    expect(verdict).to_contain_text("Your signal is heard")
+    expect(panel.locator(".tm-row")).to_have_count(3)
+    expect(panel.locator(".ip-try")).to_contain_text("raise the gain until the red appears")
+
+    def move(k, value):
+        panel.locator(f'input[data-k="{k}"]').evaluate(
+            f"r => {{ r.value = {value}; r.dispatchEvent(new Event('input', {{bubbles: true}})); }}")
+
+    move("g", 40)
+    expect(verdict).to_contain_text("Your signal is lost: drowned by distortion")
+    expect(panel.locator(".ip-svg .ip-w.lost")).to_have_count(1)
+    expect(panel.locator(".ip-svg")).to_contain_text("your signal is lost")
+    move("oip3", 45)
+    expect(verdict).to_contain_text("Your signal is heard")
+    expect(panel.locator(".tm-row.t-cur")).to_contain_text("56.6 mA")  # 10 mA × 2^((45 − 20) / 10), est
+    panel.locator(".vz-pre", has_text="Car FM next to a strong local station").click()
+    expect(panel.locator(".ip-cap")).to_contain_text("Car FM next to a strong local station")
+    expect(verdict).to_contain_text("Your signal is lost")
+    expect(panel.locator(".vz-pre-note")).to_contain_text("Si4734/35")
+    panel.locator(".vz-pre", has_text="5G phone near a base station").click()
+    expect(verdict).to_contain_text("Your signal is heard")
+    fold = panel.locator("details.vz-fold")
+    expect(fold.locator(".vz-chart")).to_be_hidden()
+    fold.locator("summary", has_text="Show the textbook IP3 chart").click()
+    expect(fold.locator(".vz-chart polyline")).to_have_count(2)
+
+
 # --- Data management --------------------------------------------------------------------------------------------------
 def test_verify_next_answer_one_with_a_comment(page):
     go(page, "/manage/verify")

@@ -221,3 +221,44 @@ def test_space_grade_red_row_says_why(session, iso):
     row = cl.cross_list(session, cl.parse("ADuM141E1L703F")[0])[0]
     assert row.light == "red" and row.reason == "No space-grade (QML) part in our portfolio."
 
+
+# ---------------------------------------------------------------- rule 8: input ranges as numbers
+
+
+def test_input_range_text_reads_as_numbers():
+    from app.matching.rules import input_range_v
+
+    def v(text):
+        return input_range_v(None, {"input_range": text})
+
+    assert v("±250 mV") == [-0.25, 0.25] and v("0.25 to 4.3 V") == [0.25, 4.3] and v("8 to 68.5 mV") == [0.008, 0.0685]
+    assert v("-0.1 to 2 V") == [-0.1, 2.0] and v("±1.2 V") == [-1.2, 1.2] and v("1 V/V") is None
+
+
+def test_a_narrower_input_range_names_the_part_not_covered(load):
+    """ADuM4195-1 takes 0.25 to 4.3 V (adum3195_adum4195.pdf p.4 / adum4195-1.pdf), Si8932D 0.25 to 2.25 V
+    (si8931-32-datasheet.pdf p.7-9): a deviation that names 2.25 to 4.3 V as not covered."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    get = load("adi_isolated_amplifiers", "skyworks_isolated_amplifiers")
+    r = cross(get("ADUM4195-1BRIZ"), get("SI8932D-IS4"), get_rules("isolated_amplifier"))
+    d = next(d for d in r.diffs if d.key == "input_range_v")
+    assert d.status == "worse" and d in r.deviations
+    assert "Linear input range 0.25 to 4.3 V vs 0.25 to 2.25 V (ours worse; partial: not covered 2.25 to 4.3 V)" in (
+        cl.comment(r, 2))
+
+
+# ---------------------------------------------------------------- rule 11: RF partial band
+
+
+def test_rf_partial_band_names_dc_and_the_uncovered_band(load):
+    """ADGM1121 works from DC to 18 GHz (adgm1121.pdf p.1); SKY13355 covers 0.1 to 6 GHz: a priority 1 partial-band
+    deviation that names DC to 0.1 GHz and 6 to 18 GHz."""
+    from app.matching.engine import cross
+    from app.matching.rules import get_rules
+
+    get = load("adi_switches", "skyworks_switches")
+    r = cross(get("ADGM1121BCCZ-RL7"), get("SKY13355-374LF"), get_rules("rf_switch"))
+    assert any(d.key == "freq_range_ghz" for d in r.deviations)
+    assert "partial: not covered DC to 0.1, 6 to 18 GHz" in cl.comment(r, 2)

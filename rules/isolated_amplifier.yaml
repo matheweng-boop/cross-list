@@ -12,7 +12,10 @@ params:
   - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, priority: 1, kind: number, direction: higher}
   # What the part does: current (shunt) vs voltage sensing and its input range.
   - {key: sense_type, label: Sense type, priority: 1, kind: category, hard: true}
-  - {key: input_range, label: Linear input range, priority: 1, kind: category}
+  # Owner, 2 Nov 2026: compared as numbers, read from the stated text (input_range): ours covering theirs is fine,
+  # a narrower range is a deviation that names the part not covered.
+  - {key: input_range_v, label: Linear input range, unit: V, priority: 1, kind: range, derive: input_range_v}
+  - {key: input_range, label: Linear input range (as stated), priority: 3, kind: category}
   # --- Priority 2: for information ---
   - {key: vdd1_range_v, label: High-side supply, unit: V, priority: 2, kind: range}
   - {key: vdd2_range_v, label: Low-side supply, unit: V, priority: 2, kind: range}

@@ -1,5 +1,6 @@
 """Load per-family matching rules from rules/*.yaml."""
 
+import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -160,7 +161,25 @@ def gate_output_config(part, values: dict) -> str | None:
     return None
 
 
-DERIVE = {"gate_output_config": gate_output_config}
+_RANGE_TEXT = re.compile(
+    r"^\s*(?:±\s*(?P<pm>[\d.]+)|(?P<lo>[-+−]?[\d.]+)\s*(?:to|–|…)\s*(?P<hi>[-+−]?[\d.]+))\s*(?P<unit>mV|V)\s*$")
+
+
+def input_range_v(part, values: dict) -> list[float] | None:
+    """An isolated amplifier's stated input range ("±250 mV", "0.25 to 4.3 V", "8 to 68.5 mV") as [min, max] in V;
+    None when the text is not a plain range (owner, 2 Nov 2026: input ranges compared as numbers)."""
+    m = _RANGE_TEXT.match(str(values.get("input_range") or ""))
+    if not m:
+        return None
+    scale = 0.001 if m["unit"] == "mV" else 1.0
+    if m["pm"]:
+        lo, hi = -float(m["pm"]), float(m["pm"])
+    else:
+        lo, hi = (float(x.replace("−", "-")) for x in (m["lo"], m["hi"]))
+    return [round(lo * scale, 6), round(hi * scale, 6)]
+
+
+DERIVE = {"gate_output_config": gate_output_config, "input_range_v": input_range_v}
 
 
 def parse_rules(data: dict) -> FamilyRules:

@@ -260,6 +260,8 @@ def format_value(p: ParamDef, value) -> str:
         return f"{_fmt_num(float(value))}{unit}"
     if p.kind == "range":
         lo, hi = value
+        if p.unit == "V" and max(abs(float(lo)), abs(float(hi))) < 1:  # an input range of a few mV reads in mV
+            return f"{_fmt_num(round(float(lo) * 1000, 3))} to {_fmt_num(round(float(hi) * 1000, 3))} mV"
         return f"{_fmt_num(lo)} to {_fmt_num(hi)}{unit}"
     if p.kind == "set":
         return ", ".join(sorted(value)) if value else "none"
@@ -275,6 +277,26 @@ def format_value(p: ParamDef, value) -> str:
         x_unit = f" {p.x_unit}" if p.x_unit else ""
         return ", ".join(f"{_fmt_num(float(y))}{unit} at {_fmt_num(float(x))}{x_unit}" for x, y in sorted(value))
     return f"{value}{unit}" if p.kind == "category" and p.unit else str(value)
+
+
+def uncovered(p: ParamDef, ref, cand) -> str:
+    """The part of the reference's range the candidate's range leaves out, in words ("2.25 to 4.3 V"; a frequency
+    range that starts at 0 starts at "DC"); "" when it is covered (owner, 2 Nov 2026: name the uncovered part)."""
+    if p.kind != "range" or not ref or not cand:
+        return ""
+    (a, b), (c, d) = sorted(map(float, ref)), sorted(map(float, cand))
+    gaps = ([(a, min(b, c))] if c > a else []) + ([(max(a, d), b)] if d < b else [])
+    gaps = [(x, y) for x, y in gaps if y > x]
+    if not gaps:
+        return ""
+    freq = p.unit in ("Hz", "kHz", "MHz", "GHz")
+
+    def end(x):
+        return "DC" if freq and x == 0 else _fmt_num(x)
+
+    if p.unit == "V" and max(abs(a), abs(b)) < 1:
+        return ", ".join(f"{_fmt_num(round(x * 1000, 3))} to {_fmt_num(round(y * 1000, 3))} mV" for x, y in gaps)
+    return ", ".join(f"{end(x)} to {_fmt_num(y)}" for x, y in gaps) + (f" {p.unit}" if p.unit else "")
 
 
 def format_at(rules: FamilyRules, p: ParamDef, values: dict) -> str:

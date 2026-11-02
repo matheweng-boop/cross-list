@@ -43,6 +43,7 @@ from app.matching.engine import (
     from_datasheet,
     is_estimate_source,
     rank_key,
+    uncovered,
 )
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
@@ -469,8 +470,13 @@ def comment(r: CrossResult, column: int) -> str:
     order = {WORSE: 0, DIFFERENT: 0, UNKNOWN: 1, BETTER: 2, EQUAL: 3}
     shown = [d for d in p1 if d.key != "qualification" and d.status != UNKNOWN  # unstated: said below
              and (d.status != EQUAL or d.ref_display != d.cand_display)]
+    rules = get_rules(ref.family)
+    rvals, cvals = (rules.values(ref), rules.values(cand)) if any(
+        p.kind == "range" and p.priority == 1 for p in rules.params) else ({}, {})  # fmt: skip
     for d in sorted(shown, key=lambda d: order[d.status])[:5]:
-        bits.append(f"{_short(d.label)} {d.ref_display} vs {d.cand_display} ({_tag(d)})")
+        gap = uncovered(rules.get(d.key), rvals.get(d.key), cvals.get(d.key)) if d.status == WORSE else ""
+        tag = f"{_tag(d)}; partial: not covered {gap}" if gap else _tag(d)
+        bits.append(f"{_short(d.label)} {d.ref_display} vs {d.cand_display} ({tag})")
     if qual is not None and qual.status == EQUAL and _qual(ref) == "automotive" == _qual(cand):
         bits.append("AEC-Q both")
     elif qual is not None and qual.status != EQUAL:

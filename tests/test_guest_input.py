@@ -99,6 +99,11 @@ def c_report_react(o, s):
                                                                          "comment": "Two dies", "author": ""}}
 
 
+def c_report_answer(o, s):  # an answer to a question to ask (2 Nov 2026): lands internal once approved
+    return "post", "/business/reports/auto-uwb-15-4ab/answers", {"data": {"key": "q-bu-ab", "text": "No project",
+                                                                         "who": "UWB BU", "sharing": "shared"}}
+
+
 def c_report_ask(o, s):
     return "post", "/business/reports/filters-1-11ghz/ask", {"data": {"text": "Which ceramic filters?", "author": ""}}
 
@@ -146,6 +151,23 @@ def c_config_update(o, s):
 def c_config_delete(o, s):
     cid = o.post("/api/broadcast/configs", json={"name": "Mine", "data": {"tuners": 1}}).json()["id"]
     return "post", f"/broadcast/configurations/{cid}/delete", {}
+
+
+CLOCK_PLAN = {"in1": "25", "in1_kind": "crystal", "f": ["100"], "n": ["8"], "fmt": ["HCSL"], "v": ["1.8"]}
+
+
+def c_clock_plan_create(o, s):
+    return "post", "/api/clocks/plans", {"json": {"name": "Guest clocks", "data": CLOCK_PLAN}}
+
+
+def c_clock_plan_update(o, s):
+    pid = o.post("/api/clocks/plans", json={"name": "Mine", "data": CLOCK_PLAN}).json()["id"]
+    return "put", f"/api/clocks/plans/{pid}", {"json": {"name": "Renamed", "data": {}}}
+
+
+def c_clock_plan_delete(o, s):
+    pid = o.post("/api/clocks/plans", json={"name": "Mine", "data": CLOCK_PLAN}).json()["id"]
+    return "post", f"/clocks/plans/{pid}/delete", {}
 
 
 def c_shortlist(o, s):
@@ -252,25 +274,39 @@ def test_every_post_route_is_covered(client):
                   "/invite/{token}/verify"}  # fmt: skip
     covered = {"/site-feedback", "/feedback", "/requests", "/reviews/request", "/reviews/requests/{rid}",
                "/reviews/{slug}/react", "/library/{key}/react", "/business/reports/{slug}/react",
+               "/business/reports/{slug}/answers",
                "/business/reports/{slug}/ask", "/business/reports/questions/{qid}", "/blocks/area-request",
                "/api/blocks/feedback", "/api/blocks/designs", "/api/blocks/designs/{design_id}",
                "/blocks/{design_id}/delete", "/blocks/verify", "/api/broadcast/configs",
                "/api/broadcast/configs/{config_id}", "/broadcast/configurations/{config_id}/delete",
+               "/api/clocks/plans", "/api/clocks/plans/{plan_id}", "/clocks/plans/{plan_id}/delete",
                "/business/shortlist", "/business/shortlist/{item_id}", "/business/schedule",
                "/business/schedule/{item_id}", "/business/cases", "/business/cases/{case_id}", "/business/decision",
                "/business/capabilities/feedback", "/api/business/review", "/business/evidence/{fn}/mapping",
                "/business/automotive/review", "/pricing/{part_id}/call", "/pipeline/new", "/pipeline/{draft_id}",
                "/site-feedback/{item_id}/file"}  # fmt: skip
-    missing = []
-    for route in client.app.routes:
+    def flat(routes, prefix=""):
+        # FastAPI 0.143+ keeps an included router as one entry wrapping its own routes
+        for r in routes:
+            inner = getattr(r, "original_router", None)
+            if inner is not None:
+                ctx = getattr(r, "include_context", None)
+                yield from flat(inner.routes, prefix + (getattr(ctx, "prefix", "") or ""))
+            else:
+                yield prefix, r
+
+    missing, seen = [], 0
+    for prefix, route in flat(client.app.routes):
         methods = getattr(route, "methods", set()) or set()
         if not methods & {"POST", "PUT", "PATCH", "DELETE"}:
             continue
-        p = route.path.replace(":int", "")
+        seen += 1
+        p = (prefix + route.path).replace(":int", "")
         sample = re.sub(r"\{[^}]+\}", "1", p)
         if p in signing_in or p in covered or guest_input.is_compute_only(p) or access.owner_only(sample, "POST"):
             continue
         missing.append(p)
+    assert seen > 50, f"only {seen} POST routes found: the route walk is broken"
     assert not missing, f"POST routes without a guest test: {missing}"
 
 

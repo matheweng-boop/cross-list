@@ -6,7 +6,13 @@ the TAM range, when a TAM key it rests on is now left out (owner disagree, or di
 shows a newer figure (check "changed"), or when no market size is left for the function. Differences become to-dos in
 the daily inbox section "TAM changes for reports"; the run updates the report and case text. Owner-view notes on the
 case and report pages say "Market figure checked <date> · matches TAM" or "· differs, update queued".
+
+A newer figure counts as worked in once the linked text quotes it with its year (e.g. "$2.43 B (2025)", as the check
+prints it): the run then keeps the band where it is and the to-do does not come back every day (2 Nov 2026; before,
+the radio-tuner-next to-do came back after the 28 Oct run had already quoted the figure).
 """
+
+import re
 
 from sqlalchemy.orm import Session
 
@@ -33,6 +39,14 @@ def _off(quoted: float | None, now: float | None) -> bool:
     return bool(quoted and now) and abs(quoted - now) > TOLERANCE * now
 
 
+def quotes_newer(lk: dict, chk: dict) -> bool:
+    """Whether the linked text already quotes a "changed" check's newer figure and its year (spaces ignored)."""
+    text = re.sub(r"\s+", "", str(lk.get("text") or ""))
+    value = re.sub(r"\s+", "", str(chk.get("new_value") or ""))
+    year = str(chk.get("new_year") or "")
+    return bool(value and year) and value in text and year in text
+
+
 def compare(session: Session) -> list[dict]:
     """Every linked figure with status "matches" or "differs", the reasons and the current TAM range."""
     sizes = tam.by_function(session)
@@ -56,7 +70,7 @@ def compare(session: Session) -> list[dict]:
             if e.get("excluded"):
                 why.append(f"rests on {k}, now left out ({e['excluded']})")
             chk = e.get("check") or {}
-            if chk.get("status") == "changed" and chk.get("new_value"):
+            if chk.get("status") == "changed" and chk.get("new_value") and not quotes_newer(lk, chk):
                 why.append(f"{k}: the source now shows {chk['new_value']} for {chk.get('new_year')}")
             if e.get("flag"):
                 notes.append(f"{k}: {e['flag']}")

@@ -69,6 +69,10 @@ def bootstrap(engine, seed_synthetic: bool) -> None:
         from app.services import demand  # owner volume estimates: 12 months, then deleted
 
         demand.purge(session)
+        from app.services import answers  # Questions to ask: old answers move in as internal; kept 12 months
+
+        answers.migrate(session)
+        answers.purge(session)
         empty = session.scalar(select(func.count(Part.id))) == 0
         if get_settings().load_real_on_start:
             load_real_if_changed(session)
@@ -146,6 +150,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.blocks import router as blocks_router
     from app.web.broadcast import router as broadcast_router
     from app.web.business import router as business_router
+    from app.web.clocks import router as clocks_router
     from app.web.competitors import router as competitors_router
     from app.web.digest import router as digest_router
     from app.web.feedback import router as feedback_router
@@ -227,6 +232,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app.include_router(presentation_router)  # before shareable: /shareable/{slug} would take /shareable/presentation
     app.include_router(shareable_router)
     app.include_router(broadcast_router)
+    app.include_router(clocks_router)
     app.include_router(requests_router)
     app.include_router(blocks_router)
     app.include_router(business_router)
@@ -248,4 +254,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.qspice import router as qspice_router  # QSPICE library + AI services (later) (27 Oct 2026)
 
     app.include_router(qspice_router)
+    from app.web.answers import router as answers_router  # answers to the Questions to ask (2 Nov 2026)
+
+    app.include_router(answers_router)
     return app

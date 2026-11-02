@@ -337,7 +337,8 @@ def companies_of(rows: list) -> list[tuple[str, int]]:
 
 
 def _part_context(
-    session: Session, part: Part, hide_eol: bool, company: str, scope: str, type: str, dev: int, grade: str, all: bool
+    session: Session, part: Part, hide_eol: bool, company: str, scope: str, type: str, dev: int, grade: str, all: bool,
+    vdd: float | None = None,
 ) -> dict:
     """Everything the part page shows; also used by the fragments that load on demand (grouped view, row detail)."""
     rules = get_rules(part.family)
@@ -346,7 +347,7 @@ def _part_context(
     grade = "automotive" if grade_of(part) == "automotive" else (grade if grade in GRADE_LABELS else "industrial")
     scope = scope if scope in ("auto", "all") else "auto"
     dev = _deviations(dev)
-    crosses = crosses_for(session, part, scope, dev)
+    crosses = crosses_for(session, part, scope, dev, vdd)  # vdd: the design's supply (owner, 2 Nov 2026)
     # the part counts as crossed only with an active drop-in of the grade (owner, 22 Oct 2026; filters on the page
     # aside). Without one it gets "Start a prelim case"; with no cross of any type it is the strongest case.
     graded = [r for r in ranked(crosses) if not r.lifecycle_risk and grade_of(r.candidate) == grade]
@@ -402,6 +403,8 @@ def _part_context(
     }
     return {
         "part": part,
+        "vdd": vdd,
+        "supply_ok": any(p.by_supply for p in rules.params),
         "pinout_source": part.pinout_source,
         "rules": rules,
         "groups": groups,
@@ -466,10 +469,13 @@ def part_detail(
     dev: int = DEFAULT_MAX_DEVIATIONS,
     grade: str = "",
     all: bool = False,
+    vdd: str = "",
     session: Session = Depends(get_session),
 ):
+    from app.web.crosslist import supply
+
     part = _part_or_404(session, part_id)
-    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, all)
+    ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, all, supply(vdd))
     return templates.TemplateResponse(request, "part.html", ctx)
 
 
@@ -676,6 +682,16 @@ def visuals_page(request: Request, session: Session = Depends(get_session)):
                                       {"data": data, "explain": visuals.explanations()})  # fmt: skip
 
 
+def _visual_words() -> dict[str, list[str]]:
+    """Search words per visual for the search box on Interactive visuals (owner, 2 Nov 2026): library.VISUALS."""
+    from app.services import library
+
+    return {k: list(v[2]) for k, v in library.VISUALS.items()}
+
+
+templates.env.globals["visual_words"] = _visual_words
+
+
 @router.get("/api/visuals/rf-parts")
 def visuals_rf_parts():
     """Active Skyworks / Qorvo RF parts with gain, NF, IP3, P1dB, loss and band, for the receiver visuals."""
@@ -718,13 +734,14 @@ def library_sources(request: Request):
 @router.get("/library/{key}", response_class=HTMLResponse)
 def library_topic(request: Request, key: str, session: Session = Depends(get_session)):
     from app.services import library
+    from app.services import systems as sy
 
     if library.topic(key) is None:
         raise HTTPException(404, "Topic not found")
     t = library.reviewed(session, key)
     ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
            "notes": library.notes(key), "cases": library.cases_using(key), "related": library.related(key),
-           "rule_links": library.rule_links}  # fmt: skip
+           "rule_links": library.rule_links, "where": sy.topic_crumb(key)}  # fmt: skip
     return templates.TemplateResponse(request, "library/topic.html", ctx)
 
 

@@ -169,6 +169,13 @@ def _reviewed(x: dict) -> dict:
 def react(session: Session, slug: str, key: str, verdict: str, comment: str = "", author: str = "") -> None:
     if key not in item_ids(slug) or verdict not in VERDICTS:
         raise ValueError("unknown item or verdict")
+    from app.services import answers
+
+    if answers.is_question(slug, key):  # a question takes an answer, kept internal (app/services/answers.py)
+        if verdict != "answer":
+            raise ValueError("a question takes an answer")
+        answers.add(session, slug, key, comment, author=author)
+        return
     session.add(DataReview(dataset=dataset(slug), key=key[:120], verdict=VERDICTS[verdict],
                            comment=comment.strip()[:2000] or None, author=author.strip()[:100] or None))  # fmt: skip
     session.commit()

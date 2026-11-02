@@ -111,50 +111,17 @@ def application(request: Request, i: int, co: str = "combined", session: Session
     return templates.TemplateResponse(request, "business/application.html", c)
 
 
-@router.get("/business/attach", response_class=HTMLResponse)
-def attach(request: Request, fn: str = "", co: str = "combined", part: str = "", app: str = "",
-           session: Session = Depends(get_session)):  # fmt: skip
-    """Cross-sell: from a part number (optionally narrowed by a loosely described application), or from a function."""
-    from app.services import crosssell
+@router.get("/business/attach")
+def attach_moved(fn: str = "", part: str = "", system: str = "", sub: str = "", aec: str = ""):
+    """Cross-sell › By part was retired (owner, 2 Nov 2026: partner parts suggested without the application are a
+    guess). Old links land on Cross-sell › By system: ?part= in its "Start from a part we already sell" box, ?fn= on
+    the systems that use the function; a system the old tab carried stays picked."""
+    from urllib.parse import urlencode
 
-    c = _ctx(session, co)
-    c["q_part"], c["q_app"] = part.strip()[:60], app.strip()[:120]
-    c["anchor"] = crosssell.resolve_part(session, c["q_part"]) if c["q_part"] else None
-    c["sell"] = crosssell.suggest(session, c["anchor"], c["q_app"], co) if c["anchor"] else None
-    c["walk_part"] = (session.scalar(select(Part).where(Part.mpn == c["anchor"]["mpn"]).limit(1))
-                      if c["anchor"] and not c["anchor"]["ours"] else None)  # fmt: skip
-    c["bundle_cfg"] = scoring.config()["bundle"]
-    used = Counter(fn for a in c["apps"] for fn in {p.fn for p in a.positions if p.status == "supported"})
-    c["anchors"] = sorted(used.items(), key=lambda kv: (-kv[1], vocab.fn_label(kv[0])))
-    c["fn"] = fn if fn in used else ""
-    c["result"] = op.attach(c["apps"], fn) if c["fn"] else None
-    c["pairs"] = op.cross_sell_pairs(c["apps"]) if not c["fn"] else []
-    # from a part (or function) to the systems that use it (owner, 25 Oct 2026: the Cross-sell tabs work together)
-    from app.services import systems as sy
-
-    focus = c["fn"] or (c["anchor"]["fns"][0] if c["anchor"] and c["anchor"]["fns"] else "")
-    c["fn_places"] = sy.places_of_function(focus) if focus else []
-    mfrs = op.company(co)[2]
-
-    def offer(f: str) -> list[dict]:
-        """Our best parts for a function (two per manufacturer), named, so a cross-sell has something to offer."""
-        out = []
-        for m in blocks.parts_for(session, f)["manufacturers"]:
-            if m["manufacturer"] in mfrs:
-                out += [{"mpn": p["mpn"], "url": p["url"], "manufacturer": m["manufacturer"]} for p in m["best"]]
-        return out[:4]
-
-    if c["result"]:
-        c["anchor_parts"] = offer(c["fn"])
-        for e in c["result"]["rows"]:
-            e["offer"] = offer(e["fn"]) if e["status"] == "supported" else []
-            e["why"] = op.pair_reasons(c["result"]["apps"], c["fn"], e["fn"])
-    for pr in c["pairs"]:
-        pr["why"] = op.pair_reasons(c["apps"], pr["a"], pr["b"])
-    c["shortlisted"] = {
-        i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "crosssell"))
-    }
-    return templates.TemplateResponse(request, "business/attach.html", c)
+    part = part.strip()[:60]
+    q = [(k, v) for k, v in (("part", part), ("fn", "" if part else fn), ("system", system), ("sub", sub),
+                             ("aec", aec)) if v]  # fmt: skip
+    return RedirectResponse("/blocks/cross-sell" + (f"?{urlencode(q)}" if q else ""), status_code=307)
 
 
 @router.get("/business/gaps")
@@ -270,15 +237,41 @@ def _by_score(e: dict):
     return (e["score"] is None, -(e["score"] or 0), -e["reach"], e["label"])
 
 
-@router.get("/blocks/cross-sell", response_class=HTMLResponse)
-def cross_sell(request: Request, co: str = "combined", system: str = "", sub: str = "", sel: str = "",
-               template: str = "", aec: str = "", session: Session = Depends(get_session)):  # fmt: skip
-    """Cross-sell, bottom up (owner, 23 Oct 2026): pick a system, a sub-system or one diagram of the Application
-    library and see which of our parts go together in it. Gaps and new technology are under Opportunities.
-    ?aec=1 / 0: "Automotive-qualified only" (owner, 24 Oct 2026), on by default for the Automotive system."""
+def _start_part(session: Session, q: str, fn: str, fns: dict) -> tuple[dict | None, dict | None, str]:
+    """"Start from a part we already sell" (owner, 2 Nov 2026): the typed part number resolved (crosssell.resolve_part),
+    the part or function to show the systems of and to highlight ({fn, label, mpn, manufacturer}; a function alone
+    from ?fn=, e.g. old "What sells with it" links), and for a competitor part the link to its cross."""
+    from urllib.parse import quote
+
+    from app.services import crosssell
     from app.services import systems as sy
 
-    if sel:  # the picker sends "system" or "system:sub"
+    found = crosssell.resolve_part(session, q) if q else None
+    if found and found["ours"]:
+        f = next((x for x in found["fns"] if sy.diagrams_of_function(x)), found["fns"][0])
+        hl = {"fn": f, "label": vocab.fn_label(f), "mpn": found["mpn"], "manufacturer": found["manufacturer"]}
+        return found, hl, ""
+    if found:  # a competitor's part: its cross (our replacements) first
+        p = session.scalar(select(Part).where(Part.mpn == found["mpn"]).limit(1))
+        return found, None, f"/parts/{p.id}" if p else f"/find?q={quote(found['mpn'])}"
+    if not q and fn in fns:
+        return None, {"fn": fn, "label": vocab.fn_label(fn), "mpn": "", "manufacturer": ""}, ""
+    return None, None, ""
+
+
+@router.get("/blocks/cross-sell", response_class=HTMLResponse)
+def cross_sell(request: Request, co: str = "combined", system: str = "", sub: str = "", sel: str = "",
+               template: str = "", aec: str = "", part: str = "", fn: str = "",
+               session: Session = Depends(get_session)):  # fmt: skip
+    """Cross-sell, bottom up (owner, 23 Oct 2026): pick a system, a sub-system or one diagram of the Block diagram
+    library and see which of our parts go together in it. Gaps and new technology are under Opportunities.
+    ?aec=1 / 0: "Automotive-qualified only" (owner, 24 Oct 2026), on by default for the Automotive system.
+    ?part= (owner, 2 Nov 2026, "Start from a part we already sell"; By part was retired): one of our part numbers shows
+    the systems and sub-systems that use its function; with a system picked, its chip and row are highlighted. ?fn=
+    does the same for a function."""
+    from app.services import systems as sy
+
+    if sel:  # the old picker sent "system" or "system:sub"
         system, _, sub = sel.partition(":")
     aec_on = aec == "1" if aec in ("0", "1") else system == "automotive"
     template = int(template) if template.isdigit() else None
@@ -290,6 +283,26 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
     c.update(tree=sy.systems(), system=system if sy.get(system) else "", sub=sub if sy.sub(system, sub) else "",
              template=template if picked["level"] == "application" else None, picked=picked,
              names={i: blocks.display_name(t) for i, t in enumerate(blocks.templates())})  # fmt: skip
+    # the chooser (owner, 2 Nov 2026): a compact grid of system buttons, the sub-systems as chips once one is picked
+    c["sys_n"] = {s["key"]: len(sy.selection(s["key"])["idx"]) for s in c["tree"]}
+    c["aec_param"] = aec if aec in ("0", "1") else ""
+    c["q_part"] = part.strip()[:60]
+    c["found"], hl, c["cross_url"] = _start_part(session, c["q_part"], fn, c["fns"])
+    c["hl"], c["hl_row"] = hl, None
+    c["fn_systems"] = sy.systems_of_function(hl["fn"]) if hl and not picked["idx"] else []
+    c["fn_n"] = len(sy.diagrams_of_function(hl["fn"])) if hl else 0
+    here = {"co": c["co"], "system": c["system"], "sub": c["sub"], "part": hl["mpn"] if hl else "",
+            "fn": hl["fn"] if hl and not hl["mpn"] else "", "template": c["template"],
+            "aec": c["aec_param"]}  # fmt: skip
+
+    def url(**kw) -> str:
+        """This page with the current selection, changed by kw ("" or None drops a parameter)."""
+        from urllib.parse import urlencode
+
+        q = {**here, **kw}
+        return "/blocks/cross-sell?" + urlencode([(k, q[k]) for k in here if q.get(k) not in ("", None)])
+
+    c["url"] = url
     if picked["idx"]:
         c["xs"] = sy.bottom_up(session, picked["idx"], mine)
         # Skyworks + Qorvo together here (owner, 25 Oct 2026): each pair is shown once. A synergy pair leaves the
@@ -309,10 +322,25 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
         c["table"] = sy.parts_table(session, c["xs"]["ours"], mine, aec_on)
         rows = {r["fn"]: r for r in c["table"]["rows"]}
         for j, x in enumerate(tog["synergies"], 1):
-            for fn, line, other in ((x["skyworks"], "Skyworks", x["qorvo_label"]),
-                                    (x["qorvo"], "Qorvo", x["skyworks_label"])):  # fmt: skip
-                if fn in rows and line in rows[fn]["pairs"]:
-                    rows[fn]["pairs"][line].append({"j": j, "other": other})
+            for f, line, other in ((x["skyworks"], "Skyworks", x["qorvo_label"]),
+                                   (x["qorvo"], "Qorvo", x["skyworks_label"])):  # fmt: skip
+                if f in rows and line in rows[f]["pairs"]:
+                    rows[f]["pairs"][line].append({"j": j, "other": other})
+        if hl and hl["fn"] in rows:  # the part (or function) we started from: its row, and its chip first in its cell
+            c["hl_row"] = row = rows[hl["fn"]]
+            cell = row["cells"].get(hl["manufacturer"])
+            if hl["mpn"] and cell is not None:
+                from app.services import autograde
+
+                rest = [p for p in cell if blocks._series(p["mpn"]) != blocks._series(hl["mpn"])]
+                if len(rest) == len(cell):  # it was not listed: one more part shown, one fewer folded away
+                    c["table"]["count"][hl["manufacturer"]] += 1
+                    c["table"]["fns"][hl["manufacturer"]] += not cell
+                    row["more"][hl["manufacturer"]] = max(row["more"][hl["manufacturer"]] - 1, 0)
+                row["cells"][hl["manufacturer"]] = [{"mpn": hl["mpn"], "aec": autograde.is_aec(hl["mpn"]), "you": True},
+                                                    *rest]  # fmt: skip
+                if hl["manufacturer"] not in c["table"]["lines"]:  # its line had no part here: give it its column
+                    c["table"]["lines"] = [m for m in sy.LINES if m in c["table"]["lines"] or m == hl["manufacturer"]]
     else:  # nothing picked yet: what we can sell across the whole library, as before
         sell = []
         for e in op.markets(session, c["apps"], mine)["rows"]:
@@ -322,10 +350,8 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
                              "markets": sorted(by, key=lambda m: (-len(by[m]), m)),
                              "requalify": e["requalify"]})  # fmt: skip
         c["sell"] = sorted(sell, key=lambda e: (-e["n_apps"], e["label"]))
-    c["aec"], c["aec_param"] = aec_on, aec if aec in ("0", "1") else ""
-    c["aec_base"] = (f"/blocks/cross-sell?co={op.company(co)[0]}" + (f"&system={system}" if sy.get(system) else "")
-                     + (f"&sub={sub}" if sy.sub(system, sub) else "")
-                     + (f"&template={template}" if c["template"] is not None else ""))  # fmt: skip
+    c["aec"] = aec_on
+    c["aec_base"] = url(aec="")  # the filter toggle adds its own aec=
     return templates.TemplateResponse(request, "business/cross_sell.html", c)
 
 
@@ -1075,7 +1101,10 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
     """RF functions by frequency band and output power: where our parts are, and where applications need one."""
     rs = rf.rows()
     need, apps, unknown, n_rf = rf.demand()
-    ctx = {"rows": rs, "gaps": rf.gaps(rs), "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
+    gaps = rf.gaps(rs)
+    for g in gaps:  # "Why it could matter" (owner, 2 Nov 2026)
+        g["why"] = rf.why_it_matters(g, rs)
+    ctx = {"rows": rs, "gaps": gaps, "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
            "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
            "fn": fn, "band": band, "power": power,
            "slot": rf.slot_parts(fn, band, power or None) if fn and band else None,
@@ -1161,6 +1190,9 @@ def product_report(request: Request, slug: str, session: Session = Depends(get_s
     ctx["radio"] = radio_summary(request, session, slug)
     ctx["radio_mandates"] = radio_mandates(slug)
     ctx |= {"expansion": ir.get(session, slug), "owner": signed_in_owner(request) is not None}
+    from app.services import answers  # Questions to ask: the answers this viewer may see (owner, 2 Nov 2026)
+
+    ctx["qa"] = answers.page(session, request, slug)
     return templates.TemplateResponse(request, "business/report.html", ctx)
 
 

@@ -4,6 +4,7 @@
 {% from "business/_common.html" import push with context %}
 {% from "business/_growth.html" import schedule_button, learn_tab, opener_box %}
 {% from "business/_expand.html" import expand_box %}
+{% from "business/_answers.html" import questions_section %}
 {% block title %}{{ page_title(request.url.path, r.title ~ (' – background' if background else '')) }}{% endblock %}
 {% block content %}
 {% if background %}
@@ -20,11 +21,12 @@
 {% for s in r.see_also or [] %}{% if s is mapping %}<p class="small rp-see">See also: <a href="{{ s.href }}">{{ s.label }}</a></p>{% else %}{% set o = report_of(s) %}{% if o %}<p class="small rp-see">See also: <a href="/business/reports/{{ o.slug }}">{{ o.title }}</a></p>{% endif %}{% endif %}{% endfor %}
 {% if r.question %}<p class="rp-q-full"><span class="small muted">Question</span><br>{{ r.question }}</p>{% endif %}
 {% if r.terms %}<aside class="rp-terms small" aria-label="Terms used">{% for k in r.terms %}{% set t = bo_help().terms.get(k) %}{% if t %}<p id="term-{{ k }}"><b>What is {{ t.term }}?</b> {{ t.short }}{% if t.href %} Source: <a href="{{ t.href }}" target="_blank" rel="noopener">{{ t.href_label or t.href }}</a>.{% endif %} <a href="/business/method#t-{{ k }}">More in Definitions</a></p>{% endif %}{% endfor %}</aside>{% endif %}
-{{ opener_box(opener, r.slug, answer_form=not case) }}{% if opener and case %}<p class="small muted">Answer it under <a href="#questions-to-ask">8. Questions to ask</a>, where it is the first business-unit question.</p>{% endif %}
+{{ opener_box(opener, r.slug) }}{% if opener %}<p class="small muted">Answer it under <a href="#questions-to-ask">{{ '8. ' if case }}Questions to ask</a>, where it is the first business-unit question.</p>{% endif %}
 {{ schedule_button(r, scheduled, request.url.path) }}
 {{ expand_box(r, expansion, owner, request.url.path) }}
 <article class="rpt">{% include body %}</article>
 {% include "business/_tam_notes.html" %}
+{% if not case and qa is defined %}{{ questions_section(qa, request.url.path) }}{% endif %}
 {% if has_background %}<p class="small"><a href="/business/reports/{{ r.slug }}/background">Background notes: data tables, detail and all sources →</a></p>{% endif %}
 
 {% if questions %}<section class="rp-ask" id="questions">

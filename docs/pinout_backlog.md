@@ -20,12 +20,12 @@ data file named, in the same format as the other gate drivers there; note a bloc
 - [ ] Chipanalog · `chipanalog_isolation.yaml` · datasheet: CAIS32212xQ1datasheetVersion1.03.pdf · CA-IS3221CW-Q1, CA-IS3221BW-Q1, CA-IS3222CW-Q1, CA-IS3222BW-Q1, CA-IS3221CN-Q1, CA-IS3221BN-Q1, CA-IS3222CN-Q1, CA-IS3222BN-Q1
 - [ ] Chipanalog · `chipanalog_isolation.yaml` · datasheet: CAIS32212xdatasheetVersion1.04.pdf · CA-IS3221BW, CA-IS3221CW, CA-IS3222CW, CA-IS3222BW, CA-IS3221AW, CA-IS3221AN, CA-IS3221BN
 - [ ] Chipanalog · `chipanalog_isolation.yaml` · datasheet: CAIS3221CdatasheetVersion1.00cn20260508.pdf · CA-IS3221CBN, CA-IS3221CBW, CA-IS3221CAN, CA-IS3221CAW
-- [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed020i12-b2-datasheet-en.pdf · 1ED020I12B2XUMA1
-- [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed020i12-f2-datasheet-en.pdf · 1ED020I12F2XUMA1
-- [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed312xmu12f-datasheet-en.pdf · 1ED3124MU12FXUMA1, 1ED3127MU12FXUMA1, 1ED3125MU12FXUMA1
-- [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf · 1ED3141MU12FXUMA1, 1ED3140MU12FXUMA1, 1ED3142MU12FXUMA1, 1ED3141MC12HXUMA1, 1ED3143MC12HXUMA1, 1ED3142MC12HXUMA1, 1ED3144MC12HXUMA1, 1ED3145MC12HXUMA1
-- [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf · 1ED3122MC12HXUMA1, 1ED3124MC12HXUMA1, 1ED3120MC12HXUMA1, 1ED3121MC12HXUMA1, 1ED3123MC12HXUMA1, 1ED3131MC12HXUMA1
-- [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf · 1ED3124MU12HXUMA1, 1ED3120MU12HXUMA1, 1ED3121MU12HXUMA1, 1ED3122MU12HXUMA1, 1ED3123MU12HXUMA1, 1ED3131MU12HXUMA1
+- [x] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed020i12-b2-datasheet-en.pdf · 1ED020I12B2XUMA1
+- [x] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed020i12-f2-datasheet-en.pdf · 1ED020I12F2XUMA1
+- [x] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed312xmu12f-datasheet-en.pdf · 1ED3124MU12FXUMA1, 1ED3127MU12FXUMA1, 1ED3125MU12FXUMA1
+- [x] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed314xmu12f1ed314xmc12h-datasheet-en.pdf · 1ED3141MU12FXUMA1, 1ED3140MU12FXUMA1, 1ED3142MU12FXUMA1, 1ED3141MC12HXUMA1, 1ED3143MC12HXUMA1, 1ED3142MC12HXUMA1, 1ED3144MC12HXUMA1, 1ED3145MC12HXUMA1
+- [x] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed31xxmc12h-1ed-x3-compact-datasheet-en.pdf · 1ED3122MC12HXUMA1, 1ED3124MC12HXUMA1, 1ED3120MC12HXUMA1, 1ED3121MC12HXUMA1, 1ED3123MC12HXUMA1, 1ED3131MC12HXUMA1
+- [x] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed31xxmu12h-datasheet-en.pdf · 1ED3124MU12HXUMA1, 1ED3120MU12HXUMA1, 1ED3121MU12HXUMA1, 1ED3122MU12HXUMA1, 1ED3123MU12HXUMA1, 1ED3131MU12HXUMA1
 - [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed332xmc12n-datasheet-en.pdf · 1ED3321MC12NXUMA1, 1ED3320MC12NXUMA1, 1ED3322MC12NXUMA1, 1ED3323MC12NXUMA1
 - [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed3330mc12m-datasheet-en.pdf · 1ED3330MC12MXUMA1
 - [ ] Infineon · `infineon_isolation.yaml` · datasheet: infineon-1ed34x1mx12m-datasheet-en.pdf · 1ED3491MC12MXUMA1, 1ED3431MC12MXUMA1, 1ED3461MC12MXUMA1, 1ED3431MU12MXUMA1, 1ED3461MU12MXUMA1, 1ED3491MU12MXUMA1

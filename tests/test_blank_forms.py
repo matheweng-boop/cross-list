@@ -239,6 +239,9 @@ def seed_rows(client) -> None:
                        follow_redirects=False).status_code in ok  # fmt: skip
     assert client.post("/business/shortlist", data={"origin": "idea", "key": "Test idea"},
                        follow_redirects=False).status_code in ok  # fmt: skip
+    # an answer to a question to ask, so its switch, edit and release forms are on Data management › Answers
+    assert client.post("/business/reports/auto-uwb-15-4ab/answers", data={"key": "q-bu-ab", "text": "Confidential",
+                       "sharing": "shared"}, follow_redirects=False).status_code in ok  # fmt: skip
     from app.auth.passkeys import new_invite
 
     with Session(get_engine()) as s:
@@ -288,6 +291,22 @@ hi</textarea><button name="go" value="save">Save</button><input type="file" name
     assert browser_payload(first, submitters(first)[0]) == [
         ("a", ""), ("n", ""), ("s", "2"), ("t", "first"), ("d", "y"), ("m", "hi"), ("outside", "o"), ("go", "save")
     ]  # fmt: skip
+
+
+def test_the_cross_sell_part_box_is_among_those_sent_blank(owner_client):
+    """Cross-sell › By part was retired (owner, 2 Nov 2026): By system's "Start from a part we already sell" box is on a
+    menu page, the old tab is not, and the box sent blank gives the page without an error message."""
+    pages = menu_pages()
+    assert "/blocks/cross-sell" in pages and "/business/attach" not in pages
+    p = _Forms()
+    p.feed(owner_client.get("/blocks/cross-sell").text)
+    p.close()
+    box = next(f for f in p.forms
+               if f["action"] == "/blocks/cross-sell" and any(x["name"] == "part" for x in f["fields"]))  # fmt: skip
+    sub = submitters(box)[0]
+    assert ("part", "") in browser_payload(box, sub)
+    path, r = send(owner_client, "/blocks/cross-sell", box, sub)
+    assert path == "/blocks/cross-sell" and r.status_code == 200 and "No part number" not in r.text
 
 
 def test_the_price_estimate_form_is_among_those_sent_blank(owner_client):

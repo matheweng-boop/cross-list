@@ -1,5 +1,7 @@
 """Automotive map: grade conventions, computed A/B levels, curated rows and the review round trip."""
 
+import re
+
 from sqlalchemy.orm import Session
 
 from app.db import get_engine
@@ -48,6 +50,39 @@ def test_moves_rank_research_first():
     scored = au._moves(cells, lambda fn, step: {"score": {"pmic": 80, "v2x_fem": 60}[fn]})
     assert [m["label"] for m in scored] == ["PMIC", "Two-carrier"]  # the Opportunity score ranks; demand text stays
     assert scored[1]["driver"] == "FCC 2026" and scored[0]["opp"]["score"] == 80
+
+
+def test_by_level_keeps_column_order_and_hides_rejected_calls():
+    cells = {("a", "x"): {"level": "A", "status": ""}, ("a", "y"): {"level": "B", "status": "rejected"},
+             ("a", "z"): {"level": "A", "status": "accepted"}, ("b", "x"): {"level": "gap", "status": "proposed"}}
+    out = au.by_level({"cells": cells}, "a", ["z", "y", "x", "w"])
+    assert list(out) == ["A"] and out["A"] == [cells[("a", "z")], cells[("a", "x")]]
+
+
+def test_by_application_letter_column(client):
+    """Item 10 (owner, 2 Nov 2026): each letter in its own column with its meaning, the function chips beside it; each
+    card has an id (the Car explorer points at it)."""
+    html = client.get("/business/automotive").text
+    assert 'id="app-telematics"' in html and 'id="app-bms"' in html
+    row = r'<span class="am-lv"><span class="am-cell am-gap">G</span> Gap</span>\s*<span class="am-fns"><a '
+    assert re.search(row, html)
+
+
+def test_short_labels_letter_tabs_and_car_diagram_counts(client):
+    """Owner, 2 Nov 2026: the short labels, five letter tabs over the By application view, and diagram counts from
+    the Automotive system only (not keyword matches across the whole library)."""
+    from app.services import systems as sy
+
+    assert au.LEVEL_LABEL == {"A": "Sell now", "B": "Qualify", "C": "New variant", "D": "Adjacent", "gap": "Gap"}
+    in_car = {i for x in sy.get("automotive")["subsystems"] for i in x["idx"]}
+    apps = {a["id"]: a for a in au.applications()}
+    for a in apps.values():
+        assert set(a["car"]) <= set(a["diagrams"])
+        assert len(a["car"]) == sum(1 for i in a["idx"] if i in in_car)
+    assert len(apps["bms"]["car"]) < len(apps["bms"]["diagrams"])  # data-center backup units are not counted
+    html = client.get("/business/automotive").text
+    assert html.count('<button type="button" data-lv=') == 5 and "/static/lv_tabs.js" in html
+    assert f'{len(apps["bms"]["car"])} car diagrams</small>' in html
 
 
 def test_config_ids_are_known():

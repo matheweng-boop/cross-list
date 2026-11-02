@@ -190,6 +190,15 @@ why_it_matters:
     - kind: cost
       text: Good geometry and dual-frequency corrections can replace an expensive survey antenna in many lane-level designs.
       est: true
+  uwb_positioning:
+    - kind: design
+      text: Knowing which method fits (two-way ranging for keys and finding, TDoA for many tags, PDoA for direction) tells the customer how many anchors, antenna ports and receive paths each product needs, and so which chips, switches and LNAs.
+      est: true
+    - kind: robust
+      text: Double-sided ranging cancels the crystal error that single-sided ranging turns into tens of centimetres, so long reply times and ordinary crystals still give centimetre ranges.
+    - kind: cost
+      text: A TDoA tag that only sends a short blink lives for years on a coin cell, while the anchors carry the receivers and the synchronisation; anchor count and anchor front ends drive the system cost.
+      est: true
 
 products:
   - key: digital_isolators
@@ -290,10 +299,10 @@ products:
     title: UWB and low-power wireless
     line: Qorvo (DW3000, QM33)
     pitch: Secure distance measurement for digital car keys, asset tracking and indoor positioning.
-    guides: [uwb_signal_path, uwb_wifi_coexistence, qualification]
-    why: [uwb_signal_path, uwb_wifi_coexistence, qualification]
+    guides: [uwb_signal_path, uwb_wifi_coexistence, uwb_positioning, qualification]
+    why: [uwb_signal_path, uwb_wifi_coexistence, uwb_positioning, qualification]
     why_notes: [lpwan_uwb_iot_links]
-    visuals: [uwb, link, rf-bands]
+    visuals: [uwb, uwbtwr, uwbtdoa, uwbltdoa, uwbpdoa, link, rf-bands]
     rf_notes: [phys_antennas_wavelength, lpwan_uwb_iot_links]
     topics: [auto_uwb]
     review_words: [uwb, ultra-wideband]

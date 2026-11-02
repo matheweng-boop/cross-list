@@ -13,17 +13,21 @@ NAV = (
         ("Compare", "/compare", "Parameter table for any list of parts"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),
+        # owner, 2 Nov 2026 (item 18): "something similar to ClockBuilder Pro", in the browser
+        ("Clock planner", "/clocks", "Input and output clocks: which timing parts fit, a frequency plan, the jitter"),
     )),
     # owner, 23 Oct 2026: Systems & applications = parts and knowledge we have; Opportunities = gaps and new
     # technology; Future growth = the business side. Systems first, then applications, workspace, designs, cross-sell.
     ("systems", "Systems & applications", (
         ("Systems library", "/library", "Full systems and their sub-systems, with deep dives"),
-        ("Application library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
+        ("Block diagram library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
         ("Cross-sell", "/blocks/cross-sell",
-         "What to sell together: by system, by part, and the Skyworks + Qorvo portfolio side by side"),
+         "What to sell together: by system or from one of our parts, and the Skyworks + Qorvo portfolio"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
+        # owner, 2 Nov 2026: the Automotive map on a see-through 3D car
+        ("Car explorer", "/business/car-explorer", "A 3D car: tap an area to see its applications and letters"),
     )),
     ("opportunities", "Opportunities", (
         ("Gaps & new technology", "/business/opportunities", "Functions with no part of ours yet: gaps and new tech"),
@@ -72,6 +76,8 @@ UTILITY = ("manage", "Data management", (
     # owner, 23 Oct 2026: Verify next, requests, site feedback and guest input as one item with tabs
     ("Site data", "/manage/verify", "Verify next, review queue, requests, site feedback and guest input"),
     ("Uploads", "/manage/uploads", "Pictures, block diagrams, documents and explanations"),
+    # owner, 2 Nov 2026: every answer to the Questions to ask, internal or shareable, with the open questions first
+    ("Answers", "/manage/answers", "Answers to the Questions to ask: internal or shareable, open questions first"),
     ("Data quality", "/business/quality", "Checks, review status and the validation queue"),
     ("People & invites", "/manage/people", "Invite guests, see their passkeys, remove someone"),
     ("Methodology", "/business/method", "Definitions, formulas, cross rules"),
@@ -92,6 +98,7 @@ PLACES = {
     "/pricing/": ("products", "/"),
     "/parts": ("products", "/"),  # owner, 24 Oct 2026: Browse products off the menu (too long); reachable by link
     "/compare": ("products", "/compare"),
+    "/clocks": ("products", "/clocks"),
     "/portfolio": ("systems", "/blocks/cross-sell"),  # owner, 25 Oct 2026: the portfolio is a Cross-sell tab
     "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application
     "/blocks/feedback": ("manage", "/manage/verify"),
@@ -114,6 +121,7 @@ PLACES = {
     "/business/rf-coverage": ("systems", "/business/rf-coverage"),
     "/business/risks": ("opportunities", "/business/risks"),
     "/business/automotive": ("systems", "/business/automotive"),
+    "/business/car-explorer": ("systems", "/business/car-explorer"),
     "/business/competitors": ("opportunities", "/business/competitors"),
     "/business/markets": ("growth", "/business/markets"),
     "/business/customers": ("growth", "/business/markets"),
@@ -143,6 +151,7 @@ PLACES = {
     "/manage/schedule": ("manage", "/manage/schedule"),
     "/manage/data-flow": ("manage", "/manage/data-flow"),
     "/manage/to-confirm": ("manage", "/manage/to-confirm"),
+    "/manage/answers": ("manage", "/manage/answers"),
     "/manage/ai-services": ("manage", "/manage/ai-services"),
     "/manage": ("manage", "/manage/overview"),
     "/library": ("systems", "/library"),  # owner, 23 Oct 2026: part of Systems & applications
@@ -172,9 +181,9 @@ TABS = (
     ),
     (("Markets", "/business/markets"), ("Customers", "/business/customers")),
     # owner, 25 Oct 2026: the Skyworks + Qorvo portfolio moved from Products to Cross-sell (cross-sell = how the two
-    # lines go together); the selected system carries over between these tabs (TAB_CARRY)
-    (("By system", "/blocks/cross-sell"), ("By part", "/business/attach"),
-     ("Skyworks + Qorvo portfolio", "/portfolio")),
+    # lines go together); the selected system carries over between these tabs (TAB_CARRY). Owner, 2 Nov 2026: By part
+    # retired (partner parts without the application are a guess); By system has "Start from a part we already sell"
+    (("By system", "/blocks/cross-sell"), ("Skyworks + Qorvo portfolio", "/portfolio")),
     (("Gaps & new technology", "/business/opportunities"), ("Detailed table", "/business/explorer/table")),
     (("Shortlist", "/business/shortlist"), ("New ideas", "/business/explore"), ("Business cases", "/business/cases")),
     # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab
@@ -184,6 +193,7 @@ TABS = (
     (("Opportunity methodology", "/business/method"), ("Cross rules", "/rules")),
     (("All visuals", "/visuals"), ("RF bands", "/rf-bands")),
     (("Tuners & demodulators", "/broadcast"), ("Radio configurations", "/broadcast/configurations")),
+    (("Clock planner", "/clocks"), ("Saved plans", "/clocks/plans")),
     (
         ("Overview", "/knowledge"),
         ("RF fundamentals", "/rf-notes"),

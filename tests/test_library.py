@@ -92,12 +92,22 @@ def _with_and_without():
     return has, none
 
 
+def _diagram_button(card: str, system: str, x: dict) -> bool:
+    """Owner, 2 Nov 2026: "▦ See the N block diagrams" (to the sub-system's diagrams; one diagram opens at once), or
+    "No diagram yet"."""
+    n = len(x["idx"])
+    if not n:
+        return "No diagram yet" in card and "▦" not in card
+    if n == 1:
+        return f'href="/blocks/new?template={x["idx"][0]}"' in card and "▦ See the block diagram<" in card
+    return (f'href="/blocks?system={system}&amp;sub={x["key"]}#sub-{x["key"]}"' in card
+            and f"▦ See the {n} block diagrams<" in card)  # fmt: skip
+
+
 def test_application_library_shows_diagram_indicator_and_one_click_links(client):
     page = client.get("/blocks").text
     (sk, x), missing = _with_and_without()
-    card = _card(page, sk, x["key"])
-    assert f"Block diagram ✓ ({len(x['idx'])})" in card
-    assert f'href="/blocks/new?template={x["idx"][0]}"' in card  # one click opens the diagram
+    assert _diagram_button(_card(page, sk, x["key"]), sk, x)
     if missing:
         assert "No diagram yet" in _card(page, missing[0], missing[1]["key"])
     assert 'id="diagrams"' in page and "block diagrams</b>" in page.split('id="area-')[0]  # summary near the top
@@ -112,10 +122,27 @@ def test_new_systems_have_indicators_in_both_libraries(client):
         assert s, key
         for x in s["subsystems"]:
             for page in (blocks_page, library_page):
-                card = _card(page, key, x["key"])
-                assert ("Block diagram ✓" in card) == bool(x["idx"]) and ("No diagram yet" in card) != bool(x["idx"])
-                if x["idx"]:
-                    assert f'href="/blocks/new?template={x["idx"][0]}"' in card
+                assert _diagram_button(_card(page, key, x["key"]), key, x), (key, x["key"])
+
+
+def test_sub_system_card_has_two_clear_buttons(client):
+    """Owner, 2 Nov 2026: "📖 Read the deep dive" (each one listed when there are several) and "▦ See the N block
+    diagrams", instead of the mixed diagram and deep-dive links."""
+    titles = {t["key"]: t["title"] for t in library.topics()}
+    for page in (client.get("/library").text, client.get("/blocks").text):
+        for s in sy.systems():
+            for x in s["subsystems"]:
+                card = _card(page, s["key"], x["key"])
+                assert _diagram_button(card, s["key"], x), (s["key"], x["key"])
+                deep = [k for k in x["topics"] if k in titles]
+                assert card.count('class="sys-btn sys-btn-deep"') == len(deep)
+                assert ("📖 Read the deep dive<" in card) == (len(deep) == 1)
+                assert ("📖 Read the deep dives<" in card) == (len(deep) > 1)
+                for k in deep:
+                    assert f'href="/library/{k}"' in card
+                assert "▸" not in card and "Deep dive:" not in card  # the old mixed links are gone
+    v2x = _card(client.get("/library").text, "automotive", "telematics-v2x")
+    assert v2x.count("📖 ") >= 3  # several deep dives: each listed
 
 
 def test_efuse_key_applications_table_has_short_cells_and_a_more_line(client):
@@ -187,19 +214,46 @@ def test_systems_library_shows_systems_with_sub_system_cards(client):
     assert html.index('id="sys-automotive"') < uwb < html.index('id="sys-datacenter"')
 
 
+def test_systems_open_and_close_in_both_libraries(client):
+    """Owner, 2 Nov 2026: each system is one closed line ("Automotive · 8 sub-systems · 48 block diagrams") that opens
+    its sub-systems; a row of system buttons jumps to a system; ?system= opens the picked one on /blocks."""
+    lib, blk = client.get("/library").text, client.get("/blocks").text
+    for s in sy.systems():
+        n = len({i for x in s["subsystems"] for i in x["idx"]})
+        for page, anchor in ((lib, "sys"), (blk, "area")):
+            assert f'<details class="sys-block" id="{anchor}-{s["key"]}">' in page  # closed
+            assert f'href="#{anchor}-{s["key"]}"' in page  # its button
+            line = page.split(f'id="{anchor}-{s["key"]}">')[1].split("</summary>")[0]
+            assert h.escape(s["title"]) in line and f"· {len(s['subsystems'])} sub-systems · {n} block diagram" in line
+    for page in (lib, blk):
+        assert not re.findall(r'<details class="sys-block" id="[^"]+" open>', page)  # every system starts closed
+        assert '<script src="/static/systems.js"></script>' in page
+    n_deep = sum(len(x["topics"]) for x in sy.get("automotive")["subsystems"])
+    assert f"{n_deep} deep dives" in lib.split('id="sys-automotive">')[1].split("</summary>")[0]
+    picked = client.get("/blocks?system=drones").text
+    assert '<details class="sys-block" id="area-drones" open>' in picked and 'id="diagrams-drones"' in picked
+    assert '<details class="sys-block" id="area-automotive">' in picked and 'id="diagrams-automotive"' not in picked
+    js = client.get("/static/systems.js").text
+    assert "hashchange" in js and "d.open = true" in js and "data-sub" in js
+
+
 def test_application_library_groups_by_system_and_sub_system(client):
     html = client.get("/blocks").text
     order = [html.index(f'id="area-{s["key"]}"') for s in sy.systems()]
     assert order == sorted(order) and order[-1] < html.index('id="other-areas"')
     assert 'href="/blocks?system=automotive&amp;sub=car-radio#sub-car-radio"' in html
     n_radio = len(sy.sub("automotive", "car-radio")["idx"])
-    assert f"Block diagram ✓ ({n_radio})" in html.split('id="card-automotive-car-radio"')[1].split("</article>")[0]
+    assert f"▦ See the {n_radio} block diagrams" in _card(html, "automotive", "car-radio")
     one = client.get("/blocks?system=automotive&sub=car-radio").text
-    assert 'id="sub-car-radio"' in one and 'id="sub-adas"' not in one and 'id="area-datacenter"' not in one
+    assert 'id="sub-car-radio"' in one and 'id="sub-adas"' not in one
+    # owner, 2 Nov 2026: every system stays on the page as a closed line; ?system= opens the picked one
+    assert '<details class="sys-block" id="area-automotive" open>' in one
+    assert '<details class="sys-block" id="area-datacenter">' in one
     assert "Cross-sell in Car radio" in one and 'href="/blocks/cross-sell?system=automotive&amp;sub=car-radio"' in one
     assert "Car radio tuner system" in one
     other = client.get("/blocks?system=other").text
-    assert "<details class=\"lib-other\" id=\"other-areas\" open>" in other and 'id="area-automotive"' not in other
+    assert '<details class="lib-other" id="other-areas" open>' in other
+    assert '<details class="sys-block" id="area-automotive">' in other
 
 
 def test_radio_is_an_application_not_a_menu_item(client):
@@ -213,8 +267,8 @@ def test_radio_is_an_application_not_a_menu_item(client):
 # ---- menu tree and redirects --------------------------------------------------------------------------------------
 def test_menu_tree_23_oct():
     menu = {k: [i[0] for i in items] for k, _, items in nav.NAV}
-    assert menu["systems"] == ["Systems library", "Application library", "Application workspace",
-                               "Cross-sell", "RF coverage", "Automotive map"]  # fmt: skip
+    assert menu["systems"] == ["Systems library", "Block diagram library", "Application workspace",
+                               "Cross-sell", "RF coverage", "Automotive map", "Car explorer"]  # fmt: skip
     assert menu["opportunities"] == ["Gaps & new technology", "Competitive analytics", "Risks"]
     assert menu["growth"][-1] == "TAM estimates"
     # owner, 24 Oct 2026: a section for shareable content, after Engineering knowledge, with its own landing page
@@ -223,8 +277,8 @@ def test_menu_tree_23_oct():
     assert nav.HOMES == {"shareable": "/shareable"}
     manage = [i[0] for i in nav.UTILITY[2]]
     # owner, 25 Oct 2026: To confirm first; 26 Oct 2026: Data flow after Schedule
-    assert manage == ["To confirm", "Overview", "Schedule", "Data flow", "Site data", "Uploads", "Data quality",
-                      "People & invites", "Methodology", "AI services (later)"]
+    assert manage == ["To confirm", "Overview", "Schedule", "Data flow", "Site data", "Uploads", "Answers",
+                      "Data quality", "People & invites", "Methodology", "AI services (later)"]
     tabs = next(g for g in nav.TABS if g[0][1] == "/manage/verify")
     # owner, 24 Oct 2026: part requests, diagram feedback and area requests as one Requests tab
     assert tabs == (("Verify next", "/manage/verify"), ("Review queue", "/manage/reviews"),
@@ -386,7 +440,7 @@ def test_pages_pick_up_the_new_systems(client, key):
     one = client.get(f"/blocks?system={key}&sub={x['key']}").text
     assert f'id="sub-{x["key"]}"' in one
     xs = client.get(f"/blocks/cross-sell?sel={key}:{x['key']}").text
-    assert x["title"] in xs and f'value="{key}:{x["key"]}"' in xs
+    assert x["title"] in xs and f'sub={x["key"]}" aria-current="true"' in xs  # its chip in the system chooser
 
 
 def test_presentation_topics_include_the_new_systems():

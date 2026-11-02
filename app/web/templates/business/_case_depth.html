@@ -1,0 +1,21 @@
+{# "In depth" part of a preliminary case (case YAML "depth:", e.g. after the owner's "Look more into it"): tables with
+   a row label, an optional lead and note each, then points and one "For the decision" line. Included by _prelim.html
+   after section 1; on phones every cell shows its column name (CSS block "16b" at the end of app.css). #}
+{% set d = case.depth %}
+<section class="pc-depth" id="in-depth" aria-labelledby="depth-title">
+<h2 id="depth-title">{{ d.title or 'In depth' }}{% if d.date %} <small class="muted">({{ d.date|date }})</small>{% endif %}</h2>
+{% if d.intro %}<p>{{ d.intro }}</p>{% endif %}
+{% if d.tables|length > 1 %}<p class="small">{% for t in d.tables %}<a href="#depth-{{ t.id }}">{{ t.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+{% for t in d.tables or [] %}
+<h3 id="depth-{{ t.id }}">{{ t.title }}</h3>
+{% if t.lead %}<p class="small">{{ t.lead }}</p>{% endif %}
+<div class="table-wrap"><table class="small pc-table">
+  <thead><tr>{% for c in t.columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in t.rows %}<tr><th scope="row">{{ row[0] }}</th>{% for c in row[1:] %}<td data-label="{{ t.columns[loop.index] if t.columns|length > loop.index else '' }}">{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+{% if t.note %}<p class="small muted">{{ t.note }}</p>{% endif %}
+{% endfor %}
+{% if d.points %}<h3 id="depth-next">{{ d.points_title or 'Next step' }}</h3>
+<ul class="pc-list">{% for p in d.points %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+{% if d.thread %}<p class="rpt-thread"><b>For the decision:</b> {{ d.thread }}</p>{% endif %}
+</section>

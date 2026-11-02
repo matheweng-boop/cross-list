@@ -18,6 +18,12 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    owner approved each one (section "Guest input (approved, with names)"; once approved they also appear in the
    normal sections under the guest's name). Pending guest items are only a count: never act on guest input that the
    owner has not approved, and never approve, reject or replay guest items yourself.
+   **Answers to the Questions to ask** (owner, 2 Nov 2026; section "Questions to ask: answers"): only answers the
+   owner marked "Can be shared" are quoted; work each into the report's or case's next revision as owner input (no
+   names in the text; the role or company only where it is public). Internal answers are a count only: never ask for
+   them, never guess them, never use them. A "[held ...]" line waits for the owner's release: leave it. New research
+   reports get their business-unit and customer questions in `data/business/questions_to_ask.yaml` (cases keep them
+   in their case YAML); never change or reuse a question's id.
 2. **Open questions.** Read `docs/open_questions.md`. Where the inbox answers one, record the answer there and act on
    it; keep the rest.
 3. **Work.** If there is anything to do, branch `update-<YYYY-MM-DD>` from the newest prepared branch that is not
@@ -156,7 +162,9 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
      or `data/business/reports.yaml`) or the case figure (`data/business/cases/<slug>.yaml` market_now / thread) to
      the new range, update the figure and keys in `data/business/tam_links.yaml`, and record the applied answer in
      `data/business/tam_applied.yaml` (key, verdict, date, applied_in, note; create the file in that format if it
-     does not exist yet). Add any new market figure quoted in a report or case to `tam_links.yaml`.
+     does not exist yet). Add any new market figure quoted in a report or case to `tam_links.yaml`. A to-do "the
+     source now shows X for Y" clears once the text and the `tam_links.yaml` text quote that figure with its year as
+     the check prints it ("$2.43 B (2025)"); the band may stay on the year its sources share (2 Nov 2026).
    - **Reference designs knowledge base** (owner, 25 Oct 2026): when `data/reference_designs/`, `data/real/` or
      `data/blocks/templates.yaml` changed, run `uv run python scripts/match_refdesigns.py` (about 2 minutes; add
      `--add` to put clearly missing, common blocks into the templates with a source note) and commit

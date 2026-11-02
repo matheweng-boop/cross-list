@@ -1,0 +1,2 @@
+{#- Letter tabs (owner, 2 Nov 2026), filled in by /static/lv_tabs.js; hidden without JavaScript (every letter shows) -#}
+{% macro lv_tabs(levels, labels, counts) %}<div class="lv-tabs" role="group" aria-label="Show one letter" hidden>{% for lv in levels %}<button type="button" data-lv="{{ lv }}" aria-pressed="false"{% if not counts[lv] %} disabled{% endif %}><span class="am-cell am-{{ lv }}">{{ 'G' if lv == 'gap' else lv }}</span> {{ labels[lv] }} <small>{{ counts[lv] }}</small></button>{% endfor %}</div>{% endmacro %}

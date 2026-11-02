@@ -18,12 +18,52 @@ One YAML file per product family. Each parameter has:
 | `derive` | name of a function in `app/matching/rules.py` (`DERIVE`) that works the value out when a part states none, e.g. `gate_output_config` reads the output option from the pinout |
 | `at`, `curve` | `number`: the parameter holding the value's test condition (e.g. `peak_current_vdd_v`) and a `curve` parameter with the value at other conditions. Two parts stated at different conditions are compared at one: the part with a curve covering the other's condition is read off it there |
 | `x_unit` | `curve` only: unit of the condition |
-| `unknown_ok` | an unknown value (stated by neither part, not derivable) is shown as unknown but not counted as a deviation |
+| `unknown_ok` | an unknown value (stated by neither part, not derivable) raises no data gap (amber light) either. No unstated value counts as a deviation (owner, 2 Nov 2026) |
 | `must_meet` | one-way requirement: a candidate below the reference (or without a value) is not listed; a better one is fine. Used for the automotive grade: an AEC-Q100 reference only gets AEC-Q100 candidates |
+| `downgrade_tier` | a worse value is a downgrade that ranks the candidate below every candidate that is not worse there, whatever else differs (the isolation rating; owner, 2 Nov 2026) |
+| `by_supply` | `number`: a curve parameter with the value at lower supplies ([[supply up to V, value], ...]); compared at the design's supply when one is given |
+| `steer` | `set` only: items that steer the pick. When the reference has any of them, a candidate with none ranks below every candidate with one (gate drivers: `desaturation`, `overcurrent`, `short-circuit`; owner, 2 Nov 2026) |
 
 Edit a file and restart the app to apply changes.
 
 Rules that live in code rather than in these files:
+
+- **Unstated values** (owner, 2 Nov 2026). A priority 1 value one side does not state never counts as a deviation:
+  theirs is shown as "not stated by <maker> (info)", ours as "not stated in our datasheet: check". It still keeps a
+  row amber (a missing priority 1 value), and a must-meet grade still has to be stated.
+
+- **Control pins by what they do** (owner, 2 Nov 2026: "pins 7 and 10 (control pins), as one rule"). Pins with a
+  role in `data/pin_roles.yaml` (one entry per datasheet pin, with its page: not connected, output enable,
+  default-output control, refresh enable, input disable) are compared by role, not by name
+  (`app/matching/pinroles.py`). Our NC pin takes any wiring of theirs. Our output enable (pulled up; tied low = outputs
+  off) against their default-output control or NC pin is a **conditional fit**: never a drop-in, shown with the note
+  "Works if pins 7 and 10 are tied high or left open on the board; tied low, our outputs switch off". Against their
+  refresh enable (tied to ground in use) or input disable (opposite polarity) it is a pin mismatch, even with the same
+  name. Where their default output follows the board (CTRL pins) and ours ignores those pins, the drop-in names both of
+  our default-output variants. On Cross a list a conditional fit shows in the functional column (when the drop-in is
+  also the best functional fit, the drop-in family's best conditional fit takes that column).
+- **Data rate at the design's supply** (owner, 2 Nov 2026). `by_supply` names a curve parameter of
+  [supply up to V, value] pairs (`data_rate_low_vdd`, from the datasheets that give a lower rate at low supply).
+  With a supply voltage given on Cross a list or the part page, both parts' rates are read there; without one the
+  headline rates are compared and the row notes "their data rate 100 Mbps up to 3 V supply".
+- **Nearest part when there is no cross** (owner, 2 Nov 2026, rule 13). When no candidate is within the deviation
+  limit, Cross a list keeps the row red and shows the nearest candidate (the usual order, no limit), marked
+  "Nearest (not a drop-in): differs in …"; it never counts as a cross. It must pass the function-defining and
+  must-meet checks: an AEC-Q100 part never gets an industrial one, not even as nearest.
+- **The size of a shortfall counts** (owner, 2 Nov 2026, rule 12). With as many deviations, a candidate that falls
+  less short ranks first: a worse number counts log2 of the ratio (2x short = 1, the weight of an option difference
+  such as the default output state; a 1 Mbps part for a 150 Mbps socket = 7.2), a worse range its uncovered share.
+  It sits after the deviation count (and, on the part page, after "same package" and "pin-to-pin"), below the
+  isolation and protection tiers.
+- **Ranges compared as numbers, the uncovered part named** (owner, 2 Nov 2026). An isolated amplifier's stated input
+  range ("±250 mV", "0.25 to 4.3 V") is read as numbers (`input_range_v`, derived from `input_range`): ours covering
+  theirs is fine, a narrower one is a deviation. A priority 1 range deviation says what is not covered ("partial: not
+  covered 2.25 to 4.3 V"); for an RF frequency range that starts at 0 it says "DC" ("not covered DC to 0.1, 6 to 18
+  GHz"). Whether a candidate covering less than the competitor's main band can still be a functional fit is open (the
+  main band is not in the data).
+- **Isolated-amplifier sides** (owner, 2 Nov 2026). We and TI number the input (sensing) side 1 / A; a datasheet in
+  `data/pin_roles.yaml` `input_side` that numbers it 2 (Analog Devices ADuM3195 / 4195 / 4195-1) has its side-1 and
+  side-2 supply and ground pins swapped before the pins are compared.
 
 - **Both Skyworks isolator families** (owner, 27 Oct 2026: "always offer both families if both families are
   available"; "add a third option which shows the family equivalent and same goes if there is a package equivalent

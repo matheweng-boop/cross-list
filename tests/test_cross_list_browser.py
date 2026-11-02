@@ -45,3 +45,43 @@ def test_paste_submit_summary_and_red_row(chromium, live_server, viewport):
     assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll at {viewport['width']} px"
     ctx.close()
     assert not watch.errors, watch.errors
+
+
+@pytest.mark.parametrize("viewport", [IPAD, PHONE], ids=["ipad", "phone"])
+def test_supply_voltage_input(chromium, live_server, viewport):
+    """Owner, 2 Nov 2026: an optional supply voltage; the value stays in the form after crossing and goes with the
+    Excel download; no sideways scrolling."""
+    watch = Watch(live_server)
+    ctx = chromium.new_context(base_url=live_server, viewport=viewport, has_touch=True)
+    page = watch.attach(ctx.new_page())
+    page.set_default_timeout(PAGE_TIMEOUT)
+    page.goto("/cross-list", wait_until="load")
+    page.locator("#cx-parts").fill("SC141")
+    page.locator("#cx-vdd").fill("3.3")
+    page.get_by_role("button", name="Cross all").click()
+    page.wait_for_load_state("load")
+    expect(page.locator(".cx-summary")).to_contain_text("1 part")
+    assert page.locator("#cx-vdd").input_value() == "3.3"
+    assert page.locator('.cx-dl input[name="vdd"]').input_value() == "3.3"
+    assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll at {viewport['width']} px"
+    ctx.close()
+    assert not watch.errors, watch.errors
+
+
+@pytest.mark.parametrize("viewport", [IPAD, PHONE], ids=["ipad", "phone"])
+def test_part_page_supply_voltage(chromium, live_server, viewport):
+    """The part page's optional supply voltage (owner, 2 Nov 2026) for a digital isolator: kept in the URL and the
+    field; no sideways scrolling."""
+    watch = Watch(live_server)
+    ctx = chromium.new_context(base_url=live_server, viewport=viewport, has_touch=True)
+    page = watch.attach(ctx.new_page())
+    page.set_default_timeout(PAGE_TIMEOUT)
+    page.goto("/find?q=SC141", wait_until="load")
+    field = page.locator('.result-filters input[name="vdd"]')
+    field.fill("2.5")
+    page.locator(".result-filters").get_by_role("button", name="Apply").click()
+    page.wait_for_load_state("load")
+    assert "vdd=2.5" in page.url and page.locator('.result-filters input[name="vdd"]').input_value() == "2.5"
+    assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll at {viewport['width']} px"
+    ctx.close()
+    assert not watch.errors, watch.errors

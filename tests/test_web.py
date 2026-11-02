@@ -315,10 +315,10 @@ def test_navigation_sections_and_old_urls(client):
     for url, section, item in [("/", "Products", "Search &amp; replacements"),
                                ("/parts", "Products", "Search &amp; replacements"),
                                ("/compare", "Products", "Compare"),
-                               ("/broadcast", "Systems &amp; applications", "Application library"),
-                               ("/broadcast/configurations", "Systems &amp; applications", "Application library"),
-                               ("/blocks", "Systems &amp; applications", "Application library"),
-                               ("/blocks/coverage", "Systems &amp; applications", "Application library"),
+                               ("/broadcast", "Systems &amp; applications", "Block diagram library"),
+                               ("/broadcast/configurations", "Systems &amp; applications", "Block diagram library"),
+                               ("/blocks", "Systems &amp; applications", "Block diagram library"),
+                               ("/blocks/coverage", "Systems &amp; applications", "Block diagram library"),
                                ("/business", "Opportunities", "Gaps &amp; new technology"),
                                ("/blocks/cross-sell", "Systems &amp; applications", "Cross-sell"),
                                ("/business/attach", "Systems &amp; applications", "Cross-sell"),
@@ -363,8 +363,8 @@ def test_navigation_sections_and_old_urls(client):
     knowledge = next(s for s in nav.NAV if s[0] == "knowledge")
     assert [i[0] for i in knowledge[2]] == ["Interactive visuals", "General knowledge", "QSPICE library"]
     systems = next(s for s in nav.NAV if s[0] == "systems")
-    assert [i[0] for i in systems[2]] == ["Systems library", "Application library", "Application workspace",
-                                         "Cross-sell", "RF coverage", "Automotive map"]
+    assert [i[0] for i in systems[2]] == ["Systems library", "Block diagram library", "Application workspace",
+                                         "Cross-sell", "RF coverage", "Automotive map", "Car explorer"]
     rf = client.get("/rf-notes").text
     assert 'aria-current="page" class="on">RF fundamentals<' in rf and 'href="/engineering"' in rf
     assert 'aria-current="page" class="on">Specification guides<' in client.get("/engineering/cmti_kv_us").text

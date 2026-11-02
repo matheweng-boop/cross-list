@@ -189,29 +189,153 @@ def test_feedback_button_sends_and_confirms(page):
 def test_application_library_system_then_sub_system(page):
     go(page, "/blocks")
     system = page.locator(".sys-pick a.fchip").nth(1)
-    name = system.inner_text().rsplit(" ", 1)[0].strip()
-    system.click()
-    page.wait_for_load_state("load")
-    assert "system=" in page.url
-    assert page.locator(".sys-pick a.fchip.on").inner_text().startswith(name)
-    sub = page.locator(".sys-sub-title").first
-    sub_name = sub.inner_text().strip()
-    sub.click()
-    page.wait_for_load_state("load")
-    assert "sub=" in page.url
-    heading = page.locator("h3.tpl-cat").first
+    key = system.get_attribute("href").removeprefix("#area-")
+    system.click()  # owner, 2 Nov 2026: jumps to the system and opens it, no reload
+    expect(page.locator(f"details#area-{key}[open]")).to_have_count(1)
+    card = page.locator(f"details#area-{key} .sys-sub", has=page.locator('a.sys-btn-dg[href^="/blocks?"]')).first
+    sub_name = card.locator(".sys-sub-title").inner_text().strip()
+    with page.expect_navigation():
+        card.locator("a.sys-btn-dg").click()  # "▦ See the N block diagrams"
+    assert f"system={key}" in page.url and "sub=" in page.url
+    assert page.locator(".sys-pick a.fchip.on").get_attribute("href") == f"#area-{key}"
+    heading = page.locator(f"details#area-{key}[open] h3.tpl-cat").first
     assert heading.is_visible() and heading.inner_text().startswith(sub_name)
 
 
+def test_systems_library_systems_open_and_close(page):
+    """Owner, 2 Nov 2026: each system is one closed line; a click opens its sub-systems and deep dives, a second click
+    closes it; the buttons jump to a system and open it; /library#sys-<key> opens with that system expanded."""
+    go(page, "/library")
+    expect(page.locator("details.sys-block")).not_to_have_count(0)
+    expect(page.locator("details.sys-block[open]")).to_have_count(0)  # all start closed
+    auto = page.locator("details#sys-automotive")
+    card = auto.locator(".sys-sub").first
+    expect(card).to_be_hidden()
+    auto.locator("summary").click()
+    expect(card).to_be_visible()
+    expect(auto.locator(".lib-card").first).to_be_visible()  # its deep dives
+    auto.locator("summary").click()
+    expect(card).to_be_hidden()
+    button = page.locator('.sys-pick a[href="#sys-drones"]')
+    button.click()
+    drones = page.locator("details#sys-drones")
+    expect(page.locator("details#sys-drones[open]")).to_have_count(1)
+    expect(drones.locator("summary")).to_be_in_viewport()
+    drones.locator("summary").click()  # closed again, then the same button (same hash) opens it once more
+    expect(page.locator("details#sys-drones[open]")).to_have_count(0)
+    button.click()
+    expect(page.locator("details#sys-drones[open]")).to_have_count(1)
+    go(page, "/blocks")
+    go(page, "/library#sys-medical")  # an old link: opens with that system expanded
+    expect(page.locator("details#sys-medical[open]")).to_have_count(1)
+    expect(page.locator("details#sys-medical .sys-sub").first).to_be_visible()
+    expect(page.locator("details.sys-block[open]")).to_have_count(1)
+
+
+def test_block_diagram_library_opens_a_system_by_button_hash_and_query(page):
+    """Owner, 2 Nov 2026: the Block diagram library opens and closes its systems like the Systems library; #area-,
+    #sub- and ?system= open the right one."""
+    go(page, "/blocks")
+    expect(page.locator("details.sys-block[open]")).to_have_count(0)
+    page.locator('.sys-pick a[href="#area-cellular"]').click()
+    expect(page.locator("details#area-cellular[open]")).to_have_count(1)
+    expect(page.locator("details#area-cellular .sys-sub").first).to_be_visible()
+    page.locator("details#area-cellular > summary").click()
+    expect(page.locator("details#area-cellular[open]")).to_have_count(0)
+    go(page, "/library")
+    go(page, "/blocks#sub-car-radio")  # a sub-system whose diagrams are not listed: its card, system open
+    expect(page.locator("details#area-automotive[open]")).to_have_count(1)
+    expect(page.locator("#card-automotive-car-radio")).to_be_in_viewport()
+    go(page, "/blocks?system=drones")
+    expect(page.locator("details#area-drones[open]")).to_have_count(1)
+    expect(page.locator("#diagrams-drones")).to_be_visible()
+    expect(page.locator("details.sys-block[open]")).to_have_count(1)
+    go(page, "/blocks?system=automotive&sub=car-radio#sub-car-radio")
+    expect(page.locator("#sub-car-radio")).to_be_in_viewport()
+
+
 def test_cross_sell_by_system(page):
+    """Owner, 2 Nov 2026: a grid of system buttons; the sub-systems appear as chips once a system is picked."""
     go(page, "/blocks/cross-sell")
-    sel = page.locator("select[name=sel]")
-    option = sel.locator("option").nth(2)  # the first sub-system of the first system
+    expect(page.locator(".xs-subs")).to_have_count(0)
     with page.expect_navigation():
-        sel.select_option(option.get_attribute("value"))
-    assert "sel=" in page.url
+        page.locator(".xs-sys").first.click()
+    assert "system=" in page.url
+    expect(page.locator(".xs-sys.on")).to_have_count(1)
+    chip = page.locator(".xs-subs a.fchip").nth(1)  # the first sub-system (the first chip is "All of …")
+    with page.expect_navigation():
+        chip.click()
+    assert "sub=" in page.url
     assert page.locator("main h2").first.is_visible()
     assert page.get_by_role("heading", name=re.compile("Our parts that go together")).is_visible()
+
+
+def test_cross_sell_start_from_a_part(page):
+    """Owner, 2 Nov 2026: By part is gone; type one of our part numbers in By system's box, see the systems that use
+    its function, pick one and find the part highlighted there. An old By part link lands on the same list."""
+    go(page, "/blocks/cross-sell")
+    expect(page.locator("nav.page-tabs a", has_text="By part")).to_have_count(0)
+    page.locator("#xs-part").fill("Si8641")
+    with page.expect_navigation():
+        page.locator("#part-box button[type=submit]").click()
+    assert "part=Si8641" in page.url
+    expect(page.locator(".xs-places .xs-sys-list li").first).to_be_visible()
+    with page.expect_navigation():
+        page.locator(".xs-sys-list li a").nth(1).click()  # the first sub-system of the first system
+    assert "sub=" in page.url and "part=" in page.url
+    expect(page.locator(".xs-note")).to_contain_text("highlighted")
+    expect(page.locator("#parts-here tr.xs-hl .xs-you").first).to_be_visible()
+    go(page, "/business/attach?fn=digital_isolator")
+    assert "/blocks/cross-sell?fn=digital_isolator" in page.url
+    expect(page.locator(".xs-sys-list")).to_be_visible()
+
+
+def test_cross_sell_system_buttons_fit_side_by_side(page, chromium, live_server):
+    """The system buttons sit side by side: at 390 px three per row in three short rows, nothing sideways, the
+    sub-system chips right under them."""
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/blocks/cross-sell?system=automotive", wait_until="load")
+    tops = tab.locator(".xs-sys").evaluate_all("bs => bs.map(b => Math.round(b.getBoundingClientRect().top))")
+    assert len(tops) >= 9 and len(tops) / len(set(tops)) >= 3  # three or more per row
+    grid = tab.locator(".xs-sys-grid").bounding_box()
+    assert grid["x"] >= 0 and grid["x"] + grid["width"] <= 391 and grid["height"] < 200  # three short rows
+    subs = tab.locator(".xs-subs").bounding_box()
+    assert 0 <= subs["y"] - (grid["y"] + grid["height"]) < 30  # the sub-system chips right under the buttons
+    assert overflow(tab) <= 1
+    ctx.close()
+
+
+def test_cross_sell_compact_parts_table(page, chromium, live_server):
+    """Owner, 2 Nov 2026: one row per function (Function | Skyworks | Qorvo | Used in), three chips, the rest under
+    "+N more" (opens on a tap, no script). At 390 px the function and "Used in" share a line and the two line cells sit
+    side by side under it; no sideways scrolling."""
+    go(page, "/blocks/cross-sell?system=cellular&aec=0")
+    table = page.locator("#parts-here table")
+    expect(table.locator("thead th")).to_have_count(4)
+    row = page.locator("#parts-here tr.xs-row", has=page.locator("details.xs-more")).first
+    more = row.locator("details.xs-more").first
+    expect(more.locator(".aec-chip").first).to_be_hidden()
+    more.locator("summary").click()
+    expect(more).to_have_attribute("open", "")
+    expect(more.locator(".aec-chip").first).to_be_visible()
+    rows = table.locator("tbody tr").count()
+    heights = table.locator("tbody tr").evaluate_all("rs => rs.map(r => r.getBoundingClientRect().height)")
+    assert rows >= 20 and sorted(heights)[len(heights) // 2] < 70  # compact: most rows one line of chips
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/blocks/cross-sell?system=cellular&aec=0", wait_until="load")
+    first = tab.locator("#parts-here tbody tr").first
+    fn = first.locator("th").bounding_box()
+    used = first.locator("td.xs-used").bounding_box()
+    sky, qor = (first.locator(f"td.ln-{k}").bounding_box() for k in ("skyworks", "qorvo"))
+    assert abs(fn["y"] - used["y"]) < 4 and used["x"] > fn["x"]  # one line: function, then "Used in"
+    assert abs(sky["y"] - qor["y"]) < 4 and qor["x"] > sky["x"] >= 0 and sky["y"] > fn["y"]  # the lines side by side
+    assert qor["x"] + qor["width"] <= 391
+    box = tab.locator("#parts-here table").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert overflow(tab) <= 1
+    ctx.close()
 
 
 def test_new_systems_in_the_libraries_and_cross_sell(page):
@@ -229,18 +353,66 @@ def test_new_systems_in_the_libraries_and_cross_sell(page):
     assert page.locator("main h2").first.is_visible()
 
 
-def test_library_card_opens_its_block_diagram_in_one_click(page):
-    """Owner, 25 Oct 2026: each card says whether a block diagram exists, and one click on a diagram name opens it
-    (the editor is visited last: leaving it asks before unload)."""
-    go(page, "/library")
-    expect(page.locator(".sys-sub .dg-flag").first).to_be_visible()
+def test_sub_system_card_buttons_open_the_deep_dive_and_the_diagrams(page):
+    """Owner, 2 Nov 2026: a sub-system card has two clear buttons, "📖 Read the deep dive" and "▦ See the N block
+    diagrams" (the editor is visited last: leaving a library diagram asks before unload)."""
+    go(page, "/library#sys-automotive")
+    card = page.locator("#card-automotive-car-access")
+    expect(card.locator("a.sys-btn")).to_have_count(2)
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/auto_uwb")
     go(page, "/blocks")
     expect(page.locator("#diagrams")).to_be_in_viewport()  # the summary sits at the top
-    card = page.locator(".sys-sub", has=page.locator(".dg-flag.has")).first
-    expect(card.locator(".dg-flag")).to_contain_text("Block diagram ✓")
+    page.locator(".sys-pick a.fchip").first.click()  # opens the first system
+    card = page.locator("details.sys-block[open] .sys-sub", has=page.locator('a.sys-btn-dg[href^="/blocks?"]')).first
+    expect(card.locator("a.sys-btn-dg")).to_have_text(re.compile(r"^▦ See the \d+ block diagrams$"))
     with page.expect_navigation():
-        card.locator(".sys-diags a").first.click()
+        card.locator("a.sys-btn-dg").click()
+    sub = re.search(r"sub=([a-z0-9-]+)", page.url).group(1)
+    expect(page.locator(f"#sub-{sub}")).to_be_in_viewport()
+    with page.expect_navigation():
+        page.locator(f"#sub-{sub} + .tpl-grid a.tpl-card").first.click()
     assert "/blocks/new?template=" in page.url
+
+
+def test_where_am_i_strip_and_breadcrumbs(page):
+    """Owner, 2 Nov 2026: a strip on the four pages highlights where you are, with one line on what the page shows; a
+    deep dive and a diagram show "Automotive › UWB in the car" and link to the other view of the same sub-system."""
+    page.on("dialog", lambda d: d.accept())  # a library diagram opens as an unsaved copy: leaving it asks first
+    here = page.locator('nav.where [aria-current="page"]')
+    what = page.locator("nav.where .where-what")
+    go(page, "/library")
+    expect(here).to_have_text("1 Systems library")
+    expect(what).to_have_text("The map of systems and the sub-systems they are made of.")
+    with page.expect_navigation():
+        page.locator("nav.where").get_by_role("link", name="3 Block diagrams").click()
+    expect(here).to_have_text("3 Block diagrams")
+    expect(what).to_contain_text("Real block diagrams from public sources")
+    go(page, "/library/auto_uwb")
+    expect(here).to_have_text("2 Deep dive")
+    expect(what).to_contain_text("A written explainer for one sub-system")
+    crumbs = page.locator("nav.crumbs")
+    expect(crumbs).to_contain_text("Automotive")
+    expect(crumbs).to_contain_text("UWB in the car")
+    with page.expect_navigation():
+        crumbs.get_by_role("link", name=re.compile(r"See its block diagrams \(\d+\)")).click()
+    assert "system=automotive" in page.url and "sub=car-access" in page.url
+    expect(page.locator("details#area-automotive[open]")).to_have_count(1)
+    expect(page.locator("#sub-car-access")).to_be_in_viewport()
+    with page.expect_navigation():
+        page.locator("#sub-car-access + .tpl-grid a.tpl-card").first.click()
+    expect(here).to_have_text("3 Block diagrams")
+    expect(page.locator("nav.crumbs")).to_contain_text("UWB in the car")
+    with page.expect_navigation():
+        page.locator("nav.crumbs").get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/auto_uwb")
+    with page.expect_navigation():
+        page.locator("nav.where").get_by_role("link", name="4 Your workspace").click()
+    assert page.url.endswith("/blocks/new")
+    expect(here).to_have_text("4 Your workspace")
+    expect(what).to_have_text("Your own diagrams, to build, edit and save.")
+    expect(page.locator("nav.crumbs")).to_have_count(0)
 
 
 def test_efuse_key_applications_table_fits_desktop_and_phone(page, chromium, live_server):
@@ -270,7 +442,7 @@ def test_cross_sell_automotive_together_here_then_portfolio_tab(page):
     with the system kept and its pairs marked, and come back to By system."""
     go(page, "/blocks/cross-sell")
     with page.expect_navigation():
-        page.locator("select[name=sel]").select_option("automotive")
+        page.locator(".xs-sys", has_text="Automotive").click()
     block = page.locator("#together")
     assert block.get_by_role("heading", name=re.compile("Skyworks \\+ Qorvo together here")).is_visible()
     assert block.locator(".pf-syn-card").count() >= 5
@@ -307,6 +479,112 @@ def test_cross_sell_parts_table_and_automotive_filter(page):
         expect(page.locator(target)).to_be_in_viewport()
 
 
+def go_built_on_first_use(page, path: str):
+    """A page whose data (the Automotive map) is built on first use: on a fresh test server, next to the start-up
+    warm-up, that can take longer than the page timeout."""
+    r = page.goto(path, wait_until="load", timeout=90_000)
+    assert r is not None and r.status == 200, (path, r and r.status)
+
+
+def test_automotive_map_letter_column(page):
+    """Item 10 (owner, 2 Nov 2026): in By application each letter sits in its own left column with its meaning, the
+    function chips wrap only in the right column, and a PC shows about two cards per row (the 390 px check follows)."""
+    go_built_on_first_use(page, "/business/automotive")
+    rows = page.locator(".am-app .am-row")
+    assert rows.count() > 5
+    tabs = page.locator(".lv-tabs button")
+    expect(tabs).to_have_count(5)  # owner, 2 Nov 2026: one letter at a time, A (Sell now) first where there is one
+    first = page.locator('.lv-tabs button[aria-pressed="true"]')
+    expect(first).to_have_count(1)
+    lv = first.get_attribute("data-lv")
+    expect(page.locator(f'.am-app .am-row[data-lv]:not([data-lv="{lv}"])').first).to_be_hidden()
+    page.locator('.lv-tabs button[data-lv="gap"]').click()
+    expect(page.locator('.lv-tabs button[data-lv="gap"]')).to_have_attribute("aria-pressed", "true")
+    expect(page.locator(".am-app .am-lv", has_text="Gap").first).to_be_visible()
+    expect(page.locator('.am-app .am-row[data-lv="gap"]').first).to_be_visible()
+    gaps = page.evaluate("""() => [...document.querySelectorAll('.am-app .am-row:not([hidden])')].map(r => {
+        const lv = r.querySelector('.am-lv').getBoundingClientRect();
+        return Math.min(...[...r.querySelectorAll('.am-fnchip')].map(c => c.getBoundingClientRect().left)) - lv.right;
+    })""")
+    assert min(gaps) > 0  # no chip ever wraps under the letter
+    tops = page.evaluate("[...document.querySelectorAll('.am-app')].slice(0, 2).map(e => e.offsetTop)")
+    assert tops[0] == tops[1]  # two cards side by side on a PC
+    page.goto("/business/automotive?view=apps#app-bms", wait_until="load")
+    expect(page.locator("#app-bms")).to_be_in_viewport()
+
+
+def test_car_explorer_area_button_opens_its_list(page):
+    """Item 11 (owner, 2 Nov 2026): the Car explorer loads (the 3D car where the browser has WebGL, else a short note);
+    on the car a click on an area flies in and opens its list, "← Whole car" closes it; an area button below the car
+    opens its list with letters, "+N more" and links (the 390 px check follows)."""
+    go_built_on_first_use(page, "/business/car-explorer")
+    if page.evaluate("!!document.createElement('canvas').getContext('webgl')"):
+        expect(page.locator("#ce-stage")).to_have_attribute("data-ready", "1")
+        x, y = page.evaluate("carExplorer.where('roof')")
+        page.mouse.click(x, y)
+        expect(page.locator("#ce-area-roof")).to_be_visible()
+        expect(page.locator("#ce-area-roof").get_by_role("heading", name="V2X")).to_be_visible()
+        page.get_by_role("button", name="← Whole car").click()
+        expect(page.locator("#ce-area-roof")).to_be_hidden()
+        expect(page.locator("#ce-back")).to_be_hidden()
+    else:
+        expect(page.locator("#ce-no3d")).to_be_visible()
+    page.get_by_role("link", name="High-voltage battery").click()
+    panel = page.locator("#ce-area-battery")
+    expect(panel).to_be_visible()
+    expect(panel.get_by_role("heading", name=re.compile("Battery systems"))).to_be_visible()
+    expect(panel.locator(".am-row .am-lv").first).to_be_visible()
+    blocks_link = panel.get_by_role("link", name=re.compile("^Block diagrams"))
+    expect(blocks_link).to_have_attribute("href", "/blocks?system=automotive&sub=battery-power")
+    expect(panel.locator(".lv-tabs button")).to_have_count(5)
+    panel.locator('.lv-tabs button[data-lv="gap"]').click()  # the gaps: the longest list
+    expect(panel.locator('.am-row[data-lv="gap"]').first).to_be_visible()
+    more = panel.locator('.am-row[data-lv="gap"] details.ce-more').first
+    hidden = more.locator(".am-fnchip").first
+    expect(hidden).to_be_hidden()
+    more.locator("summary").click()
+    expect(hidden).to_be_visible()
+    assert "area=battery" in page.url
+
+
+def test_car_explorer_without_webgl(page):
+    """Without WebGL (old devices, some headless browsers): no 3D car and no three.js download, a short note instead,
+    and the area buttons still open their lists, without a console error."""
+    page.add_init_script("""(() => { const get = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+            return /webgl/i.test(type) ? null : get.call(this, type, ...rest); }; })();""")
+    asked = []
+    page.on("request", lambda r: asked.append(r.url))
+    go_built_on_first_use(page, "/business/car-explorer")
+    expect(page.locator("#ce-no3d")).to_be_visible()
+    expect(page.locator("#ce-stage")).to_be_hidden()
+    page.get_by_role("link", name="Doors, mirrors and access").click()
+    expect(page.locator("#ce-area-doors").get_by_role("heading", name="Digital key & car access")).to_be_visible()
+    assert not [u for u in asked if "/vendor/three/" in u or "car_explorer.js" in u]
+
+
+def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
+    """Owner, 2 Nov 2026: each gap row says why it could matter, with the applications linked; on a phone the sentence
+    is a second line under the row and the table is not wider than the screen."""
+    go(page, "/business/rf-coverage")
+    why = page.locator("table.rf-gaps td.rf-why").first
+    expect(why).to_contain_text("Needed by")
+    link = why.locator("a").first
+    with page.expect_navigation():
+        link.click()
+    assert "/business/applications/" in page.url
+    ctx = chromium.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    tab = ctx.new_page()
+    tab.goto(live_server + "/business/rf-coverage", wait_until="load")
+    row = tab.locator("table.rf-gaps tbody tr").first
+    first, sentence = row.locator("td").first.bounding_box(), row.locator("td.rf-why").bounding_box()
+    assert sentence["y"] > first["y"] + 5 and sentence["x"] < 40  # its own line, from the left edge
+    box = tab.locator("table.rf-gaps").bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    assert overflow(tab) <= 1
+    ctx.close()
+
+
 # --- Engineering knowledge --------------------------------------------------------------------------------------------
 def test_rf_bands_type_and_application_chips_change_the_chart(page):
     go(page, "/rf-bands")
@@ -326,6 +604,17 @@ def test_rf_bands_type_and_application_chips_change_the_chart(page):
     assert page.locator(".rbt-list").inner_text().strip()
 
 
+def pick_visual(page, vid: str):
+    """Open a visual the way a person does (owner, 2 Nov 2026): its tab, its drop-down line, then its title."""
+    link, inner = page.locator(f"#vz-nav a[data-id='{vid}']"), page.locator(f"a[data-id='{vid}']")
+    tab = page.locator("#vz-nav .vz-tp", has=inner).get_attribute("aria-labelledby")
+    page.locator(f"#{tab}").click()
+    line = page.locator("#vz-nav details.vz-sub", has=inner)
+    if line.get_attribute("open") is None:
+        line.locator("summary").click()
+    link.click()
+
+
 def test_every_visual_moves_without_errors(page):
     go(page, "/visuals")
     links = page.locator("#vz-nav a[data-id]")
@@ -333,7 +622,7 @@ def test_every_visual_moves_without_errors(page):
     assert len(ids) > 10
     stuck, total = [], 0
     for vid in ids:
-        page.locator(f"#vz-nav a[data-id='{vid}']").click()
+        pick_visual(page, vid)
         expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", vid)
         panel = page.locator("#vz-panel")
         before = panel.inner_html()
@@ -398,11 +687,261 @@ def test_frequency_visuals_draw_the_bands_as_ranges(page):
     for label in ("AM", "FM", "DAB", "GNSS", "UWB"):
         expect(chart.locator("text.vz-bl", has_text=label).first).to_be_attached()
     expect(page.locator("#vz-panel .vz-more")).to_contain_text("76–108 MHz")
-    page.locator("#vz-nav a[data-id='fmim']").click()
+    pick_visual(page, "fmim")
     for label in ("Japan", "most countries", "OIRT"):
         expect(page.locator("#vz-panel .vz-chart text.vz-bl", has_text=label).first).to_be_attached()
-    page.locator("#vz-nav a[data-id='nf']").click()
+    pick_visual(page, "nf")
     expect(page.locator("#vz-panel .vz-strip .vz-sbar").first).to_be_attached()
+
+
+def test_dbm_ladder_bands_explain_what_moves_them(page):
+    """Owner 2 Nov 2026 ("BLE sensitivity is a range, not a dotted line at one value"): the ladder draws each rung as a
+    band; a tap, a hover or the keyboard shows its range, what moves it and the source; the slider picks the nearest."""
+    go(page, "/visuals#dbm")
+    panel = page.locator("#vz-panel")
+    bands = panel.locator(".dl-b")
+    expect(bands).to_have_count(14)
+    expect(panel.locator(".dl-ln")).to_have_count(4)  # noise in 1 MHz, 1 mW, 1 W and the slider
+    expect(panel.locator(".vz-chartwrap")).to_be_hidden()
+    ble = panel.locator('.dl-b[data-dl="BLE sensitivity"]')
+    ble.click()
+    expect(ble).to_have_attribute("aria-pressed", "true")
+    info = panel.locator(".dl-info")
+    expect(info.locator("h4")).to_have_text("BLE sensitivity")
+    expect(info).to_contain_text("−105 dBm to −70 dBm, typical −97 dBm")
+    expect(info).to_contain_text("What moves it")
+    expect(info.locator('a[href*="bluetooth.com"]')).to_have_count(1)
+    panel.locator('.dl-b[data-dl="Radar transmitter (peak)"]').hover()
+    expect(info.locator("h4")).to_have_text("Radar transmitter (peak)")
+    expect(info).to_contain_text("BizDev estimate (est)")
+    panel.locator('.dl-b[data-dl="Wi-Fi client transmitter"]').focus()
+    page.keyboard.press("Tab")  # the keyboard moves on to the next band, which explains itself
+    expect(info.locator("h4")).to_have_text("Phone transmitter (LTE / 5G)")
+    expect(panel.locator('.dl-b[data-dl="Phone transmitter (LTE / 5G)"]')).to_be_focused()
+    slider = panel.locator('input[data-k="p"]')
+    slider.evaluate("r => { r.value = -128; r.dispatchEvent(new Event('input', {bubbles: true})); }")
+    expect(info.locator("h4")).to_have_text("GNSS signal at the antenna")
+    expect(panel.locator(".vz-kpis")).to_contain_text("GNSS signal at the antenna")
+    panel.locator('select[data-k="mode"]').select_option("blocker")
+    expect(panel.locator(".vz-chartwrap")).to_be_visible()
+    expect(panel.locator(".dl-b")).to_have_count(0)
+
+
+def test_fm_intermod_answers_yes_or_no_and_shows_the_fixes(page):
+    """Owner 2 Nov 2026: "here's the tuned station, here's strong station A and strong station B; is this an intermod
+    product of that?" The verdict gives the arithmetic; A and B move by keyboard and by dragging; a fix is tried."""
+    go(page, "/visuals#fmim")
+    panel = page.locator("#vz-panel")
+    verdict = panel.locator(".fm-verdict")
+    expect(verdict).to_contain_text("Yes, this is an intermod product: 2 × 91.0 − 89.5 = 92.5 MHz, exactly your")
+    expect(verdict).to_contain_text("6 dB louder than your station")
+    expect(panel.locator(".fm-svg .fm-gh.hit")).to_have_count(1)
+    expect(panel.locator(".fm-pairs")).to_contain_text("2 × 91.0 − 89.5 = 92.5 MHz")
+    a = panel.locator('.fm-svg [data-fk="f1"]')
+    expect(a).to_have_attribute("role", "slider")
+    a.focus()
+    page.keyboard.press("ArrowRight")  # A to 91.1 MHz: the ghost moves to the next channel
+    expect(verdict).to_contain_text("Next door: 2 × 91.1 − 89.5 = 92.7 MHz")
+    expect(panel.locator('input[data-k="f1"]')).to_have_value("91.1")
+    expect(panel.locator('.fm-svg [data-fk="f1"]')).to_be_focused()  # the keyboard keeps its place
+    page.keyboard.press("ArrowLeft")
+    expect(verdict).to_contain_text("exactly your station")
+    b = panel.locator('.fm-svg [data-fk="f2"] .fm-st')
+    box, svg = b.bounding_box(), panel.locator(".fm-svg").bounding_box()
+    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    page.mouse.down()
+    page.mouse.move(svg["x"] + svg["width"] * 0.8, box["y"] + box["height"] / 2, steps=5)
+    page.mouse.up()
+    expect(verdict).to_contain_text("No: the products land on")
+    assert float(panel.locator('input[data-k="f2"]').input_value()) > 100
+    panel.locator(".vz-pre", has_text="A ghost on your station").click()
+    expect(verdict).to_contain_text("exactly your station")
+    lin = panel.locator('[data-fix="lin"]')
+    lin.click()
+    expect(panel.locator('[data-fix="lin"]')).to_have_attribute("aria-pressed", "true")
+    expect(panel.locator('[data-fix="lin"]')).to_be_focused()
+    expect(verdict).to_contain_text("14 dB below your station")
+    panel.locator('[data-fix="att"]').click()
+    expect(verdict).to_contain_text("34 dB below your station → harmless")
+    expect(panel.locator(".fx-card.on")).to_have_count(2)
+    expect(panel.locator(".fm-fix")).to_contain_text("not close neighbours")
+    panel.locator(".vz-fmlist").fill("90.0, 91.0, 92.0")
+    expect(panel.locator(".fm-pairs")).to_contain_text("2 × 91.0 − 89.5 = 92.5 MHz")
+    fold = panel.locator("details.vz-fold")
+    expect(fold.locator("summary")).to_have_text(
+        "Show the whole picture: every product, the image and the FM band by region")
+    fold.locator("summary").click()
+    expect(fold.locator(".vz-chart")).to_be_visible()
+    expect(panel.locator(".vz-im")).to_contain_text("Half-IF spur")
+
+
+def test_ip3_trade_off_meter_scenarios_and_textbook_chart(page):
+    """Owner 2 Nov 2026: "what am I actually trading off with linearity?" More gain: the signal turns red (drowned by
+    distortion); more IP3 brings it back and costs current; ready-made scenarios; the textbook chart folded."""
+    go(page, "/visuals#ip3")
+    panel = page.locator("#vz-panel")
+    verdict = panel.locator(".ip-verdict")
+    expect(verdict).to_contain_text("Your signal is heard")
+    expect(panel.locator(".tm-row")).to_have_count(3)
+    expect(panel.locator(".ip-try")).to_contain_text("raise the gain until the red appears")
+
+    def move(k, value):
+        panel.locator(f'input[data-k="{k}"]').evaluate(
+            f"r => {{ r.value = {value}; r.dispatchEvent(new Event('input', {{bubbles: true}})); }}")
+
+    move("g", 40)
+    expect(verdict).to_contain_text("Your signal is lost: drowned by distortion")
+    expect(panel.locator(".ip-svg .ip-w.lost")).to_have_count(1)
+    expect(panel.locator(".ip-svg")).to_contain_text("your signal is lost")
+    move("oip3", 45)
+    expect(verdict).to_contain_text("Your signal is heard")
+    expect(panel.locator(".tm-row.t-cur")).to_contain_text("56.6 mA")  # 10 mA × 2^((45 − 20) / 10), est
+    panel.locator(".vz-pre", has_text="Car FM next to a strong local station").click()
+    expect(panel.locator(".ip-cap")).to_contain_text("Car FM next to a strong local station")
+    expect(verdict).to_contain_text("Your signal is lost")
+    expect(panel.locator(".vz-pre-note")).to_contain_text("Si4734/35")
+    panel.locator(".vz-pre", has_text="5G phone near a base station").click()
+    expect(verdict).to_contain_text("Your signal is heard")
+    fold = panel.locator("details.vz-fold")
+    expect(fold.locator(".vz-chart")).to_be_hidden()
+    fold.locator("summary", has_text="Show the textbook IP3 chart").click()
+    expect(fold.locator(".vz-chart polyline")).to_have_count(2)
+
+
+def test_uwb_positioning_page_visuals_follow_sliders_drags_taps_and_keys(page):
+    """Owner 2 Nov 2026: two-way ranging, TDoA, lightweight TDoA and PDoA on one page, each with a live visual that
+    works with a mouse, a finger (tap) and the keyboard; the same visuals are on Interactive visuals under UWB."""
+    go(page, "/engineering/uwb_positioning")
+    slide = "(r, v) => { r.value = v; r.dispatchEvent(new Event('input', {bubbles: true})); }"
+    kpi = lambda box, label: box.locator(".vz-kpi", has_text=re.compile(label)).locator("b")  # noqa: E731
+    for vid in ("uwbtwr", "uwbtdoa", "uwbltdoa", "uwbpdoa"):
+        expect(page.locator(f'[data-uwp="{vid}"] .vz-kpi').first).to_be_visible()
+
+    twr = page.locator('[data-uwp="uwbtwr"]')  # longer reply: single-sided error grows, double-sided stays tiny
+    ss = kpi(twr, "^Single-sided error")
+    before = ss.inner_text()
+    twr.locator('input[data-k="r1"]').evaluate(slide, 1000)
+    expect(ss).not_to_have_text(before)
+    expect(kpi(twr, "^Double-sided error")).to_contain_text("µm")
+    twr.locator(".uwp-play").click()
+    expect(twr.locator(".uwp-play")).to_have_text("▶ Play again", timeout=15000)
+    expect(twr.locator(".uwp-ladder text", has_text="t6")).to_be_attached()
+
+    tdoa = page.locator('[data-uwp="uwbtdoa"]')
+    where = kpi(tdoa, "^Tag")
+    start = where.inner_text()
+    tdoa.locator('[data-h="tag"]').focus()
+    page.keyboard.press("ArrowRight")
+    expect(where).not_to_have_text(start)
+    expect(tdoa.locator('[data-h="tag"]')).to_be_focused()  # the redraw keeps the keyboard focus
+    after_key = where.inner_text()
+    plan = tdoa.locator(".uwp-plan").bounding_box()
+    page.mouse.click(plan["x"] + plan["width"] * 0.75, plan["y"] + plan["height"] * 0.55)  # a tap places the tag
+    expect(where).not_to_have_text(after_key)
+    pair = kpi(tdoa, "^Anchor 2 − anchor 1")
+    first = pair.inner_text()
+    a2 = tdoa.locator('[data-h="a1"] rect').bounding_box()
+    page.mouse.move(a2["x"] + a2["width"] / 2, a2["y"] + a2["height"] / 2)
+    page.mouse.down()
+    page.mouse.move(a2["x"] - 60, a2["y"] + 40, steps=6)
+    page.mouse.up()
+    expect(pair).not_to_have_text(first)
+    spread = kpi(tdoa, "^Position spread")
+    s0 = spread.inner_text()
+    tdoa.locator('input[data-k="sync"]').evaluate(slide, 2)
+    expect(spread).not_to_have_text(s0)
+    tdoa.locator('select[data-k="mode"]').select_option("dl")
+    expect(kpi(tdoa, "^Computes the position")).to_have_text("the tag itself")
+
+    light = page.locator('[data-uwp="uwbltdoa"]')
+    got = kpi(light, "^Blinks that get through")
+    g0 = got.inner_text()
+    light.locator('input[data-k="tags"]').evaluate(slide, 1000)
+    expect(got).not_to_have_text(g0)
+    expect(light.locator(".uwp-light text", has_text="slots full")).to_be_attached()
+
+    pd = page.locator('[data-uwp="uwbpdoa"]')
+    pd.locator('input[data-k="d"]').evaluate(slide, 40)
+    expect(kpi(pd, "^Spacing d / λ")).to_contain_text("ambiguous")
+    expect(pd.locator(".uwp-pdoa text", has_text="also fits").first).to_be_attached()
+    pd.locator('[data-h="tag"]').focus()
+    page.keyboard.press("ArrowRight")
+    expect(pd.locator('input[data-k="th"]')).to_have_value("31")
+    expect(kpi(pd, "^Angle read back")).to_be_visible()
+
+    go(page, "/visuals#uwbpdoa")  # the same visual inside the engine on /visuals
+    expect(page.locator("#vz-panel h2")).to_contain_text("phase difference of arrival")
+    expect(page.locator("#vz-panel .uwp-pdoa")).to_be_attached()
+    page.locator('#vz-panel input[data-k="th"]').evaluate(slide, 70)
+    expect(page.locator("#vz-panel .vz-kpi", has_text="Angle read back")).to_contain_text("70")
+
+
+def test_visuals_tabs_drop_downs_one_visual_deep_links_and_search(page):
+    """Owner, 2 Nov 2026: three tabs; under the chosen tab each sub-group is one closed line with a count; opening it
+    lists only the titles; a title shows only that visual; #id deep links open the right tab, line and visual; a
+    search box finds a visual by its title or a word."""
+    go(page, "/visuals")
+    tabs = page.locator("#vz-tabbar [role=tab]")
+    expect(tabs).to_have_count(3)
+    for i, label in enumerate(("RF & wireless", "Power & isolation", "Basics")):
+        expect(tabs.nth(i)).to_contain_text(label)
+    expect(tabs.nth(0)).to_have_attribute("aria-selected", "true")
+    rf = page.locator("#vz-tp-rf")
+    lines = ("RF links", "Receivers", "Matching and filters", "Broadcast radio", "GNSS", "UWB", "Timing")
+    expect(rf.locator("details.vz-sub > summary")).to_have_text([re.compile(rf"^{s} · \d+$") for s in lines])
+    expect(rf.locator("details.vz-sub[open]")).to_have_count(0)  # every line starts closed
+    expect(page.locator("#vz-panel .vz-hint")).to_be_visible()  # no visual until one is picked
+    radio = rf.locator("details.vz-sub").filter(has=page.locator("summary", has_text="Broadcast radio"))
+    radio.locator("summary").click()
+    titles = radio.locator(".vz-titles > *")
+    expect(titles.first).to_be_visible()
+    assert titles.count() == radio.locator(".vz-titles > a[data-id]").count()  # only titles in the list
+    radio.locator(".vz-titles a", has_text="AM vs FM").click()
+    expect(page.locator("#vz-panel h2")).to_have_count(1)  # only that visual
+    expect(page.locator("#vz-panel h2")).to_have_text("AM vs FM modulation")
+    assert page.url.endswith("#mod")
+    tabs.nth(1).click()
+    power = page.locator("#vz-tp-power")
+    expect(power).to_be_visible()
+    expect(rf).to_be_hidden()
+    expect(power.locator("details.vz-sub > summary")).to_have_text(
+        [re.compile(rf"^{s} · \d+$") for s in ("Isolation", "Power switching", "Circuits in motion")])  # fmt: skip
+    ids = power.locator("details.vz-sub").evaluate_all(
+        "ds => ds.map(d => [...d.querySelectorAll('a[data-id]')].map(a => a.dataset.id))")  # fmt: skip
+    assert ids[0] == ["cmti", "creep", "emc"] and ids[1][:4] == ["gate", "thermal", "swloss", "turnon"]
+    assert len(ids[2]) == 6
+    tabs.nth(2).click()
+    expect(page.locator("#vz-tp-basics details.vz-sub > summary")).to_have_text([re.compile(r"^Digital basics · \d+$")])
+    # deep links from other pages open the right tab, line and visual
+    for vid, tab, line in (("ip3", "rf", "Receivers"), ("creep", "power", "Isolation"),
+                           ("turnon", "power", "Power switching"), ("hex", "basics", "Digital basics")):  # fmt: skip
+        page.goto("about:blank")
+        go(page, f"/visuals#{vid}")
+        expect(page.locator(f"#vz-tab-{tab}")).to_have_attribute("aria-selected", "true")
+        expect(page.locator(f"#vz-tp-{tab} details.vz-sub[open] > summary")).to_have_text(re.compile(rf"^{line} · "))
+        expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", vid)
+        expect(page.locator("#vz-panel h2")).to_have_count(1)
+    page.evaluate("location.hash = 'nf'")  # a link inside a visual to another one switches the tab too
+    expect(page.locator("#vz-tab-rf")).to_have_attribute("aria-selected", "true")
+    expect(page.locator("#vz-nav a.on")).to_have_attribute("data-id", "nf")
+    # search by title or word
+    q, hits = page.locator("#vz-q"), page.locator("#vz-hits a[data-hit]")
+    q.fill("jitter")
+    expect(hits.first).to_have_attribute("data-hit", "jitter")
+    q.fill("VSWR")
+    expect(hits.first).to_have_attribute("data-hit", "vswr")
+    hits.first.click()
+    expect(page.locator("#vz-panel h2")).to_contain_text("VSWR")
+    expect(page.locator("#vz-tp-rf details.vz-sub[open] > summary")).to_contain_text(["Matching and filters"])
+    q.fill("clearance")  # a word from the visual's keywords, not its title; Enter opens the first hit
+    expect(hits.first).to_have_attribute("data-hit", "creep")
+    q.press("Enter")
+    expect(page.locator("#vz-panel h2")).to_have_text("Creepage against working voltage")
+    expect(page.locator("#vz-tab-power")).to_have_attribute("aria-selected", "true")
+    q.fill("zzzz")
+    expect(page.locator("#vz-hits")).to_contain_text("No visual matches")
+    q.fill("")
+    expect(page.locator("#vz-hits")).to_be_hidden()
 
 
 # --- Data management --------------------------------------------------------------------------------------------------
@@ -840,6 +1379,53 @@ def test_expand_this_idea_asks_once_and_shows_the_request(page):
     assert page.locator("details.rp-exp").count() == 0
 
 
+def test_answer_a_question_to_ask_switch_edit_and_find_it_in_answers(page):
+    """Owner, 2 Nov 2026 (item 15): under a research report's question, write a two-line answer and who answered;
+    it saves as Internal only, the switch makes it Can be shared, an edit keeps the earlier version (shown on a tap),
+    and Data management › Answers lists it with a link back to its question (iPad upright; 390 px checked after)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/business/reports/filters-1-11ghz")
+    box = page.locator("#i-q-bu-standalone")
+    form = box.locator("form.aq-form")
+    expect(form.locator(".aq-warn")).to_have_text("Don't record confidential figures or plans; summarise instead")
+    expect(form.locator("input[name=sharing][value=internal]")).to_be_checked()
+    form.locator("textarea[name=text]").fill("They keep standalone filters.\nLow volume stays for now.")
+    form.locator("input[name=who]").fill("Filter BU product line")
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save answer").click()
+    card = page.locator("#i-q-bu-standalone article.aq-a").first
+    expect(card).to_contain_text("Low volume stays for now.")
+    expect(card).to_contain_text("Filter BU product line")
+    expect(card.get_by_role("button", name="🔒 Internal only")).to_have_attribute("aria-pressed", "true")
+    with page.expect_navigation():
+        card.get_by_role("button", name="✅ Can be shared").click()
+    card = page.locator("#i-q-bu-standalone article.aq-a").first
+    expect(card.get_by_role("button", name="✅ Can be shared")).to_have_attribute("aria-pressed", "true")
+    card.locator("details.aq-more summary", has_text="Edit").click()
+    card.locator("textarea[name=text]").fill("They keep standalone filters for defense and test.")
+    with page.expect_navigation():
+        card.get_by_role("button", name="Save changes").click()
+    card = page.locator("#i-q-bu-standalone article.aq-a").first
+    expect(card.locator(".aq-text")).to_have_text("They keep standalone filters for defense and test.")
+    expect(card.locator(".aq-edited")).to_be_visible()
+    old = card.locator("details.aq-more", has_text="Earlier versions")
+    expect(old.locator(".aq-vers")).to_be_hidden()
+    old.locator("summary").click()
+    expect(old.locator(".aq-vers")).to_contain_text("Low volume stays for now.")
+    assert overflow(page) <= 1
+    go(page, "/manage/answers?sharing=shared")
+    item = page.locator(".aq-list > li", has_text="for defense and test").first
+    expect(item.locator(".aq-q")).to_contain_text("standalone filters")
+    with page.expect_navigation():
+        item.locator(".aq-where a").click()
+    assert page.url.endswith("/business/reports/filters-1-11ghz#i-q-bu-standalone")
+    go(page, "/manage/answers?sharing=internal")
+    expect(page.locator(".aq-list > li", has_text="for defense and test")).to_have_count(0)
+    expect(page.locator("#open-questions")).to_contain_text("Still open")
+    go(page, "/business/reports/auto-uwb-15-4ab#questions-to-ask")  # a case's section 8 (390 px checked after)
+    expect(page.locator("#i-q-bu-ab form.aq-form .aq-warn")).to_be_visible()
+
+
 # --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------
 def test_describe_your_system_builds_blocks_at_ipad_size(page):
     """Type a sentence, Build: the 48 V input, protection, buck, LDO and MCU frames appear, linked left to right, with
@@ -860,3 +1446,68 @@ def test_describe_your_system_builds_blocks_at_ipad_size(page):
     expect(page.locator("#bk-words-echo")).to_contain_text("MCU → Microcontroller")
     expect(page.locator("#bk-status")).to_contain_text("built from your description")
     assert overflow(page) <= 1
+
+
+# --- Research: our own PD controller (worker G, 2 Nov 2026) -----------------------------------------------------------
+def test_charging_report_own_pd_controller_section_on_a_phone(page):
+    """Owner, 2 Nov 2026 ("Look into own pd controller"): the summary links to the closer look; its five parts show
+    and their tables scroll inside their own box on a 390 px phone, not the page."""
+    page.set_viewport_size(PHONE)
+    go(page, "/business/reports/auto-charging-power")
+    page.locator('.brief a[href="#own-pd-controller"]').click()
+    sec = page.locator("#own-pd-controller")
+    expect(sec).to_be_in_viewport()
+    for h in ("What we could reuse (est)", "What it takes", "Who sells it today", "Effort and feasibility",
+              "Build, partner or license"):  # fmt: skip
+        expect(sec.locator("h3", has_text=h)).to_have_count(1)
+    assert overflow(page) <= 1
+
+
+# --- Research: isolated current sensing case, In depth (worker G, 2 Nov 2026) -----------------------------------------
+def test_current_sense_case_in_depth_reads_on_a_phone(page):
+    """Owner, 27 Oct 2026 ("Look more into it"): the case's In depth tables; on a 390 px phone each row is a block and
+    each cell shows its column name, nothing scrolls sideways; a link in the table list jumps to its table."""
+    page.set_viewport_size(PHONE)
+    page.request.get("/business/reports/iso-current-sense-charging", timeout=90_000)  # a case's first render is slow
+    go(page, "/business/reports/iso-current-sense-charging")
+    sec = page.locator("#in-depth")
+    expect(sec.locator("h3")).to_have_count(7)  # six tables and "Next step"
+    cell = sec.locator("#depth-where + .table-wrap td[data-label='How it is done']").first
+    expect(cell).to_be_visible()
+    label = cell.evaluate("e => getComputedStyle(e, '::before').content")
+    assert "How it is done" in label, label
+    sec.locator("a[href='#depth-needs']").click()
+    expect(page.locator("#depth-needs")).to_be_in_viewport()
+    assert overflow(page) <= 1
+
+
+# --- Products > Clock planner (owner, 2 Nov 2026, item 18) ------------------------------------------------------------
+def test_clock_planner_preset_parts_plan_save_reopen(page):
+    """Preset → the parts that fit → plan with another part → add an output row → save → the link reopens the plan
+    (iPad held upright; 390 px checked after the test)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/clocks")
+    expect(page.locator("#cp-cbpro a")).to_have_attribute("href", re.compile("Clockbuilder-Pro-Software"))
+    with page.expect_navigation():
+        page.get_by_role("link", name="Mixed with fractional outputs").click()
+    expect(page.locator("#cp-parts")).to_contain_text("Si5332A-GM1")
+    expect(page.locator("#cp-plan h2")).to_contain_text("Frequency plan for")
+    expect(page.locator("#cp-plan")).to_contain_text("fractional divider")
+    with page.expect_navigation():
+        page.locator("#cp-parts tr", has_text="Si5332A-GM1").get_by_role("link", name="Plan with this part").click()
+    expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
+    expect(page.locator("#cp-plan")).to_contain_text("All outputs come from one VCO with integer dividers")
+    expect(page.locator(".cp-diagram svg .cp-out")).to_have_count(3)
+    rows = page.locator("#cp-rows .cp-row:not(.cp-row-head)")
+    before = rows.count()
+    page.locator("#cp-add").click()
+    expect(rows).to_have_count(before + 1)
+    page.locator("#cp-name").fill("Browser clock plan")
+    page.locator("#cp-save-btn").click()
+    expect(page.locator("#cp-status")).to_contain_text("Saved. Link:")
+    assert re.search(r"/clocks/plans/\d+$", page.url)
+    go(page, page.url)
+    expect(page.locator("main h1")).to_have_text("Browser clock plan")
+    expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
+    go(page, "/clocks/plans")
+    expect(page.locator("main")).to_contain_text("Browser clock plan")

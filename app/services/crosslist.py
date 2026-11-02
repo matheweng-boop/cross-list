@@ -33,6 +33,7 @@ from sqlalchemy.orm import Session
 
 from app.matching.engine import (
     BETTER,
+    DEFAULT_MAX_DEVIATIONS,
     DIFFERENT,
     EQUAL,
     UNKNOWN,
@@ -43,6 +44,7 @@ from app.matching.engine import (
     from_datasheet,
     is_estimate_source,
     rank_key,
+    uncovered,
 )
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
@@ -232,8 +234,9 @@ class Crosser:
     candidates that fail a function-defining ("hard") or must-meet categorical spec are skipped before the full
     comparison (the engine would not list them either: the same compare_param decides)."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, supply_v: float | None = None):
         self.session = session
+        self.supply_v = supply_v  # the design's supply: rates read there (owner, 2 Nov 2026)
         self._cands: dict[tuple, list[Part]] = {}
         self._values: dict[int, dict] = {}
 
@@ -242,7 +245,7 @@ class Crosser:
             self._values[p.id] = rules.values(p)
         return self._values[p.id]
 
-    def crosses(self, ref: Part) -> dict[str, list[CrossResult]]:
+    def crosses(self, ref: Part, max_deviations: int | None = None) -> dict[str, list[CrossResult]]:
         rules = get_rules(ref.family)
         ck = (ref.family, ref.is_reference, ref.manufacturer_id if ref.is_reference else None)
         if ck not in self._cands:
@@ -266,7 +269,8 @@ class Crosser:
                 if not fail:
                     keep.append(c)
             cands = keep
-        return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id))
+        return find_crosses(ref, cands, rules, feedback_for(self.session, ref.id),
+                            DEFAULT_MAX_DEVIATIONS if max_deviations is None else max_deviations, self.supply_v)
 
 
 def _p1(r: CrossResult) -> list:
@@ -293,15 +297,24 @@ def _pool(ref: Part, crosses: dict) -> list[CrossResult]:
 
 
 def drop_in_key(r: CrossResult):
-    return (r.category != "fff", len(r.deviations), getattr(r, "unverified_worse", 0), _worse_score(r),
-            len(r.exceptions), r.closeness,
-            r.candidate.mpn)  # fmt: skip
+    """A candidate with a lower isolation rating (``downgrade``), then one without the reference's short-circuit
+    protection (``steer_miss``), ranks last (owner, 2 Nov 2026)."""
+    return (getattr(r, "steer_miss", False), getattr(r, "downgrade", False), r.category != "fff", _devs(r),
+            getattr(r, "shortfall", 0.0), getattr(r, "unverified_worse", 0), _worse_score(r), len(r.exceptions),
+            r.closeness, r.candidate.mpn)  # fmt: skip
 
 
 def functional_key(r: CrossResult):
     p1_off = sum(d.score for d in _p1(r) if d.status != EQUAL and d.status != BETTER)
-    return (len(r.deviations), getattr(r, "unverified_worse", 0), p1_off, len(r.exceptions), not r.fit.same_package,
-            not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
+    return (getattr(r, "steer_miss", False), getattr(r, "downgrade", False), _devs(r),
+            getattr(r, "unverified_worse", 0), getattr(r, "shortfall", 0.0), p1_off, len(r.exceptions),
+            not r.fit.same_package, not r.fit.same_pinout, r.closeness, r.candidate.mpn)  # fmt: skip
+
+
+def _devs(r) -> int:
+    """Deviations for the order: a priority 1 value we do not state (a "check" note, never a deviation) counts like one
+    (owner, 2 Nov 2026), so a part with its values stated ranks first."""
+    return len(r.deviations) + getattr(r, "unstated_ours", 0)
 
 
 def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult | None]:
@@ -312,8 +325,19 @@ def columns(ref: Part, crosses: dict) -> tuple[CrossResult | None, CrossResult |
     c1 = min(fits, key=drop_in_key) if fits else None
     c2 = min(pool, key=functional_key) if pool else None
     if c1 is not None and c2 is not None and c2.candidate.id == c1.candidate.id:
-        c2 = None
+        c2 = _conditional_fit(c1, pool)
     return c1, c2
+
+
+def _conditional_fit(c1: CrossResult, pool: list) -> CrossResult | None:
+    """When the drop-in is also the best functional fit, the functional column shows the best conditional fit of the
+    drop-in's family instead (same package, a control pin that fits one board wiring only, shown with its deciding
+    note; owner, 2 Nov 2026: ADuM1411 -> Si86SS41 drop-in, Si86S641 and Si8641 "shown with the deciding note"); the
+    other family keeps its own row. None when there is no such part."""
+    fam = isolator_family(c1.candidate.mpn)
+    conds = [r for r in pool if r.candidate.id != c1.candidate.id and getattr(r.fit, "conditions", None)
+             and r.fit.same_package and r.fit.same_pinout and isolator_family(r.candidate.mpn) == fam]  # fmt: skip
+    return min(conds, key=functional_key) if conds else None
 
 
 def is_si86s(mpn: str) -> bool:
@@ -392,10 +416,8 @@ def data_gaps(r: CrossResult) -> list[str]:
         if d.status == UNKNOWN and not d.unknown_ok:
             rv, cv = rules.values(r.reference).get(d.key), rules.values(r.candidate).get(d.key)
             empty = (None, "", [])
-            if rv in empty and cv in empty:
-                gaps.append(f"{_short(d.label)} in neither datasheet")
-            elif rv in empty or cv in empty:
-                gaps.append(f"{_short(d.label)} not in {'their' if rv in empty else 'our'} datasheet")
+            if rv in empty or cv in empty:
+                gaps.append(unstated(r, d, rv in empty, cv in empty))
             else:
                 gaps.append(f"{_short(d.label)} not comparable ({d.ref_display} vs {d.cand_display})")
         for side in ("their", "our"):
@@ -407,6 +429,16 @@ def data_gaps(r: CrossResult) -> list[str]:
             elif _is_estimate(src):
                 gaps.append(f"{_short(d.label)} estimated ({side}s)")
     return list(dict.fromkeys(gaps))
+
+
+def unstated(r: CrossResult, d, theirs_missing: bool, ours_missing: bool) -> str:
+    """A priority 1 value one side does not state (owner, 2 Nov 2026): never a deviation; theirs is info, ours a check
+    note."""
+    if theirs_missing and ours_missing:
+        return f"{_short(d.label)} stated by neither (info)"
+    if theirs_missing:
+        return f"{_short(d.label)} not stated by {r.reference.manufacturer.name} (info)"
+    return f"{_short(d.label)} not stated in our datasheet: check"
 
 
 def _short(label: str) -> str:
@@ -425,19 +457,31 @@ def comment(r: CrossResult, column: int) -> str:
     data gaps, a must-meet lower-priority difference ("also: …"), lifecycle and engineer notes."""
     bits = []
     ref, cand = r.reference, r.candidate
+    lead = ""  # the deciding note of a conditional fit, said first (owner, 2 Nov 2026)
     if r.fit.fits:
         bits.append("Same package and pinout")
+    elif r.fit.same_package and r.fit.same_pinout and r.fit.conditions:  # fits on one board wiring of a control pin
+        lead = r.fit.condition_note + ". "
+        bits.append("Same package and pinout otherwise")
     elif r.fit.same_package:
-        bits.append(f"Same package ({cand.package.code}), different pinout")
+        bits.append(f"Same package ({cand.package.code}), different pinout{_role_diffs(r.fit)}")
     else:
         bits.append(f"Package {ref.package.code} vs {cand.package.code}"
                     + ("" if r.fit.same_pinout else ", different pinout"))  # fmt: skip
     p1 = _p1(r)
     qual = next((d for d in p1 if d.key == "qualification"), None)
     order = {WORSE: 0, DIFFERENT: 0, UNKNOWN: 1, BETTER: 2, EQUAL: 3}
-    shown = [d for d in p1 if d.key != "qualification" and (d.status != EQUAL or d.ref_display != d.cand_display)]
+    rules_ = get_rules(ref.family)
+    shown = [d for d in p1 if d.key != "qualification" and d.status != UNKNOWN  # unstated: said below
+             and (d.status != EQUAL or d.ref_display != d.cand_display)
+             and not (d.status == BETTER and getattr(rules_.get(d.key), "kind", "") == "bool")]  # only ours
+    rules = get_rules(ref.family)
+    rvals, cvals = (rules.values(ref), rules.values(cand)) if any(
+        p.kind == "range" and p.priority == 1 for p in rules.params) else ({}, {})  # fmt: skip
     for d in sorted(shown, key=lambda d: order[d.status])[:5]:
-        bits.append(f"{_short(d.label)} {d.ref_display} vs {d.cand_display} ({_tag(d)})")
+        gap = uncovered(rules.get(d.key), rvals.get(d.key), cvals.get(d.key)) if d.status == WORSE else ""
+        tag = f"{_tag(d)}; partial: not covered {gap}" if gap else _tag(d)
+        bits.append(f"{_short(d.label)} {d.ref_display} vs {d.cand_display} ({tag})")
     if qual is not None and qual.status == EQUAL and _qual(ref) == "automotive" == _qual(cand):
         bits.append("AEC-Q both")
     elif qual is not None and qual.status != EQUAL:
@@ -447,7 +491,20 @@ def comment(r: CrossResult, column: int) -> str:
     must = [d for d in r.diffs if d.priority > 1 and (d.hard or d.must_meet) and d.status in (WORSE, DIFFERENT)]
     if must:
         bits.append("also: " + ", ".join(f"{_short(d.label)} {d.ref_display} vs {d.cand_display}" for d in must))
+    if getattr(r, "steer_miss", False):  # their short-circuit protection, ours none: ranked lower (owner, 2 Nov 2026)
+        rules = get_rules(ref.family)
+        for p in (p for p in rules.params if p.steer):
+            steer = {x.lower() for x in p.steer}
+            theirs = sorted(str(x) for x in rules.values(ref).get(p.key) or [] if str(x).lower() in steer)
+            if theirs:
+                bits.append(f"also: ours has no {' or '.join(theirs)} protection (ranked lower)")
+    bits += low_supply_notes(r)
+    if getattr(r.fit, "notes", None) and r.fit.same_package:  # e.g. their output enable facing our NC pin
+        bits.append(r.fit.info_note)
+    bits += [unstated(r, d, d.ref_display == "—", d.cand_display == "—") for d in p1
+             if d.status == UNKNOWN and d.key != "qualification"]  # fmt: skip
     bits += data_gaps(r)
+    bits = list(dict.fromkeys(bits))
     if r.lifecycle_risk:
         bits.append(f"our part is {lifecycle.badge(cand)[0]}")
     notes = cross_notes.notes_for(ref.mpn, cand.mpn)
@@ -455,10 +512,63 @@ def comment(r: CrossResult, column: int) -> str:
         bits.append(f"engineer note: {notes[0]['verdict_label'].lower()}")
     if not get_rules(ref.family).by_priority(1):
         bits.append("(no priority list yet)")
-    return "; ".join(bits) + "."
+    return lead + "; ".join(bits) + "."
 
 
+def low_supply_notes(r: CrossResult) -> list[str]:
+    """Where a part's data rate drops at a low supply and no supply was given (owner, 2 Nov 2026): "their data rate
+    100 Mbps up to 3 V supply (give the supply to compare there)"."""
+    from app.matching.rules import low_supply_note
+
+    rules = get_rules(r.reference.family)
+    out = []
+    for p in (p for p in rules.params if p.by_supply):
+        if any(d.key == p.key and d.ref_display.endswith("V supply") for d in r.diffs):
+            continue  # compared at the given supply already
+        for side, part in (("their", r.reference), ("our", r.candidate)):
+            note = low_supply_note(part.param_map().get(p.by_supply))
+            if note:
+                out.append(f"{side} {_short(p.label).lower()} {note} supply (give the supply to compare there)")
+    return out
+
+
+def _role_diffs(fit) -> str:
+    """Control pins with another job at the same position (pin roles): " (pins 7, 10: their refresh enable, our
+    output enable)"."""
+    from app.matching.pinroles import label
+
+    by: dict[tuple, list[int]] = {}
+    for pos, theirs, ours in getattr(fit, "role_diffs", None) or []:
+        by.setdefault((theirs, ours), []).append(pos)
+    parts = [f"pin{'s' if len(ps) > 1 else ''} {', '.join(map(str, ps))}: their {label(t)}, our {label(o)}"
+             for (t, o), ps in by.items()]  # fmt: skip
+    return f" ({'; '.join(parts)})" if parts else ""
+
+
+def default_variants_note(session: Session, r: CrossResult) -> str:
+    """Their default output follows their board wiring (pins such as ADuM141x CTRL1 / CTRL2) while ours is fixed by the
+    ordering code, and our pins there ignore the wiring: name the other default-output variant of our part too (owner,
+    2 Nov 2026: the drop-in "offered in both default-output variants"; alternates.output_variants)."""
+    from app.matching.pinroles import pins_phrase
+    from app.services.alternates import output_variants
+
+    pins = getattr(r.fit, "board_default", None)
+    if not pins or not r.fit.fits:
+        return ""
+    mine = r.candidate.param_map().get("default_output")
+    others = [p for p in output_variants(session, r.candidate) if p.param_map().get("default_output") != mine]
+    if not mine or not others:
+        return ""
+    other = others[0].param_map().get("default_output")
+    when = {"high": "tied high or left open", "low": "tied low"}
+    phrase = pins_phrase(pins).replace(" is", "").replace(" are", "")
+    return (f"their default output follows {phrase} on the board: {r.candidate.mpn} (default {mine}) when "
+            f"{when.get(mine, mine)}, {others[0].mpn} (default {other}) when {when.get(other, other)}")
+
+
+CONDITIONAL_TYPE = "Conditional fit · same package"  # owner, 2 Nov 2026: "a conditional fit, not a full drop-in"
 TYPE_KIND = {"Direct package equivalent": "pe", "Package drop-in, deviations": "di"}  # chip colours; others "fn"
+TYPE_KIND.update({CONDITIONAL_TYPE + s: "di" for s in ("", " · upgrade", " · downgrade")})
 
 
 def cross_type(r: CrossResult, column: int) -> str:
@@ -470,6 +580,8 @@ def cross_type(r: CrossResult, column: int) -> str:
         return "Direct package equivalent"
     if column == 1 or r.fit.fits:
         return "Package drop-in, deviations"
+    if r.fit.same_package and getattr(r.fit, "conditions", None):  # a control pin takes one board wiring only
+        return CONDITIONAL_TYPE + {"over": " · upgrade", "under": " · downgrade"}.get(v.spec, "")
     base = "Functional · other package" if not r.fit.same_package else "Functional · other pinout"
     return base + {"over": " · upgrade", "under": " · downgrade"}.get(v.spec, "")
 
@@ -609,6 +721,7 @@ class Row:
     reason_link: str | None = None
     checked_on: list[str] = field(default_factory=list)
     other: Column | None = None  # third column: the other Skyworks isolator family's best part (Si86 / Si86S)
+    nearest: Column | None = None  # no cross within the deviation limit: the nearest part, marked (rule 13)
 
     @property
     def maker(self) -> str:
@@ -633,10 +746,37 @@ class Row:
         return any(c and c.verified for c in (self.drop_in, self.functional))
 
 
+NEAREST_TYPE = "Nearest (not a drop-in)"
+NEAREST_LIMIT = 99  # deviations: no limit
+
+
+def nearest(crosser: "Crosser", part: Part) -> CrossResult | None:
+    """No candidate within the deviation limit: the nearest one by the usual order (owner, 2 Nov 2026, rule 13: "show
+    the nearest candidate, with the differences marked"). It passed the function-defining and must-meet checks, so an
+    automotive part never gets an industrial one, not even as nearest; a package-locked part only its own package."""
+    pool = [r for r in _pool(part, crosser.crosses(part, NEAREST_LIMIT)) if not r.hard_fail]
+    if _qual(part) == "automotive":
+        pool = [r for r in pool if _qual(r.candidate) == "automotive"]
+    return min(pool, key=functional_key) if pool else None
+
+
+def nearest_note(r: CrossResult) -> str:
+    """'Nearest (not a drop-in): differs in output configuration, peak source current; ...' and the usual comment."""
+    diff = ", ".join(dict.fromkeys(_short(d.label).lower() for d in r.deviations)) or "package or pinout"
+    return f"{NEAREST_TYPE}: differs in {diff}. {comment(r, 2)}"
+
+
+# Grades above the rules' levels that we do not make: the red row says so (owner, 2 Nov 2026: ADuM141ES, QML Level V)
+GRADES_WE_LACK = {"space": "space-grade (QML)"}
+
+
 def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | None]:
     from app.models import Case
     from app.services import pipeline, vocab
 
+    grade = next((pv.value for pv in part.params if pv.key == "qualification"), None)
+    if grade in GRADES_WE_LACK:
+        return f"No {GRADES_WE_LACK[grade]} part in our portfolio.", "/business/opportunities"
     fn = pipeline.fn_for_part(part)
     what = vocab.fn_label(fn) if fn else vocab.family_title(part.family)
     if not any_ours:  # e.g. an isolated DC-DC module (owner, 26 Oct 2026: UCC12051QDVERQ1)
@@ -648,9 +788,10 @@ def _no_cross(session: Session, part: Part, any_ours: bool) -> tuple[str, str | 
     return f"Function known ({what}), no cross yet – see Opportunities › Gaps.", link
 
 
-def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
+def cross_list(session: Session, entries: list[Entry], supply_v: float | None = None) -> list[Row]:
+    """``supply_v``: the design's supply voltage; values that depend on it (data rate) are compared there."""
     ix = build_index(session)
-    crosser = Crosser(session)
+    crosser = Crosser(session, supply_v)
     verified = Verified(session)
     said = answers(session)
     rows = []
@@ -681,6 +822,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
                 continue
             a = said.get((normalize_pn(part.mpn), normalize_pn(r.candidate.mpn)))
             note = comment(r, col) if col < 3 else f"{alt[0]} family · {comment(r, col)}"
+            if variants := default_variants_note(session, r):  # their default output is set on the board
+                note = f"{note[:-1]}; {variants}."
             c = Column(r, cross_type(r, col), note, (part.id, r.candidate.id) in verified, a.verdict if a else None)
             if c.answer == "wrong":
                 c.verified = False
@@ -693,6 +836,8 @@ def cross_list(session: Session, entries: list[Entry]) -> list[Row]:
         if c1 is None and c2 is None:
             row.reason, row.reason_link = _no_cross(session, part, bool(crosser._cands.get(
                 (part.family, False, None))))  # fmt: skip
+            if (n := nearest(crosser, part)) is not None:
+                row.nearest = Column(n, NEAREST_TYPE, nearest_note(n))
         elif any(c is not None and c.category == "fff" and not data_gaps(c) and not c.lifecycle_risk
                  for c in (c1, alt[1] if alt else None)):  # fmt: skip
             row.light = "green"
@@ -714,6 +859,8 @@ def export_cells(r: Row) -> list:
 
     if r.drop_in is None and r.functional is None:
         first, second = ["No drop-in", "", "", ""], ["No functional fit", "", "", r.reason]
+        if r.nearest:  # rule 13: the nearest part, marked as not a cross
+            second = [r.nearest.part.mpn, r.nearest.part.manufacturer.name, r.nearest.type, r.nearest.comment]
     else:
         first = col(r.drop_in) if r.drop_in else ["No drop-in", "", "", ""]
         second = col(r.functional) if r.functional else ["= Drop-in", "", "", ""]

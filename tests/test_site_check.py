@@ -13,11 +13,13 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 OLD_NAMES = ("Opportunity explorer", "Cross-sell & gaps", "Cross-sell &amp; gaps", "Radio & audio", "Radio &amp; audio",
-             "Requests & reviews", "Requests &amp; reviews", "Data centre", "data centre")  # fmt: skip
+             "Requests & reviews", "Requests &amp; reviews", "Data centre", "data centre",
+             "Application library")  # fmt: skip
 PAGES = ("/", "/parts", "/portfolio", "/library", "/blocks", "/blocks/cross-sell", "/business/opportunities",
          "/business/explorer/table", "/business/risks", "/business/reports", "/business/shortlist", "/business/tam",
          "/business/quality", "/business/validation", "/business/method", "/business/markets", "/manage/schedule",
-         "/manage/overview", "/shareable/technology-overview", "/reviews/qorvo-dw3000-uwb", "/rf-notes")  # fmt: skip
+         "/manage/overview", "/shareable/technology-overview", "/reviews/qorvo-dw3000-uwb", "/rf-notes",
+         "/engineering/uwb_positioning")  # fmt: skip
 
 
 @pytest.mark.parametrize("path", PAGES)
@@ -70,7 +72,7 @@ def test_portfolio_headline_counts_each_part_once(client):
 
 
 def test_titles_name_the_page(client):
-    assert "<title>Car radio – Application library" in client.get("/broadcast").text
+    assert "<title>Car radio – Block diagram library" in client.get("/broadcast").text
     assert "<title>Library sources – " in client.get("/library/sources").text
     assert "<h1>New radio configuration</h1>" in client.get("/broadcast/configurations/new").text
 

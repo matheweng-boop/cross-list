@@ -404,6 +404,49 @@ def test_1ed3140_prop_delay_and_uvlo_cross(session, load):
     assert best.candidate.param_map()["uvlo_v"] == 8  # the B (8 V) code, not 4 or 12 V
 
 
+# Pinout backlog (docs/pinout_backlog.md, owner 22 Oct 2026): the Infineon output option is read from the pinout.
+IFX_OUTPUT_OPTION = {
+    "1ED020I12B2XUMA1": "Miller clamp",  # DESAT driver: OUT and CLAMP
+    "1ED020I12F2XUMA1": "Miller clamp",
+    "1ED3124MU12FXUMA1": "split output",  # OUT+ / OUT- in the pin table
+    "1ED3125MU12FXUMA1": "Miller clamp",
+    "1ED3127MU12FXUMA1": "Miller clamp",
+    "1ED3140MU12FXUMA1": "split output",  # OUTH / OUTL
+    "1ED3141MC12HXUMA1": "split output",
+    "1ED3143MC12HXUMA1": "UVLO to GND2",  # one output, UVLO referred to GND2
+    "1ED3144MC12HXUMA1": "UVLO to GND2",
+    "1ED3145MC12HXUMA1": "single output",  # one output, ADJ sets the UVLO
+    "1ED3120MC12HXUMA1": "split output",  # wide body: VEE2, OUT-, OUT+, VCC2 on pins 5-8
+    "1ED3122MC12HXUMA1": "Miller clamp",
+    "1ED3121MU12HXUMA1": "split output",  # same pin tables as the MC12H parts
+    "1ED3122MU12HXUMA1": "Miller clamp",
+}
+
+
+def test_infineon_output_option_from_the_transcribed_pinout():
+    ifx = _parts("infineon_isolation")
+    for mpn, want in IFX_OUTPUT_OPTION.items():
+        assert gate_output_config(Part(pinout=ifx[mpn]["pinout"]), ifx[mpn]["params"]) == want, mpn
+    # where Infineon's feature list names the Miller clamp, the pinout has the CLAMP pin, and the other way round
+    for mpn, p in ifx.items():
+        if p.get("family") == "gate_driver" and p.get("pinout"):
+            derived = gate_output_config(Part(pinout=p["pinout"]), p["params"])
+            assert ("Miller clamp" in (p["params"].get("protection") or [])) == ("Miller clamp" in derived), mpn
+
+
+def test_ticked_pinout_backlog_lines_have_their_pinouts():
+    """A ticked line of docs/pinout_backlog.md: every part named carries a pinout and the datasheet page it is from."""
+    text = (DATA.parents[1] / "docs" / "pinout_backlog.md").read_text()
+    ticked = re.findall(r"^- \[x\] [^·]+· `(\w+)\.yaml` · datasheet: (\S+) · (.+)$", text, flags=re.M)
+    assert ticked
+    for name, sheet, mpns in ticked:
+        parts = _parts(name)
+        for mpn in (m.strip() for m in mpns.split(",")):
+            p = parts[mpn]
+            assert p["pinout"] and p["param_sources"]["pinout"].startswith(f"{sheet} p"), mpn
+            assert "Pinout not transcribed" not in (p.get("notes") or ""), mpn
+
+
 # ---------------------------------------------------------------- Si86
 
 

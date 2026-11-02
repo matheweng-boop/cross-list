@@ -4,8 +4,11 @@ fetch()  saves the digital-isolator table, per-device orderable part numbers
          and datasheets under var/raw/ti and var/datasheets/ti. Each file is
          saved as soon as it is fetched, and existing files are skipped, so an
          interrupted fetch resumes where it stopped.
+build()  turns them into the data file. A rebuild keeps every value the file
+         it replaces read from a datasheet page (keep_datasheet_values).
 """
 
+import copy
 import hashlib
 import json
 import re
@@ -18,6 +21,7 @@ BASE_URL = "https://www.ti.com"
 RAW_DIR = PROJECT_ROOT / "var" / "raw" / "ti"
 DATASHEET_DIR = PROJECT_ROOT / "var" / "datasheets" / "ti"
 FAMILIES = {"digital_isolator": 3121}
+OUT = PROJECT_ROOT / "data" / "real" / "ti_digital_isolators.yaml"
 
 
 def gpn_table_url(family_id: int) -> str:
@@ -187,7 +191,60 @@ class DatasheetInfo:
         return (list(unique.pop()), t.page) if len(unique) == 1 else (None, None)
 
 
-def build(family: str = "digital_isolator", log=print) -> dict:
+# A source that cites a datasheet page ("<file>.pdf p.N …", the same test as app.matching.engine.from_datasheet), also
+# when a person marked the reading "est:" (e.g. ISO774x: the page contradicts itself).
+_CITES_PAGE = re.compile(r"\.pdf\b[^;]*?\bp\.\s?\d+", re.I)
+_CITED_FILE = re.compile(r"([\w.-]+\.pdf)\b", re.I)
+NO_PINOUT = "Pinout not read from the datasheet; fit cannot be checked."
+
+
+def cites_datasheet_page(source) -> bool:
+    return bool(source) and bool(_CITES_PAGE.search(str(source)))
+
+
+def keep_datasheet_values(built: dict, previous: dict | None) -> list[str]:
+    """The merge step of a rebuild (owner, 26 Oct 2026: a data rate decides a cross only when it comes from the
+    datasheet pages; 2 Nov 2026: every TI isolator's data rate was re-read there, and a rebuild must not undo it).
+
+    For each part in both the rebuilt data and the file it replaces (``previous``), a value whose source cites a
+    datasheet page stays, with its source, unless the rebuild read that value from a datasheet page itself: a product-
+    table value (or no value) never replaces it. The same holds for a pinout read from a datasheet page. A part new to
+    TI's table starts from the product table, its sources saying so. ``built`` is changed in place; returns the lines
+    for the log: a summary, then each kept value whose datasheet file changed since (its page to be re-checked)."""
+    if not previous:
+        return []
+    old = {p["mpn"]: p for p in previous.get("parts") or []}
+    old_sha = {d["file"]: d.get("sha256") for d in previous.get("datasheets") or []}
+    new_sha = {d["file"]: d.get("sha256") for d in built.get("datasheets") or []}
+    kept, recheck, parts = 0, [], set()
+    for part in built.get("parts") or []:
+        was = old.get(part["mpn"])
+        if not was:
+            continue
+        params, sources = part.setdefault("params", {}), part.setdefault("param_sources", {})
+        was_sources = was.get("param_sources") or {}
+        keep = [k for k, v in (was.get("params") or {}).items()
+                if v is not None and cites_datasheet_page(was_sources.get(k))
+                and not cites_datasheet_page(sources.get(k))]  # fmt: skip
+        for key in keep:
+            params[key], sources[key] = copy.deepcopy(was["params"][key]), was_sources[key]
+        if was.get("pinout") and not part.get("pinout") and cites_datasheet_page(was_sources.get("pinout")):
+            part["pinout"], sources["pinout"] = list(was["pinout"]), was_sources["pinout"]
+            part["notes"] = (part.get("notes") or "").replace(NO_PINOUT, "").strip() or None
+            keep.append("pinout")
+        if keep:
+            kept, parts = kept + len(keep), parts | {part["mpn"]}
+        for key in keep:
+            m = _CITED_FILE.search(sources[key])
+            f = m.group(1) if m else None
+            if f in old_sha and f in new_sha and old_sha[f] != new_sha[f]:
+                recheck.append(f"  {part['mpn']} {key}: {f} changed since it was read; re-check '{sources[key][:80]}'")
+    return [f"kept {kept} values read from datasheet pages ({len(parts)} parts) over the product table", *recheck]
+
+
+def build(family: str = "digital_isolator", log=print, previous: Path | None = OUT) -> dict:
+    """The data file from the fetched table and datasheets. ``previous`` is the file it will replace: its values read
+    from datasheet pages are kept (keep_datasheet_values); None builds from the product table alone."""
     table = json.loads((RAW_DIR / f"gpn_{FAMILIES[family]}.json").read_text())
     sheets: dict[str, DatasheetInfo] = {}
     packages: dict[str, dict] = {}
@@ -324,7 +381,7 @@ def build(family: str = "digital_isolator", log=print) -> dict:
                 src["channel_config"] = f"{sheet.name} p.{pin_page}"
                 params["enable_pins"], src["enable_pins"] = _enable_text(pinout), f"{sheet.name} p.{pin_page}"
             else:
-                notes.append("Pinout not read from the datasheet; fit cannot be checked.")
+                notes.append(NO_PINOUT)
                 if fwd_rev:
                     params["channel_config"], src["channel_config"] = f"{fwd_rev[0]}/{fwd_rev[1]}", "TI product table"
 
@@ -365,7 +422,7 @@ def build(family: str = "digital_isolator", log=print) -> dict:
                 "revision_date": s.revision_date,
             }
         )
-    return {
+    data = {
         "source": "ti.com selection tool and datasheets",
         "manufacturers": [{"name": "TI", "role": "competitor", "website": BASE_URL}],
         "packages": list(packages.values()),
@@ -373,3 +430,9 @@ def build(family: str = "digital_isolator", log=print) -> dict:
         "parts": parts,
         "skipped": skipped,
     }
+    if previous is not None and Path(previous).exists():
+        from app import yamlio
+
+        for line in keep_datasheet_values(data, yamlio.load(Path(previous).read_text())):
+            log(line)
+    return data

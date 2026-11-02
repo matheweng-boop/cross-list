@@ -1,0 +1,70 @@
+# Analog Devices RF switches (MEMS). From the public ADGM1121 datasheet the owner uploaded on 30 Oct 2026;
+# every value cites its page.
+source: Analog Devices public datasheet, owner upload, 30 Oct 2026 (analog.com blocks automated access; nothing fetched)
+manufacturers:
+- name: Analog Devices
+  role: competitor
+  website: https://www.analog.com
+packages:
+- code: LGA-24 5x4 (ADI CC-24-9) p0
+  name: ADI CC-24-9 24-terminal LGA, 5 x 4 x 1 mm; pitch not read
+  pin_count: 24
+  pitch_mm: 0.0
+  body_length_mm: 5.0
+  body_width_mm: 4.0
+  span_mm: 4.0
+  height_mm: 1.0
+datasheets:
+- file: adgm1121.pdf
+  url: https://www.analog.com/ADGM1121
+  sha256: 9cc510d0786f2ab5e13da0d0ac8d04dd3545bb6ccac6c95ba76eee4464f7c057
+  revision: '0'
+  revision_date: null
+  origin: owner upload, 30 Oct 2026
+parts:
+- mpn: ADGM1121BCCZ-RL7
+  manufacturer: Analog Devices
+  family: rf_switch
+  description: ADGM1121 DC to 18 GHz DPDT MEMS switch, integrated driver, 1.9 Ω on-resistance
+  package: LGA-24 5x4 (ADI CC-24-9) p0
+  pinout: []
+  datasheet: adgm1121.pdf
+  datasheet_url: https://www.analog.com/ADGM1121
+  product_url: null
+  notes: 'MEMS (electrostatically actuated) switch: passes DC, 100 million actuations minimum, 200 µs switching. Termination not stated (no internal 50 Ω loads), so it is left out. Pinout not stored.'
+  lifecycle:
+    status: unknown
+    revision: '0'
+    revision_date: null
+    source: 'owner upload, 30 Oct 2026: datasheet Rev. 0 (2023); the datasheet states no lifecycle status and analog.com was not checked (blocks automated access)'
+  params:
+    configuration: DPDT
+    control_interface: GPIO
+    freq_range_ghz:
+    - 0.0
+    - 18.0
+    max_input_power_dbm: 33.0
+    insertion_loss_db: 1.0
+    isolation_db: 16.0
+    iip3_dbm: 73.0
+    vdd_range_v:
+    - 3.0
+    - 3.6
+    temp_range_c:
+    - -40.0
+    - 85.0
+    switching_time_ns: 200000.0
+    esd_hbm_kv: 0.2
+  param_sources:
+    configuration: adgm1121.pdf p.1 (DC to 18 GHz DPDT MEMS switch (two SPDT switches, RFCA and RFCB))
+    control_interface: adgm1121.pdf p.1 (parallel IN1-IN4 pins, or SPI (PIN/SPI pin))
+    freq_range_ghz: adgm1121.pdf p.3 (DC (0 Hz) to 18 GHz, -3 dB)
+    max_input_power_dbm: adgm1121.pdf p.4 (CW, max, -40 to +85 °C)
+    insertion_loss_db: adgm1121.pdf p.3 (typ 1.0 dB at 10-16 GHz (0.34 dB DC-2.5 GHz))
+    isolation_db: adgm1121.pdf p.4 (typ 16 dB at 10-16 GHz (27 dB DC-2.5 GHz, p.3))
+    iip3_dbm: adgm1121.pdf p.4 (typ)
+    vdd_range_v: adgm1121.pdf p.5
+    temp_range_c: adgm1121.pdf p.8
+    switching_time_ns: adgm1121.pdf p.4 (tON / tOFF max 200 µs (MEMS))
+    esd_hbm_kv: adgm1121.pdf p.8 (HBM 200 V on the RF pins, 2.5 kV on the others)
+skipped: []

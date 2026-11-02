@@ -7,6 +7,7 @@ import-skyworks [--offline]
                      fetch Skyworks Si86 data, build data/real/skyworks_si86.yaml and load it
 import-ti [--offline]
                      fetch TI digital isolator data, build data/real/ti_digital_isolators.yaml and load it
+                     (values the old file read from datasheet pages are kept over the product table)
 import-novosense [--offline]
                      fetch Novosense digital isolator data and load it
 import-skyworks-switches [--offline]

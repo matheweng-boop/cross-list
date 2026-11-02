@@ -175,6 +175,44 @@ def test_every_link_points_at_known_keys_and_quoted_text():
             assert lk["text"].split(" (")[0].lstrip("≈") in case["market_now"][i]["value"], lk["id"]
 
 
+def test_newer_figure_quoted_in_the_text_clears_the_to_do(session, tmp_path, monkeypatch):
+    """2 Nov 2026: the radio to-do "the source now shows $2.43 B for 2025" came back every day after the 28 Oct run had
+    quoted it. Once the linked text quotes the newer figure with its year it clears; a still newer figure brings it
+    back."""
+
+    def checks(name: str, value: str, year: int) -> None:  # a new file each time: the YAML cache keys on mtime
+        p = tmp_path / name
+        p.write_text(yaml.safe_dump({"checked": "2026-10-25", "checks": {"tuner-ic-mrfr": {
+            "status": "changed", "date": "2026-10-25", "new_value": value, "new_year": year}}}))  # fmt: skip
+        monkeypatch.setattr(tam, "CHECKS_FILE", p)
+
+    checks("c1.yaml", "$2.43 B", 2025)
+    keys = ["tuner-ic-mrfr", "tuner-ic-datahorizzon"]
+    base = {"slug": "radio-tuner-next", "where": "case: market_now[2]", "low": 8.9e8, "high": 2.31e9, "year": 2024,
+            "fn": "am_fm_tuner", "topic": "auto-radio-tuner-ics", "keys": keys}  # fmt: skip
+    p = tmp_path / "tam_links.yaml"
+    p.write_text(yaml.safe_dump({"links": [{**base, "id": "old", "text": "$0.89–2.31 B (2024)"},
+                                           {**base, "id": "new", "text": "$0.89–2.31 B (2024); MRFR $2.43 B (2025)"}]},
+                                allow_unicode=True))  # fmt: skip
+    monkeypatch.setattr(tam_links, "LINKS_FILE", p)
+    res = {c["id"]: c for c in tam_links.compare(session)}
+    assert res["old"]["status"] == "differs" and "now shows $2.43 B for 2025" in " ".join(res["old"]["why"])
+    assert res["new"]["status"] == "matches", res["new"]["why"]
+    assert tam_links.quotes_newer({"text": "$2.43B (2025)"}, {"new_value": "$2.43 B", "new_year": 2025})
+    assert not tam_links.quotes_newer({"text": "$2.43 B"}, {"new_value": "$2.43 B", "new_year": 2025})
+    checks("c2.yaml", "$2.55 B", 2026)
+    assert {c["id"]: c for c in tam_links.compare(session)}["new"]["status"] == "differs"
+
+
+def test_radio_links_quote_the_newer_mrfr_figure(session):
+    """The committed radio texts quote MRFR's 2025 figure, so the check's "changed" no longer re-queues them."""
+    res = {c["id"]: c for c in tam_links.compare(session)}
+    for i in ("radio-tuner-next.market_now.2", "radio-tuner-next.background.4-13"):
+        assert "$2.43 B (2025)" in res[i]["text"] and not any("$2.43 B for 2025" in w for w in res[i]["why"]), i
+    applied = {a["key"]: a for a in tam_links.applied()}
+    assert str(applied["tuner-ic-mrfr"]["date"]) == "2026-11-02"
+
+
 def test_schedule_has_the_biweekly_tam_verification():
     jobs = yamlio.load((ROOT / "data/manage/schedule.yaml").read_text())["jobs"]
     job = next(j for j in jobs if j["name"] == "TAM verification")

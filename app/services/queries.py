@@ -71,10 +71,12 @@ def feedback_for(session: Session, ref_id: int) -> dict[int, CrossFeedback]:
 
 
 def crosses_for(
-    session: Session, ref: Part, scope: str = "auto", max_deviations: int = DEFAULT_MAX_DEVIATIONS
+    session: Session, ref: Part, scope: str = "auto", max_deviations: int = DEFAULT_MAX_DEVIATIONS,
+    supply_v: float | None = None,
 ) -> dict[str, list[CrossResult]]:
     candidates = candidates_for(session, ref, scope)
-    return find_crosses(ref, candidates, get_rules(ref.family), feedback_for(session, ref.id), max_deviations)
+    return find_crosses(ref, candidates, get_rules(ref.family), feedback_for(session, ref.id), max_deviations,
+                        supply_v)
 
 
 def single_cross(

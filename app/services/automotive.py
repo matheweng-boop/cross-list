@@ -45,16 +45,18 @@ def config() -> dict:
 
 @lru_cache
 def applications() -> tuple[dict, ...]:
-    """Configured applications with the library diagrams they cover and the functions those diagrams use."""
-    tpls = [(blocks.display_name(t), t) for t in blocks.templates()]
+    """Configured applications with the library diagrams they cover (names and template indexes) and the functions
+    those diagrams use."""
+    tpls = [(i, blocks.display_name(t), t) for i, t in enumerate(blocks.templates())]
     taken: set[str] = set()
     out = []
     for a in config().get("applications") or []:
         keys = [k.lower() for k in a.get("templates") or []]
-        mine = [(n, t) for n, t in tpls if n not in taken and any(k in t.get("name", "").lower() for k in keys)]
-        taken.update(n for n, _ in mine)
-        fns = {f for _, t in mine for f in blocks.template_functions(t)}
-        out.append({"id": a["id"], "label": a["label"], "diagrams": [n for n, _ in mine], "fns": fns})
+        mine = [(i, n, t) for i, n, t in tpls if n not in taken and any(k in t.get("name", "").lower() for k in keys)]
+        taken.update(n for _, n, _ in mine)
+        fns = {f for _, _, t in mine for f in blocks.template_functions(t)}
+        out.append({"id": a["id"], "label": a["label"], "diagrams": [n for _, n, _ in mine],
+                    "idx": [i for i, _, _ in mine], "fns": fns})  # fmt: skip
     return tuple(out)
 
 
@@ -139,6 +141,20 @@ def _cell(row: dict | None, comp: dict | None) -> dict | None:
     return {"level": "gap", "why": "Neither Skyworks nor Qorvo sells a part of this function.", "curated": False}
 
 
+def _app_cell(a: dict, fn: str, rows: dict, comp: dict | None, verdicts: dict, cat: dict) -> dict | None:
+    """The map's call for one function in one application, with its review status; None for the customer's parts."""
+    c = _cell(rows.get((a["id"], fn)) or rows.get(("*", fn)), comp)
+    if c is None:
+        return None
+    k = f"{a['id']}:{fn}"
+    reviewable = c["level"] != "A" or bool(c.get("next"))
+    status = {"correct": "accepted", "wrong": "rejected"}.get(verdicts.get(k), "proposed") if reviewable else ""
+    c.update(key=k, app=a["id"], app_label=a["label"], fn=fn, label=vocab.fn_label(fn), status=status,
+             category=(cat.get(fn) or {}).get("category", ""))  # fmt: skip
+    c.setdefault("distance", scoring.ladder_distance(c["level"]))
+    return c
+
+
 def build(session: Session) -> dict:
     """The map: applications (rows), functions (columns), cells by (app, fn), moves and rejected calls."""
     key = (blocks._data_version(session), _review_version(session), tuple(scoring.review_version(session)))
@@ -150,16 +166,9 @@ def build(session: Session) -> dict:
     cells: dict[tuple[str, str], dict] = {}
     for a in apps:
         for fn in a["fns"] | {f for app, f in rows if app == a["id"]}:
-            c = _cell(rows.get((a["id"], fn)) or rows.get(("*", fn)), computed.get(fn))
-            if c is None:
-                continue
-            k = f"{a['id']}:{fn}"
-            reviewable = c["level"] != "A" or bool(c.get("next"))
-            status = {"correct": "accepted", "wrong": "rejected"}.get(verdicts.get(k), "proposed") if reviewable else ""
-            c.update(key=k, app=a["id"], app_label=a["label"], fn=fn, label=vocab.fn_label(fn), status=status,
-                     category=(cat.get(fn) or {}).get("category", ""))  # fmt: skip
-            c.setdefault("distance", scoring.ladder_distance(c["level"]))
-            cells[(a["id"], fn)] = c
+            c = _app_cell(a, fn, rows, computed.get(fn), verdicts, cat)
+            if c is not None:
+                cells[(a["id"], fn)] = c
     # RF first, then the radio SoCs and timing, then the catalogue's category order
     lead = ["rf", "radio", "networking", "timing", *blocks.catalogue()["categories"]]
     order = {c: i for i, c in enumerate(dict.fromkeys(lead))}
@@ -180,6 +189,20 @@ def build(session: Session) -> dict:
            "counts": {lv: sum(1 for c in live if c["level"] == lv) for lv in LEVELS}}  # fmt: skip
     _CACHE.clear()
     _CACHE[key] = out
+    return out
+
+
+def cells_for(session: Session, app_id: str, fns) -> dict[str, dict]:
+    """The map's calls for these functions under one application, made as build() makes them, also for a function the
+    application's own diagrams do not use (the Car explorer's seat row): {fn: cell}, the customer's parts left out."""
+    m = build(session)
+    a = next(x for x in m["apps"] if x["id"] == app_id)
+    rows, verdicts, cat = _rows(), _verdicts(session), blocks.catalogue()["functions"]
+    out = {}
+    for fn in fns:
+        c = m["cells"].get((app_id, fn)) or _app_cell(a, fn, rows, _function_level(session, fn), verdicts, cat)
+        if c is not None:
+            out[fn] = c
     return out
 
 

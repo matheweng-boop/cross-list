@@ -24,6 +24,8 @@ NAV = (
          "What to sell together: by system, by part, and the Skyworks + Qorvo portfolio side by side"),
         ("RF coverage", "/business/rf-coverage", "RF functions by frequency band and power: covered, at risk, missing"),
         ("Automotive map", "/business/automotive", "Automotive: what we sell today, what to qualify or build"),
+        # owner, 2 Nov 2026: the Automotive map on a see-through 3D car
+        ("Car explorer", "/business/car-explorer", "A 3D car: tap an area to see its applications and letters"),
     )),
     ("opportunities", "Opportunities", (
         ("Gaps & new technology", "/business/opportunities", "Functions with no part of ours yet: gaps and new tech"),
@@ -114,6 +116,7 @@ PLACES = {
     "/business/rf-coverage": ("systems", "/business/rf-coverage"),
     "/business/risks": ("opportunities", "/business/risks"),
     "/business/automotive": ("systems", "/business/automotive"),
+    "/business/car-explorer": ("systems", "/business/car-explorer"),
     "/business/competitors": ("opportunities", "/business/competitors"),
     "/business/markets": ("growth", "/business/markets"),
     "/business/customers": ("growth", "/business/markets"),

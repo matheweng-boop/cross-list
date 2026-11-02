@@ -307,10 +307,17 @@ def test_cross_sell_parts_table_and_automotive_filter(page):
         expect(page.locator(target)).to_be_in_viewport()
 
 
+def go_built_on_first_use(page, path: str):
+    """A page whose data (the Automotive map) is built on first use: on a fresh test server, next to the start-up
+    warm-up, that can take longer than the page timeout."""
+    r = page.goto(path, wait_until="load", timeout=90_000)
+    assert r is not None and r.status == 200, (path, r and r.status)
+
+
 def test_automotive_map_letter_column(page):
     """Item 10 (owner, 2 Nov 2026): in By application each letter sits in its own left column with its meaning, the
     function chips wrap only in the right column, and a PC shows about two cards per row (the 390 px check follows)."""
-    go(page, "/business/automotive")
+    go_built_on_first_use(page, "/business/automotive")
     rows = page.locator(".am-app .am-row")
     assert rows.count() > 5
     expect(page.locator(".am-app .am-lv", has_text="Gap").first).to_be_visible()
@@ -323,6 +330,53 @@ def test_automotive_map_letter_column(page):
     assert tops[0] == tops[1]  # two cards side by side on a PC
     page.goto("/business/automotive?view=apps#app-bms", wait_until="load")
     expect(page.locator("#app-bms")).to_be_in_viewport()
+
+
+def test_car_explorer_area_button_opens_its_list(page):
+    """Item 11 (owner, 2 Nov 2026): the Car explorer loads (the 3D car where the browser has WebGL, else a short note);
+    on the car a click on an area flies in and opens its list, "← Whole car" closes it; an area button below the car
+    opens its list with letters, "+N more" and links (the 390 px check follows)."""
+    go_built_on_first_use(page, "/business/car-explorer")
+    if page.evaluate("!!document.createElement('canvas').getContext('webgl')"):
+        expect(page.locator("#ce-stage")).to_have_attribute("data-ready", "1")
+        x, y = page.evaluate("carExplorer.where('roof')")
+        page.mouse.click(x, y)
+        expect(page.locator("#ce-area-roof")).to_be_visible()
+        expect(page.locator("#ce-area-roof").get_by_role("heading", name="V2X")).to_be_visible()
+        page.get_by_role("button", name="← Whole car").click()
+        expect(page.locator("#ce-area-roof")).to_be_hidden()
+        expect(page.locator("#ce-back")).to_be_hidden()
+    else:
+        expect(page.locator("#ce-no3d")).to_be_visible()
+    page.get_by_role("link", name="High-voltage battery").click()
+    panel = page.locator("#ce-area-battery")
+    expect(panel).to_be_visible()
+    expect(panel.get_by_role("heading", name=re.compile("Battery systems"))).to_be_visible()
+    expect(panel.locator(".am-row .am-lv").first).to_be_visible()
+    blocks_link = panel.get_by_role("link", name=re.compile("^Block diagrams"))
+    expect(blocks_link).to_have_attribute("href", "/blocks?system=automotive&sub=battery-power")
+    more = panel.locator("details.ce-more").first
+    hidden = more.locator(".am-fnchip").first
+    expect(hidden).to_be_hidden()
+    more.locator("summary").click()
+    expect(hidden).to_be_visible()
+    assert "area=battery" in page.url
+
+
+def test_car_explorer_without_webgl(page):
+    """Without WebGL (old devices, some headless browsers): no 3D car and no three.js download, a short note instead,
+    and the area buttons still open their lists, without a console error."""
+    page.add_init_script("""(() => { const get = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+            return /webgl/i.test(type) ? null : get.call(this, type, ...rest); }; })();""")
+    asked = []
+    page.on("request", lambda r: asked.append(r.url))
+    go_built_on_first_use(page, "/business/car-explorer")
+    expect(page.locator("#ce-no3d")).to_be_visible()
+    expect(page.locator("#ce-stage")).to_be_hidden()
+    page.get_by_role("link", name="Doors, mirrors and access").click()
+    expect(page.locator("#ce-area-doors").get_by_role("heading", name="Digital key & car access")).to_be_visible()
+    assert not [u for u in asked if "/vendor/three/" in u or "car_explorer.js" in u]
 
 
 # --- Engineering knowledge --------------------------------------------------------------------------------------------

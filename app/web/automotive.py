@@ -31,6 +31,18 @@ def automotive(request: Request, view: str = "apps", cell: str = "", session: Se
     return templates.TemplateResponse(request, "business/automotive.html", ctx)
 
 
+@router.get("/business/car-explorer", response_class=HTMLResponse)
+def car_explorer(request: Request, area: str = "", session: Session = Depends(get_session)):
+    """Systems & applications > Car explorer (owner, 2 Nov 2026): a see-through 3D car; each area opens the Automotive
+    map applications that sit there. ?area=<id> opens one area (also without JavaScript)."""
+    from app.services import car_explorer as ce
+
+    zs = ce.areas(session)
+    sel = area if any(z["id"] == area for z in zs) else ""
+    car = [{"id": z["id"], "title": z["title"], "n": z["n_diagrams"]} for z in zs]  # what the 3D car needs
+    return templates.TemplateResponse(request, "business/car_explorer.html", {"areas": zs, "sel": sel, "car": car})
+
+
 @router.post("/business/automotive/review")
 def review(cell: str = Form(...), verdict: str = Form(...), view: str = Form("apps"),
            session: Session = Depends(get_session)):  # fmt: skip

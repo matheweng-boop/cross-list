@@ -3,7 +3,7 @@
 # Pinouts are not read yet (docs/timing_backlog.md); the catalogue (data/catalog/skyworks_parts.yaml) keeps every
 # other Skyworks timing part. Second batch 2026-11-02: the other grades and family members (Si5332B/C/D-GM and -AM,
 # Si5341C/D, Si5340B/C/D, Si5394, Si5392, Si5396, Si53212) from the same datasheets, read from the copies fetched
-# 2026-10-22 (sha256 unchanged, no new download).
+# 2026-10-22 (sha256 unchanged, no new download). Third batch 2026-11-02: the PCIe Gen 7 parts (SKY62101, SKY535x2).
 source: skyworksinc.com datasheets (fetched 2026-10-22)
 manufacturers:
 - name: Skyworks
@@ -82,6 +82,15 @@ packages:
   span_mm: 5.0
   height_mm: 1.18
   exposed_pad: false
+- code: QFN-56 8x8 p0.5 EP
+  name: 56-pin QFN 8 x 8 mm, 0.5 mm pitch, exposed pad (SKY62101; height not read, 0.85 mm est)
+  pin_count: 56
+  pitch_mm: 0.5
+  body_length_mm: 8.0
+  body_width_mm: 8.0
+  span_mm: 8.0
+  height_mm: 0.85
+  exposed_pad: true
 datasheets:
 - file: si5332-datasheet.pdf
   url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si5332-datasheet.pdf
@@ -128,6 +137,18 @@ datasheets:
   sha256: 86a670eae26f93b45bb53e0eea330ddd8684551c955f3e35ed645df4574bd252
   revision: current
   revision_date: '2023-05-30'
+# Third batch 2026-11-02 (owner: "Yes to all"): the PCIe Gen 7 parts. Of the parts above, none states Gen 7 in its
+# datasheet (Si5332: Gen 1-6, Si5332-AM: Gen 1-5, Si532xx: Gen 1-6), so their pcie_gen is unchanged.
+- file: SKY535x2-x3-datasheet.pdf
+  url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/SKY535x2-x3-datasheet.pdf
+  sha256: c08b8ac1747c1b09c47962726453d8dd92c17ac4c2d5ede9b9a1cb980f560015
+  revision: 207241A
+  revision_date: '2026-01-05'
+- file: SKY62101_datasheet.pdf
+  url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/SKY62101_datasheet.pdf
+  sha256: 21b0364e821cc1f10350148a0f654a777866771af4cca19d02e860ff62530f0f
+  revision: 207133A
+  revision_date: '2025-06-06'
 parts:
 # ---------------------------------------------------------------- Si5332: 6/8/12-output any-frequency clock generator
 - mpn: Si5332A-GM1
@@ -854,3 +875,98 @@ parts:
     temp_range_c: si549-datasheet.pdf Table 2.1
     stability_ppm: si549-datasheet.pdf ordering guide (grade C, ±20 ppm total)
     pinout: si549-datasheet.pdf p1
+# ---------------------------------------------------------------- PCIe Gen 7 (third batch, 2026-11-02)
+- mpn: SKY62101
+  manufacturer: Skyworks
+  family: timing
+  description: 12-output any-frequency clock generator, <55 fs, up to 3.2 GHz, PCIe Gen 1–7
+  package: QFN-56 8x8 p0.5 EP
+  pinout: []
+  datasheet: SKY62101_datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/SKY62101_datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Timing/Ultra-Low-Jitter-Clock-Generators/SKY62101
+  notes: 'Fifth-generation DSPLL, one DSPLL and two MultiSynths, locks to a crystal or oscillator. <55 fs RMS typ.
+    (integer mode; 100 fs fractional). PCIe Gen 7 common-clock jitter 4 fs typ / 28 fs max against the 67 fs limit
+    (DSPLL + Q divider, Table 6). Differential 8 kHz–3.2 GHz, LVCMOS to 250 MHz. VDD18 1.8 V plus VDDA / VDDXO 3.3 V
+    (1.8 V in low-power mode). Pin-compatible with SKY63104/05/06 jitter attenuators and SKY63001/69003/69102
+    synchronizers. For 112G / 224G SerDes, coherent optics and data center equipment.'
+  lifecycle:
+    status: active
+    source: skyworksinc.com catalogue (Active)
+  params:
+    function_type: clock_generator
+    outputs: 12
+    output_formats: [LVPECL, LVDS, HCSL, CML, LVCMOS]
+    freq_range_mhz: [0.008, 3200]
+    vdd_range_v: [1.71, 1.89]
+    core_rails: 2
+    jitter_fs: 55
+    qualification: industrial
+    temp_range_c: [-40, 95]
+    pcie_gen: gen7
+    inputs: 1
+    control: [I2C, SPI]
+  param_sources:
+    function_type: SKY62101_datasheet.pdf p1
+    outputs: SKY62101_datasheet.pdf p1 (12 outputs)
+    output_formats: SKY62101_datasheet.pdf p2 (fixed formats LVDS, S-LVDS, LVPECL, LVCMOS, CML, HCSL)
+    freq_range_mhz: SKY62101_datasheet.pdf p1 (differential 8 kHz to 3.2 GHz)
+    vdd_range_v: SKY62101_datasheet.pdf Table 2 (VDD18 1.71–1.89 V)
+    core_rails: SKY62101_datasheet.pdf Table 2 (VDD18 1.8 V and VDDA 3.3 V)
+    jitter_fs: SKY62101_datasheet.pdf p1 (<55 fs RMS typ, integer mode)
+    temp_range_c: SKY62101_datasheet.pdf p2 (–40 to +95 °C ambient)
+    pcie_gen: SKY62101_datasheet.pdf p1 (PCIe Gen 1/2/3/4/5/6/7 compliant) and Table 6 (Gen 7 jitter)
+# ---------------------------------------------------------------- SKY535x2: PCIe Gen 1-7 low additive jitter buffers
+- mpn: SKY53582
+  manufacturer: Skyworks
+  family: timing
+  description: 8-output PCIe Gen 1–7 ultra-low additive jitter differential buffer, DC to 3.1 GHz
+  package: QFN-40 6x6 p0.5 EP
+  pinout: []
+  datasheet: SKY535x2-x3-datasheet.pdf
+  datasheet_url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/SKY535x2-x3-datasheet.pdf
+  product_url: https://www.skyworksinc.com/en/Products/Timing/HCSL-Clock-Buffers/SKY53582
+  notes: 'PCIe Gen 1/2/3/4/5/6/7 compliant. 100 MHz PCIe common-clock additive jitter: Gen 7 2 fs typ / 5 fs max
+    (limit 67 fs), Gen 6 3 / 7 fs (limit 100 fs) (Table 20, measured with an Si5361 as source). Universal buffer as
+    well: 35 fs typ (12 kHz–20 MHz) or 29 fs with a 4 MHz HPF at 156.25 MHz LVPECL, for 56G / 112G / 224G SerDes.
+    3:1 input mux (two any-format inputs plus a crystal), two output banks set by I2C to LVPECL, LVDS, HCSL, 800 mV
+    LVDS or LVCMOS; HCSL to 800 MHz. VDD / VDDO 1.8, 2.5 or 3.3 V. SKY53512 (10 outputs) and SKY53542 (4) are the
+    same family; SKY535x3 are the non-PCIe versions.'
+  lifecycle:
+    status: active
+    source: skyworksinc.com catalogue (Active)
+  params:
+    function_type: pcie_buffer
+    outputs: 8
+    output_formats: [LVPECL, LVDS, HCSL, LVCMOS]
+    freq_range_mhz: [0, 3100]
+    vdd_range_v: [1.71, 3.465]
+    jitter_fs: 2
+    qualification: industrial
+    temp_range_c: [-40, 95]
+    pcie_gen: gen7
+    inputs: 3
+    control: [I2C]
+  param_sources:
+    function_type: SKY535x2-x3-datasheet.pdf p1 (PCIe Gen1/2/3/4/5/6/7 compliant)
+    outputs: SKY535x2-x3-datasheet.pdf p1 (10/8/4 output options; SKY53582/83 40-pin QFN)
+    output_formats: SKY535x2-x3-datasheet.pdf p1
+    freq_range_mhz: SKY535x2-x3-datasheet.pdf p1 (LVPECL dc to 3.1 GHz)
+    vdd_range_v: SKY535x2-x3-datasheet.pdf Table 20 conditions (1.8, 2.5 or 3.3 V ±5 %)
+    jitter_fs: SKY535x2-x3-datasheet.pdf Table 20 (Gen 7 common clock, 2 fs typ)
+    temp_range_c: SKY535x2-x3-datasheet.pdf p1 (–40 to +95 °C ambient)
+    pcie_gen: SKY535x2-x3-datasheet.pdf p1 and Table 20
+- mpn: SKY53512
+  like: SKY53582
+  description: 10-output PCIe Gen 1–7 ultra-low additive jitter differential buffer, DC to 3.1 GHz
+  package: QFN-48 7x7 p0.5 EP
+  product_url: https://www.skyworksinc.com/en/Products/Timing/HCSL-Clock-Buffers/SKY53512
+  params:
+    outputs: 10
+- mpn: SKY53542
+  like: SKY53582
+  description: 4-output PCIe Gen 1–7 ultra-low additive jitter differential buffer, DC to 3.1 GHz
+  package: QFN-32 5x5 p0.5 EP
+  product_url: https://www.skyworksinc.com/en/Products/Timing/HCSL-Clock-Buffers/SKY53542
+  params:
+    outputs: 4

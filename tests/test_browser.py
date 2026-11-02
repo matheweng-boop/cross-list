@@ -192,10 +192,10 @@ def test_application_library_system_then_sub_system(page):
     key = system.get_attribute("href").removeprefix("#area-")
     system.click()  # owner, 2 Nov 2026: jumps to the system and opens it, no reload
     expect(page.locator(f"details#area-{key}[open]")).to_have_count(1)
-    sub = page.locator(f"details#area-{key} .sys-sub-title").first
-    sub_name = sub.inner_text().strip()
+    card = page.locator(f"details#area-{key} .sys-sub", has=page.locator('a.sys-btn-dg[href^="/blocks?"]')).first
+    sub_name = card.locator(".sys-sub-title").inner_text().strip()
     with page.expect_navigation():
-        sub.click()
+        card.locator("a.sys-btn-dg").click()  # "▦ See the N block diagrams"
     assert f"system={key}" in page.url and "sub=" in page.url
     assert page.locator(".sys-pick a.fchip.on").get_attribute("href") == f"#area-{key}"
     heading = page.locator(f"details#area-{key}[open] h3.tpl-cat").first
@@ -280,19 +280,66 @@ def test_new_systems_in_the_libraries_and_cross_sell(page):
     assert page.locator("main h2").first.is_visible()
 
 
-def test_library_card_opens_its_block_diagram_in_one_click(page):
-    """Owner, 25 Oct 2026: each card says whether a block diagram exists, and one click on a diagram name opens it
-    (the editor is visited last: leaving it asks before unload)."""
+def test_sub_system_card_buttons_open_the_deep_dive_and_the_diagrams(page):
+    """Owner, 2 Nov 2026: a sub-system card has two clear buttons, "📖 Read the deep dive" and "▦ See the N block
+    diagrams" (the editor is visited last: leaving a library diagram asks before unload)."""
     go(page, "/library#sys-automotive")
-    expect(page.locator("#sys-automotive .sys-sub .dg-flag").first).to_be_visible()
+    card = page.locator("#card-automotive-car-access")
+    expect(card.locator("a.sys-btn")).to_have_count(2)
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/auto_uwb")
     go(page, "/blocks")
     expect(page.locator("#diagrams")).to_be_in_viewport()  # the summary sits at the top
     page.locator(".sys-pick a.fchip").first.click()  # opens the first system
-    card = page.locator("details.sys-block[open] .sys-sub", has=page.locator(".dg-flag.has")).first
-    expect(card.locator(".dg-flag")).to_contain_text("Block diagram ✓")
+    card = page.locator("details.sys-block[open] .sys-sub", has=page.locator('a.sys-btn-dg[href^="/blocks?"]')).first
+    expect(card.locator("a.sys-btn-dg")).to_have_text(re.compile(r"^▦ See the \d+ block diagrams$"))
     with page.expect_navigation():
-        card.locator(".sys-diags a").first.click()
+        card.locator("a.sys-btn-dg").click()
+    sub = re.search(r"sub=([a-z0-9-]+)", page.url).group(1)
+    expect(page.locator(f"#sub-{sub}")).to_be_in_viewport()
+    with page.expect_navigation():
+        page.locator(f"#sub-{sub} + .tpl-grid a.tpl-card").first.click()
     assert "/blocks/new?template=" in page.url
+
+
+def test_where_am_i_strip_and_breadcrumbs(page):
+    """Owner, 2 Nov 2026: a strip on the four pages highlights where you are, with one line on what the page shows; a
+    deep dive and a diagram show "Automotive › UWB in the car" and link to the other view of the same sub-system."""
+    page.on("dialog", lambda d: d.accept())  # a library diagram opens as an unsaved copy: leaving it asks first
+    here = page.locator('nav.where [aria-current="page"]')
+    what = page.locator("nav.where .where-what")
+    go(page, "/library")
+    expect(here).to_have_text("1 Systems library")
+    expect(what).to_have_text("The map of systems and the sub-systems they are made of.")
+    with page.expect_navigation():
+        page.locator("nav.where").get_by_role("link", name="3 Block diagrams").click()
+    expect(here).to_have_text("3 Block diagrams")
+    expect(what).to_contain_text("Real block diagrams from public sources")
+    go(page, "/library/auto_uwb")
+    expect(here).to_have_text("2 Deep dive")
+    expect(what).to_contain_text("A written explainer for one sub-system")
+    crumbs = page.locator("nav.crumbs")
+    expect(crumbs).to_contain_text("Automotive")
+    expect(crumbs).to_contain_text("UWB in the car")
+    with page.expect_navigation():
+        crumbs.get_by_role("link", name=re.compile(r"See its block diagrams \(\d+\)")).click()
+    assert "system=automotive" in page.url and "sub=car-access" in page.url
+    expect(page.locator("details#area-automotive[open]")).to_have_count(1)
+    expect(page.locator("#sub-car-access")).to_be_in_viewport()
+    with page.expect_navigation():
+        page.locator("#sub-car-access + .tpl-grid a.tpl-card").first.click()
+    expect(here).to_have_text("3 Block diagrams")
+    expect(page.locator("nav.crumbs")).to_contain_text("UWB in the car")
+    with page.expect_navigation():
+        page.locator("nav.crumbs").get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/auto_uwb")
+    with page.expect_navigation():
+        page.locator("nav.where").get_by_role("link", name="4 Your workspace").click()
+    assert page.url.endswith("/blocks/new")
+    expect(here).to_have_text("4 Your workspace")
+    expect(what).to_have_text("Your own diagrams, to build, edit and save.")
+    expect(page.locator("nav.crumbs")).to_have_count(0)
 
 
 def test_efuse_key_applications_table_fits_desktop_and_phone(page, chromium, live_server):

@@ -19,7 +19,7 @@ ISSUE_TYPES = {
         "Ratings, competitors, customers, trends, platforms, patents, foundry.",
     ),
     "commercial": ("Market size (TAM)", "TAM estimates per product or technology and their sources."),
-    "area": ("Application area request", "Another application area asked for in the Application library."),
+    "area": ("Application area request", "Another application area asked for in the Block diagram library."),
 }
 
 # what a data review affects, per dataset
@@ -36,7 +36,7 @@ AFFECTS = {
     "new_markets": "Ideas page only (not scored)",
     "auto_reach": "Automotive map and its Top moves (applied immediately)",
     "case": "Preliminary case: the case is revised from it",
-    "application": "Application library: technically verified flag (applied immediately)",
+    "application": "Block diagram library: technically verified flag (applied immediately)",
     "library": "Systems library: the item's confidence (applied immediately); the topic is revised from it",
     "tam": "TAM estimates page (not in any score)",
 }
@@ -141,7 +141,7 @@ def items(session: Session) -> list[dict]:
                 "status": b.status,
                 "link": "/manage/requests?kind=diagram",
                 "resolution": "Needs a template update in the repository.",
-                "affects": "Application library and every analysis using that architecture",
+                "affects": "Block diagram library and every analysis using that architecture",
             }
         )
     for a in session.scalars(select(AreaRequest)):
@@ -155,7 +155,7 @@ def items(session: Session) -> list[dict]:
                 "status": a.status,
                 "link": "/manage/requests?kind=area",
                 "resolution": "The daily update researches it a few documents per run and adds diagrams.",
-                "affects": "Application library",
+                "affects": "Block diagram library",
             }
         )
     out.sort(key=lambda i: i["date"], reverse=True)

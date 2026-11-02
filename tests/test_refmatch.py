@@ -25,7 +25,7 @@ def test_menu_has_no_reference_designs_but_the_page_works(client):
     assert nav.PLACES["/reference-designs"][0] == "systems"
     r = client.get("/reference-designs")
     assert r.status_code == 200 and 'name="q"' in r.text  # still searchable
-    assert 'aria-current="page" class="on">Application library<' in r.text  # highlights Systems & applications
+    assert 'aria-current="page" class="on">Block diagram library<' in r.text  # highlights Systems & applications
 
 
 def test_filtered_lists_by_fn_diagram_and_part(client):

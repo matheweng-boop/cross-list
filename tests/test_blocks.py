@@ -94,7 +94,7 @@ def test_applications_without_vendor_names_and_coverage_uses(client):
     assert b.display_name({"name": "E-mobility drive up to 85 V (Microchip AN5324)"}) == "E-mobility drive up to 85 V"
     page = client.get("/blocks").text
     assert (
-        "Application library" in page
+        "Block diagram library" in page
         and "Possible variants" in page
         and "(TI)" not in page
         and "(NXP)" not in page

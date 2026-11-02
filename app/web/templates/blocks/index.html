@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 {% macro url() -%}{%- set base = {'market': market, 'source': source, 'variants': 'true' if variants else '', 'verified': verified, 'system': system, 'sub': sub} -%}{%- set _ = base.update(kwargs) -%}/blocks?{{ base|dictsort|selectattr('1')|list|urlencode }}{%- endmacro %}
-<h1>Application library</h1>
+{% from "_where.html" import where_strip %}{{ where_strip("blocks") }}
+<h1>Block diagram library</h1>
 <p class="subtitle muted">Reference architectures from public material. Open one to see its blocks, candidate parts and unmet requirements.
   On each card: <span class="tpl-chip have">solid</span> = a Skyworks / Qorvo candidate exists in BizDev, <span class="tpl-chip">dashed</span> = no candidate yet.</p>
 {% set mcount = dict(markets) %}
 {% from "_systems.html" import sub_card, diagram_flag %}
 <p class="dg-summary small" id="diagrams"><b>{{ n_all }} block diagrams</b> · {% if dg.with == dg.subs %}every one of the {{ dg.subs }} sub-systems has at least one{% else %}{{ dg.with }} of {{ dg.subs }} sub-systems have one, {{ dg.subs - dg.with }} have none yet{% endif %}{% if dg.other %} · {{ dg.other }} more under <a href="{{ url(system='other', sub='') }}#other-areas">Other areas</a>{% endif %}.
-  Each card shows {{ diagram_flag(1) }} or {{ diagram_flag(0) }}; click a diagram name (▸) to open it.</p>
+  Open a system, then press <b>▦ See the block diagrams</b> on a sub-system; a sub-system without one says {{ diagram_flag(0) }}.</p>
 {# owner, 2 Nov 2026: as in the Systems library, each system is one closed line that opens and closes; the buttons
    jump to a system and open it; #area-<key>, #sub-<key> and ?system=<key> open the right system. #}
 <nav class="sys-pick small" aria-label="Block diagrams by system"><span class="chip-lbl">Block diagrams by system</span>{% for s in tree %}<a class="fchip{{ ' on' if system == s.key }}" href="#area-{{ s.key }}">{{ s.title }} <small>{{ s.n }}</small></a>{% endfor %}{% if other %}<a class="fchip{{ ' on' if system == 'other' }}" href="#other-areas">Other <small>{{ other|map(attribute=1)|map('length')|sum }}</small></a>{% endif %}<a href="#request-area">Request an area</a></nav>

@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/blocks", response_class=HTMLResponse)
 def index(request: Request, market: str = "", source: str = "", variants: bool = False, verified: str = "",
           session: Session = Depends(get_session)):  # fmt: skip
-    """Application library: reference architectures with facets for end market and source; architectures that may
+    """Block diagram library: reference architectures with facets for end market and source; architectures that may
     describe the same application are flagged as possible variants (never merged)."""
     designs = session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc())).all()
     groups = blocks.template_cards(session)
@@ -206,6 +206,8 @@ def edit(request: Request, design_id: int, bare: bool = False, place: str = "", 
 
 
 def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None, words=None):
+    from app.services import systems as sy
+
     info = info or {"id": None, "name": blocks.display_name(tpl) if tpl else "", "data": None}
     if design:
         info = {"id": design.id, "name": design.name, "data": design.data}
@@ -228,6 +230,7 @@ def _editor(request, session, design, tpl, tpl_i=None, bare=False, info=None, wo
             "ref_counts": refmatch.fn_counts(),
             "words": words,
             "practice": qspice.practice_by_fn(),  # "Seen in practice (QSPICE forum)" per function (27 Oct 2026)
+            "places": sy.diagram_crumbs(tpl_i),  # owner, 2 Nov 2026: "Automotive › UWB in the car", its deep dive
         },
     )
 

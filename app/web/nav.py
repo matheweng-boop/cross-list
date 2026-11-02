@@ -18,7 +18,7 @@ NAV = (
     # technology; Future growth = the business side. Systems first, then applications, workspace, designs, cross-sell.
     ("systems", "Systems & applications", (
         ("Systems library", "/library", "Full systems and their sub-systems, with deep dives"),
-        ("Application library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
+        ("Block diagram library", "/blocks", "Diagrams grouped by system and sub-system, with their coverage"),
         ("Application workspace", "/blocks/new", "Build or edit a block diagram"),
         ("Cross-sell", "/blocks/cross-sell",
          "What to sell together: by system, by part, and the Skyworks + Qorvo portfolio side by side"),

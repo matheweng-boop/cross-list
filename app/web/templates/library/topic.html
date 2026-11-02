@@ -9,7 +9,9 @@
   {% for cm in f.comments %}<p class="small"><b>{{ cm.author or 'anonymous' }}</b>, {{ cm.date|date('short') }}: {{ cm.text }}</p>{% endfor %}
 </div>{% endmacro %}
 {% block content %}
-<p class="small"><a href="/library">← Systems library</a></p>
+{% from "_where.html" import where_strip %}{% from "_systems.html" import crumbs %}
+{{ where_strip("deep", {"systems": "/library#sys-" ~ where.system, "blocks": "/blocks?system=" ~ where.system ~ "&sub=" ~ where.sub ~ "#sub-" ~ where.sub} if where else {}) }}
+{% if where %}{{ crumbs(where, "deep") }}{% else %}<nav class="crumbs small" aria-label="Breadcrumb"><a href="/library#sys-other">Other deep dives</a><span class="muted">: not tied to one system yet</span></nav>{% endif %}
 <h1>{{ t.title }}</h1>
 <p class="subtitle">{{ t.summary }}</p>
 {% from "reviews/_how.html" import how_links %}{{ how_links(how_for_topic(key)) }}

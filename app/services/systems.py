@@ -1,7 +1,7 @@
 """Systems and sub-systems (owner, 23 and 25 Oct 2026): Automotive, Data center, Drones, Cellular, Industrial & energy,
 Aerospace & defense, Consumer & wearables, Home & building and Medical, each made of
 sub-systems such as "UWB in the car" or "Car radio". The Systems library shows them as headers with their
-sub-systems; the Application library groups its diagrams by them; Cross-sell works on a selected system or
+sub-systems; the Block diagram library groups its diagrams by them; Cross-sell works on a selected system or
 sub-system. The assignment lives in data/blocks/systems.yaml; diagrams it does not list sit under "Other"."""
 
 from functools import lru_cache
@@ -68,8 +68,35 @@ def topic_place(key: str) -> tuple[str, str] | None:
     return next(((s["key"], x["key"]) for s in systems() for x in s["subsystems"] if key in x["topics"]), None)
 
 
+def crumb(system: str, subsystem: str) -> dict | None:
+    """A sub-system as the breadcrumbs show it (owner, 2 Nov 2026: "Automotive › UWB in the car", with a link to the
+    other view): system and sub-system keys and titles, its number of block diagrams and its deep dives."""
+    from app.services import library
+
+    s, x = get(system), sub(system, subsystem)
+    if not s or not x:
+        return None
+    titles = {t["key"]: t["title"] for t in library.topics()}
+    return {"system": s["key"], "system_title": s["title"], "sub": x["key"], "title": x["title"], "n": len(x["idx"]),
+            "deep": [{"key": k, "title": titles[k]} for k in x["topics"] if k in titles]}  # fmt: skip
+
+
+def topic_crumb(key: str) -> dict | None:
+    """The sub-system a deep dive belongs to (None: not tied to a system yet)."""
+    place = topic_place(key)
+    return crumb(*place) if place else None
+
+
+def diagram_crumbs(i: int | None) -> list[dict]:
+    """The sub-systems a library diagram sits in (most diagrams sit in one; none when it is under Other or when the
+    editor shows no library diagram)."""
+    if i is None or not 0 <= i < len(blocks.templates()):
+        return []
+    return [c for c in (crumb(s, x) for s, x in place_of(i) if s != OTHER) if c]
+
+
 def selection(system: str, subsystem: str = "", template: int | None = None) -> dict:
-    """What a person picked in the Application library: the library diagram indexes it covers and a label."""
+    """What a person picked in the Block diagram library: the library diagram indexes it covers and a label."""
     lib = blocks.templates()
     if template is not None and 0 <= template < len(lib):
         return {"idx": [template], "label": blocks.display_name(lib[template]), "level": "application"}

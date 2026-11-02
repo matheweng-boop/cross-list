@@ -1,15 +1,35 @@
-{# Systems and sub-systems (owner, 23 Oct 2026): shared by the Systems library and the Application library.
-   Owner, 25 Oct 2026: every card says whether a block diagram exists ("Block diagram ✓ (n)" / "No diagram yet") and
-   links straight to each diagram, so one click opens it. `diagrams`: [{i, name}] of the sub-system's diagrams. #}
+{# Systems and sub-systems (owner, 23 Oct 2026): shared by the Systems library and the Block diagram library.
+   Owner, 2 Nov 2026: a sub-system card has two clear buttons instead of mixed links: "📖 Read the deep dive" (each
+   one listed when there are several) and "▦ See the N block diagrams" (one diagram: it opens at once); a card with no
+   diagram says "No diagram yet". `diagrams`: [{i, name}] of the sub-system's diagrams. #}
 {% macro diagram_flag(n) -%}
 {% if n %}<span class="dg-flag has" title="{{ n }} block diagram{{ 's' if n != 1 }} available">Block diagram ✓ ({{ n }})</span>{% else %}<span class="dg-flag none" title="No block diagram drawn for this yet">No diagram yet</span>{% endif %}
 {%- endmacro %}
 {% macro sub_card(s, x, n, deep, diagrams=none) -%}
 <article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}" data-sub="{{ x.key }}">
-  <a class="sys-sub-title" href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}"><b>{{ x.title }}</b></a>
-  <small>{{ diagram_flag(n) }}{% if deep %} <span class="muted">· {{ deep|length }} deep dive{{ 's' if deep|length != 1 }}</span>{% endif %}</small>
-  {% if diagrams %}<small class="sys-diags">{% for d in diagrams[:3] %}<a href="/blocks/new?template={{ d.i }}" title="Open the block diagram: {{ d.name }}">▸ {{ d.name|truncate(46) }}</a>{% endfor %}{% if diagrams|length > 3 %}<a href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}">All {{ diagrams|length }} diagrams</a>{% endif %}</small>{% endif %}
+  <b class="sys-sub-title">{{ x.title }}</b>
   {% if x.elements %}<span class="sys-els small">{% for e in x.elements %}<span class="sys-el">{{ e }}</span>{% endfor %}</span>{% endif %}
-  {% if deep or x.links %}<small class="sys-links">{% for t in deep %}<a href="/library/{{ t.key }}" title="{{ t.title }}">Deep dive: {{ t.title|truncate(48) }}</a>{% endfor %}{% for label, href in x.links %}<a href="{{ href }}">{{ label }}</a>{% endfor %}</small>{% endif %}
+  <div class="sys-btns">
+    {%- if deep|length == 1 %}<a class="sys-btn sys-btn-deep" href="/library/{{ deep[0].key }}" title="{{ deep[0].title }}">📖 Read the deep dive</a>
+    {%- elif deep %}<span class="sys-btn-lbl">📖 Read the deep dives</span>{% for t in deep %}<a class="sys-btn sys-btn-deep" href="/library/{{ t.key }}" title="{{ t.title }}">📖 {{ t.title|truncate(52) }}</a>{% endfor %}{% endif %}
+    {%- if n == 1 and diagrams %}<a class="sys-btn sys-btn-dg" href="/blocks/new?template={{ diagrams[0].i }}" title="Open the block diagram: {{ diagrams[0].name }}">▦ See the block diagram</a>
+    {%- elif n %}<a class="sys-btn sys-btn-dg" href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}">▦ See the {{ n }} block diagrams</a>
+    {%- else %}{{ diagram_flag(0) }}{% endif %}
+  </div>
+  {% if x.links %}<small class="sys-links">Also: {% for label, href in x.links %}<a href="{{ href }}">{{ label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</small>{% endif %}
 </article>
+{%- endmacro %}
+{# Breadcrumbs on a deep dive or a diagram (owner, 2 Nov 2026): "Automotive › UWB in the car" inside this view's
+   library, then the other view of the same sub-system ("See its block diagrams" / "Read the deep dive").
+   c: systems.crumb(); view: deep (a deep dive) | diagram (a library diagram). #}
+{% macro crumbs(c, view) -%}
+<nav class="crumbs small" aria-label="Breadcrumb">
+  {%- if view == 'deep' %}<a href="/library#sys-{{ c.system }}">{{ c.system_title }}</a><span class="crumb-sep" aria-hidden="true">›</span><a href="/library#card-{{ c.system }}-{{ c.sub }}">{{ c.title }}</a>
+  {%- else %}<a href="/blocks?system={{ c.system }}#area-{{ c.system }}">{{ c.system_title }}</a><span class="crumb-sep" aria-hidden="true">›</span><a href="/blocks?system={{ c.system }}&amp;sub={{ c.sub }}#sub-{{ c.sub }}">{{ c.title }}</a>{% endif %}
+  <span class="crumb-x">
+  {%- if view == 'deep' %}{% if c.n %}<a class="sys-btn sys-btn-dg" href="/blocks?system={{ c.system }}&amp;sub={{ c.sub }}#sub-{{ c.sub }}">▦ See its block diagrams ({{ c.n }})</a>{% endif %}
+  {%- elif c.deep|length == 1 %}<a class="sys-btn sys-btn-deep" href="/library/{{ c.deep[0].key }}" title="{{ c.deep[0].title }}">📖 Read the deep dive</a>
+  {%- elif c.deep %}<span class="sys-btn-lbl">📖 Read the deep dives</span>{% for t in c.deep %}<a class="sys-btn sys-btn-deep" href="/library/{{ t.key }}" title="{{ t.title }}">📖 {{ t.title|truncate(52) }}</a>{% endfor %}{% endif %}
+  </span>
+</nav>
 {%- endmacro %}

@@ -70,7 +70,7 @@ def test_portfolio_headline_counts_each_part_once(client):
 
 
 def test_titles_name_the_page(client):
-    assert "<title>Car radio – Application library" in client.get("/broadcast").text
+    assert "<title>Car radio – Block diagram library" in client.get("/broadcast").text
     assert "<title>Library sources – " in client.get("/library/sources").text
     assert "<h1>New radio configuration</h1>" in client.get("/broadcast/configurations/new").text
 

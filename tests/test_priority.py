@@ -106,7 +106,9 @@ def test_yaml_validates_and_every_function_is_mapped():
         assert lv[fn] == "outside", fn
 
 
-CARD = (r'<article class="csg-card" data-t="([\w]+)"><b><a [^>]*>([^<]+)</a></b>\s*<span class="pr-bar".*?'
+# a card, or a group card (one function in several bands, owner 3 Nov 2026) with its line of bands
+CARD = (r'<article class="csg-card(?: vg-card)?" data-t="([\w]+)"[^>]*><b><a [^>]*>([^<]+)</a></b>\s*'
+        r'(?:<small class="vg-line">[^<]*</small>\s*)?<span class="pr-bar".*?'
         r'<b class="pr-num">([\d.]+)</b>')  # fmt: skip
 # a Markets row: label, then the priority cell (its fill colour names the technology level)
 MROW = r'<td class="bo-fn"><b>([^<]+)</b>.*?<span class="pr-fill pr-t-(\w+)".*?<b class="pr-num">([\d.]+)</b>'
@@ -172,7 +174,7 @@ def test_both_lists_sorted_by_priority_and_filtered(client):
 
 
 def html_count(html: str) -> int:
-    return html.count('class="csg-card"')
+    return html.count('<article class="csg-card')
 
 
 def test_all_lists_every_open_item(client, session):
@@ -184,7 +186,9 @@ def test_all_lists_every_open_item(client, session):
     rows = op.explorer(apps, asp, vol, scoring.for_session(session, apps, asp, vol))
     open_rows = [e for e in rows if e["gap_type"] != "not_ours"]
     every = client.get("/business/opportunities?show=all").text
-    assert html_count(every) == len(open_rows)
+    from app.services import variants
+
+    assert html_count(every) == variants.count(open_rows)  # one card per function, its bands inside
     assert pr.unmapped(open_rows) == []
 
 

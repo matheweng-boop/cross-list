@@ -646,7 +646,9 @@ def rf_band_rows() -> list[dict]:
         label = f"{g['label']} · {b['label']}" + (f" · {g['power_label']}" if g["power_label"] else "")
         out.append({
             "fn": g["fn"], "key": f"{g['fn']}@{b['id']}" + (f"@{g['power_label']}" if g["power_label"] else ""),
-            "label": label, "status": "competitor" if g["comp"] else "gap", "gap_type": "band_gap",
+            "label": label, "base_label": g["label"], "band_id": b["id"], "power_label": g["power_label"] or None,
+            "variant": label[len(g["label"]) + 3:], "status": "competitor" if g["comp"] else "gap",
+            "gap_type": "band_gap",
             "band_note": BAND_KINDS[g["kind"]], "rf_kind": g["kind"],
             "rf_link": f"/business/rf-coverage?fn={g['fn']}&band={b['id']}",
             "reach": g["need"], "positions": g["need"], "adjacent": 0, "adjacency": 0, "tam": 0.0, "tam_apps": 0,

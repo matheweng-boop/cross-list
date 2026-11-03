@@ -38,9 +38,14 @@
 {% if not g or g.startswith('RF') %}<p class="small"><b>RF:</b> an RF function counts as covered as soon as one part exists, so RF also gets one row per band (and power class) that the block diagrams need and we don't cover: “Band gap” rows from <a href="/business/rf-coverage">RF coverage</a>. Their score takes demand from the diagrams that need the band, distance from the coverage status and competition from competitor parts in the band; architecture is neutral.</p>{% endif %}
 </details>
 </div>
-{% if rows and (same.gap or same.crowd or same.tam) %}<p class="small ex-same">{% if same.gap %}All {{ rows|length }} rows: <span class="gt gt-{{ rows[0].gap_type }}" title="{{ gap_labels[rows[0].gap_type] }}">{{ gap_labels[rows[0].gap_type].split(' – ')[0] }}</span>{% endif %}{% if same.crowd %}{{ ' · ' if same.gap else 'All rows: ' }}competition {{ crowd(rows[0].competition, crowding_label) }}{% endif %}{% if same.tam %}{{ ' · ' if same.gap or same.crowd }}Market size (TAM): no public estimate for these functions yet – <a href="/business/tam">add a sourced TAM estimate</a>{% endif %}</p>{% endif %}
+{% if rows and (same.gap or same.crowd or same.tam) %}<p class="small ex-same">{% if same.gap %}All {{ n_items }} rows: <span class="gt gt-{{ rows[0].gap_type }}" title="{{ gap_labels[rows[0].gap_type] }}">{{ gap_labels[rows[0].gap_type].split(' – ')[0] }}</span>{% endif %}{% if same.crowd %}{{ ' · ' if same.gap else 'All rows: ' }}competition {{ crowd(rows[0].competition, crowding_label) }}{% endif %}{% if same.tam %}{{ ' · ' if same.gap or same.crowd }}Market size (TAM): no public estimate for these functions yet – <a href="/business/tam">add a sourced TAM estimate</a>{% endif %}</p>{% endif %}
 
-{% macro table(rs) %}<div class="table-wrap"><table class="striped explorer">
+{% macro aside_form(key, label='Set aside') %}<details class="aside-form"><summary class="small-btn outline secondary" role="button">{{ label }}</summary>
+          <form method="post" action="/business/decision"><input type="hidden" name="fn" value="{{ key }}"><input type="hidden" name="status" value="set_aside"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">
+            <input type="text" name="note" placeholder="Why, e.g. not now – revisit 2027" aria-label="Reason"><button type="submit" class="small-btn">Set aside</button></form></details>{% endmacro %}
+{% macro kept_chip(e, what='') %}<span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept{{ what }}</span>{% endmacro %}
+{% macro range(r) %}{{ r[0] if r[0] == r[1] else r[0] ~ '–' ~ r[1] }}{% endmacro %}
+{% macro table(rs) %}{% set show_tam = not (same.tam or guest_blocked(request, '/business/tam')) %}{% set ncol = 6 + (0 if same.crowd else 1) + (1 if show_tam else 0) %}<div class="table-wrap"><table class="striped explorer">
   <thead><tr>
     {{ th('label') }}
     {{ th('priority') }}
@@ -48,24 +53,45 @@
     {% call th('reach') %}Needed in <small class="muted">of {{ apps|length }}</small>{% endcall %}
     {% if not same.crowd %}{{ th('competition') }}{% endif %}
     {% call th('score') %}Type · score{% endcall %}
-    {% if not (same.tam or guest_blocked(request, '/business/tam')) %}{{ th('tam') }}{% endif %}
+    {% if show_tam %}{{ th('tam') }}{% endif %}
     <th scope="col">Decision</th>
   </tr></thead>
   <tbody>{% for e in rs %}{% set kept = (e.decision or {}).get('status') == 'keep' %}
+    {% if e.subs %}{# one function in several bands: the parent row with its best band's scores, its bands below (owner, 3 Nov 2026) #}
+    <tr class="vg-head{{ ' kept' if kept }}" data-fn="{{ e.fn }}">
+      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a> <small class="vg-line">· {{ e.n_variants }} {{ e.variant_kind }}{% if e.span %} · {{ e.span }}{% endif %}</small>{% if kept %} {{ kept_chip(e, ' (all)') }}{% elif e.n_kept %} <span class="kept-chip">✓ {{ e.n_kept }} kept</span>{% endif %}{{ found_in(e.fn) }}</td>
+      <td class="pr-cell">{{ prio_bar(e) }}<small>best: {{ e.subs[0].variant or e.subs[0].label }}</small></td>
+      <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
+      <td class="n" title="Diagrams that need one of its {{ e.variant_kind }}">{{ range(e.reach_range) if e.reach_range else e.reach }}</td>
+      {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
+      <td>{{ score_chip(e) }}</td>
+      {% if show_tam %}<td class="n">{% if e.tam_range %}{{ usd(e.tam_range[0]) }}{% if e.tam_range[1] != e.tam_range[0] %}–{{ usd(e.tam_range[1]) }}{% endif %}{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
+      <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep all', 'outline') }}{% endif %}{{ aside_form(e.key, 'Set aside all') }}</td>
+    </tr>
+    <tr class="vg-row"><td colspan="{{ ncol }}"><details class="vg-subs small"><summary>Show the {{ e.n_variants }} {{ e.variant_kind }}</summary>
+      <table class="explorer vg-table"><thead><tr><th scope="col">{{ 'Power class' if e.variant_kind == 'power classes' else 'Band' }}</th><th scope="col">Priority</th><th scope="col" class="n">Needed in</th><th scope="col">Competition</th><th scope="col">Type · score</th><th scope="col">Decision</th></tr></thead>
+      <tbody>{% for x in e.subs %}{% set xk = (x.decision or {}).get('status') == 'keep' %}<tr{% if xk %} class="kept"{% endif %}>
+        <td><b>{{ x.variant or x.label }}</b>{% if x.band_note %} <small class="muted">· {{ x.band_note }} · <a href="{{ x.rf_link }}">RF coverage</a></small>{% endif %}{% if xk %} {{ kept_chip(x, ' (with the group)' if x.decision.inherited else '') }}{% endif %}</td>
+        <td class="pr-cell">{{ prio_bar(x) }}</td>
+        <td class="n">{{ x.reach }}</td>
+        <td>{{ crowd(x.competition, crowding_label) }}</td>
+        <td>{{ score_chip(x) }}</td>
+        <td class="decide">{% if not xk %}{{ decide(x, 'keep', 'Keep', 'outline') }}{% endif %}{{ aside_form(x.key) }}
+          {{ push('explorer', x.key, x.label, gap_labels[x.gap_type].split(' – ')[0] ~ ' · needed in ' ~ x.reach ~ ' architectures', x.fn, x.key in shortlisted) }}</td>
+      </tr>{% endfor %}</tbody></table></details></td></tr>
+    {% else %}
     <tr{% if kept %} class="kept"{% endif %}>
-      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if e.band_note %} <small class="muted">· {{ e.band_note }} · <a href="{{ e.rf_link }}">RF coverage</a></small>{% endif %}{% if kept %} <span class="kept-chip" title="Kept for consideration{{ ' – ' ~ e.decision.note if e.decision.note }}">✓ kept</span>{% endif %}{{ found_in(e.fn) }}</td>
+      <td><a href="/business/evidence/{{ e.fn }}?co={{ co }}"><b>{{ e.label }}</b></a>{% if e.band_note %} <small class="muted">· {{ e.band_note }} · <a href="{{ e.rf_link }}">RF coverage</a></small>{% endif %}{% if kept %} {{ kept_chip(e) }}{% endif %}{{ found_in(e.fn) }}</td>
       <td class="pr-cell">{{ prio_bar(e) }}<small>{{ prio_chips(e) }}</small></td>
       <td>{% if not same.gap %}<span class="gt gt-{{ e.gap_type }}" title="{{ gap_labels[e.gap_type] }}">{{ gap_labels[e.gap_type].split(' – ')[0] }}</span> {% endif %}{{ path_chip(e.path, path_label) }}</td>
       <td class="n" title="{{ e.adjacent }} of them already use our parts">{{ e.reach }}{% if e.background %} <small class="muted" title="of which background architectures">({{ e.background }} bg)</small>{% endif %}</td>
       {% if not same.crowd %}<td>{{ crowd(e.competition, crowding_label) }}</td>{% endif %}
       <td>{{ score_chip(e) }}</td>
-      {% if not (same.tam or guest_blocked(request, '/business/tam')) %}<td class="n">{% if e.tam_apps %}{{ e.tam_src.band if e.tam_src and e.tam_src.band else usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/tam" title="No market size (TAM) yet">— <span class="visually-hidden">add a market size for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
+      {% if show_tam %}<td class="n">{% if e.tam_apps %}{{ e.tam_src.band if e.tam_src and e.tam_src.band else usd(e.tam) }}{% elif not e.band_note %}<a class="muted" href="/business/tam" title="No market size (TAM) yet">— <span class="visually-hidden">add a market size for {{ e.label }}</span></a>{% else %}<span class="muted">–</span>{% endif %}</td>{% endif %}
       <td class="decide">{% if not kept %}{{ decide(e, 'keep', 'Keep', 'outline') }}{% endif %}
-        <details class="aside-form"><summary class="small-btn outline secondary" role="button">Set aside</summary>
-          <form method="post" action="/business/decision"><input type="hidden" name="fn" value="{{ e.key }}"><input type="hidden" name="status" value="set_aside"><input type="hidden" name="back" value="{{ request.url.path }}?{{ request.url.query }}">
-            <input type="text" name="note" placeholder="Why, e.g. not now – revisit 2027" aria-label="Reason"><button type="submit" class="small-btn">Set aside</button></form></details>
+        {{ aside_form(e.key) }}
         {{ push('explorer', e.key, e.label, gap_labels[e.gap_type].split(' – ')[0] ~ ' · needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</td>
-    </tr>{% endfor %}
+    </tr>{% endif %}{% endfor %}
   </tbody>
 </table></div>{% endmacro %}
 {% if rows %}
@@ -80,9 +106,9 @@
 {% if aside %}
 <div class="table-wrap"><table class="striped explorer">
   <thead><tr><th scope="col">Function</th><th scope="col">Why</th><th scope="col">Since</th><th scope="col">Score</th><th scope="col"></th></tr></thead>
-  <tbody>{% for e in aside %}<tr><td><a href="/business/evidence/{{ e.fn }}?co={{ co }}">{{ e.label }}</a> <small class="muted">{{ e.group }}</small></td><td class="small">{{ e.decision.note or '–' }}</td>
-    <td class="small">{{ e.decision.date|date }}</td><td>{{ score_chip(e) }}</td>
-    <td>{{ decide(e, 'clear', 'Restore', 'outline secondary') }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for e in aside %}{% for x in (e.subs if e.subs and not e.decision else [e]) %}{% set whole = x.subs and x.decision %}<tr><td><a href="/business/evidence/{{ x.fn }}?co={{ co }}">{{ x.label }}</a>{% if whole %} <small class="vg-line">· {{ x.n_variants }} {{ x.variant_kind }}{% if x.span %} · {{ x.span }}{% endif %}</small>{% endif %} <small class="muted">{{ x.group }}</small></td><td class="small">{{ x.decision.note or '–' }}</td>
+    <td class="small">{{ x.decision.date|date }}</td><td>{{ score_chip(x) }}</td>
+    <td>{% if x.decision.inherited and not whole %}<small class="muted">set aside with its function</small> {% endif %}{{ decide({'key': x.fn if x.decision.inherited else x.key}, 'clear', 'Restore all' if whole or x.decision.inherited else 'Restore', 'outline secondary') }}</td></tr>{% endfor %}{% endfor %}</tbody>
 </table></div>
 {% else %}<p class="small muted">Nothing set aside. Use “Set aside” on a row to park a function that is not a priority now.</p>{% endif %}
 {{ about('explorer') }}

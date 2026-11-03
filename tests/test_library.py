@@ -449,3 +449,112 @@ def test_presentation_topics_include_the_new_systems():
     groups = {t["group"] for t in presentation.topics()}
     for k in NEW_SYSTEMS:
         assert sy.get(k)["title"] in groups, k
+
+
+def test_v2x_background_sources_from_5gaa(client):
+    """5GAA documents read as background: listed under the V2X topic's references with page-cited points, the source
+    registered, and the C-V2X case background and automotive map citing them."""
+    t = library.topic("v2x_frontend")
+    bg = t["background_references"]
+    assert len(t["references"]) == 6 and 1 <= len(bg) <= 6
+    assert all(r["url"].startswith("https://5gaa.org/") and 3 <= len(r["points"]) <= 6 for r in bg)
+    assert all(any(re.search(r"\bpp?\. \d", p) for p in r["points"]) for r in bg)
+    assert all(any("(est)" in p for p in r["points"]) for r in bg)
+    page = client.get("/library/v2x_frontend").text
+    assert "Background sources" in page and "5gaa-annual-report-2025.pdf" in page
+    src = next(s for s in library.sources() if s["id"] == "5gaa")
+    assert "summaries" in src["licence"] and src["access"].startswith("Allowed")
+    case_bg = client.get("/business/reports/auto-cv2x-fe/background").text
+    assert all(r["url"] in case_bg for r in bg)
+    reach = (library.FOLDER.parent / "business" / "auto_reach.yaml").read_text()
+    assert all(r["url"] in reach for r in bg)
+
+
+# ---- owner, 2 Nov 2026: timing solutions in the data center (worker N) ---------------------------------------------
+def test_data_center_timing_sub_system_diagrams_and_deep_dive(client):
+    x = sy.sub("datacenter", "timing")
+    tpls = [blocks.templates()[i] for i in x["idx"]]
+    assert len(tpls) >= 4 and any("PCIe" in t["name"] for t in tpls) and any("OCP Time Card" in t["name"] for t in tpls)
+    assert sy.topic_place("dc_timing") == ("datacenter", "timing") and ("Clock planner", "/clocks") in x["links"]
+    fns = {b["fn"] if isinstance(b, dict) else b.split()[0] for t in tpls for g in t["groups"] for b in g["blocks"]}
+    assert {"clock_generator", "pcie_buffer", "jitter_attenuator", "crystal_oscillator", "clock_buffer"} <= fns
+    card = _card(client.get("/library").text, "datacenter", "timing")
+    assert "Timing and synchronization" in card and 'href="/library/dc_timing"' in card and 'href="/clocks"' in card
+    deep = client.get("/library/dc_timing").text
+    assert 'href="/clocks"' in deep and "Clock planner" in deep and "Si5332" in deep
+    one = client.get(f"/blocks/new?template={x['idx'][0]}").text  # the server clock tree shows our timing parts
+    assert "Si5332" in one and "Si532" in one
+
+
+def test_data_center_timing_market_by_socket_is_an_estimate(client, session):
+    """Owner, 2 Nov 2026 ("Yes to all"): units x content per socket in the deep dive, and the total as a TAM entry
+    marked est (no fn, so it does not set a function's market size)."""
+    from app.services import tam
+
+    segs = [m["segment"] for m in library.topic("dc_timing")["market"]]
+    for socket in ("Servers", "Switches", "Optical modules", "Time cards", "Total"):
+        assert any(s.startswith(socket) and "est" in s for s in segs), socket
+    e = next(x for x in tam.estimates(session) if x["key"] == "dc-timing-sockets-est")
+    assert "(est)" in e["value"] and e["usd"] == 170_000_000 and not e["fn"]
+    assert "dc-timing-sockets-est" in client.get("/library/dc_timing").text
+
+
+# ---- Nisshinbo Micro Devices automotive block diagrams (2 Nov 2026) ----
+NISSHINBO_NEW = {  # name prefix -> (system, sub-system, functions the source diagram shows)
+    "eCall module": ("automotive", "telematics-v2x", {"modem", "gnss_lna", "rf_switch", "amplifier", "audio_amp"}),
+    "Head-up display": ("automotive", "cockpit", {"optical_driver", "motor_driver_brushed", "watchdog", "supervisor"}),
+    "Parking-assist camera ECU": ("automotive", "adas", {"camera_radar", "amplifier", "pmic", "can_transceiver"}),
+    "Electric power steering ECU": ("automotive", "powertrain", {"three_phase_gate_driver", "ldo_tracker"}),
+    "LED headlight ECU": ("automotive", "cockpit", {"led_driver", "comparator", "ldo_tracker", "motor_driver_brushed"}),
+    "Acoustic vehicle alerting system": ("automotive", "cockpit", {"audio_amp", "amplifier", "lin_transceiver"}),
+    "Corner sensor ECU": ("automotive", "adas", {"ultrasonic_afe", "amplifier", "audio_amp"}),
+    "Body control module with a smart key receiver": ("automotive", "car-access", {"rf_switch", "filter_saw_baw"}),
+}
+
+
+def test_nisshinbo_diagrams_are_drawn_after_their_page_and_sit_in_their_sub_system():
+    fns = blocks.catalogue()["functions"]
+    for prefix, (system, sub, want) in NISSHINBO_NEW.items():
+        i = _index(prefix)
+        t = blocks.templates()[i]
+        assert t["name"].endswith("(after Nisshinbo)") and t["note"].startswith("After Nisshinbo")
+        assert all(s["url"].startswith("https://www.nisshinbo-microdevices.co.jp/en/") for s in t["sources"])
+        assert all(not s["url"].endswith(".pdf") for s in t["sources"])  # robots.txt disallows their PDFs
+        ids = {g["id"] for g in t["groups"]}
+        assert len(ids) == len(t["groups"]) >= 5
+        used = {b.split()[0] for g in t["groups"] for b in g["blocks"]}
+        assert used <= set(fns) and want <= used, prefix
+        assert all(a in ids and b in ids for a, b, _ in t["links"]), prefix
+        assert (system, sub) in sy.place_of(i), (prefix, sy.place_of(i))
+
+
+def test_nisshinbo_is_a_reference_on_the_matching_library_diagrams():
+    src = next(s for s in library.sources() if s["id"] == "nisshinbo")
+    assert "PDFs disallowed" in src["access"] and src["kind"] == "block_diagram"
+    added = {  # existing diagram -> the group added after Nisshinbo
+        "Automotive infotainment head unit": ("NISSHINBO-AUTO-AV", "gnss_rf", {"gnss_lna", "rf_switch"}),
+        "Automotive instrument cluster": ("NISSHINBO-AUTO-INFO", "wdt_vd", {"watchdog", "supervisor"}),
+        "V2X unit with two antenna paths": ("NISSHINBO-AUTO-V2X", "wdt_vd", {"watchdog", "supervisor"}),
+        "EV traction inverter": ("NISSHINBO-AUTO-EAXLE", "resolver", {"position_interface", "amplifier"}),
+        "HEV/EV on-board charger": ("NISSHINBO-AUTO-OBC", "hv_afe", {"amplifier", "comparator"}),
+        "HEV/EV HV-to-LV DC/DC": ("NISSHINBO-AUTO-DCDC", "afe", {"amplifier"}),
+        "EV high-voltage battery system": ("NISSHINBO-AUTO-BMS", "hv_afe", {"amplifier"}),
+        "Automotive HVAC e-compressor drive": ("NISSHINBO-AUTO-ECOMP", "tracker", {"ldo_tracker", "comparator"}),
+        "ADAS domain controller": ("NISSHINBO-AUTO-SAFETY", "video_amp", {"amplifier"}),
+    }
+    names = [t["name"] for t in blocks.templates()]
+    for prefix, (doc, gid, want) in added.items():
+        t = blocks.templates()[names.index(prefix) if prefix in names else _index(prefix)]
+        assert doc in {s["doc"] for s in t["sources"]} and doc in t["note"], prefix
+        g = next(g for g in t["groups"] if g["id"] == gid)
+        fns = {b.split()[0] if isinstance(b, str) else b["fn"] for b in g["blocks"]}
+        assert "after Nisshinbo" in g["label"] and want <= fns, prefix
+        assert any(gid in lk[:2] for lk in t["links"]), prefix
+    for key in ("tcu_rf", "v2x_frontend", "gnss_frontend"):
+        assert "Nisshinbo" in library.notes(key) and len(library.topic(key)["references"]) == 6
+
+
+def test_nisshinbo_diagrams_open_with_their_source(client):
+    for prefix in NISSHINBO_NEW:
+        r = client.get(f"/blocks/new?template={_index(prefix)}")
+        assert r.status_code == 200 and "nisshinbo-microdevices.co.jp" in r.text, prefix

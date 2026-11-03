@@ -9,6 +9,99 @@ references:
   - {id: r4, title: "Multi-Channel Operation (MCO) Part 2: Technical capabilities and limits (WP 2084 V1.0)", publisher: "CAR 2 CAR Communication Consortium", year: 2020, url: "https://www.car-2-car.org/fileadmin/documents/General_Documents/C2CCC_WP_2084_MCO-TechnicalCapabilies_V1.0.pdf", type: white_paper, licence: "Free download; no reproduction without permission (summarised)", retrieved: 2026-10-21, why: "Shows which RF parameters (TX mask vs RX selectivity, overloading, IM, CSMA threshold) limit several V2X channels in one area; lists 802.11bd PHY features"}
   - {id: r5, title: "Co-channel coexistence between ITS-G5 and LTE-V2X: mitigation methods (WP 2091 V1.0)", publisher: "CAR 2 CAR Communication Consortium", year: 2021, url: "https://www.car-2-car.org/fileadmin/documents/General_Documents/C2CCC_WP_2091_Co-ChannelCoexistence_MitigationMethods_V1.0.pdf", type: white_paper, licence: "Free download; no reproduction without permission (summarised)", retrieved: 2026-10-21, why: "Evaluates ETSI TR 103 766 methods A–F for ITS-G5 and LTE-V2X in the same EU channel; the chosen method makes one radio send both waveforms back to back"}
   - {id: r6, title: "Survey of Spectrum Regulation for Intelligent Transportation Systems (Choi, Marojevic, Dietrich, Reed, Ahn), IEEE Access 8", publisher: "IEEE Access / arXiv 2008.00084", year: 2020, url: "https://arxiv.org/abs/2008.00084", type: paper, licence: "CC BY 4.0", retrieved: 2026-10-21, why: "Open-access review of DSRC, C-V2X and UNII-4 Wi-Fi sharing in the US, EU, China, Korea and Japan, with adjacent-channel Wi-Fi interference results (2020, before the final FCC rules)"}
+background_references:  # 5GAA documents read 2 Nov 2026 (g6 via its download link, owner approved) as background only (not used for the rules or trends above); page numbers are PDF pages; "est" marks our reading
+  - id: g1
+    title: "5GAA Annual Report 2025"
+    publisher: "5GAA"
+    year: 2026
+    url: "https://5gaa.org/content/uploads/2026/04/5gaa-annual-report-2025.pdf"
+    type: white_paper
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "Current deployment status and roadmap for the US, Europe and Asia"
+    points:
+      - "Roadmap figure (p. 6): expected mass-deployment timelines for connected-vehicle use cases from 2020 to 2030, tied to 3GPP Releases 16–20; the Visionary Roadmap is due for an update in 2026."
+      - "Europe (p. 20): CEPT conclusions now enable \"wider 20 MHz channels for road-safety ITS\"; the revision of the EU 5.9 GHz Decision is \"expected to start in 2026\"; 5GAA notes a \"lack of harmonised progress on V2X Direct\" and is studying how adjacent 5.9 GHz channels could carry different services (Dual-Technology activity)."
+      - "US (p. 21): Atlanta became the first Day One Deployment District for C-V2X (Aug 2025); the USDOT V2X National Deployment Plan of Aug 2024 was \"paused in 2025 due to changes in administration\"."
+      - "First on-road 5G-V2X Direct demo (p. 27): Valeo with Marben, Paris, May 2025, two cars sharing sensor data to warn of a hidden pedestrian."
+      - "Asia (pp. 18–19): China published its first national standard for LTE-V2X Direct (GB/T 45315-2025); Korea runs a ≈50 km LTE-V2X corridor and gives V2X one extra K-NCAP point from Feb 2025; Japan allocated 5.9 GHz to V2X and India concluded its 5.9 GHz allocation."
+      - "Our reading (est): more regions on the same 5.9 GHz band and 20 MHz channels in Europe favour one wide-band, two-path front end over regional variants."
+  - id: g2
+    title: "V2X State of Play in China II (technical report v1.5)"
+    publisher: "5GAA"
+    year: 2025
+    url: "https://5gaa.org/content/uploads/2025/02/5gaa-tr-wi-v2x-china-sop-ii-v1.5-clean-0221.pdf"
+    type: white_paper
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "China's V2X standards, pilots and rating-scheme plans"
+    points:
+      - "The national LTE-V2X direct OBU standard is published: China's first national standard for LTE-V2X direct, with BSM transmission and OBU component requirements and test methods (p. 13)."
+      - "A follow-on national standard for direct-link safety warnings has started: intersection collision, abnormal vehicle and red-light violation warnings (p. 13)."
+      - "Vehicle-road-cloud pilot from 2024 to 2026 in 20 cities named in July 2024 (pp. 10, 24); pilot cities deploy LTE-V2X direct RSUs, plan C-V2X terminals for buses, official cars and taxis, and new L2+ cars sold there \"are encouraged to carry C-V2X terminals\" (p. 25)."
+      - "C-NCAP 2024 test cases targeted for C-V2X include a crossing path with obstruction, traffic-signal recognition and high-speed rear-end cases (p. 17)."
+      - "Our reading (est): China fitment stays policy-led (encouraged, not mandated) and LTE-V2X direct only in the documents read; no NR-V2X direct timeline is given."
+  - id: g3
+    title: "Initial C-V2X System Profile (TR S-180179 v1.1, PC5 basic system profile)"
+    publisher: "5GAA"
+    year: 2018
+    url: "https://5gaa.org/content/uploads/2020/02/5GAA_S-180179_TR_ICSP_Initial_C-V2X_System_Profile_v1.1.pdf"
+    type: standard
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "Which radio rules an EU Day 1 C-V2X (PC5) station must follow, as amendments to the C2C-CC basic system profile"
+    points:
+      - "The access layer shall conform to ETSI TS 103 613 (LTE-V2X in the 5.9 GHz band) and meet all relevant regulatory requirements (p. 8)."
+      - "All messages use a sub-band dedicated to C-ITS under ETSI EN 302 571; transmit power control follows ETSI TS 103 574 (p. 10)."
+      - "Near tolling stations (protected zones) the station sets its power to Pregulatory,c per 3GPP TS 36.101 and applies the C2C-CC mitigation, except for the highest-priority DENMs (p. 9)."
+      - "Congestion control runs in the access stratum with CBR measured per TS 36.214; ITS-G5 DCC parameters such as pDccMinSensitivity and pDccCcaThresh do not apply to C-V2X (pp. 9–10)."
+      - "Our reading (est): no new RF numbers here; the RF limits stay those of EN 302 571 and 3GPP (r1, r2), but the front end must support fine power control and a tolling-zone power step."
+  - id: g4
+    title: "Updated study of spectrum needs for safety-related ITS: day 1 and advanced use cases (V2.0)"
+    publisher: "5GAA"
+    year: 2021
+    url: "https://5gaa.org/content/uploads/2021/10/5GAA_Day1_and_adv_Use_Cases_Spectrum_Needs_Study_V2.0.pdf"
+    type: white_paper
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "How much 5.9 GHz spectrum direct V2X needs, which sets channel count and front-end bandwidth"
+    points:
+      - "Day-1 use cases over LTE-V2X need \"between 10 and 20 MHz\" at 5.9 GHz; advanced use cases over LTE-V2X and NR-V2X need \"an additional 40 MHz or more\" (pp. 6, 52)."
+      - "5GAA recommends at least 20 MHz at 5.9 GHz for day-1 repetitive messages (p. 33) and says the whole \"70-75 MHz of ITS spectrum in the 5.9 GHz band\" is needed (pp. 7, 52)."
+      - "Allocations must exceed the minimum, because near 100 % load packet collisions rise sharply (p. 52)."
+      - "Sensor sharing can need a few tens of MHz or more; VRU messages up to several MHz; cooperative manoeuvres only about 150 kHz to 1 MHz (p. 6)."
+      - "Network (V2N) services need at least 50 MHz more low-band (< 1 GHz) and 500 MHz more mid-band (1–7 GHz) spectrum (pp. 7, 53)."
+      - "Our reading (est): demand for several 10–20 MHz carriers at once supports a wide-band (5855–5925 MHz), two-path V2X front end."
+  - id: g5
+    title: "Coexistence of C-V2X and ITS-G5 at 5.9 GHz (position paper, Rev-1)"
+    publisher: "5GAA"
+    year: 2018
+    url: "https://5gaa.org/content/uploads/2018/10/Position-Paper-ITG5.pdf"
+    type: white_paper
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "5GAA's early proposal for C-V2X and 802.11p (ITS-G5) sharing in Europe"
+    points:
+      - "Without an agreed solution, the two technologies in the same channel and area cause \"mutually harmful co-channel interference\" (p. 2)."
+      - "Step 1: one preferred 10 MHz channel each in 5875–5905 MHz, for example 5875–5885 and 5895–5905 MHz (pp. 1–2, 5)."
+      - "Steps 2 and 3: mutual detect-and-vacate in the middle channel (5885–5895 MHz), then in all channels; full sharing of 5855–5925 MHz later, with the rules in ETSI EN 302 571 (pp. 3–4)."
+      - "EU framework: 5875–5905 MHz safety ITS (Decision 2008/671/EC), 5905–5925 MHz extension under review, 5855–5875 MHz non-safety; EN 302 571 equipment is licence-exempt (p. 2)."
+      - "Our reading (est): later work (r5 and the 2024 band plan) refined this, but it shows why EU radios must tune across all 10 MHz channels and detect the other waveform."
+  - id: g6
+    title: "Connectivity and V2X for Highly Automated Vehicles (position paper)"
+    publisher: "5GAA"
+    year: 2026
+    url: "https://5gaa.org/sdc_download/9723/?key=wz6eh4bwzqh6qh0w90hb3idg229xsg"
+    type: white_paper
+    licence: "Copyright 5GAA; summaries with citation"
+    retrieved: 2026-11-02
+    why: "Where direct and network V2X fit in L4 robotaxi and automated-freight operations"
+    points:
+      - "L4 services run at scale in the US and China; today they are \"autonomy-first, connectivity-enhanced\", with connectivity used mainly for fleet supervision, remote assistance, OTA updates and data upload (p. 3)."
+      - "Large-scale L4 needs connectivity beyond best effort: continuous availability, the same service quality across operators and differentiated QoS, because safety signals, remote-intervention commands and cooperative-awareness messages need high reliability and low latency (p. 4)."
+      - "Where connectivity enables remote supervision, tele-assistance or cooperative services, it may need to count as part of the Automated Driving System; how it is assessed in type approval is still \"limited or inconsistent\" (p. 5)."
+      - "Seven-point call for action: a technology-agnostic use-case catalogue, harmonised connectivity requirements and QoS/SLA levels, consistent QoS across operators, and recognition of connectivity as \"a foundational AV deployment layer\" (p. 6)."
+      - "No spectrum, RF or timeline figures (pp. 3–6). Our reading (est): supports demand for always-on, multi-operator telematics and V2X in robotaxi and freight fleets, not a new front-end requirement."
 block_diagram:
   name: "V2X front end at the roof antenna (compensator mode) beside car Wi-Fi"
   note: "Drawn by us from r1–r5 (not copied). One V2X path is shown, as in SKY5A2105: T/R switch, BAW band-pass, PA, LNA, step attenuator, log detector and temperature sensor. It sits next to the V2X antenna and makes up the coax loss to the V2X chipset. A dual-carrier car (US 20 + 10 MHz, EU ITS-G5 + C-V2X) has two such paths. The car's Wi-Fi 5/6 GHz front end shares the roof module and needs its own filter so it does not leak into 5855–5925 MHz."

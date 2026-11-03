@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set no_tam = guest_blocked(request, '/business/tam') %}
+{% block content %}
+<h1>Automotive focus</h1>
+<p class="subtitle muted">Six goals one person can pursue to grow automotive business, short to long term. Every number comes live from the site's own pages (linked); "est" marks our estimates.</p>
+
+
+<div class="af-grid">
+{% for g in f.goals %}
+<article class="af-card af-h-{{ g.horizon }}" id="af-{{ g.id }}" data-goal="{{ g.id }}">
+  <header><span class="af-n">{{ g.n }}</span> <span class="af-hz">{{ g.horizon_label }}</span><h2>{{ g.title }}</h2></header>
+  <p class="af-goal">{{ g.goal }}</p>
+  {% if g.missing %}<p class="small banner">Data missing: {{ g.missing }}</p>{% endif %}
+  {% if g.why %}<p class="af-lbl">Why</p>
+  <ul class="af-why small">{% for x in g.why if not (x.tam and no_tam) %}<li data-n="{{ x.n }}">{{ x.text }} <a href="{{ x.href }}" class="muted">{{ x.src }}</a></li>{% endfor %}</ul>{% endif %}
+  {% if g.steps %}<p class="af-lbl">First steps</p>
+  <ol class="af-steps small">{% for s in g.steps %}<li>{{ s }}</li>{% endfor %}</ol>{% endif %}
+  <p class="af-meta small"><span><b>Effort</b> {{ g.effort }}</span> <span><b>Confidence</b> {{ g.confidence }} (est)</span></p>
+  {% if g.parts or g.links or g.also %}
+  <details class="af-more small"><summary>Parts and diagrams</summary>
+    {% if g.parts %}<p><b>Parts:</b> {% for p in g.parts %}<a href="{{ p.href }}">{{ p.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+    {% if g.links %}<p><b>Open:</b> {% for l in g.links %}<a href="{{ l.href }}">{{ l.label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+    {% if g.also %}<p><b>Next closest automotive ideas:</b> {% for a in g.also %}<a href="{{ a.href }}">{{ a.label }}</a> <small class="muted">(feasibility {{ a.feasibility }})</small>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+  </details>{% endif %}
+</article>
+{% endfor %}
+</div>
+
+<section id="ae-draw" class="af-draw">
+<h2>Which markets to draw new car parts from</h2>
+<p class="small muted">Functions the car needs where we sell a part elsewhere but not in automotive grade (Qualify) or have a close product (New variant), by Opportunity score. "Where it sits" counts the library block diagrams of each system that use the function.</p>
+{% if f.draw %}
+<div class="table-wrap"><table class="af-table">
+  <thead><tr><th>Function</th><th>Where it sits today</th><th>Our parts</th><th>Car use</th><th>What it takes</th></tr></thead>
+  <tbody>{% for r in f.draw %}<tr data-fn="{{ r.fn }}">
+    <td><a href="/business/automotive?view=all&cell={{ r.key }}#detail">{{ r.label }}</a> <span class="am-cell am-{{ r.level }}" title="{{ level_label[r.level] }}">{{ r.level }}</span>{% if r.score is not none %} <small class="muted">score {{ r.score }}</small>{% endif %}</td>
+    <td>{% for s in r.source %}<a href="{{ s.href }}">{{ s.title }}</a> <small class="muted">({{ s.n }})</small>{{ '<br>'|safe if not loop.last }}{% endfor %}</td>
+    <td>{% for p in r.parts %}<a href="{{ p.href }}">{{ p.label }}</a>{{ '<br>'|safe if not loop.last }}{% else %}<span class="muted">–</span>{% endfor %}</td>
+    <td>{{ r.apps[:2]|join(', ') }}{% if r.apps|length > 2 %} <small class="muted">+{{ r.apps|length - 2 }}</small>{% endif %}</td>
+    <td>{{ r.take }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="small banner">Data missing: no Qualify or New-variant function is used outside the car in the library yet.</p>{% endif %}
+</section>
+
+<details class="af-how small" id="af-how"><summary>How these were picked</summary>
+  <p>One goal per rung of the <a href="/business/automotive">Automotive map</a> ladder ({{ f.counts.A }} Sell now, {{ f.counts.B }} Qualify, {{ f.counts.C }} New variant, {{ f.counts.D }} Adjacent, {{ f.counts.gap }} Gap calls over {{ f.n_apps }} car applications and {{ f.n_diagrams }} car block diagrams), plus the reference-design anchors and the other markets. Within a goal:</p>
+  <ul>
+    <li><b>Sell now</b>: the functions with an automotive-grade part of ours in the most car applications; the pair of our functions that meets most often in the car diagrams (Cross-sell).</li>
+    <li><b>Reference designs</b>: competitor parts we cross, most public reference designs first (the anchors on Cross-sell).</li>
+    <li><b>Qualify</b>, <b>New variant</b> and <b>Draw from other markets</b>: the Top moves of the map, ranked by the Opportunity score at the step's distance (weights: {% for k, w in f.weights.items() %}{{ k }} {{ w }}{{ ', ' if not loop.last }}{% endfor %}; see <a href="/business/method">Methodology</a>). A New variant needs a business case in Research &amp; ideas; the table leaves out functions goals 3 and 4 already name.</li>
+    <li><b>Gaps</b>: functions neither company sells, scored at the distance of our closest technology (Gaps &amp; new technology); crowded markets score lower.</li>
+    <li><b>Horizon and effort</b> follow the distance: {% for d, e in effort.items() %}{{ d }} {{ dist_label(d)|lower }} → {{ e[0]|lower }}, {{ e[1] }}{{ '; ' if not loop.last }}{% endfor %} (all est).</li>
+    {% if not no_tam %}<li><b>TAM</b> is shown where the <a href="/business/tam">TAM estimates</a> page has a figure for the function; most functions have none yet.</li>{% endif %}
+  </ul>
+  <p>Calls a reviewer rejected on the map are left out. The goals change by themselves when the map, the parts or the research change.</p>
+</details>
+{% endblock %}

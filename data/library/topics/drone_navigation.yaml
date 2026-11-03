@@ -1,0 +1,75 @@
+order: 14
+topic: drone_navigation
+knowledge: [drone_gnss_map]
+title: "Drone navigation: multi-band GNSS, RTK and sensor fusion"
+summary: "A drone needs its position at least once a second for Remote ID and continuously for every autonomous mode. Hobby drones use L1 GNSS with a magnetometer and a barometer; mapping, spraying, delivery and inspection drones move to L1 + L5 (and L2 / E6) with RTK or PPP-RTK corrections for centimetre accuracy, fused with two or three IMUs, optical flow, a rangefinder and visual odometry so the estimate survives when GNSS is weak. The RF part is the GNSS front end: a low-noise LNA with pre- and post-filters that also rejects the drone's own 0.9 / 2.4 / 5.8 GHz transmitters, a band split for the receiver, a DC feed for an active antenna, and an antenna on top of the frame. How to keep position under deliberate jamming or spoofing is in the Anti-jamming deep dive."
+references:
+  - {id: r1, title: "SKY55951-11 Sky5 GNSS L1 + L5 dual-frequency LNA front-end module with post-filter, data sheet 205521I (2 Mar 2026)", publisher: "Skyworks", year: 2026, url: "https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf", type: app_note, licence: "Own public data sheet; summary with citation", retrieved: 2026-10-24, why: "Reused from the drone radio-links deep dive: L1 + L5 gain, noise figure, current, compression, absolute maximum input and rejection at the drone's control and video bands"}
+  - {id: r2, title: "ZED-X20P Integration manual R05 (UBXDOC-963802114-12901)", publisher: "u-blox", year: 2026, url: "https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf", type: app_note, licence: "u-blox copyright; C1-Public document", retrieved: 2026-10-21, why: "Reused from the automotive GNSS deep dive: all-band RTK receiver, external gain window, active-antenna spec, rejection budget, bias-T, L-band corrections"}
+  - {id: r3, title: "Low-Cost, Triple-Frequency, Multi-GNSS PPP and MEMS IMU Integration for Continuous Navigation in Simulated Urban Environments (Vana, Bisnath)", publisher: "NAVIGATION (Institute of Navigation) 70(2)", year: 2023, url: "https://navi.ion.org/content/navi/70/2/navi.578.full.pdf", type: paper, licence: "CC BY 4.0", retrieved: 2026-10-21, why: "Reused: single vs dual vs triple frequency PPP with a MEMS IMU on a low-cost antenna, and how much the IMU helps during outages"}
+  - {id: r4, title: "ETSI EN 303 413 V1.2.1 (2021-04): GNSS receivers operating in 1164-1300 MHz and 1559-1610 MHz; Harmonised Standard for access to radio spectrum", publisher: "ETSI", year: 2021, url: "https://www.etsi.org/deliver/etsi_en/303400_303499/303413/01.02.01_60/en_303413v010201p.pdf", type: standard, licence: "ETSI copyright; free public download", retrieved: 2026-10-21, why: "Reused: the EU blocking test every GNSS receiver must pass (at most 1 dB C/N0 loss), which a drone sold in Europe also meets"}
+  - {id: r5, title: "14 CFR 89.310: Minimum performance requirements for standard remote identification unmanned aircraft", publisher: "US eCFR, via Cornell LII", year: 2021, url: "https://www.law.cornell.edu/cfr/text/14/89.310", type: standard, licence: "US federal regulation, public domain", retrieved: 2026-10-24, why: "Reused: the position accuracy and update rate Remote ID requires from every standard drone"}
+  - {id: r6, title: "GNSS Jamming Detection with Automatic Gain Control (AGC) and Carrier-to-Noise Ratio Density (CNO) Observables from a COTS receiver (Kazim, Darwich, Marais)", publisher: "arXiv 2602.12688", year: 2026, url: "https://arxiv.org/pdf/2602.12688", type: paper, licence: "arXiv distribution licence (specific licence not checked)", retrieved: 2026-10-21, why: "Reused: integrity flags from the front end (AGC, C/N0) that the navigation estimator can use; the bridge to the Anti-jamming deep dive"}
+why_customer:
+  - "Remote ID makes a good GNSS fix a legal requirement for every standard drone in the US (r5): 100 ft horizontal accuracy at 95 %, reported every second."
+  - "Mapping, spraying and precision landing need centimetres: dual- or triple-frequency GNSS with corrections gives decimetres or better, single frequency about a metre (r3)."
+  - "The drone's own radios are the nearest interferers; a GNSS front end that rejects them keeps the fix without a redesign of the frame (r1)."
+  - "When GNSS fades (under bridges, near buildings, under interference) the IMU and vision sensors carry the estimate; a stable clock and clean supplies for those sensors are parts we sell (est)."
+block_diagram:
+  name: "Drone navigation: multi-band GNSS with RTK, fused with inertial and vision sensors"
+  note: "Drawn by us from r1–r6. One GNSS antenna and front end on top of the frame; corrections arrive over the control radio, cellular or L-band; the flight controller fuses GNSS with IMU, magnetometer, barometer, optical flow, rangefinder and, near the dock, UWB."
+  groups:
+    - {id: g1, label: "GNSS antenna", col: 0, row: 0, blocks: [{fn: antenna, label: "Multi-band patch or helix"}]}
+    - {id: g2, label: "GNSS front end", col: 1, row: 0, blocks: [{fn: filter_saw_baw, label: "Pre-filter / notch"}, {fn: gnss_lna, label: "L1 + L5 LNA"}, {fn: diplexer, label: "Band split"}, {fn: load_switch, label: "Antenna bias-T"}]}
+    - {id: g3, label: "GNSS receiver", col: 2, row: 0, blocks: [{fn: external_block, label: "Multi-band RTK receiver"}, {fn: crystal_oscillator, label: "TCXO"}]}
+    - {id: g4, label: "Corrections", col: 2, row: 1, blocks: [{fn: rf_transceiver, label: "From the base station via the control radio"}, {fn: modem, label: "NTRIP over cellular"}]}
+    - {id: g5, label: "Other sensors", col: 0, row: 1, blocks: [{fn: external_block, label: "IMU x2-3, magnetometer"}, {fn: env_sensor, label: "Barometer"}, {fn: camera_radar, label: "Optical flow, rangefinder, VIO camera"}, {fn: uwb_soc, label: "UWB (docking)"}]}
+    - {id: g6, label: "Flight controller", col: 3, row: 0, blocks: [{fn: mcu, label: "EKF sensor fusion"}, {fn: clock_buffer, label: "Sensor time sync"}]}
+  links:
+    - [g1, g2, "RF"]
+    - [g2, g3, "L1, L5"]
+    - [g4, g3, "RTCM / SPARTN"]
+    - [g3, g6, "position, velocity, 1 PPS"]
+    - [g5, g6, "rates, heading, altitude, velocity"]
+design_rules:
+  - {id: d1, area: "Bands", rule: "Use L1 + L5 for drones that map, spray or fly autonomously, L1 alone only for low-cost consumer drones; budget about 3 mA for both bands (SKY55951-11: 1 mA L1 and 1.9 mA L5 at 1.8 V, 17 dB gain, 1.4 / 1.1 dB noise figure).", why: "r1 features and tables; L5 helps against multipath and for RTK (est).", refs: [r1], conf: high, kind: rule}
+  - {id: d2, area: "Accuracy gain", rule: "Expect about 1.2 m horizontal rms with single-frequency PPP and an IMU, about 9 cm with dual and 7 cm with triple frequency on a low-cost patch antenna; the IMU improves the result by 10–40 % during outages with 0–2 satellites.", why: "r3 land-vehicle results; drones see more sky but more vibration (est).", refs: [r3], conf: high, kind: consideration}
+  - {id: d3, area: "Gain window", rule: "Keep the net gain from antenna to receiver input, after cable and filter losses, inside the receiver's window (17–40 dB for an all-band receiver in normal mode).", why: "r2: too little gain adds noise figure, too much overloads the receiver's front end.", refs: [r2], conf: high, kind: rule}
+  - {id: d4, area: "Active antenna", rule: "Specify an active antenna module with noise figure under 3.5 dB, about 40 dB out-of-band rejection and under 10 ns in-band group-delay variation for carrier-phase (RTK) use.", why: "r2 active-antenna requirements.", refs: [r2], conf: high, kind: rule}
+  - {id: d5, area: "Own transmitters", rule: "Check rejection at each on-board transmit band: SKY55951-11 L1 rejects 87 dB at 806–928 MHz, 77 dB at 2.4–2.5 GHz and 69 dB at 5.16–5.56 GHz, but nothing is specified at 5725–5850 MHz video.", why: "r1 Tables 4 and 5 (also rule d6 of the radio-links deep dive). Deliberate jamming is in the Anti-jamming deep dive.", refs: [r1], conf: high, kind: rule}
+  - {id: d6, area: "Overload", rule: "Keep the strongest on-board signal at the LNA input well below its compression point (L1 IP1dB −29 dBm in band) and always below the +10 dBm absolute maximum.", why: "r1 electrical and absolute-maximum tables; the margin needed is our reasoning (est).", refs: [r1], conf: high, kind: rule}
+  - {id: d7, area: "EU blocking", rule: "For Europe, pass the EN 303 413 blocking points (for example a −65 dBm blocker at 1524 MHz and −85 dBm at 1627 MHz) with at most 1 dB C/N0 loss for each declared signal.", why: "r4 clause on blocking; each added band adds test cases.", refs: [r4], conf: high, kind: rule}
+  - {id: d8, area: "L-band corrections", rule: "If corrections arrive over L-band satellites, let the antenna pass about 1525–1559 MHz while still falling steeply below 1525 MHz, and check the receiver's gain window (it does not cover L-band).", why: "r2 and r4; widening L1 for corrections moves the filter edge toward the satellite downlink.", refs: [r2, r4], conf: med, kind: consideration}
+  - {id: d9, area: "Remote ID", rule: "Meet Remote ID accuracy from the GNSS alone: drone position within 100 ft (95 %), drone altitude within 150 ft, reported at least once a second and within 1 s of measurement.", why: "r5 (e) and (h).", refs: [r5], conf: high, kind: rule}
+  - {id: d10, area: "Antenna placement", rule: "Put the GNSS antenna on top of the frame over a ground plane (specifications are measured on about 120 mm), as far as possible from transmit antennas, motors and ESCs.", why: "r2 placement guidance; motor and ESC noise is our reasoning (est).", refs: [r2], conf: med, kind: consideration}
+  - {id: d11, area: "Antenna feed", rule: "Feed an active antenna through a bias-T with an inductor above 500 Ω across 1–1.8 GHz, a current limit and short / open detection.", why: "r2 bias-T guidance.", refs: [r2], conf: high, kind: rule}
+  - {id: d12, area: "Integrity", rule: "Pass the receiver's AGC and C/N0 flags to the estimator so it can lower the weight of GNSS and lean on IMU and vision when interference rises.", why: "r6 shows AGC and C/N0 detect jamming; the use in fusion is our reasoning (est). See the Anti-jamming deep dive.", refs: [r6], conf: med, kind: consideration}
+  - {id: d13, area: "Sensor fusion", rule: "Time-stamp every sensor (IMU, magnetometer, barometer, optical flow, rangefinder, GNSS 1 PPS) on one clock and fuse them in the flight controller's estimator; use two or three IMUs on enterprise drones.", why: "r3 shows the value of IMU integration; the clock and redundancy points are our reasoning (est).", refs: [r3], conf: med, kind: consideration}
+trends:
+  - {id: t1, text: "GNSS moves from L1 to L1 + L5 in drones that map, spray or fly autonomously.", horizon: now, refs: [r1], conf: med, for_us: "SKY55951-11 is a ready dual-band LNA; a version with rejection specified at 5.8 GHz would fit drones better."}
+  - {id: t2, text: "All-band receivers (L1 / L2 / L5 / E6 plus L-band) with one RF input and PPP-RTK corrections.", horizon: now, refs: [r2], conf: high, for_us: "A single-input triplexed front end with a group-delay specification is the matching socket (est)."}
+  - {id: t3, text: "Low-cost triple-frequency PPP fused with MEMS IMUs reaches centimetres without a local base station.", horizon: 2-3y, refs: [r3], conf: high, for_us: "Pushes a third band (L2 or E6) into mid-range drones; Qorvo's 880368 1280 MHz BAW filter fits E6 (est)."}
+  - {id: t4, text: "Receivers report interference (AGC, C/N0, spectrum) for the estimator to use.", horizon: now, refs: [r6], conf: high, for_us: "Flat, characterised LNA gain over temperature makes these flags reliable (est)."}
+  - {id: t5, text: "Remote ID makes GNSS mandatory content in every standard drone in the US.", horizon: now, refs: [r5], conf: high, for_us: "Every drone is a GNSS socket, even the cheapest."}
+skyworks_fit:
+  - {fn: gnss_lna, parts: ["SKY55951-11", "SKY65943-11", "SKY65728-11", "SKY5A2110"], note: "L1 + L5 with B13 notch; L1 with pre- and post-filters; L5 alone; the automotive L1 + L5 module (pre- and post-filter, diplexed output) for heavy drones."}
+  - {fn: filter_saw_baw, parts: ["880060", "880273", "880368"], note: "Qorvo wide-band GPS BAW filters and a 1280 MHz BAW for E6; the older 8571xx GPS SAWs are discontinued."}
+  - {fn: diplexer, parts: ["QPQ1028"], note: "Qorvo dual GPS SAW diplexer L1 / L2 (status unknown in our catalogue)."}
+  - {fn: crystal_oscillator, parts: ["Si511"], note: "General-purpose XO for the flight controller; no TCXO for GNSS in our catalogue (gap)."}
+  - {fn: clock_buffer, parts: ["SKY53540"], note: "Clock fan-out for synchronised sensor sampling on larger flight computers (est)."}
+  - {fn: uwb_soc, parts: ["DW3110", "DW3210"], note: "Qorvo UWB for docking and indoor positioning (see the UWB diagram in this sub-system)."}
+competitors:
+  - {fn: gnss_lna, names: ["Infineon (BGA524N6, BGA525N6)", "NXP (BGU8019, est)", "Maxim / ADI (est)"], note: "Discrete GNSS LNAs, as in the automotive GNSS case."}
+  - {fn: external_block, names: ["u-blox", "Septentrio", "Quectel", "STMicroelectronics (Teseo)", "Broadcom (est)"], note: "GNSS receivers and modules; u-blox sells a small L1 / L5 module for UAVs (our new-markets evidence)."}
+  - {fn: filter_saw_baw, names: ["Murata", "TDK", "Taiyo Yuden"], note: "GNSS SAW pre-filters."}
+  - {fn: camera_radar, names: ["Bosch, TDK InvenSense, Murata (IMUs, est)", "PixArt (optical flow, est)"], note: "Navigation sensors: not our market, but they set the size and supply of the flight controller (est)."}
+market:
+  - {segment: "Consumer", text: "L1 (often multi-constellation) GNSS, magnetometer, barometer and optical flow; one GNSS LNA or none (receiver-integrated) per drone (est).", refs: [], conf: low}
+  - {segment: "Enterprise, mapping, agriculture", text: "L1 + L5 or all-band RTK, often two antennas for heading; two front ends per drone (est).", refs: [], conf: low}
+  - {segment: "Remote ID", text: "Every standard US drone must report its position (r5): GNSS is in every drone.", refs: [r5], conf: high}
+  - {segment: "Size", text: "GNSS front-end content per drone is under a dollar for consumer drones and a few dollars for RTK drones (est); volume is set by drone shipments, not read in a primary source.", refs: [], conf: low}
+open_questions:
+  - "Which rejection does SKY55951-11 (or a successor) have at 5725–5850 MHz, the most common drone video band?"
+  - "Do drone makers buy the GNSS LNA separately, or take it inside a u-blox / Septentrio module or an active antenna? Who designs the antenna module?"
+  - "Is there demand for an L1 + L2 / E6 + L5 single-input module for drones, and at what price?"
+  - "Should we offer a TCXO for GNSS and NTN modems? None is in our catalogue."

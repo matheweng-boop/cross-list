@@ -292,7 +292,8 @@ def _text(x) -> str:
     if isinstance(x, str):
         return x
     if isinstance(x, dict):
-        return " ".join(_text(v) for k, v in x.items() if k not in ("references", "refs", "id", "url"))
+        skip = ("references", "background_references", "refs", "id", "url")
+        return " ".join(_text(v) for k, v in x.items() if k not in skip)
     if isinstance(x, list | tuple):
         return " ".join(_text(v) for v in x)
     return ""

@@ -19,6 +19,21 @@ Also read, not in the six:
 
 Neither IEC 60747-17, IEC 60664-1 nor ISO 26262 is free to read, so the standard slot is filled by r3 (the metrics) and the vendor certification statements (r4, 1EDI3041AS).
 
+Background, not in the six: Nisshinbo Micro Devices automotive block diagrams for the e-Axle inverter, electric
+compressor and electric power steering (read 2 Nov 2026, HTML pages under
+https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/; our summary):
+- The e-Axle inverter splits the board into a high-voltage side and a low-voltage side joined by one isolator. The
+  gate driver, a high-voltage monitor and HV-side power management (with its own transformer) sit on the HV side; the
+  MCU, flyback power management, current-sense op-amps, RDC and resolver amplifier sit on the LV side.
+- Nisshinbo does not sell the gate driver or the isolator (grey blocks). Its parts are the op-amps, HV monitor,
+  resolver amplifier and power management around them.
+- The electric compressor uses the same split, with LDO, voltage detector and watchdog on both sides and a tracking
+  regulator for an off-board sensor.
+- The EPS ECU is all low voltage: a non-isolated pre-driver drives a six-MOSFET bridge from +B, with op-amps on the
+  motor current and torque sensor and a voltage tracker that supplies the torque sensor.
+- In the library this adds a resolver amplifier and HV monitor group to the EV traction inverter diagram, a tracking
+  regulator group to the TI e-compressor diagram and a new EPS diagram.
+
 ## Block diagram explained (drawn by us)
 
 LV domain (12 V) on the left, the galvanic barrier in the middle, HV domain (400/800 V) on the right.

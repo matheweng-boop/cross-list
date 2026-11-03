@@ -15,12 +15,14 @@
 <h1>{{ t.title }}</h1>
 <p class="subtitle">{{ t.summary }}</p>
 {% from "reviews/_how.html" import how_links %}{{ how_links(how_for_topic(key)) }}
+{% if t.links %}<p class="small lib-tools">{% for l in t.links %}<a href="{{ l[1] }}">{{ l[0] }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 <p class="small muted">Agree or disagree with any design rule or trend: a disagreement lowers its confidence and is listed in <a href="/manage/reviews">Site data › Review queue</a>{% if t.n_feedback %} · {{ t.n_feedback }} item{{ 's' if t.n_feedback != 1 }} with feedback{% endif %}.</p>
 {% if cases %}<p class="small">Used by the preliminary case{{ 's' if cases|length != 1 }}: {% for c in cases %}<a href="/business/reports/{{ c.slug }}">{{ c.title }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 {% if related.knowledge or related.visuals %}<section class="kn-links small" aria-label="Background">
   {% if related.knowledge %}<p><b>Basics in General knowledge:</b> {% for x in related.knowledge %}<a class="kn-chip" href="{{ x.href }}" title="{{ x.kind }}: {{ x.title }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
   {% if related.visuals %}<p><b>Try it in Interactive visuals:</b> {% for x in related.visuals %}<a class="kn-chip vz" href="{{ x.href }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
 </section>{% endif %}
+{% if t.see_also %}<p class="small lib-see-also"><b>See also:</b> {% for label, href in t.see_also %}<a href="{{ href }}">{{ label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
 <nav class="bo-toc small">{% if t.why_customer %}<a href="#customer">Why it matters to the customer</a> · {% endif %}{% if t.block_diagram %}<a href="#diagram">Block diagram ✓</a>{% else %}<span class="muted">No block diagram yet</span>{% endif %} · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a>{% if t.competitors %} · <a href="#competitors">Competitors</a>{% endif %}{% if t.market %} · <a href="#market">Market</a>{% endif %} · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
 {% if t.why_customer %}<h2 id="customer">Why it matters to the customer</h2>
 <ul class="pc-list small">{% for w in t.why_customer %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
@@ -72,5 +74,7 @@
 <h2 id="refs">References</h2>
 <ol class="small lib-refs">{% for r in t.references or [] %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved|date }}</span><br><small>{{ r.why }}</small></li>{% endfor %}</ol>
 <p class="small muted">Summaries are ours; quotes are short and cited. The block diagram is drawn by us from the references.</p>
+{% if t.background_references %}<details class="lib-notes"><summary><b>Background sources</b> <span class="small muted">· {{ t.background_references|length }} more documents read for context, not used for the rules above</span></summary>
+<ol class="small lib-refs">{% for r in t.background_references %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved|date }}</span><br><small>{{ r.why }}</small>{% if r.points %}<ul class="small">{% for p in r.points %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ol></details>{% endif %}
 {% if notes %}<details class="lib-notes"><summary><b>Full research notes</b> <span class="small muted">· what was read, the reasoning, and the sources that were blocked</span></summary><pre>{{ notes }}</pre></details>{% endif %}
 {% endblock %}

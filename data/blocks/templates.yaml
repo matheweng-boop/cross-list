@@ -9,7 +9,9 @@
 
 - name: ADAS domain controller
   category: Automotive systems
-  note: Layout after a reference ADAS block diagram the user shared; every block is a function to fill.
+  note: "Layout after a reference ADAS block diagram the user shared; every block is a function to fill. The camera video amplifier group is added after Nisshinbo public material: NISSHINBO-AUTO-SAFETY (ADAS sensor ECU block diagram: ultrasonic, radar and camera module with a video amplifier into a sensor block with MCU, flash, EEPROM, DDR and CAN; power management with buck DC/DC, LDO with watchdog, watchdog timer and voltage detector; link to the ADAS ECU)."
+  sources:
+  - {doc: NISSHINBO-AUTO-SAFETY, title: 'Nisshinbo Micro Devices application block diagram (automotive): Safety (Advanced Driving Assistant System (ADAS), Parking Assist System)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/safety.html'}
   groups:
     - {id: protection, label: Protection, col: 0, row: 0, blocks: [reverse_polarity, tvs_esd]}
     - {id: power, label: Power rail, col: 1, row: 0, w: 2, blocks: [buck_boost, wide_vin_buck, pol_buck, pol_ldo, ldo_tracker, supervisor, sequencer, voltage_reference, multiphase]}
@@ -22,7 +24,9 @@
     - {id: proc, label: Processing, col: 4, row: 1, blocks: [mcu, adas_processor]}
     - {id: net, label: Networking, col: 5, row: 1, blocks: [can_transceiver, ethernet_phy, pcie_buffer, tvs_esd]}
     - {id: ext, label: Camera / lidar / radar, col: 6, row: 0, blocks: [camera_radar]}
+    - {id: video_amp, label: Camera module video amplifier (after Nisshinbo), col: 6, row: 1, blocks: [amplifier]}
   links:
+    - [video_amp, ext, analog video]
     - [protection, power, "+12 V"]
     - [power, proc, MCU / processor power]
     - [power, memory, ""]
@@ -56,7 +60,9 @@
 
 - name: EV traction inverter
   category: Power & isolation
-  note: Three half-bridges with isolated gate drivers, phase-current sensing and isolated power.
+  note: "Three half-bridges with isolated gate drivers, phase-current sensing and isolated power. Resolver amplifier and HV voltage monitor added after Nisshinbo public material: NISSHINBO-AUTO-EAXLE (e-Axle inverter block diagram: HV battery, gate driver and six IGBTs, high-voltage monitor and HV-side power management with a transformer, isolator to the MCU, op-amps on two phase-current sensors, resolver with RDC and a resolver excitation amplifier, flyback power management from +B, CAN interface)."
+  sources:
+  - {doc: NISSHINBO-AUTO-EAXLE, title: 'Nisshinbo Micro Devices application block diagram (automotive): e-Axle (inverter)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/e-axle.html'}
   groups:
     - {id: ctrl, label: Control, col: 0, row: 0, blocks: [mcu, crystal_oscillator, supervisor]}
     - {id: iso, label: Isolation, col: 1, row: 0, blocks: [digital_isolator, isolated_dcdc]}
@@ -64,7 +70,9 @@
     - {id: sense, label: Sensing, col: 2, row: 1, blocks: [current_sensor x2, isolated_amplifier, temperature_sensor]}
     - {id: power, label: Power rail, col: 0, row: 1, blocks: [reverse_polarity, wide_vin_buck, pol_ldo]}
     - {id: net, label: Vehicle network, col: 1, row: 1, blocks: [can_transceiver, tvs_esd]}
+    - {id: resolver, label: Resolver excitation amplifier and RDC; HV voltage monitor (after Nisshinbo), col: 0, row: 2, blocks: [position_interface, amplifier]}
   links:
+    - [resolver, ctrl, rotor angle / HV voltage]
     - [ctrl, iso, PWM / SPI]
     - [iso, drive, ""]
     - [sense, ctrl, phase current]
@@ -1123,11 +1131,12 @@
 # ---- converted from data/blocks/research/ti_block_diagrams.yaml by tools/research_to_templates.py
 - name: HEV/EV on-board charger (two-stage PFC + isolated DC/DC) (TI)
   category: Power & isolation
-  note: 'From TI public material: TI-SOL-OBC, SLUAAS6, STDA010'
+  note: 'From TI public material: TI-SOL-OBC, SLUAAS6, STDA010 The HV-side op-amp and comparator group is added after Nisshinbo public material: NISSHINBO-AUTO-OBC (OBC block diagram: AC input with ZCT and earth leakage sensor, PFC, full-bridge DC/DC to an 800 V battery, high-voltage monitors on the PFC and battery sides, an op-amp AFE on the PFC current shunt, a comparator in the bridge driver circuits, flyback power management, isolator to the LV MCU and CAN).'
   sources:
   - {doc: TI-SOL-OBC, title: Onboard charger (OBC) - block diagram + subsystems, url: 'https://www.ti.com/solution/onboard-charger'}
   - {doc: SLUAAS6, title: Isolated Bias Power Supply Architecture for HEV and EV Onboard Chargers, url: 'https://www.ti.com/lit/pdf/sluaas6'}
   - {doc: STDA010, title: Isolated Bias Power Supply Architecture for HEV/EV Single Stage Onboard Chargers, url: 'https://www.ti.com/lit/pdf/stda010'}
+  - {doc: NISSHINBO-AUTO-OBC, title: 'Nisshinbo Micro Devices application block diagram (automotive): On Board Charger (OBC)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/onboard-charger.html'}
   groups:
   - id: ac_input
     label: AC/DC EMI filter
@@ -1230,7 +1239,13 @@
     blocks: [motor_controller, load_switch]
     col: 3
     row: 4
+  - id: hv_afe
+    label: HV voltage monitors, op-amp AFE on the PFC shunt, comparator in the bridge driver (after Nisshinbo)
+    blocks: [amplifier x2, comparator]
+    col: 0
+    row: 5
   links:
+  - [hv_afe, pfc_controller, voltage / current]
   - [ac_input, pfc_stage, AC power from grid]
   - [pfc_stage, dcdc_primary, PFC bus]
   - [dcdc_primary, transformer, '']
@@ -1297,10 +1312,11 @@
     source: TI-SOL-OBC 'HEV/EV safety', 'MCU diagnostics/monitoring'
 - name: HEV/EV HV-to-LV DC/DC converter (phase-shifted full bridge, HV battery to 12 V) (TI)
   category: Power & isolation
-  note: 'From TI public material: TI-SOL-HVLVDCDC, SLUAB19'
+  note: 'From TI public material: TI-SOL-HVLVDCDC, SLUAB19 The op-amp AFE group is added after Nisshinbo public material: NISSHINBO-AUTO-DCDC (DC/DC converter block diagram: 800 V battery through fuse and filter to a full bridge, transformer and synchronous rectifier to the 14 V battery; high-voltage monitor, an op-amp AFE on the primary current transformer and another on the 14 V shunt, voltage regulator and flyback power management, isolator and isolated gate driver, CAN).'
   sources:
   - {doc: TI-SOL-HVLVDCDC, title: DC/DC converter system (HEV/EV HV-to-LV) - block diagram + subsystems, url: 'https://www.ti.com/solution/dc-dc-converter'}
   - {doc: SLUAB19, title: Isolated Bias Power Supply Architecture for HEV/EV HVLV DCDC Converters, url: 'https://www.ti.com/lit/pdf/sluab19'}
+  - {doc: NISSHINBO-AUTO-DCDC, title: 'Nisshinbo Micro Devices application block diagram (automotive): DC / DC Converter', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/dc-dc-converter.html'}
   groups:
   - id: hv_input
     label: HV battery + HV supply monitoring
@@ -1353,7 +1369,13 @@
     blocks: [hv_flyback, isolated_dcdc, wide_vin_buck, pmic, reverse_polarity]
     col: 1
     row: 2
+  - id: afe
+    label: Op-amp AFEs on the primary current transformer and the 14 V shunt; HV voltage monitor (after Nisshinbo)
+    blocks: [amplifier x3]
+    col: 2
+    row: 2
   links:
+  - [afe, mcu, current / voltage]
   - [hv_input, primary_bridge, HV battery]
   - [primary_bridge, transformer, '']
   - [transformer, secondary_rect, '']
@@ -1394,10 +1416,11 @@
     source: TI-SOL-HVLVDCDC 'Circuit breaker'
 - name: EV high-voltage battery system (wired cell supervision, BDU, BMU) (TI)
   category: Power & isolation
-  note: 'From TI public material: TI-SOL-HVBATT, SLYY197A'
+  note: 'From TI public material: TI-SOL-HVBATT, SLYY197A The HV-side op-amp group is added after Nisshinbo public material: NISSHINBO-AUTO-BMS (BMS block diagram: cell monitoring AFE, an op-amp AFE on the pack current shunt, earth leakage sensor and high-voltage monitor into an HV-side MCU that drives the contactor gate driver; isolator to the LV MCU with RTC and CAN; flyback and LV power management from +B).'
   sources:
   - {doc: TI-SOL-HVBATT, title: High-voltage battery system (wired) - block diagram + subsystems, url: 'https://www.ti.com/solution/high-voltage-battery-system'}
   - {doc: SLYY197A, title: Wired vs. Wireless Communications In EV Battery Management, url: 'https://www.ti.com/lit/pdf/slyy197'}
+  - {doc: NISSHINBO-AUTO-BMS, title: 'Nisshinbo Micro Devices application block diagram (automotive): Battery Management System (BMS)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/battery-management-system.html'}
   groups:
   - id: cell_supervision
     label: Cell supervision (CSC, per module)
@@ -1459,7 +1482,13 @@
     blocks: [pmic, reverse_polarity, watchdog, supervisor, can_transceiver, ethernet_phy, tvs_esd]
     col: 3
     row: 2
+  - id: hv_afe
+    label: Op-amp AFE on the pack current shunt and HV voltage monitor (after Nisshinbo)
+    blocks: [amplifier x2]
+    col: 0
+    row: 3
   links:
+  - [hv_afe, bdu_controller, pack current / voltage]
   - [cell_supervision, daisy_chain, daisy chain]
   - [daisy_chain, bmu_controller, via daisy-chain bridge]
   - [hv_sensing, bdu_controller, '']
@@ -2004,10 +2033,11 @@
     source: TI-SOL-TCU 'Wireless connectivity'
 - name: Automotive infotainment head unit with radio tuner (AM/FM/HD/DAB) (TI)
   category: Automotive systems
-  note: 'From TI public material: TI-SOL-HEADUNIT, TI-SOL-RADIO'
+  note: 'From TI public material: TI-SOL-HEADUNIT, TI-SOL-RADIO. The last three groups (GNSS front end and RF switches, microphone amplifier, analog camera video amplifier) are added after Nisshinbo public material: NISSHINBO-AUTO-AV (Entertainment (Car AV) block diagram: GNSS front-end module with LNA + SAW filter on the radio / GPS antenna, PA, LNA and RF switch on the LTE antenna, RF switch on the Bluetooth / Wi-Fi antenna, microphone amplifier ahead of the audio codec, video isolation amplifier from the camera).'
   sources:
   - {doc: TI-SOL-HEADUNIT, title: Automotive head unit, url: 'https://www.ti.com/solution/automotive-head-unit'}
   - {doc: TI-SOL-RADIO, title: Automotive radio tuner, url: 'https://www.ti.com/solution/automotive-radio-tuners'}
+  - {doc: NISSHINBO-AUTO-AV, title: 'Nisshinbo Micro Devices application block diagram (automotive): Entertainment (Car AV)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/entertainment.html'}
   groups:
   - id: off_battery
     label: Off-battery power
@@ -2079,6 +2109,21 @@
     blocks: [voltage_translator]
     col: 1
     row: 3
+  - id: gnss_rf
+    label: 'GNSS front end (LNA + SAW) and RF switches on the LTE and Bluetooth / Wi-Fi antennas (after Nisshinbo)'
+    blocks: [gnss_lna, filter_saw_baw, rf_switch, lna]
+    col: 2
+    row: 3
+  - id: mic_amp
+    label: Microphone amplifier ahead of the codec (after Nisshinbo)
+    blocks: [{fn: amplifier, label: Microphone amplifier}]
+    col: 3
+    row: 3
+  - id: video_amp
+    label: Analog camera input, video isolation amplifier (after Nisshinbo)
+    blocks: [{fn: amplifier, label: Video isolation amplifier}]
+    col: 0
+    row: 4
   links:
   - [off_battery, system_power, '']
   - [system_power, app_proc, '']
@@ -2094,6 +2139,9 @@
   - [camera, app_proc, '']
   - [app_proc, display, '']
   - [ui, app_proc, I2C]
+  - [gnss_rf, wireless, RF]
+  - [mic_amp, anc, mic signal]
+  - [video_amp, camera, analog video]
   questions:
   - id: broadcast_standards
     question: Broadcast standards
@@ -7106,9 +7154,10 @@
     source: BMS page text (ISO 26262 up to ASIL D)
 - name: 'Automotive instrument cluster (hybrid 2D: gauges + segment / TFT LCD) (NXP)'
   category: Automotive systems
-  note: 'From NXP public material: NXP_CLUSTER'
+  note: 'From NXP public material: NXP_CLUSTER. The watchdog and voltage detector group is added after Nisshinbo public material: NISSHINBO-AUTO-INFO (Instrument Panel block diagram: PMIC with DC/DC and LDOs, a separate watchdog timer and voltage detector watching the MCU, CAN transceiver, op-amp / audio amplifier to the speaker).'
   sources:
   - {doc: NXP_CLUSTER, title: NXP Instrument Cluster application page, url: 'https://www.nxp.com/applications/INSTRUMENT-CLUSTER'}
+  - {doc: NISSHINBO-AUTO-INFO, title: 'Nisshinbo Micro Devices application block diagram (automotive): Information (Head Up Display (HUD), Instrument Panel)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/information.html'}
   groups:
   - id: mcu
     label: MCU / MPU
@@ -7165,8 +7214,14 @@
     blocks: [led_driver]
     col: 2
     row: 2
+  - id: wdt_vd
+    label: Watchdog timer and voltage detector next to the PMIC (after Nisshinbo)
+    blocks: [watchdog, supervisor]
+    col: 3
+    row: 2
   links:
   - [memory, mcu, '']
+  - [wdt_vd, mcu, reset]
   - [eth, mcu, '']
   - [gpio, mcu, '']
   - [can_lin, mcu, '']
@@ -8867,9 +8922,10 @@
 # ---- imported by tools/import_diagrams.py
 - name: Automotive HVAC e-compressor drive (HV battery, isolated CAN/LIN, 3-phase IGBT/MOSFET inverter) (TI)
   category: Automotive systems
-  note: 'From TI public material: TI-SOL-ECOMP'
+  note: 'From TI public material: TI-SOL-ECOMP The tracking regulator and comparator group is added after Nisshinbo public material: NISSHINBO-AUTO-ECOMP (electric compressor block diagram: LV block with LDO, flyback DC/DC, watchdog and voltage detector, CAN to the BCM and a comparator voltage sensor; isolator; HV block with LDO, voltage detector, watchdog, high-voltage monitor, MCU, six-IGBT bridge and op-amp phase-current sensing; a tracking regulator for an off-board sensor).'
   sources:
   - {doc: TI-SOL-ECOMP, title: 'HVAC compressor - high voltage, isolated communication - block diagram + subsystems', url: 'https://www.ti.com/solution/automotive-hvac-e-compressor'}
+  - {doc: NISSHINBO-AUTO-ECOMP, title: 'Nisshinbo Micro Devices application block diagram (automotive): Electric Compressor', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/electric-compressor.html'}
   groups:
   - id: mcu
     label: MCU
@@ -8926,7 +8982,13 @@
     blocks: [power_module, motor, hv_battery]
     col: 2
     row: 2
+  - id: tracker
+    label: Tracking regulator for the off-board sensor; comparator voltage sensor on the 12 V side (after Nisshinbo)
+    blocks: [ldo_tracker, comparator]
+    col: 3
+    row: 2
   links:
+  - [tracker, mcu, sensor supply / voltage]
   - [isolated_power_supply, power_supply, isolated supply from 12 V car battery]
   - [power_supply, mcu, '']
   - [reference_voltage_source, mcu, ADC reference]
@@ -14913,9 +14975,10 @@
 
 - name: V2X unit with two antenna paths, standalone or companion to the TCU (after Autotalks, Skyworks and 5GAA public material)
   category: Automotive systems
-  note: "Owner, 23 Oct 2026: Autotalks as the reference for the V2X applications. Autotalks (Qualcomm since Jun 2025) sold a V2X chipset in two set-ups: standalone, with the V2X stack on the chipset's own processor, and companion, attached to the telematics unit's processor; both with an external 5.9 GHz front end per antenna path for diversity or a second channel (est, from public product descriptions; autotalks.com is no longer online, checked 23 Oct 2026). Skyworks' automotive material paired SKY5A2105 with Autotalks parts."
+  note: "Owner, 23 Oct 2026: Autotalks as the reference for the V2X applications. Autotalks (Qualcomm since Jun 2025) sold a V2X chipset in two set-ups: standalone, with the V2X stack on the chipset's own processor, and companion, attached to the telematics unit's processor; both with an external 5.9 GHz front end per antenna path for diversity or a second channel (est, from public product descriptions; autotalks.com is no longer online, checked 23 Oct 2026). Skyworks' automotive material paired SKY5A2105 with Autotalks parts. The watchdog and voltage detector group is added after Nisshinbo public material: NISSHINBO-AUTO-V2X (V2X block diagram: RF block with PA, LNA, RF switch and filter to one antenna; power management with an LDO with watchdog, buck DC/DC, watchdog timer and voltage detector; a second LDO + DC/DC feeding the MCU, DDR, security and the LIN / CAN interface to the BCM / IVI)."
   sources:
   - {doc: 5GAA_FAQ_59, title: '5GAA FAQ on the 5.9 GHz band', url: 'https://5gaa.org/content/uploads/2025/02/faq-5.9-ghz.pdf'}
+  - {doc: NISSHINBO-AUTO-V2X, title: 'Nisshinbo Micro Devices application block diagram (automotive): Vehicle to Everything (V2X)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/vehicle-to-everything.html'}
   groups:
   - {id: ant, label: V2X antennas (roof and second position), col: 0, row: 0, blocks: [antenna x2]}
   - {id: fe1, label: "5.9 GHz front end, path 1 (PA / LNA / switch + filter)", col: 1, row: 0, blocks: [v2x_fem, filter_saw_baw]}
@@ -14926,6 +14989,7 @@
   - {id: gnss, label: GNSS (position and time for every message), col: 2, row: 1, blocks: [gnss_lna, filter_saw_baw]}
   - {id: pwr, label: Power, col: 0, row: 2, blocks: [pmic, pol_ldo]}
   - {id: net, label: Vehicle network, col: 1, row: 2, blocks: [can_transceiver, ethernet_phy]}
+  - {id: wdt_vd, label: Watchdog timer and voltage detector (after Nisshinbo), col: 2, row: 2, blocks: [watchdog, supervisor]}
   links:
   - [ant, fe1, 5.9 GHz]
   - [ant, fe2, 5.9 GHz]
@@ -14936,6 +15000,7 @@
   - [host, hsm, '']
   - [host, net, CAN / Ethernet]
   - [pwr, chip, rails]
+  - [wdt_vd, host, reset]
   questions:
   - {id: v2x_mode, question: Set-up, choices: [standalone V2X unit, companion to the telematics unit, inside a smart antenna module]}
   - {id: v2x_tech, question: Radio technology, choices: [802.11p / ITS-G5, LTE-V2X (PC5), NR-V2X, dual mode 802.11p + C-V2X]}
@@ -15775,3 +15840,790 @@
   - {id: board_net, question: Board net, choices: [12 V, 48 V]}
   - {id: motor_type, question: Motor type, choices: [brushed DC (H-bridge), BLDC (3-phase)]}
   - {id: motors, question: Motors per seat, choices: [2-4, 6-8, 10 or more (massage, lumbar)]}
+
+- name: AI / GPU server clock tree (100 MHz PCIe Gen 5 / 6 reference clocks from a clock generator and LP-HCSL fanout buffers to the CPU, GPUs, NICs and retimers, with spread spectrum) (after TI and Skyworks public material)
+  category: Enterprise & data center
+  note: "Drawn by us from TI SNAA386 (PCIe clocking) and the Skyworks Si5332 and Si532xx data sheets. Every PCIe device gets a 100 MHz HCSL / LP-HCSL REFCLK; in the common-clock architecture one clock generator feeds the CPU root complex and, through fanout buffers, every GPU, NIC, switch and retimer slot. PCIe Gen 6 allows 100 fs RMS REFCLK jitter after the PCIe filters (Gen 5: 150 fs) and ±100 ppm; down-spread SSC (0 to -0.5 %, 30-33 kHz) cuts EMI. A NIC or DPU that sits in another box (SRIS) runs from its own XO plus its own 156.25 / 312.5 MHz Ethernet SerDes reference. The number of buffers per server (4 to 8 GPUs, 8 to 12 NICs and retimers on an AI tray) is our estimate (est)."
+  sources:
+  - {doc: TI-SNAA386, title: 'TI SNAA386, Clocking for PCIe Applications (Nov 2023)', url: 'https://www.ti.com/lit/an/snaa386/snaa386.pdf'}
+  - {doc: SKY-SI532XX, title: 'Skyworks Si53204 / Si53208 / Si53212 PCIe Gen 1-6 LP-HCSL fanout buffers, data sheet 206658A', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si532xx-datasheet.pdf'}
+  groups:
+  - {id: ref, label: 25 MHz crystal or XO (frequency reference), col: 0, row: 0, blocks: [{fn: crystal_oscillator, label: 25 MHz crystal / XO}]}
+  - {id: clkgen, label: 'Clock generator: 100 MHz PCIe REFCLK (optional -0.5 % down-spread) plus 25 / 33 / 48 MHz platform clocks, I2C configured', col: 1, row: 0, blocks: [clock_generator]}
+  - {id: fanout, label: 'PCIe fanout buffers (LP-HCSL, 85 or 100 Ω, Gen 6 additive jitter ≤ 20 fs; one per GPU / NIC group)', col: 2, row: 0, blocks: [pcie_buffer x2]}
+  - {id: cpu, label: CPU (PCIe root complex) and memory, col: 1, row: 1, blocks: [{fn: soc, label: Host CPU}, ddr_flash]}
+  - {id: switch, label: PCIe switches and retimers (to GPUs and NIC slots), col: 2, row: 1, blocks: [pcie_switch, {fn: redriver, label: PCIe retimer / redriver}]}
+  - {id: gpu, label: GPU / accelerator modules (PCIe REFCLK per module), col: 3, row: 0, blocks: [{fn: soc, label: GPU / AI accelerator x4-8}]}
+  - {id: nic, label: 'NIC / DPU (scale-out network): own XO for SRIS and 156.25 / 312.5 MHz Ethernet SerDes reference', col: 3, row: 1, blocks: [{fn: ethernet_phy, label: NIC / DPU}, {fn: crystal_oscillator, label: 156.25 / 312.5 MHz differential XO}]}
+  - {id: bmc, label: Board management controller (clock enables and configuration), col: 0, row: 1, blocks: [{fn: mcu, label: BMC}]}
+  - {id: pwr, label: Low-noise LDOs for the clock supplies (1.5 / 1.8 / 3.3 V), col: 0, row: 2, blocks: [pol_ldo]}
+  links:
+  - [ref, clkgen, 25 MHz]
+  - [clkgen, cpu, 100 MHz REFCLK + platform clocks]
+  - [clkgen, fanout, 100 MHz (SSC on or off)]
+  - [fanout, switch, 100 MHz LP-HCSL]
+  - [fanout, gpu, 100 MHz LP-HCSL]
+  - [fanout, nic, 100 MHz LP-HCSL (common clock) or none (SRIS)]
+  - [cpu, switch, PCIe Gen 5 / 6 lanes]
+  - [switch, gpu, PCIe lanes]
+  - [switch, nic, PCIe lanes]
+  - [bmc, clkgen, I2C / output enables]
+  - [pwr, clkgen, clean supply]
+  - [pwr, fanout, clean supply]
+  questions:
+  - {id: pcie_gen, question: PCIe generation, choices: [Gen 5 (150 fs), Gen 6 (100 fs), 'Gen 7 (67 fs, TI LMK3H0102-Q1 data sheet)'], source: TI SNAA386 Table 4-1}
+  - {id: architecture, question: Clocking architecture, choices: [common clock (CC), common clock with spread (CCS), separate reference no spread (SRNS), separate reference independent spread (SRIS)], source: TI SNAA386 section 3}
+  - {id: ssc, question: Spread spectrum, choices: ['off', '-0.5 % down-spread (common clock)', '-0.3 % down-spread (SRIS)'], source: TI SNAA386 section 3.3}
+  - {id: termination, question: Board impedance, choices: [100 Ω, 85 Ω], source: Skyworks Si532xx data sheet (A01 / A02)}
+
+- name: Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)
+  category: Enterprise & data center
+  note: "Drawn by us from the Skyworks timing reference design for Broadcom switch SoCs (May 2026), AN1432 (112G / 224G SerDes) and AN1077 (synchronization clocks). The switch ASIC needs a very clean reference for its SerDes: <35 fs RMS with a 4 MHz high-pass filter at 312.5 MHz for the newest 224G-class chips, <90 fs (12 kHz-20 MHz) at 312.5 MHz for 112G-class chips, <150 fs at 156.25 MHz one generation earlier. Where the switch also carries SyncE and PTP (AI back-end fabrics, edge data centers that host 5G fronthaul), a network synchronizer with a TCXO / OCXO tracks the recovered line clock and the 1 PPS / time of day, and a jitter attenuator or fanout buffer cleans and distributes the SerDes references. A 1U / 2U switch is AN1077's centralized 'pizza box' timing architecture. The reference design recommends the Si5403 or SKY69002 NetSync network synchronizer for every switch generation; both are in our timing data (Si5403: 18 outputs, 51 fs, G.8273.1 / .2 / .4; SKY69002: 16 outputs, 47 fs, integrated BAW)."
+  sources:
+  - {doc: SKY-RD-BCM, title: 'Skyworks, Timing Solutions for Broadcom SOCs (reference design, May 2026)', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf'}
+  - {doc: SKY-AN1432, title: 'Skyworks AN1432, Using the Si536x, Si540x and SKY6310x in 112G and 224G SerDes applications (Oct 2025)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1432_112G_224G_SerDes_Applications.pdf'}
+  - {doc: SKY-AN1077, title: 'Skyworks AN1077, Selecting the right clocks for timing synchronization applications', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/application-notes/an1077-selecting-clocks-for-timing-synchronization.pdf'}
+  groups:
+  - {id: ports, label: 'Front-panel ports: 400G / 800G / 1.6T optics and copper (SyncE recovered clocks)', col: 0, row: 0, blocks: [{fn: external_block, label: Optical modules / DAC cables}]}
+  - {id: asic, label: 'Switch ASIC: 112G / 224G PAM4 SerDes (recovered clocks out, 156.25 / 312.5 MHz reference in), PTP timestamping', col: 1, row: 0, w: 2, blocks: [{fn: soc, label: Switch ASIC}, serdes]}
+  - {id: sync, label: 'Network synchronizer (DPLL: SyncE G.8262, IEEE 1588 phase / frequency steering, hitless switching, holdover)', col: 0, row: 1, blocks: [{fn: jitter_attenuator, label: 'Network synchronizer (Si5403 / SKY69002)'}]}
+  - {id: osc, label: 'Stability reference (TCXO / OCXO) and crystal for the low-jitter core', col: 0, row: 2, blocks: [{fn: crystal_oscillator, label: TCXO / OCXO}, {fn: crystal_oscillator, label: 48-54 MHz crystal}]}
+  - {id: ja, label: 'SerDes reference clocks: jitter attenuator and any-format fanout (<35 fs with 4 MHz HPF at 312.5 MHz)', col: 1, row: 1, blocks: [jitter_attenuator, clock_buffer]}
+  - {id: cpu, label: 'Control-plane CPU: PTP stack (ptp4l), PHC, PCIe to the ASIC', col: 2, row: 1, blocks: [{fn: soc, label: Control-plane CPU}, {fn: clock_generator, label: CPU / PCIe / platform clock generator}, pcie_buffer]}
+  - {id: tod, label: 1 PPS / time of day from a time card or GNSS (grandmaster or boundary clock), col: 1, row: 2, blocks: [{fn: external_block, label: Time card / GNSS 1 PPS + ToD}]}
+  - {id: pwr, label: Low-noise LDOs for the timing devices, col: 2, row: 2, blocks: [pol_ldo]}
+  links:
+  - [ports, asic, 112G / 224G lanes]
+  - [asic, sync, recovered SyncE clocks]
+  - [osc, sync, TCXO / OCXO + XTAL]
+  - [tod, sync, 1 PPS + ToD]
+  - [sync, ja, clean frequency- and phase-locked clock]
+  - [ja, asic, 156.25 / 312.5 MHz SerDes reference + 1 PPS]
+  - [cpu, sync, I2C / SPI (1588 steering)]
+  - [cpu, asic, PCIe + PTP timestamps]
+  - [pwr, ja, clean supply]
+  questions:
+  - {id: serdes, question: SerDes class, choices: ['224G (<35 fs, 4 MHz HPF, 312.5 MHz)', '112G (<90 fs at 312.5 MHz)', '56G (<150 fs at 156.25 MHz)'], source: Skyworks timing reference design for Broadcom SOCs}
+  - {id: sync, question: Network synchronization, choices: [none (free-running), SyncE only, SyncE + IEEE 1588 PTP (boundary clock), PTP grandmaster input (time card)], source: Skyworks AN1077}
+  - {id: holdover, question: Holdover reference, choices: [TCXO, OCXO, none], source: Skyworks AN1077 sections 2.4 and 3}
+  - {id: loop_bw, question: Synchronizer loop bandwidth, choices: [1-10 Hz (G.8262 EEC option 1), below 0.1 Hz (option 2)], source: Skyworks AN1077 Table 4.1}
+
+- name: Optical transceiver module reference clock (400G / 800G / 1.6T pluggable or coherent module - PAM4 or coherent DSP clocked from a low-jitter XO or jitter attenuator) (after Skyworks public material)
+  category: Enterprise & data center
+  note: "Drawn by us from Skyworks AN1432 and our Si545 / Si549 and Si5344H data. The module DSP retimes the host's 112G / 224G electrical lanes onto the optical lanes; its PLLs need a 156.25 / 312.5 MHz class reference. AN1432 budgets 10 % of the transmit jitter for the reference clock: 115 fs RMS for 400GBASE-FR4 and 140 fs for 800GAUI-8 chip-to-module, integrated from 4 MHz with aliasing included. Direct-detect modules usually take a low-jitter differential XO; coherent modules (ZR / ZR+) use a jitter attenuator (Si5344H class, 2 inputs, 4 outputs, 0.1 ps). Module internals beyond the clock (drivers, TIAs, CMIS MCU) are generic and drawn by us (est)."
+  sources:
+  - {doc: SKY-AN1432, title: 'Skyworks AN1432, Using the Si536x, Si540x and SKY6310x in 112G and 224G SerDes applications (Oct 2025)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/AN1432_112G_224G_SerDes_Applications.pdf'}
+  - {doc: SKY-SI545, title: 'Skyworks Si545 any-frequency differential XO data sheet', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/si545-datasheet.pdf'}
+  groups:
+  - {id: host, label: 'Host connector: 8 x 112G or 8 x 224G electrical lanes (OSFP / QSFP-DD)', col: 0, row: 0, blocks: [{fn: external_block, label: Switch / NIC host}]}
+  - {id: dsp, label: 'PAM4 or coherent DSP: host SerDes, CDR, FEC, line SerDes / DAC-ADC', col: 1, row: 0, blocks: [{fn: soc, label: PAM4 / coherent DSP}, serdes]}
+  - {id: clk, label: 'Reference clock: low-jitter differential XO (156.25 / 312.5 MHz) or jitter attenuator (coherent)', col: 1, row: 1, blocks: [{fn: crystal_oscillator, label: Low-jitter differential XO}, {fn: jitter_attenuator, label: Coherent-optics jitter attenuator}]}
+  - {id: tx, label: Laser / modulator drivers, col: 2, row: 0, blocks: [optical_driver]}
+  - {id: rx, label: Photodiodes and TIAs, col: 2, row: 1, blocks: [optical_tia]}
+  - {id: optics, label: 'Lasers, modulators and fiber (DR / FR / LR / ZR)', col: 3, row: 0, blocks: [{fn: external_block, label: Optical engine}]}
+  - {id: mgmt, label: Module MCU (CMIS management) and power, col: 0, row: 1, blocks: [mcu, pol_buck, pol_ldo]}
+  links:
+  - [host, dsp, 112G / 224G electrical lanes]
+  - [clk, dsp, 156.25 / 312.5 MHz reference]
+  - [dsp, tx, PAM4 / coherent drive]
+  - [tx, optics, modulated light]
+  - [optics, rx, received light]
+  - [rx, dsp, analog receive]
+  - [mgmt, dsp, I2C / MDIO]
+  - [mgmt, clk, clean supply]
+  - [host, mgmt, CMIS over I2C]
+  questions:
+  - {id: rate, question: Module rate, choices: [400G (8 x 56G), 800G (8 x 112G), 1.6T (8 x 224G)], source: Skyworks AN1432 Table 1}
+  - {id: modulation, question: Optics, choices: [direct-detect PAM4 (DR / FR / LR), coherent (ZR / ZR+)]}
+  - {id: refclk_budget, question: 'Reference-clock jitter budget (4 MHz to TX bandwidth, with aliasing)', choices: [115 fs (400GBASE-FR4), 140 fs (800GAUI-8 C2M), 125 fs (CEI-112G-VSR)], source: Skyworks AN1432 Table 2}
+
+- name: Data center PTP time card / grandmaster (OCP Time Card - GNSS timing receiver, atomic clock or OCXO holdover, FPGA bridge, PCIe PHC to the server, 1 PPS / 10 MHz outputs) (after OCP Time Appliances Project)
+  category: Enterprise & data center
+  note: "Drawn by us from the OCP Time Card specification (rev 1.0, Time Appliances Project, OWFa 1.0). A PCIe card turns a server into a PTP grandmaster (Open Time Server): a GNSS timing receiver gives 1 PPS and time of day, an atomic clock (±1 µs holdover) or high-quality OCXO (±22 µs) holds time when GNSS is jammed or lost, and an FPGA timestamps the PPS edges, steers the oscillator and exposes a PTP hardware clock (/dev/ptp) to ptp4l / phc2sys / chrony, which then discipline the NIC. The clock synthesizer that makes the FPGA clocks from the 10 MHz is our assumption (est): the specification does not name one."
+  sources:
+  - {doc: OCP-TIMECARD, title: 'OCP Time Appliances Project, Time Card specification rev 1.0 (README)', url: 'https://github.com/Time-Appliances-Project/Time-Card/blob/master/README.md'}
+  groups:
+  - {id: ant, label: GNSS antenna input (SMA) and front end, col: 0, row: 0, blocks: [antenna, gnss_lna]}
+  - {id: gnss, label: 'GNSS timing receiver (1 PPS + time of day; e.g. a u-blox F9T class module)', col: 1, row: 0, blocks: [{fn: external_block, label: GNSS timing module}]}
+  - {id: osc, label: 'Holdover oscillator: miniature atomic clock (±1 µs) or OCXO (±22 µs)', col: 1, row: 1, blocks: [{fn: crystal_oscillator, label: Atomic clock / OCXO (10 MHz)}]}
+  - {id: fpga, label: 'FPGA bridge: PPS timestamping, oscillator steering, PTP hardware clock, IRIG-B / DCF77', col: 2, row: 0, blocks: [{fn: soc, label: FPGA}]}
+  - {id: clk, label: Clock synthesis from the 10 MHz (FPGA and output clocks) (est), col: 2, row: 1, blocks: [{fn: jitter_attenuator, label: Jitter attenuator / clock generator}, clock_buffer]}
+  - {id: io, label: '4 SMA in / out: 1 PPS, 10 MHz, IRIG-B, DCF77', col: 3, row: 1, blocks: [{fn: external_block, label: SMA connectors}, tvs_esd]}
+  - {id: host, label: 'Server host: PCIe x1, ptp4l / phc2sys / chrony, NIC with PTP hardware clock', col: 3, row: 0, blocks: [{fn: soc, label: Host CPU}, {fn: ethernet_phy, label: PTP NIC}]}
+  - {id: pwr, label: Card power from the PCIe slot (low-noise rails), col: 0, row: 1, blocks: [pol_buck, pol_ldo]}
+  links:
+  - [ant, gnss, GNSS RF]
+  - [gnss, fpga, 1 PPS + ToD (UART)]
+  - [osc, fpga, '10 MHz + 1 PPS, steering']
+  - [osc, clk, 10 MHz]
+  - [clk, fpga, FPGA clocks]
+  - [fpga, io, 1 PPS / 10 MHz / IRIG-B out and in]
+  - [fpga, host, 'PCIe x1 (PHC, PPS)']
+  - [pwr, osc, supply]
+  questions:
+  - {id: holdover, question: Holdover oscillator, choices: [miniature atomic clock (±1 µs), OCXO (±22 µs)], source: 'OCP Time Card spec, Clock section'}
+  - {id: role, question: Role in the network, choices: [PTP grandmaster, boundary clock, NTP server], source: 'OCP Time Card spec, General'}
+  - {id: gnss_security, question: GNSS protection, choices: [holdover only, signed GNSS messages + jump detection], source: 'OCP Time Card spec, Security'}
+# ---- Data center > Cooling and HVAC (owner, 2 Nov 2026: "Also add cooling and HVAC to data centers") ----------------
+
+- name: "Data-center CRAH / CRAC air handler or chiller drive (HVAC compressor and fan drives: PFC front end, 3-phase inverters, isolated gate drivers and current sense, BACnet / Modbus RS-485 and Ethernet) (after TI)"
+  category: Enterprise & data center
+  note: "After TI public material: TI-SOL-ACOUT (air conditioner outdoor unit: AC/DC with PFC, power stage with isolated gate drivers, current and voltage sense, motor and power controller, compressor, AC / DC fan motors, expansion and four-way valves, RS-485 wired interface) and TI-SOL-HVACMOTOR (AC input, PFC, 3-phase power stage, isolation between the motor and the application controller, RS-485 Modbus / BACnet fieldbus). Drawn by us for the data-center unit: a computer-room air handler (CRAH, chilled-water coil and fans only), a computer-room air conditioner (CRAC, with its own compressor) or a chiller (large compressor, condenser fans) uses the same chain at different power. Large units run from 380-480 V three-phase and put an active or Vienna PFC in front of a 600-800 V DC link (est). Our parts: Si823x / Si828x isolated gate drivers, Si892x isolated amplifiers for phase current and DC-link voltage, Si86xx isolators and Si882xx isolated DC-DC between the hot side and the controls, Si8583x isolated RS-485, PAC5556 600 V one-chip controllers for the EC fans, Si5xx oscillators."
+  sources:
+  - {doc: TI-SOL-ACOUT, title: 'Air conditioner outdoor unit - block diagram + subsystems', url: 'https://www.ti.com/solution/air-conditioner-outdoor-unit'}
+  - {doc: TI-SOL-HVACMOTOR, title: 'HVAC motor control (AC input, PFC + 3-phase inverter) - block diagram + subsystems', url: 'https://www.ti.com/solution/hvac-motor-control'}
+  groups:
+  - {id: input, label: '3-phase AC input 380-480 V (or 230 V): fuses, EMI filter, inrush limit', col: 0, row: 0, blocks: [{fn: external_block, label: Fuses and EMI filter}, {fn: relay_driver, label: Inrush relay / soft start}, tvs_esd]}
+  - {id: pfc, label: 'PFC front end (boost, Vienna or active front end)', col: 1, row: 0, blocks: [acdc_controller, {fn: gate_driver, label: PFC switch gate drivers}, {fn: power_module, label: 'PFC switches (IGBT / SiC / GaN)'}, {fn: isolated_amplifier, label: DC-link voltage sense}]}
+  - {id: inverter, label: 'Compressor inverter (3-phase, 600-800 V DC link)', col: 2, row: 0, blocks: [{fn: gate_driver, label: 'Isolated half-bridge drivers (x3) with DESAT'}, {fn: power_module, label: IGBT / SiC module or IPM}, dc_link_cap]}
+  - {id: compressor, label: 'Compressor motor (scroll, screw or centrifugal; PMSM)', col: 3, row: 0, blocks: [{fn: motor, label: Compressor motor}]}
+  - {id: isense, label: Phase current and temperature sensing, col: 2, row: 1, blocks: [{fn: isolated_amplifier, label: Isolated shunt amplifiers / modulators}, {fn: current_sensor, label: Hall current sensor (alternative)}, temperature_sensor]}
+  - {id: fans, label: 'Evaporator / condenser fans (EC, one drive per fan)', col: 3, row: 1, blocks: [{fn: motor_controller, label: 600 V one-chip BLDC controller}, {fn: motor, label: EC fan motors}]}
+  - {id: mctrl, label: Motor and PFC controller (FOC), col: 1, row: 1, blocks: [mcu, crystal_oscillator, supervisor]}
+  - {id: iso, label: Isolation between the hot side and the controls, col: 0, row: 1, blocks: [digital_isolator, isolated_dcdc]}
+  - {id: aux, label: Auxiliary supply from the DC link, col: 0, row: 2, blocks: [{fn: acdc_controller, label: Flyback bias supply}, pol_buck, pmic, pol_ldo]}
+  - {id: unit, label: 'Unit controller: refrigerant loop, expansion valve, sensors', col: 1, row: 2, blocks: [mcu, {fn: motor_driver_brushed, label: Expansion-valve stepper driver}, {fn: env_sensor, label: Pressure and humidity sensors}, temperature_sensor]}
+  - {id: comms, label: 'Building / DCIM link: BACnet or Modbus on RS-485, Ethernet', col: 2, row: 2, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, ethernet_phy, tvs_esd]}
+  links:
+  - [input, pfc, 3-phase AC]
+  - [pfc, inverter, 600-800 V DC link]
+  - [pfc, aux, DC link]
+  - [inverter, compressor, 3 phases]
+  - [inverter, isense, phase currents]
+  - [isense, mctrl, current / temperature]
+  - [mctrl, inverter, PWM (through the isolated drivers)]
+  - [mctrl, iso, SPI / UART]
+  - [iso, unit, isolated link]
+  - [unit, fans, speed command]
+  - [unit, comms, '']
+  - [aux, mctrl, 3.3 V / 15 V]
+  questions:
+  - {id: unit, question: Unit, choices: [CRAH (chilled-water coil and fans), CRAC (own compressor), chiller, in-row cooler]}
+  - {id: supply, question: Supply, choices: [380-480 V three-phase, 230 V single-phase, 48 V DC]}
+  - {id: switches, question: Power switches, choices: [IGBT module or IPM, SiC MOSFETs, GaN (small fans)]}
+  - {id: bus, question: Building interface, choices: [BACnet MS/TP on RS-485, Modbus RTU on RS-485, BACnet/IP or Modbus TCP on Ethernet]}
+
+- name: "Liquid cooling distribution unit for AI racks (CDU: redundant pump drives, flow / pressure / temperature / leak sensing, isolated RS-485 and Ethernet, PLC) (after TI and OCP Project Deschutes)"
+  category: Enterprise & data center
+  note: "After TI public material: TI-SOL-CDU (liquid cooling distribution unit: pump and fan motor drivers with gate driver, GaN, current sense and hot-swap; valve motor driver; sensors for temperature, humidity, leakage, liquid flow, pressure and level; analog front end; main controller; signal isolation on RS-485; system controller with RS-485 / CAN / Ethernet; non-isolated AC/DC with PFC; HMI) and OCP-DESCHUTES (Google's 2 MW CDU: two pumps N+1 each with its own VFD, 380-416 V three-phase dual feeds, leak rope in three zones read by the PLC, telemetry of temperature and pressure on both sides, flow, pump speed and power, Modbus TCP over IPv4 / IPv6). Pump power ranges from about 1 kW in an in-rack CDU (est) to 37 kW per pump in the 2 MW row CDU. Our parts: Si823x / Si828x isolated gate drivers and Si892x isolated amplifiers in the pump inverters, Si8583x isolated RS-485 to the drives, Si86xx isolators, Si882xx isolated DC-DC, PAC5527 / PAC5532 for 48 V fans and small pumps, ACT88xxx PMICs, Si5xx oscillators."
+  sources:
+  - {doc: TI-SOL-CDU, title: 'Liquid cooling distribution unit (CDU) - block diagram + subsystems', url: 'https://www.ti.com/solution/liquid-cooling'}
+  - {doc: OCP-DESCHUTES, title: 'Project Deschutes: Data Center Facilities 1.0.0 (2 MW CDU specification, Google)', url: 'https://www.opencompute.org/documents/ocp-specification-deschutes-v1-0-pdf/'}
+  groups:
+  - {id: feeds, label: 'AC feeds 380-416 V three-phase (dual feed, GFCI, breakers per pump)', col: 0, row: 0, blocks: [{fn: external_block, label: Dual-feed PDU}, tvs_esd]}
+  - {id: power, label: 'Power supply: non-isolated AC/DC with PFC, DC/DC rails', col: 1, row: 0, blocks: [acdc_controller, {fn: gate_driver, label: PFC gate driver}, pol_buck, pmic, pol_ldo]}
+  - {id: pump_a, label: 'Pump drive A (VFD: 3-phase inverter)', col: 2, row: 0, blocks: [{fn: mcu, label: Motor control MCU}, {fn: gate_driver, label: Isolated gate drivers}, {fn: power_module, label: 'Inverter switches (IGBT / SiC; GaN on 48 V pumps)'}, {fn: isolated_amplifier, label: Phase current sense}, efuse_hotswap]}
+  - {id: pump_b, label: 'Pump drive B (redundant, N+1, replaceable in operation)', col: 2, row: 1, blocks: [{fn: mcu, label: Motor control MCU}, {fn: gate_driver, label: Isolated gate drivers}, {fn: power_module, label: Inverter switches}, {fn: isolated_amplifier, label: Phase current sense}]}
+  - {id: pumps, label: 'Pump motors A and B (sealless pumps)', col: 3, row: 0, blocks: [{fn: motor, label: Pump motors}]}
+  - {id: valve_fan, label: Valve and fan drives, col: 3, row: 1, blocks: [{fn: motor_driver_brushed, label: Valve stepper / solenoid driver}, {fn: motor_controller, label: DC fan BLDC drive}]}
+  - {id: sensors, label: 'Sensors: temperature, pressure, flow, level, humidity, leak rope (3 zones)', col: 0, row: 1, blocks: [temperature_sensor, {fn: env_sensor, label: Pressure and humidity sensors}, {fn: ultrasonic_afe, label: Flow meter front end}, {fn: external_block, label: Leak rope sensor cable}]}
+  - {id: afe, label: Analog front end, col: 1, row: 1, blocks: [amplifier, adc, voltage_reference]}
+  - {id: main, label: 'Main controller / PLC (pump speed, valve, alarms)', col: 1, row: 2, blocks: [mcu, crystal_oscillator, watchdog, supervisor]}
+  - {id: sigiso, label: Signal isolation to the drives (RS-485), col: 2, row: 2, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, isolated_dcdc]}
+  - {id: system, label: 'System controller: Modbus TCP / Redfish on Ethernet, RS-485 Modbus, CAN', col: 3, row: 2, blocks: [soc, ethernet_phy, {fn: rs485_transceiver, label: Isolated RS-485}, digital_isolator]}
+  - {id: hmi, label: 'HMI (display, status LEDs, touch keys)', col: 0, row: 2, blocks: [led_driver, touch_controller, display]}
+  links:
+  - [feeds, power, '']
+  - [feeds, pump_a, 3-phase AC]
+  - [feeds, pump_b, 3-phase AC]
+  - [pump_a, pumps, 3 phases]
+  - [pump_b, pumps, 3 phases]
+  - [sensors, afe, analog]
+  - [afe, main, ADC data]
+  - [main, sigiso, pump speed / status]
+  - [sigiso, pump_a, RS-485]
+  - [sigiso, pump_b, RS-485]
+  - [main, valve_fan, valve position / fan speed]
+  - [main, system, telemetry and alarms]
+  - [main, hmi, '']
+  - [power, main, 24 V / 3.3 V]
+  questions:
+  - {id: size, question: CDU size, choices: [in-rack (tens of kW), in-row (hundreds of kW), row or facility (1-2 MW)]}
+  - {id: loop, question: Secondary loop, choices: [liquid to liquid (facility water), liquid to air (fans)]}
+  - {id: pump_supply, question: Pump supply, choices: [380-480 V three-phase VFD, 48 V DC BLDC pump]}
+  - {id: link, question: Link to the facility, choices: [Modbus TCP / Redfish on Ethernet, Modbus RTU on RS-485, both]}
+
+- name: "Data-center fan wall / EC fan array (one BLDC drive per fan; mains-powered EC fans or 12 / 48 V rack fans, fan controller, power monitor, Modbus or I2C link) (after TI)"
+  category: Enterprise & data center
+  note: "After TI public material: TI-SOL-FANWALL (fan card / module / wall: M-PIC power connector, input power and monitoring with an I2C power monitor and a DC/DC buck, switching and control with buffers, logic-level and power FETs per fan, an MCU control unit) and TI-SOL-HVACMOTOR (the AC-input chain of an electronically commutated fan: rectifier, PFC, 3-phase power stage, motor controller, RS-485). Drawn by us: a fan wall is an array of identical fans, so the drive is repeated per fan; in-rack fan walls use 12 V or 48 V DC fans with the drive built into the fan, room fan walls use mains-powered EC fans with a 600 V drive inside each fan. Our parts: PAC5556 / PAC5253 (600 V) and PAC5527 / PAC5532 (48 V) one-chip BLDC controllers, Si8583x isolated RS-485 for the Modbus string, Si86xx isolators, Si5xx oscillators."
+  sources:
+  - {doc: TI-SOL-FANWALL, title: 'Fan card / module / wall - block diagram + subsystems', url: 'https://www.ti.com/solution/fan-card-module'}
+  - {doc: TI-SOL-HVACMOTOR, title: 'HVAC motor control (AC input, PFC + 3-phase inverter) - block diagram + subsystems', url: 'https://www.ti.com/solution/hvac-motor-control'}
+  groups:
+  - {id: acin, label: 'EC fan, mains-powered: rectifier and PFC (larger fans)', col: 0, row: 0, blocks: [{fn: external_block, label: EMI filter and rectifier}, acdc_controller]}
+  - {id: ecdrive, label: 'EC fan drive, one per fan (600 V)', col: 1, row: 0, blocks: [{fn: motor_controller, label: 600 V one-chip BLDC controller}, {fn: power_fets, label: 6 MOSFETs / IGBTs or an IPM}, {fn: amplifier, label: Shunt current sense}]}
+  - {id: ecfans, label: EC fan motors (outer-rotor BLDC), col: 2, row: 0, blocks: [{fn: motor, label: EC fans}]}
+  - {id: dcin, label: 'Rack fan card: input power and monitoring (12 V / 48 V, M-PIC connector)', col: 0, row: 1, blocks: [{fn: efuse_hotswap, label: Hot-swap / eFuse}, {fn: current_sensor, label: I2C power monitor}, wide_vin_buck]}
+  - {id: switching, label: 'Switching and control per DC fan (PWM buffer, power FET)', col: 1, row: 1, blocks: [{fn: voltage_translator, label: PWM / tach buffer}, power_fets, {fn: motor_controller, label: 48 V BLDC controller (drive on the card)}]}
+  - {id: dcfans, label: DC fans (12 V / 48 V BLDC with a built-in drive), col: 2, row: 1, blocks: [{fn: motor, label: DC fans}]}
+  - {id: ctrl, label: 'Fan controller (speed loop, tach, fault log)', col: 3, row: 0, blocks: [mcu, temperature_sensor, crystal_oscillator]}
+  - {id: comms, label: 'Link to the BMC or the building system: I2C / PMBus, isolated Modbus RS-485', col: 3, row: 1, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, digital_isolator, voltage_translator]}
+  links:
+  - [acin, ecdrive, DC link]
+  - [ecdrive, ecfans, 3 phases]
+  - [dcin, switching, 12 V / 48 V]
+  - [switching, dcfans, power + PWM]
+  - [dcfans, ctrl, tach]
+  - [ctrl, switching, PWM]
+  - [ctrl, ecdrive, speed command (0-10 V or Modbus)]
+  - [ctrl, comms, '']
+  - [dcin, ctrl, power data (I2C)]
+  questions:
+  - {id: fan, question: Fan type, choices: [mains-powered EC fan, 48 V DC fan, 12 V DC fan]}
+  - {id: drive, question: Where is the drive, choices: [inside each fan, on the fan card]}
+  - {id: control, question: Speed command, choices: [PWM, 0-10 V, Modbus RS-485, I2C / PMBus]}
+
+- name: "Rear-door heat exchanger with active fans (fan row, water valve, air and water temperature, dew-point guard, leak detection, Modbus / Ethernet) (after OCP)"
+  category: Enterprise & data center
+  emerging: "Passive rear doors are common; active doors with a fan row and a controller for high-density racks are newer, and OCP's Door Heat Exchanger sub-project works on interfaces and 'air-assisted liquid cooling' for Open Rack V3. No public electronics block diagram was found: drawn by us (est)."
+  note: "After OCP public material: OCP-COOLENV (Cooling Environments project: Door Heat Exchanger sub-project for rear-door heat exchangers on Open Rack V3, air-assisted liquid cooling) and OCP-DESCHUTES (rear-door heat exchangers behind each IT rack, fed from process chilled water; a drip pan with leak detection integrated with the building management system). Drawn by us (est): a fan row on the door pulls the rack exhaust through a water coil; the controller sets fan speed and the water valve from the air outlet temperature and keeps the water above the dew point. The electronics repeat the fan wall (one BLDC drive per fan) and add a valve actuator, sensors and a building link. Our parts: PAC5527 / PAC5532 (48 V) or PAC5556 (mains) one-chip fan controllers, Si8583x isolated RS-485, Si86xx isolators, Si5xx oscillators."
+  sources:
+  - {doc: OCP-COOLENV, title: 'OCP Cooling Environments project page (cold plate, CDU, door heat exchanger, immersion, heat reuse)', url: 'https://www.opencompute.org/projects/cooling-environments/'}
+  - {doc: OCP-DESCHUTES, title: 'Project Deschutes: Data Center Facilities 1.0.0 (2 MW CDU specification, Google)', url: 'https://www.opencompute.org/documents/ocp-specification-deschutes-v1-0-pdf/'}
+  groups:
+  - {id: power, label: 'Power in (AC or 48 V DC from the rack) and protection', col: 0, row: 0, blocks: [efuse_hotswap, {fn: acdc_controller, label: AC/DC (mains-fed doors)}, pol_buck]}
+  - {id: fans, label: 'Fan row on the door (N+1)', col: 1, row: 0, blocks: [{fn: motor_controller, label: BLDC drive per fan}, {fn: motor, label: Door fans}]}
+  - {id: valve, label: Water valve actuator, col: 2, row: 0, blocks: [{fn: motor_driver_brushed, label: Valve stepper driver}, {fn: dac, label: 0-10 V valve command}]}
+  - {id: sensors, label: 'Air in / out temperature, water supply / return temperature and pressure, humidity, door open', col: 0, row: 1, blocks: [temperature_sensor, {fn: env_sensor, label: Humidity and pressure sensors}, {fn: hall_switch, label: Door-open switch}]}
+  - {id: leak, label: Leak detection (drip pan rope sensor), col: 1, row: 1, blocks: [{fn: external_block, label: Leak rope sensor}, {fn: amplifier, label: Leak sense comparator}]}
+  - {id: ctrl, label: 'Door controller (fan speed and valve from the outlet temperature, dew-point guard)', col: 2, row: 1, blocks: [mcu, crystal_oscillator, watchdog]}
+  - {id: comms, label: 'Link to the building system / DCIM: Modbus RS-485, Ethernet', col: 3, row: 1, blocks: [{fn: rs485_transceiver, label: Isolated RS-485}, ethernet_phy, digital_isolator]}
+  links:
+  - [power, fans, 48 V / DC link]
+  - [power, ctrl, 3.3 V]
+  - [ctrl, fans, PWM / speed]
+  - [ctrl, valve, valve position]
+  - [sensors, ctrl, 'temperatures, pressure, humidity']
+  - [leak, ctrl, leak alarm]
+  - [ctrl, comms, alarms and telemetry]
+  questions:
+  - {id: door, question: Door type, choices: [passive (no fans), active (fan row)]}
+  - {id: supply, question: Fan supply, choices: [48 V DC from the rack, AC mains]}
+  - {id: link, question: Building link, choices: [Modbus RS-485, Modbus TCP / SNMP on Ethernet]}
+# ---- Drones: satellite link, navigation, anti-jamming (owner, 2 Nov 2026: "For Drones: add NTN/DTC, drone
+# connectivity, drone navigation if we don't already have this"; "drone disturbance" = anti-jamming). Drawn by us from
+# the public sources of the Systems library topics drone_satellite_link, drone_navigation and drone_antijam; our own
+# reasoning is marked "est".
+- name: Drone satellite IoT module (NB-IoT / LTE-M over NTN, 3GPP Rel-17/18, L-band n255 and S-band n256)
+  category: RF & connectivity
+  note: "A drone's satellite telemetry path to the 3GPP IoT-NTN standard (drawn by us from the 3GPP NTN overview, TS 38.101-5 and our catalogue): the modem pre-compensates timing advance and Doppler from its own GNSS fix and the satellite's ephemeris, so GNSS is part of the link, not an extra. One multimode PA covers the terrestrial LTE-M / NB-IoT bands and the NTN L / S bands (SKY68040-11). The hard part is the L-band uplink (1626.5-1660.5 MHz) a few cm from the GNSS L1 antenna (est)."
+  sources:
+  - {doc: 3GPP_NTN, title: '3GPP: Non-Terrestrial Networks (NTN) overview (J. Krause, 3GPP MCC)', url: 'https://www.3gpp.org/technologies/ntn-overview'}
+  - {doc: TS38101-5, title: '3GPP TS 38.101-5 V19.6.0 (ETSI TS 138 101-5): NR UE radio, satellite access', url: 'https://www.etsi.org/deliver/etsi_ts/138100_138199/13810105/19.06.00_60/ts_13810105v190600p.pdf'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: 'L / S-band patch, sky-facing (0-3 dBic)'}, {fn: antenna, label: Terrestrial LTE-M / NB-IoT}, {fn: antenna, label: GNSS L1 / L5}]}
+  - {id: sw, label: Antenna selection, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Terrestrial / satellite antenna switch}]}
+  - {id: fe, label: NTN front end, col: 2, row: 0, blocks: [{fn: pa_module, label: 'Multimode PA: LTE-M / NB-IoT + n255 / n256 (23 dBm PC3)'}, {fn: filter_saw_baw, label: n255 / n256 duplex filters}, {fn: lna, label: Satellite receive LNA}]}
+  - {id: modem, label: Modem, col: 3, row: 0, blocks: [{fn: modem, label: 'NB-IoT / LTE-M modem with NTN (TA and Doppler pre-compensation)'}, {fn: crystal_oscillator, label: TCXO (frequency accuracy for Doppler)}, {fn: secure_element, label: eSIM}]}
+  - {id: gnss, label: GNSS (needed by the NTN modem), col: 1, row: 1, blocks: [{fn: gnss_lna, label: L1 + L5 LNA with high rejection at 1610-1660 MHz}, {fn: filter_saw_baw, label: L1 post-filter}]}
+  - {id: pwr, label: Power, col: 2, row: 1, blocks: [{fn: wide_vin_buck, label: 'Pack to 3.8 V PA rail'}, pol_ldo]}
+  - {id: fc, label: Flight computer, col: 3, row: 1, blocks: [{fn: soc, label: Flight controller / link manager}]}
+  links:
+  - [ant, sw, '']
+  - [sw, fe, RF]
+  - [fe, modem, RF + MIPI RFFE]
+  - [ant, gnss, GNSS]
+  - [gnss, modem, position and time (TA / Doppler)]
+  - [pwr, fe, 3.8 V]
+  - [modem, fc, telemetry and commands (kbit/s)]
+  questions:
+  - {id: ntn_band, question: Satellite band, choices: ['L-band n255 (1626.5-1660.5 MHz up)', 'S-band n256 (1980-2010 MHz up)', both]}
+  - {id: ntn_orbit, question: Satellite network, choices: [GEO, LEO]}
+  - {id: ntn_pc, question: Power class, choices: ['PC3 23 dBm', 'PC2 26 dBm', 'PC1 31 dBm (not for phones)']}
+
+- name: Drone direct-to-cell (DTC) link (standard LTE / 5G phone-band radio to LEO satellites under supplemental coverage from space)
+  category: RF & connectivity
+  note: "Direct-to-cell: the satellite works as a cell site in the mobile operator's own terrestrial band, so an unmodified LTE / 5G radio can reach it (as Starlink Direct to Cell, AST SpaceMobile and Lynk describe it; their pages were not readable by us, so the description is est). In the US this is supplemental coverage from space (SCS, 47 CFR 25.125): the satellite operator leases the band from the terrestrial licensee, and the device is certified under the terrestrial rules (Parts 22, 24 or 27). No new RF block on the drone; what changes is the link budget (sky-facing antenna, full PA power, best receiver noise figure) and the rule for airborne use (47 CFR 22.925 bars cellular phones on aircraft in the 800 MHz cellular band; how this applies to drones is an open question)."
+  sources:
+  - {doc: CFR47_25_125, title: '47 CFR 25.125: Applications for supplemental coverage from space (SCS)', url: 'https://www.law.cornell.edu/cfr/text/47/25.125'}
+  - {doc: CFR47_22_925, title: '47 CFR 22.925: Prohibition on airborne operation of cellular telephones', url: 'https://www.law.cornell.edu/cfr/text/47/22.925'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: Down-looking (towers)}, {fn: antenna, label: Up-looking (satellites)}, {fn: antenna, label: GNSS}]}
+  - {id: sw, label: Antenna selection and tuning, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Up / down antenna switch}, antenna_tuner]}
+  - {id: fe, label: Cellular front end (600-2200 MHz), col: 2, row: 0, blocks: [{fn: rf_frontend, label: 'LTE / 5G FEM or LPAMiD (low and mid bands)'}, {fn: diversity_rx_module, label: Diversity receive (2nd branch helps the weak satellite downlink)}, filter_saw_baw]}
+  - {id: modem, label: Modem, col: 3, row: 0, blocks: [{fn: modem, label: Standard LTE / 5G modem (DTC-capable firmware)}, {fn: secure_element, label: eSIM (operator with a DTC partner)}]}
+  - {id: gnss, label: GNSS, col: 1, row: 1, blocks: [{fn: gnss_lna, label: L1 + L5 LNA}]}
+  - {id: fc, label: Flight computer, col: 3, row: 1, blocks: [{fn: soc, label: Flight controller / link manager}]}
+  links:
+  - [ant, sw, '']
+  - [sw, fe, RF]
+  - [fe, modem, RF]
+  - [ant, gnss, GNSS]
+  - [gnss, fc, position]
+  - [modem, fc, 'telemetry, text, low-rate data']
+  questions:
+  - {id: dtc_role, question: Role of the satellite path, choices: [none (terrestrial only), fallback for telemetry and messages, always-on second path]}
+  - {id: dtc_band, question: Operator band used for DTC, choices: [low band 600-900 MHz, mid band 1.7-2.2 GHz]}
+
+- name: Drone dedicated satellite modem for command and control (Iridium-class LEO or L-band MSS, with GNSS protection)
+  category: RF & connectivity
+  note: "A separate satellite modem module for beyond-line-of-sight command and control on remote routes (est, from public descriptions of mobile-satellite services): Iridium-class LEO in 1616-1626.5 MHz (TDD), Globalstar-class uplink 1610-1618.725 MHz with downlink at 2483.5-2500 MHz (the same pair as 3GPP band n254), or L-band MSS (uplink 1626.5-1660.5, downlink 1525-1559 MHz, as n255). All transmit within 15-90 MHz of GNSS L1, so the GNSS front end needs specified rejection there and the satellite PA needs low noise and spurious output in the GNSS band (est)."
+  sources:
+  - {doc: 3GPP_NTN, title: '3GPP: Non-Terrestrial Networks (NTN) overview (band n254 1610-1626.5 / 2483.5-2500 MHz)', url: 'https://www.3gpp.org/technologies/ntn-overview'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: 'L-band satellite antenna (sky-facing, as far from GNSS as the frame allows)'}, {fn: antenna, label: GNSS}]}
+  - {id: fe, label: Satellite front end, col: 1, row: 0, blocks: [{fn: power_amplifier, label: L-band PA (1-2 W class, est)}, {fn: antenna_switch, label: T/R switch (TDD) or duplexer}, {fn: lna, label: L-band LNA}, {fn: filter_saw_baw, label: L-band filter with low noise in the GNSS band}]}
+  - {id: modem, label: Satellite modem module, col: 2, row: 0, blocks: [{fn: external_block, label: Satellite modem (Iridium / Globalstar / L-band MSS)}, crystal_oscillator]}
+  - {id: gnss, label: GNSS with satellite-uplink protection, col: 1, row: 1, blocks: [{fn: gnss_lna, label: GNSS LNA with high IIP3}, {fn: filter_saw_baw, label: Steep L1 filter (1610-1660 MHz rejection)}]}
+  - {id: pwr, label: Power, col: 0, row: 1, blocks: [{fn: wide_vin_buck, label: Pack to modem rail}, {fn: efuse_hotswap, label: Burst-current limit}]}
+  - {id: fc, label: Flight computer, col: 2, row: 1, blocks: [{fn: soc, label: Flight controller / link manager}]}
+  links:
+  - [ant, fe, '']
+  - [fe, modem, RF]
+  - [ant, gnss, GNSS]
+  - [gnss, fc, position]
+  - [pwr, modem, rail]
+  - [modem, fc, commands and telemetry]
+  questions:
+  - {id: msat_net, question: Satellite network, choices: ['Iridium-class LEO (global, TDD)', 'Globalstar-class (n254 pair)', 'L-band MSS (GEO)']}
+  - {id: msat_role, question: Role, choices: [command and control backup, primary on remote routes, tracking only]}
+
+- name: Drone multi-band GNSS receiver with RTK (L1 / L5, optional L2 / E6, corrections over the radio link, cellular or L-band)
+  category: RF & connectivity
+  note: "Centimetre positioning for mapping, spraying and precision landing (drawn by us from the u-blox ZED-X20P integration manual, the Skyworks SKY55951-11 data sheet and ETSI EN 303 413): a multi-band antenna, an LNA front end with pre-filter and notch, a band split to an all-band receiver, a TCXO, and RTK corrections from a base station over the control link, from NTRIP over cellular or PPP-RTK over L-band. Net gain to the receiver 17-40 dB; group delay matters for carrier phase (est where not in the sources)."
+  sources:
+  - {doc: UBX_ZEDX20P, title: 'u-blox ZED-X20P Integration manual R05', url: 'https://content.u-blox.com/sites/default/files/documents/ZED-X20P_IntegrationManual_UBXDOC-963802114-12901.pdf'}
+  - {doc: SKY55951-11, title: 'Skyworks SKY55951-11 GNSS L1 + L5 LNA FEM data sheet 205521I', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf'}
+  groups:
+  - {id: ant, label: Antenna, col: 0, row: 0, blocks: [{fn: antenna, label: 'Multi-band patch or helix (L1 / L2 / L5 / E6), ground plane'}]}
+  - {id: afe, label: Antenna front end, col: 1, row: 0, blocks: [{fn: filter_saw_baw, label: Pre-filter and B13 notch}, {fn: gnss_lna, label: L1 + L5 LNA FEM}, {fn: diplexer, label: Band split L1 / L5 (L2 / E6)}]}
+  - {id: bias, label: Antenna supply, col: 1, row: 1, blocks: [{fn: load_switch, label: Bias-T feed with current limit and short detection}]}
+  - {id: rx, label: GNSS receiver, col: 2, row: 0, blocks: [{fn: external_block, label: 'Multi-band, multi-constellation RTK receiver'}, {fn: crystal_oscillator, label: TCXO}]}
+  - {id: corr, label: Corrections in, col: 2, row: 1, blocks: [{fn: rf_transceiver, label: RTK base link (in the control radio)}, {fn: modem, label: NTRIP over cellular}, {fn: lna, label: L-band correction channel (in the receiver)}]}
+  - {id: fc, label: Flight controller, col: 3, row: 0, blocks: [{fn: soc, label: Navigation estimator}]}
+  links:
+  - [ant, afe, RF]
+  - [afe, rx, 'L1, L5 (L2 / E6)']
+  - [bias, afe, DC over coax]
+  - [corr, rx, RTCM / SPARTN corrections]
+  - [rx, fc, 'position, velocity, 1 PPS']
+  questions:
+  - {id: gnss_bands, question: GNSS bands, choices: [L1 only, L1 + L5, 'all-band L1 / L2 / L5 / E6']}
+  - {id: gnss_corr, question: Corrections, choices: [none (SBAS), RTK from own base station, NTRIP over cellular, PPP-RTK over L-band]}
+  - {id: gnss_heading, question: Heading, choices: [magnetometer, two GNSS antennas (moving baseline)]}
+
+- name: Drone navigation sensor-fusion unit (IMU, magnetometer, barometer, optical flow / visual odometry, rangefinder, GNSS, UWB)
+  category: Industrial
+  note: "What keeps a drone's position when GNSS is weak or denied (drawn by us from Vana and Bisnath 2023 and public flight-controller designs, est): two or three IMUs, a magnetometer, a barometer, a downward optical-flow camera with a rangefinder for low altitude, a stereo or visual-inertial camera, GNSS and, near docks, UWB beacons, all time-stamped on one clock and fused in an extended Kalman filter. Few RF parts; timing and clean supplies are where our parts fit."
+  sources:
+  - {doc: ION_NAVI_578, title: 'Vana, Bisnath: Low-cost triple-frequency multi-GNSS PPP and MEMS IMU integration (NAVIGATION 70(2), 2023)', url: 'https://navi.ion.org/content/navi/70/2/navi.578.full.pdf'}
+  groups:
+  - {id: inertial, label: Inertial and air data, col: 0, row: 0, blocks: [{fn: external_block, label: IMU x2-3 (redundant)}, {fn: external_block, label: Magnetometer}, {fn: env_sensor, label: Barometer}]}
+  - {id: vision, label: Vision and range, col: 0, row: 1, blocks: [{fn: camera_radar, label: Optical-flow camera}, {fn: camera_radar, label: 'Rangefinder (ToF lidar or radar altimeter)'}, {fn: camera_radar, label: Stereo / visual-inertial odometry camera}]}
+  - {id: radio, label: Radio positioning, col: 1, row: 1, blocks: [{fn: gnss_lna, label: GNSS L1 + L5 front end}, {fn: uwb_soc, label: UWB for docking and indoor}]}
+  - {id: est, label: Estimator, col: 1, row: 0, blocks: [{fn: mcu, label: Flight controller (EKF sensor fusion)}, {fn: soc, label: Companion computer (visual odometry)}]}
+  - {id: clk, label: Timing, col: 2, row: 0, blocks: [{fn: crystal_oscillator, label: Low-drift oscillator}, {fn: clock_buffer, label: Sensor sync and time stamps}]}
+  - {id: pwr, label: Clean supplies, col: 2, row: 1, blocks: [{fn: pol_ldo, label: Low-noise LDO for IMU and magnetometer}, pol_buck]}
+  links:
+  - [inertial, est, 'rates, accelerations, heading, altitude']
+  - [vision, est, 'velocity, height, features']
+  - [radio, est, 'position, time']
+  - [clk, est, time base]
+  - [pwr, inertial, quiet rails]
+  questions:
+  - {id: nav_denied, question: GNSS-denied fallback, choices: [none (hold and land), optical flow + rangefinder (low altitude), visual-inertial odometry, terrain or map matching]}
+  - {id: nav_imu, question: IMUs, choices: [one, two, three (voting)]}
+
+- name: Drone CRPA anti-jam GNSS (controlled-reception-pattern antenna array with a nulling / beamforming front end)
+  category: RF & connectivity
+  note: "Business and block level only (drawn by us from public descriptions of CRPA products and the GNSS interference literature, est): 2-7 antenna elements, one coherent receive channel per element (limiter, filter, high-linearity LNA, down-conversion on a shared local oscillator and clock, ADC), and a processor that steers nulls toward interferers and gain toward the satellites; the output is a cleaned RF signal for a standard receiver or digital samples for an integrated one. Channel-to-channel phase and gain matching over temperature is the design core."
+  sources:
+  - {doc: arXiv_2602_12688, title: 'Kazim, Darwich, Marais: GNSS jamming detection with AGC and C/N0 observables (arXiv 2602.12688)', url: 'https://arxiv.org/pdf/2602.12688'}
+  groups:
+  - {id: arr, label: Antenna array (2-7 elements), col: 0, row: 0, blocks: [{fn: antenna, label: GNSS elements x4-7}]}
+  - {id: ch, label: Receive channel per element, col: 1, row: 0, blocks: [{fn: rf_limiter, label: Limiter}, {fn: filter_saw_baw, label: Band filter}, {fn: gnss_lna, label: High-IIP3 LNA}, {fn: rf_mixer, label: Down-converter}, {fn: adc, label: ADC}]}
+  - {id: cal, label: Calibration, col: 1, row: 1, blocks: [{fn: rf_switch, label: Calibration-signal injection switch}]}
+  - {id: lo, label: Coherent LO and clocks, col: 2, row: 1, blocks: [{fn: rf_synthesizer, label: Shared LO}, {fn: clock_buffer, label: Clock fan-out to all ADCs}, jitter_attenuator, {fn: crystal_oscillator, label: OCXO / TCXO}]}
+  - {id: proc, label: Nulling processor, col: 2, row: 0, blocks: [{fn: logic, label: 'FPGA: adaptive nulling / beamforming'}]}
+  - {id: out, label: Output, col: 3, row: 0, blocks: [{fn: external_block, label: 'GNSS receiver (RF out or digital samples)'}]}
+  links:
+  - [arr, ch, RF per element]
+  - [cal, ch, test tone]
+  - [lo, ch, LO and clocks]
+  - [ch, proc, samples per element]
+  - [proc, out, cleaned signal]
+  questions:
+  - {id: crpa_elements, question: Array elements, choices: ['2 (small drones)', '4', '7']}
+  - {id: crpa_out, question: Output, choices: [RF to a standard receiver, digital to an integrated receiver]}
+  - {id: crpa_bands, question: Bands, choices: [L1 only, L1 + L2, L1 + L5]}
+
+- name: Drone hardened GNSS front end (multi-band, multi-constellation, interference and notch filters, high-linearity LNA, jamming and spoofing monitor)
+  category: RF & connectivity
+  note: "The single-antenna answer to interference (drawn by us from ETSI EN 303 413, the SKY55951-11 data sheet and the interference-monitoring literature): steep pre-filters and notches for the drone's own 0.9 / 2.4 / 5.8 GHz transmitters, an LNA with high input compression and IIP3, multi-band and multi-constellation tracking, and a receiver that watches AGC and C/N0 and checks positions against the IMU and authenticated signals (Galileo OSNMA) to flag spoofing (est where not in the sources)."
+  sources:
+  - {doc: EN303413, title: 'ETSI EN 303 413 V1.2.1 (GNSS receivers, harmonised standard)', url: 'https://www.etsi.org/deliver/etsi_en/303400_303499/303413/01.02.01_60/en_303413v010201p.pdf'}
+  - {doc: SKY55951-11, title: 'Skyworks SKY55951-11 GNSS L1 + L5 LNA FEM data sheet 205521I', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/2901-3000/SKY55951-11_205521I.pdf'}
+  groups:
+  - {id: ant, label: Antenna, col: 0, row: 0, blocks: [{fn: antenna, label: 'Multi-band antenna, high on the frame, ground plane'}]}
+  - {id: prot, label: Protection, col: 1, row: 0, blocks: [tvs_esd, {fn: rf_limiter, label: Limiter against strong signals}]}
+  - {id: filt, label: Interference filtering, col: 2, row: 0, blocks: [{fn: filter_saw_baw, label: Steep pre-filter (SAW / BAW)}, {fn: filter_saw_baw, label: 'Notches for own 0.9 / 2.4 / 5.8 GHz transmitters'}]}
+  - {id: lna, label: Low-noise gain, col: 3, row: 0, blocks: [{fn: gnss_lna, label: High-IIP3 L1 + L5 LNA}, {fn: rf_gain_block, label: Second stage}, {fn: diplexer, label: Band split}]}
+  - {id: rx, label: Receiver and monitor, col: 3, row: 1, blocks: [{fn: external_block, label: 'Multi-band receiver: AGC / C/N0 jamming flag, OSNMA, spoofing checks'}, {fn: crystal_oscillator, label: TCXO}]}
+  - {id: fc, label: Flight controller, col: 2, row: 1, blocks: [{fn: mcu, label: Estimator (cross-checks GNSS against IMU)}]}
+  links:
+  - [ant, prot, RF]
+  - [prot, filt, '']
+  - [filt, lna, '']
+  - [lna, rx, L1 / L5]
+  - [rx, fc, position + integrity flags]
+  questions:
+  - {id: aj_threat, question: Interference to plan for, choices: [own transmitters only, unintentional interference, 'deliberate jamming and spoofing (defence, border)']}
+  - {id: aj_auth, question: Signal authentication, choices: [none, Galileo OSNMA, military / PRS (government only)]}
+
+- name: Drone resilient command-and-control link (FHSS control radio with antenna diversity, cellular and NTN fallback, link manager)
+  category: RF & connectivity
+  note: "Keeping control when one link is disturbed (drawn by us from 47 CFR 15.247, the drone radio-links and cellular deep dives and our catalogue, est): a frequency-hopping control radio with two antennas and a diversity switch, a second terrestrial path over LTE / 5G, a satellite path (IoT-NTN on the same PA, or a dedicated modem), and a link manager that encrypts, scores each link and falls back, with a fail-safe (hold, return home, land) if all are lost."
+  sources:
+  - {doc: CFR47_15_247, title: '47 CFR 15.247 (902-928, 2400-2483.5 and 5725-5850 MHz)', url: 'https://www.law.cornell.edu/cfr/text/47/15.247'}
+  groups:
+  - {id: ant, label: Antennas, col: 0, row: 0, blocks: [{fn: antenna, label: Control x2 (diversity)}, {fn: antenna, label: Cellular}, {fn: antenna, label: Satellite L / S-band}]}
+  - {id: rc, label: FHSS control radio, col: 1, row: 0, blocks: [{fn: antenna_switch, label: Diversity + T/R switch}, {fn: power_amplifier, label: PA}, {fn: lna, label: High-IIP3 LNA}, {fn: filter_saw_baw, label: Band filter}, {fn: rf_transceiver, label: Fast-hopping transceiver}, {fn: rf_synthesizer, label: Fast-settling synthesizer}]}
+  - {id: cell, label: Cellular path, col: 1, row: 1, blocks: [{fn: rf_frontend, label: LTE / RedCap FEM}, {fn: modem, label: LTE / 5G modem}]}
+  - {id: sat, label: Satellite path, col: 1, row: 2, blocks: [{fn: pa_module, label: NTN-capable PA (n255 / n256)}, {fn: external_block, label: Or a dedicated satellite modem}]}
+  - {id: mgr, label: Link manager, col: 2, row: 0, blocks: [{fn: soc, label: 'Link scoring, fallback, fail-safe'}, {fn: secure_element, label: Keys for link encryption}, crystal_oscillator]}
+  - {id: fc, label: Flight controller, col: 3, row: 0, blocks: [{fn: mcu, label: Flight controller}]}
+  links:
+  - [ant, rc, control]
+  - [ant, cell, cellular]
+  - [ant, sat, satellite]
+  - [rc, mgr, commands / telemetry]
+  - [cell, mgr, commands / telemetry / video]
+  - [sat, mgr, commands / telemetry]
+  - [mgr, fc, selected link]
+  questions:
+  - {id: c2_paths, question: Links on board, choices: [control radio only, control radio + cellular, control radio + cellular + satellite]}
+  - {id: c2_band, question: Control-radio band, choices: [868 / 915 MHz, 2.4 GHz, both (band switching)]}
+# Owner, 3 Nov 2026 ("For Factory automation, something for robotics would be good. Focus on a Euro-centric view for
+# this."): three robot diagrams for the sub-system "Robotics (European view)" (data/blocks/systems.yaml) and the deep
+# dive data/library/topics/robotics_europe.yaml. Drawn by us from public material; Skyworks / Qorvo sockets and gaps
+# are named in each note.
+- name: Six-axis industrial robot - controller, EtherCAT joint chain, safe torque off and safety controller (ISO 13849 / IEC 61508) (after TI, EU Commission and Skyworks public material)
+  category: Industrial
+  note: "After TI-SOL-SERVO (TI industrial servo drive: isolated gate drive, isolated current sense, encoder interface, 24 V auxiliary input), TI-SOL-HUMANOIDJOINT (robot joint drive with holding-brake power and an Ethernet / CAN link to the controller) and EC-MACHINERY (EU Machinery Regulation (EU) 2023/1230, applying from 20 January 2027: safety control systems, AI-powered safety functions and cyber-safety of safety software). Drawn by us: a European cabinet controller runs motion planning and an EtherCAT master; six servo axes (one per joint, often one multi-axis drive) sit on a 560-750 V DC link from 400 V AC mains; a two-channel safety controller (PL d / PL e per EN ISO 13849-1, SIL 2-3 per IEC 61508 / IEC 62061, est) commands safe torque off (STO), safe stop 1 and safe brake control, usually over FSoE (Safety over EtherCAT) or PROFIsafe. Our parts that fit: Si828x isolated gate drivers with DESAT (Si8281BD-IS), Si8941 / Si8922 isolated delta-sigma modulator and amplifier for phase current, Si86xx / Si88xx digital isolators for the STO paths and EtherCAT side, Si838x 24 V isolated inputs and Si834x isolated smart switches for safety I/O and brakes, Si85833D isolated RS-485 for EnDat / BiSS encoders, Si5341 / Si545 timing. Gaps: no EtherCAT / Ethernet PHY, no IO-Link master or device PHY, no MCU or safety MCU, no power modules."
+  sources:
+  - {doc: TI-SOL-SERVO, title: 'Industrial servo drive (single axis, AC motor) - block diagram + subsystems', url: 'https://www.ti.com/solution/robot-servo-drive'}
+  - {doc: TI-SOL-HUMANOIDJOINT, title: 'Humanoid / collaborative robot joint motor drive (48 V) - block diagram + subsystems', url: 'https://www.ti.com/solution/humanoid-robot-joint-motor-control'}
+  - {doc: EC-MACHINERY, title: 'European Commission: Machinery - Machinery Directive 2006/42/EC and Machinery Regulation (EU) 2023/1230 (applies from 20 January 2027)', url: 'https://single-market-economy.ec.europa.eu/sectors/mechanical-engineering/machinery_en'}
+  groups:
+  - {id: ctrl, label: 'Robot controller: motion planning, EtherCAT master, HMI and cell network', col: 0, row: 0, blocks: [soc, ddr_flash, ethernet_phy, crystal_oscillator, clock_generator]}
+  - {id: safety, label: 'Safety controller, two channels (PL d / PL e, SIL 2-3, est): FSoE or PROFIsafe', col: 0, row: 1, blocks: [mcu x2, watchdog, supervisor, digital_isolator]}
+  - {id: pendant, label: 'Teach pendant: E-stop, three-position enabling switch, safety fence and light curtain inputs', col: 0, row: 2, blocks: [external_block, isolated_digital_input]}
+  - {id: io, label: '24 V I/O and IO-Link master (grippers, sensors, valves)', col: 1, row: 2, blocks: [isolated_digital_input, isolated_smart_switch, digital_isolator, tvs_esd]}
+  - {id: psu, label: 'Cabinet power: 400 V AC rectifier, 560-750 V DC link, brake chopper, 24 V supply', col: 1, row: 0, blocks: [dc_link_cap, acdc_controller, isolated_dcdc, efuse_hotswap]}
+  - {id: axis, label: 'Servo axis x6 (one per joint): FOC current loop, isolated gate drive and current sense', col: 2, row: 0, blocks: [mcu, gate_driver, power_module, isolated_amplifier, digital_isolator, isolated_dcdc]}
+  - {id: sto, label: 'Safe torque off per axis: two channels block the gate-driver inputs and cut the driver supply', col: 2, row: 1, blocks: [digital_isolator, load_switch, isolated_switch_driver]}
+  - {id: brake, label: 'Holding brake control (safe brake control, 24 V)', col: 3, row: 1, blocks: [isolated_smart_switch, current_sensor]}
+  - {id: encoder, label: 'Encoder interface: EnDat 2.2, BiSS or one-cable HIPERFACE DSL over RS-485', col: 3, row: 0, blocks: [rs485_transceiver, position_interface, tvs_esd]}
+  - {id: joint, label: 'Joint: PMSM, gearbox, absolute encoder, holding brake', col: 4, row: 0, blocks: [motor, position_sensor, temperature_sensor]}
+  links:
+  - [ctrl, axis, 'EtherCAT, 100 Mbit/s, distributed clocks (cycle 0.125-1 ms, est)']
+  - [safety, axis, 'FSoE / PROFIsafe: STO, SS1, SLS commands']
+  - [safety, sto, 'STO channel 1 and channel 2']
+  - [sto, axis, gate enable and driver supply]
+  - [pendant, safety, 'E-stop, enabling switch, fence']
+  - [io, ctrl, 'IO-Link and 24 V signals']
+  - [psu, axis, DC link]
+  - [axis, joint, 3 phases]
+  - [joint, encoder, position]
+  - [encoder, axis, 'position, multi-turn']
+  - [brake, joint, brake release 24 V]
+  - [safety, brake, safe brake control]
+  questions:
+  - {id: payload, question: Robot class, choices: [cobot up to 20 kg, industrial 20-300 kg, heavy over 300 kg]}
+  - {id: fieldbus, question: Drive network, choices: [EtherCAT, PROFINET IRT, EtherNet/IP with CIP Motion, TSN]}
+  - {id: safety_level, question: Safety level of the stop functions, choices: [PL d / SIL 2, PL e / SIL 3]}
+  - {id: encoder, question: Encoder link, choices: [EnDat 2.2, BiSS-C, HIPERFACE DSL (one cable), resolver]}
+
+- name: Autonomous mobile robot (AMR) for European warehouses and factories - safety laser scanners, 48 V battery, wireless charging, private 5G / Wi-Fi 7 and UWB (after IFR, EU Commission and MobileKnowledge public material)
+  category: Industrial
+  note: "After IFR-SR2026 (IFR: global sales of professional service robots up 24% to almost 250,000 units in 2025; transport and logistics robots, about 117,000, the top application), EC-MACHINERY (an AMR is machinery under (EU) 2023/1230 from 20 January 2027, including AI-powered safety functions and cyber-safety) and MK-ROBOTICS (UWB module with BLE and 3D angle of arrival for AGV / AMR navigation and docking). Drawn by us: a navigation computer runs SLAM and the fleet client; a two-channel safety controller reads front and rear safety laser scanners (IEC 61496-3, typically PL d, est) and limits speed; wheel and lift drives run from a 48 V Li-ion pack; the robot charges on an inductive pad or contacts; it talks to the fleet manager over Wi-Fi 6 / 7 or a private 5G campus network (Germany assigns 3.7-3.8 GHz, n78, for local licences, est) and uses UWB for precise positioning and docking. Our parts that fit: QPF4557 / QM45655 Wi-Fi 7 FEMs, SKY58261-11 (n77 / n78 5G front end), QM33120W / DWM3001C UWB, QM14068 UWB LNA, PAC5527 / ACT72350 motor controllers, PAC25140 battery SoC, Si86xx isolators and Si838x inputs in the safety I/O, Si545 / Si5341 timing. Gaps: no wireless-charging transmitter or receiver, no MOSFETs, no eFuse, no navigation SoC or 5G modem."
+  sources:
+  - {doc: IFR-SR2026, title: 'IFR press releases: Global Sales of Professional Service Robots Surge 24% (30 Sep 2026) and World Robotics 2026 (24 Sep 2026)', url: 'https://ifr.org/ifr-press-releases'}
+  - {doc: EC-MACHINERY, title: 'European Commission: Machinery - Machinery Regulation (EU) 2023/1230 (applies from 20 January 2027)', url: 'https://single-market-economy.ec.europa.eu/sectors/mechanical-engineering/machinery_en'}
+  - {doc: MK-ROBOTICS, title: 'MobileKnowledge MK UWB Kit Robotics (product page and product brief v1.1)', url: 'https://www.themobileknowledge.com/product/mk-uwb-kit-robotics/'}
+  groups:
+  - {id: nav, label: 'Navigation computer: SLAM, AI vision, fleet client', col: 0, row: 0, blocks: [soc, ddr_flash, camera_radar, crystal_oscillator]}
+  - {id: safety, label: 'Safety controller, two channels, with front and rear safety laser scanners (IEC 61496-3, PL d est)', col: 0, row: 1, blocks: [mcu x2, external_block, isolated_digital_input, digital_isolator]}
+  - {id: radio, label: 'Wi-Fi 6 / 7 and private 5G (n78) to the fleet manager', col: 1, row: 0, blocks: [wifi_soc, wifi_fem, modem, rf_frontend, antenna]}
+  - {id: uwb, label: 'UWB positioning and docking (anchors in the hall)', col: 2, row: 0, blocks: [uwb_soc, uwb_fem, antenna, crystal_oscillator]}
+  - {id: drives, label: 'Wheel and lift drives (48 V, 2-4 motors)', col: 1, row: 1, blocks: [motor_controller, three_phase_gate_driver, power_fets, current_sensor]}
+  - {id: motors, label: 'Wheel hub / lift motors with encoders and brakes', col: 2, row: 1, blocks: [motor, position_sensor]}
+  - {id: battery, label: '48 V Li-ion pack and BMS', col: 0, row: 2, blocks: [battery_pack, battery_monitor, battery_protector, efuse_hotswap]}
+  - {id: charge, label: 'Charging: inductive pad or floor contacts', col: 1, row: 2, blocks: [wireless_power, battery_charger]}
+  - {id: rails, label: '24 V / 12 V / 5 V rails', col: 2, row: 2, blocks: [wide_vin_buck, pol_buck, supervisor]}
+  links:
+  - [nav, radio, fleet commands and maps]
+  - [nav, uwb, 'position, docking']
+  - [nav, drives, speed set-points]
+  - [safety, drives, 'safe stop, speed limit (STO)']
+  - [safety, nav, protective field switching]
+  - [drives, motors, 3 phases]
+  - [battery, drives, 48 V]
+  - [battery, rails, 48 V]
+  - [charge, battery, charge current]
+  - [rails, nav, '']
+  questions:
+  - {id: link, question: Fleet radio, choices: [Wi-Fi 6, Wi-Fi 7, private 5G (n78), both Wi-Fi and 5G]}
+  - {id: position, question: Positioning, choices: [laser SLAM only, SLAM + UWB, SLAM + floor markers]}
+  - {id: charge, question: Charging, choices: [inductive pad, floor contacts, battery swap]}
+
+- name: Robot end-of-arm tool and tool changer with IO-Link Wireless or contactless power and data (gripper, vacuum, tool identification) (after Skyworks and TI public material)
+  category: Industrial
+  note: "After SKY-SI834X (Skyworks Si834x isolated smart switch: 24 V sourcing outputs, 2.5 A per channel, 1.5 kVrms, status indicators) and SKY-SI838X (Skyworks Si838x eight-channel 24 V isolated digital inputs), with TI-SOL-HUMANOIDJOINT for the joint side. Drawn by us (est): the robot flange carries a tool changer; a wired changer passes 24 V, I/O and an IO-Link port through spring contacts, which wear and arc when tools change under power; a contactless coupler instead transfers tens of watts inductively and the data over a short-range radio, or the tool talks IO-Link Wireless (2.4 GHz, a master serves many tools with deterministic 5 ms cycles, est). The tool (electric gripper, vacuum ejector, screwdriver) has a small motor drive, sensors, an ID chip and its own 24 V supply. Our parts that fit: Si834x outputs and Si838x inputs on the flange I/O, Si86P320 isolator with integrated power for a small isolated sensor side, PAC5527 one-chip motor controller for the electric gripper, QPG6200L 2.4 GHz SoC or Skyworks 2.4 GHz front ends for a wireless link (est). Gaps: no IO-Link transceiver, no inductive power transmitter / receiver, no NFC tool ID part of ours."
+  sources:
+  - {doc: SKY-SI834X, title: 'Skyworks Si834x Isolated Smart Switch (product page, Si83401BAA-IF)', url: 'https://www.skyworksinc.com/en/Products/Isolation/Si834x-Isolated-Smart-Switch/Si83401BAA-IF'}
+  - {doc: SKY-SI838X, title: 'Skyworks Si838x 24 V digital isolators (product page, Si8380P-IU)', url: 'https://www.skyworksinc.com/en/Products/Isolation/Si838x-Digital-Isolators/Si8380P-IU'}
+  - {doc: TI-SOL-HUMANOIDJOINT, title: 'Humanoid / collaborative robot joint motor drive (48 V) - block diagram + subsystems', url: 'https://www.ti.com/solution/humanoid-robot-joint-motor-control'}
+  groups:
+  - {id: arm, label: 'Robot controller side: IO-Link master or wireless master, 24 V', col: 0, row: 0, blocks: [external_block, isolated_digital_input, isolated_smart_switch]}
+  - {id: flange, label: 'Tool changer, robot side: 24 V outputs, inputs, tool-present and lock sensing', col: 1, row: 0, blocks: [isolated_smart_switch, isolated_digital_input, tvs_esd, hall_switch]}
+  - {id: coupler, label: 'Contactless coupler: inductive power (tens of W) and short-range data', col: 1, row: 1, blocks: [wireless_power, wireless_soc, antenna]}
+  - {id: tool_io, label: 'Tool side: IO-Link device or IO-Link Wireless device (2.4 GHz)', col: 2, row: 0, blocks: [mcu, wireless_soc, rf_frontend, crystal_oscillator]}
+  - {id: tool_power, label: 'Tool 24 V supply and isolated sensor side', col: 2, row: 1, blocks: [wide_vin_buck, pol_ldo, digital_isolator]}
+  - {id: gripper, label: 'Electric gripper drive (24-48 V BLDC or stepper)', col: 3, row: 0, blocks: [motor_controller, power_fets, current_sensor, motor]}
+  - {id: sensors, label: 'Tool sensors: jaw position, force, vacuum, tool ID', col: 3, row: 1, blocks: [position_sensor, env_sensor, nfc_frontend]}
+  links:
+  - [arm, flange, '24 V, I/O, IO-Link through the arm']
+  - [flange, tool_io, 'spring contacts: 24 V and IO-Link']
+  - [flange, coupler, 'or contactless']
+  - [coupler, tool_power, inductive power]
+  - [coupler, tool_io, data]
+  - [tool_power, gripper, 24 V]
+  - [tool_io, gripper, 'grip, force, speed']
+  - [sensors, tool_io, '']
+  questions:
+  - {id: link, question: Tool link, choices: [wired IO-Link through spring contacts, IO-Link Wireless, contactless power + data coupler]}
+  - {id: tool, question: Tool, choices: [electric gripper, vacuum gripper, screwdriver / process tool]}
+# ---- Nisshinbo Micro Devices automotive application block diagrams (owner, 2 Nov 2026: "Check Nisshinbo Micro
+# Devices for automotive block diagrams"). HTML pages only (robots.txt disallows PDFs and CSVs); each diagram is an
+# inline SVG on the page, redrawn here with our function ids. Read 2 Nov 2026.
+- name: eCall module (LTE module, GNSS front end, RF switch to a backup antenna, microphone and speaker amplifiers) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-ECALL (eCall block diagram: LTE module and a GPS module with GNSS IC, SAW and a front-end module (LNA + SAW filter) both reach two antennas through an RF switch; power management with DC/DC, two LDOs, watchdog timer and voltage detector fed from the battery; two low-voltage LDOs make 3.3 V for the MCU and audio codec and 5 V for the speaker amplifier; ECM microphone with a microphone amplifier into the codec; speaker amplifier under 3 W). The page lists SPDT and DPDT high-power switches for the RF switch and a GNSS front-end module (est: the switch moves the call to a second antenna when the roof antenna is lost in a crash, as NG-eCall asks; the page does not say so)."
+  sources:
+  - {doc: NISSHINBO-AUTO-ECALL, title: 'Nisshinbo Micro Devices application block diagram (automotive): eCall', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/ecall.html'}
+  groups:
+  - {id: lte, label: LTE module, col: 0, row: 0, blocks: [modem]}
+  - {id: gnss, label: 'GPS module: GNSS IC, SAW, front-end module (LNA + SAW filter)', col: 0, row: 1, blocks: [gnss_lna, filter_saw_baw x2]}
+  - {id: rfsw, label: RF switch (SPDT or DPDT) to the two antennas, col: 1, row: 0, blocks: [rf_switch]}
+  - {id: ant, label: 'Two antennas (main and backup, est)', col: 2, row: 0, blocks: [antenna x2]}
+  - {id: batt, label: Battery input, col: 0, row: 2, blocks: [external_block]}
+  - {id: pwr, label: 'Power management: DC/DC, LDOs, watchdog timer, voltage detector', col: 1, row: 2, blocks: [wide_vin_buck, pol_ldo x2, watchdog, supervisor]}
+  - {id: lvldo, label: 'Low-voltage LDOs: 3.3 V (MCU, codec) and 5 V (speaker amplifier)', col: 2, row: 2, blocks: [pol_ldo x2]}
+  - {id: mcu, label: MCU, col: 2, row: 1, blocks: [mcu]}
+  - {id: mic, label: ECM microphone and microphone amplifier, col: 0, row: 3, blocks: [acoustic_transducer, amplifier]}
+  - {id: codec, label: Audio codec, col: 1, row: 3, blocks: [audio_codec]}
+  - {id: spk, label: Speaker amplifier (under 3 W) and speaker, col: 2, row: 3, blocks: [audio_amp, acoustic_transducer]}
+  links:
+  - [lte, rfsw, cellular]
+  - [gnss, rfsw, GNSS]
+  - [rfsw, ant, '']
+  - [batt, pwr, '']
+  - [pwr, lvldo, '']
+  - [lvldo, mcu, 3.3 V]
+  - [lvldo, codec, 3.3 V]
+  - [lvldo, spk, 5 V]
+  - [mic, codec, mic signal]
+  - [codec, spk, audio]
+  questions:
+  - {id: backup_antenna, question: Second (backup) antenna, choices: ['yes, through the RF switch', 'no'], source: NISSHINBO-AUTO-ECALL (two antennas behind the RF switch)}
+  - {id: speaker_amp, question: Speaker amplifier, choices: ['class-D, filter-less, up to 3 W', 'small speaker amplifier, about 0.5 W'], source: NISSHINBO-AUTO-ECALL product list (3 W class-D and 500 mW speaker amplifiers)}
+
+- name: Head-up display (picture generation with laser or LED, mirror motor, color compensation) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-INFO (Head Up Display (HUD) block diagram: battery into a PMIC with buck DC/DC, boost DC/DC and LDOs, plus a watchdog timer and voltage detector; the vehicle interface (CAN, LIN, MOST) and the graphic engine (MCU, video processor) drive an LCoS or LED picture source lit by red, green and blue laser diodes with a laser diode driver; a photodiode and op-amp measure the light for color compensation; an H-bridge motor driver turns the mirror that throws the picture onto the windshield). The instrument panel half of the same page is added to the instrument cluster diagram."
+  sources:
+  - {doc: NISSHINBO-AUTO-INFO, title: 'Nisshinbo Micro Devices application block diagram (automotive): Information (Head Up Display (HUD), Instrument Panel)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/information.html'}
+  groups:
+  - {id: batt, label: Battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pmic, label: 'PMIC: buck DC/DC, boost DC/DC, LDOs', col: 1, row: 0, blocks: [pmic, pol_buck, pre_regulator, pol_ldo x2]}
+  - {id: wdt_vd, label: Watchdog timer and voltage detector, col: 2, row: 0, blocks: [watchdog, supervisor]}
+  - {id: vif, label: 'Vehicle interface (CAN, LIN, MOST)', col: 0, row: 1, blocks: [can_transceiver, lin_transceiver]}
+  - {id: ge, label: 'Graphic engine (MCU, video processor)', col: 1, row: 1, blocks: [mcu]}
+  - {id: pgu, label: 'Picture source: LCoS or LED with RGB laser diodes and the laser diode driver', col: 2, row: 1, blocks: [display, optical_driver]}
+  - {id: color, label: 'Color compensation: photodiode and op-amp', col: 1, row: 2, blocks: [amplifier]}
+  - {id: mirror, label: Mirror motor (H-bridge driver) and mirror to the windshield, col: 2, row: 2, blocks: [motor_driver_brushed]}
+  links:
+  - [batt, pmic, '']
+  - [pmic, vif, '']
+  - [pmic, ge, '']
+  - [pmic, pgu, boost for the laser diodes]
+  - [wdt_vd, ge, reset]
+  - [vif, ge, vehicle data]
+  - [ge, pgu, picture]
+  - [pgu, color, light level]
+  - [color, ge, color correction]
+  - [ge, mirror, mirror angle]
+  questions:
+  - {id: light_source, question: Light source, choices: [RGB laser diodes, LEDs], source: NISSHINBO-AUTO-INFO (L-COS / LED with laser diode and LDD)}
+  - {id: vehicle_bus, question: Vehicle interface, choices: [CAN, LIN, MOST], source: "NISSHINBO-AUTO-INFO ('I/F (CAN, LIN, MOST)')"}
+
+- name: Parking-assist camera ECU with four analog cameras (video amplifier in each camera, video isolation amplifiers at the ECU input, PMIC) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-CAMERA (Camera Sensing (Parking Assist System) block diagram: front, two side and rear cameras, each with a video amplifier driving the cable; in the ECU one video isolation amplifier per input ahead of the MCU; a PMIC with two DC/DCs and two LDOs from the battery, also feeding the CAN transceiver and DDR memory). Here 'isolation amplifier' means a video amplifier that rejects the ground difference between camera and ECU, not galvanic isolation (est, from the part names on the page). A digital surround-view ECU over SerDes links is in the background diagrams (TI)."
+  sources:
+  - {doc: NISSHINBO-AUTO-CAMERA, title: 'Nisshinbo Micro Devices application block diagram (automotive): Camera Sensing (Parking Assist System)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/camera-sensing-adas.html'}
+  groups:
+  - {id: cams, label: 'Front, two side and rear cameras', col: 0, row: 0, blocks: [camera_radar]}
+  - {id: camamp, label: Video amplifier (cable driver) in each camera, col: 1, row: 0, blocks: [amplifier x4]}
+  - {id: iso, label: Video isolation amplifier at each ECU input, col: 2, row: 0, blocks: [amplifier x4]}
+  - {id: mcu, label: MCU (image processing), col: 3, row: 0, blocks: [mcu]}
+  - {id: batt, label: Battery, col: 0, row: 1, blocks: [external_block]}
+  - {id: pmic, label: 'PMIC: two DC/DCs and two LDOs', col: 1, row: 1, blocks: [pmic, pol_buck x2, pol_ldo x2]}
+  - {id: can, label: CAN transceiver, col: 2, row: 1, blocks: [can_transceiver]}
+  - {id: ddr, label: DDR memory, col: 3, row: 1, blocks: [ddr_flash]}
+  links:
+  - [cams, camamp, '']
+  - [camamp, iso, analog video over cable]
+  - [iso, mcu, '']
+  - [batt, pmic, '']
+  - [pmic, mcu, rails]
+  - [pmic, can, '']
+  - [pmic, ddr, '']
+  - [mcu, can, CAN]
+  questions:
+  - {id: camera_link, question: Camera link, choices: [analog video (as drawn), digital SerDes link], source: NISSHINBO-AUTO-CAMERA (video amplifiers); TI surround view background diagram (FPD-Link)}
+  - {id: cameras, question: Cameras, choices: [rear only, four (surround view)], source: 'NISSHINBO-AUTO-CAMERA (front, side, side, rear)'}
+
+- name: Electric power steering ECU (buck DC/DC and LDO with watchdog, pre-driver and 3-phase MOSFET bridge, torque sensor with voltage tracker, resolver) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-EPS (Electronic Power Steering block diagram: +B through a switching driver to a buck DC/DC and an LDO with watchdog for the MCU; MCU to a pre-driver and a six-MOSFET bridge driving the assist motor; op-amps on the motor current (current transformer) and on the steering torque sensor; a voltage tracker supplies the torque sensor from 5 V under MCU control; resolver with RDC and a resolver excitation amplifier; CAN interface). EPS ECU diagrams from TI and NXP are in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-EPS, title: 'Nisshinbo Micro Devices application block diagram (automotive): Electronic Power Steering (EPS)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/electronic-power-steering.html'}
+  groups:
+  - {id: batt, label: +B battery and switching driver, col: 0, row: 0, blocks: [external_block, load_switch]}
+  - {id: power, label: Buck DC/DC and LDO with watchdog, col: 0, row: 1, blocks: [wide_vin_buck, pol_ldo, watchdog]}
+  - {id: mcu, label: MCU, col: 1, row: 1, blocks: [mcu]}
+  - {id: predrv, label: Pre-driver and six-MOSFET bridge, col: 1, row: 0, blocks: [three_phase_gate_driver, power_fets]}
+  - {id: motor, label: Steering assist motor with resolver and steering torque sensor, col: 2, row: 0, blocks: [motor, position_sensor]}
+  - {id: sense, label: 'Op-amps: motor current (current transformer) and steering torque', col: 2, row: 1, blocks: [amplifier x2]}
+  - {id: tracker, label: Voltage tracker supplying the torque sensor from 5 V, col: 3, row: 1, blocks: [ldo_tracker]}
+  - {id: resolver, label: RDC and resolver excitation amplifier, col: 3, row: 0, blocks: [position_interface]}
+  - {id: can, label: CAN interface, col: 0, row: 2, blocks: [can_transceiver]}
+  links:
+  - [batt, power, '+B']
+  - [batt, predrv, '+B']
+  - [power, mcu, '']
+  - [mcu, predrv, PWM]
+  - [predrv, motor, 3 phases]
+  - [motor, sense, current / torque]
+  - [sense, mcu, '']
+  - [mcu, tracker, enable]
+  - [tracker, motor, torque sensor supply]
+  - [motor, resolver, resolver signals]
+  - [resolver, mcu, angle]
+  - [mcu, can, CAN]
+  questions:
+  - {id: position, question: Motor position sensor, choices: [resolver with RDC (as drawn), magnetic angle sensor], source: NISSHINBO-AUTO-EPS (resolver and RDC)}
+  - {id: sensor_supply, question: Torque sensor supply, choices: [voltage tracker following the 5 V rail (as drawn), separate LDO], source: NISSHINBO-AUTO-EPS (voltage tracker)}
+
+- name: LED headlight ECU (boost / buck supply, LED string with switching driver, current and voltage sensing, leveling motors with tracking supply) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-LED (LED Headlight ECU block diagram: battery into power management with boost DC/DC, buck DC/DC, LDO with watchdog, watchdog timer and voltage detector, and a tracking regulator for the off-board position sensors; supply monitor and the BCM into the MCU; an LED string switched by a switching driver (gate driver) and FET; a comparator voltage sensor and an op-amp current sensor on the LED string; motor drivers and beam control for two leveling motors with position sensors). A TI LED headlight module and an NXP exterior lighting diagram are in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-LED, title: 'Nisshinbo Micro Devices application block diagram (automotive): LED Headlight ECU', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/led-headlight-ecu.html'}
+  groups:
+  - {id: batt, label: Battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pm, label: 'Power management: boost DC/DC, buck DC/DC, LDO with watchdog, watchdog timer, voltage detector', col: 1, row: 0, blocks: [pre_regulator, pol_buck, pol_ldo, watchdog, supervisor]}
+  - {id: tracker, label: Tracking regulator for the off-board position sensors, col: 2, row: 0, blocks: [ldo_tracker]}
+  - {id: bcm, label: Body control module and supply monitor, col: 0, row: 1, blocks: [external_block]}
+  - {id: mcu, label: MCU, col: 1, row: 1, blocks: [mcu]}
+  - {id: sense, label: 'Comparator voltage sensor and op-amp current sensor on the LED string', col: 2, row: 1, blocks: [comparator, amplifier]}
+  - {id: led, label: LED string with switching driver (gate driver) and FET, col: 3, row: 1, blocks: [led_driver, power_fets]}
+  - {id: level, label: 'Motor drivers / beam control: two leveling motors with position sensors', col: 3, row: 0, blocks: [motor_driver_brushed x2, position_sensor x2]}
+  links:
+  - [batt, pm, '']
+  - [pm, mcu, '']
+  - [pm, led, LED supply]
+  - [pm, tracker, '']
+  - [tracker, level, sensor supply]
+  - [bcm, mcu, light request]
+  - [mcu, led, switching]
+  - [led, sense, voltage / current]
+  - [sense, mcu, '']
+  - [level, mcu, position]
+  questions:
+  - {id: leveling, question: Beam leveling motors, choices: ['none', 'two (as drawn)'], source: NISSHINBO-AUTO-LED (motor drivers and position sensors)}
+  - {id: led_supply, question: LED supply, choices: [boost then buck (as drawn), single buck-boost], source: NISSHINBO-AUTO-LED (boost and buck DC/DC)}
+
+- name: Acoustic vehicle alerting system (AVAS - MCU, op-amp filter, two-channel audio amplifier and speakers on LIN / CAN) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-AVAS (Acoustic Vehicle Alerting System block diagram: B+ into power management with LDO, watchdog timer, voltage detector, DC/DC and a tracking regulator for an off-board sensor; a LIN / CAN interface to the MCU; two MCU outputs through op-amps and an audio amplifier to two speakers). An electric car must make this sound at low speed (est: UN R138 in Europe, FMVSS 141 in the US; the page does not cite the rules)."
+  sources:
+  - {doc: NISSHINBO-AUTO-AVAS, title: 'Nisshinbo Micro Devices application block diagram (automotive): Acoustic Vehicle Alerting System (AVAS)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/acoustic-vehicle-alerting-system.html'}
+  groups:
+  - {id: batt, label: B+ battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pm, label: 'Power management: LDO, watchdog timer, voltage detector, DC/DC, tracking regulator', col: 1, row: 0, blocks: [pol_ldo, watchdog, supervisor, wide_vin_buck, ldo_tracker]}
+  - {id: bus, label: LIN / CAN interface, col: 0, row: 1, blocks: [lin_transceiver, can_transceiver]}
+  - {id: mcu, label: MCU (sound generation), col: 1, row: 1, blocks: [mcu]}
+  - {id: opamp, label: Op-amps (two channels), col: 2, row: 1, blocks: [amplifier x2]}
+  - {id: amp, label: Audio amplifier (two channels), col: 3, row: 1, blocks: [audio_amp x2]}
+  - {id: spk, label: Two speakers, col: 3, row: 0, blocks: [acoustic_transducer x2]}
+  links:
+  - [batt, pm, '']
+  - [pm, bus, LDO]
+  - [pm, mcu, LDO]
+  - [pm, amp, DC/DC]
+  - [bus, mcu, LIN / CAN]
+  - [mcu, opamp, sound]
+  - [opamp, amp, '']
+  - [amp, spk, '']
+  questions:
+  - {id: channels, question: Speakers, choices: [one, two (as drawn)], source: NISSHINBO-AUTO-AVAS}
+  - {id: bus, question: Vehicle bus, choices: [LIN, CAN], source: NISSHINBO-AUTO-AVAS ('Interface LIN / CAN')}
+
+- name: Corner sensor ECU (corner sensors with ASIC and op-amp, buzzer driver, LIN / CAN to the navigation / IVI) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-CORNER (Corner Sensor ECU block diagram: battery into power management with an LDO with watchdog, an LDO, watchdog timer and voltage detector; LIN / CAN interface to the navigation monitor / IVI; MCU talking to the corner sensors, each with an ASIC / ASSP and an op-amp, supplied by their own LDO; a switching driver / audio amplifier drives a warning speaker). The sensors are drawn as transducers (est: ultrasonic, as in park assist; the page does not say). A TI ultrasonic park assist sensor is in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-CORNER, title: 'Nisshinbo Micro Devices application block diagram (automotive): Corner Sensor ECU', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/corner-sensor-ecu.html'}
+  groups:
+  - {id: batt, label: Battery, col: 0, row: 0, blocks: [external_block]}
+  - {id: pm, label: 'Power management: LDO with watchdog, LDO, watchdog timer, voltage detector', col: 1, row: 0, blocks: [pol_ldo x2, watchdog, supervisor]}
+  - {id: ivi, label: Navigation monitor / IVI, col: 0, row: 1, blocks: [external_block]}
+  - {id: bus, label: LIN / CAN interface, col: 1, row: 1, blocks: [lin_transceiver, can_transceiver]}
+  - {id: mcu, label: MCU, col: 2, row: 1, blocks: [mcu]}
+  - {id: sldo, label: LDO supplying the corner sensors, col: 3, row: 0, blocks: [pol_ldo]}
+  - {id: sensor, label: 'Corner sensors: ASIC / ASSP and op-amp per sensor (ultrasonic, est)', col: 3, row: 1, blocks: [ultrasonic_afe, amplifier]}
+  - {id: buzzer, label: Switching driver / audio amplifier and warning speaker, col: 2, row: 2, blocks: [audio_amp, acoustic_transducer]}
+  links:
+  - [batt, pm, '']
+  - [batt, sldo, '']
+  - [pm, bus, '']
+  - [pm, mcu, '']
+  - [ivi, bus, '']
+  - [bus, mcu, LIN / CAN]
+  - [sldo, sensor, sensor supply]
+  - [mcu, sensor, sensor data]
+  - [mcu, buzzer, warning]
+  questions:
+  - {id: sensors, question: Corner sensors, choices: [four (as drawn), more], source: NISSHINBO-AUTO-CORNER}
+  - {id: warning, question: Driver warning, choices: [buzzer from this ECU (as drawn), sound and picture on the IVI], source: NISSHINBO-AUTO-CORNER (speaker and IVI link)}
+
+- name: Body control module with a smart key receiver (two antennas, RF switch, SAW filter, RF receiver; switch drivers for locks and lamps) (after Nisshinbo)
+  category: Automotive systems
+  note: "After Nisshinbo public material: NISSHINBO-AUTO-BCM (Body Control Module block diagram: the smart key's signal reaches two body antennas, an RF switch picks one, then a SAW filter and an RF receiver into the MCU; power management with two DC/DCs, an LDO, watchdog timer and voltage detector from the battery; an op-amp for current detection; a switch driver for the door lock, answer back, room lamp and more). The page lists SPDT GaAs switches for the RF switch. A TI body control module and an NXP TPMS / RKE receiver are in the background diagrams."
+  sources:
+  - {doc: NISSHINBO-AUTO-BCM, title: 'Nisshinbo Micro Devices application block diagram (automotive): Body Control Module (BCM)', url: 'https://www.nisshinbo-microdevices.co.jp/en/applications/automotive/block/body-control-module.html'}
+  groups:
+  - {id: key, label: Smart key, col: 0, row: 0, blocks: [external_block]}
+  - {id: ant, label: Two body antennas, col: 1, row: 0, blocks: [antenna x2]}
+  - {id: rfsw, label: RF switch (antenna select), col: 2, row: 0, blocks: [rf_switch]}
+  - {id: rx, label: SAW filter and RF receiver, col: 3, row: 0, blocks: [filter_saw_baw, rf_transceiver]}
+  - {id: mcu, label: MCU, col: 4, row: 0, blocks: [mcu]}
+  - {id: batt, label: Battery, col: 0, row: 1, blocks: [external_block]}
+  - {id: pm, label: 'Power management: DC/DCs, LDO, watchdog timer, voltage detector', col: 1, row: 1, blocks: [wide_vin_buck, pol_buck, pol_ldo, watchdog, supervisor]}
+  - {id: cur, label: Op-amp current detection, col: 3, row: 1, blocks: [amplifier]}
+  - {id: drv, label: 'Switch driver: door lock, answer back, room lamp and more', col: 4, row: 1, blocks: [load_switch, relay_driver]}
+  links:
+  - [key, ant, RF]
+  - [ant, rfsw, '']
+  - [rfsw, rx, '']
+  - [rx, mcu, key data]
+  - [batt, pm, '']
+  - [pm, mcu, '']
+  - [cur, mcu, load current]
+  - [mcu, drv, '']
+  questions:
+  - {id: antennas, question: Receive antennas, choices: [one, two with an RF switch (as drawn)], source: NISSHINBO-AUTO-BCM}
+  - {id: key_type, question: Key, choices: [remote keyless entry (button), passive smart key, phone as a key (BLE / UWB)], source: NISSHINBO-AUTO-BCM ('Smart Key'); car access diagrams in this library}

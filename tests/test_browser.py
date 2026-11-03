@@ -563,6 +563,32 @@ def test_car_explorer_without_webgl(page):
     assert not [u for u in asked if "/vendor/three/" in u or "car_explorer.js" in u]
 
 
+def test_automotive_focus_goals_folds_and_links(page):
+    """Automotive focus (owner, 3 Nov 2026): from the Future growth menu, six goal cards (two or more per row on an
+    iPad held sideways), "Parts and diagrams" and "How these were picked" open on a tap, a "why" link leads to its
+    page (the 390 px check follows)."""
+    go(page, "/business/reports")
+    page.locator("nav").get_by_role("link", name="Automotive focus").first.click()
+    page.wait_for_url("**/business/automotive-focus", timeout=90_000)
+    cards = page.locator(".af-card")
+    expect(cards).to_have_count(6)
+    tops = page.evaluate("[...document.querySelectorAll('.af-card')].slice(0, 2).map(e => e.offsetTop)")
+    assert tops[0] == tops[1]  # side by side
+    how = page.locator("#af-how")
+    expect(how.locator("li").first).to_be_hidden()
+    how.locator("summary").click()
+    expect(how.locator("li").first).to_be_visible()
+    more = cards.first.locator("details.af-more")
+    if more.count():
+        more.locator("summary").click()
+        expect(more.locator("a").first).to_be_visible()
+    link = cards.first.locator(".af-why a").first
+    href = link.get_attribute("href")
+    link.click()
+    page.wait_for_load_state("load")
+    assert href.split("?")[0].split("#")[0] in page.url
+
+
 def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
     """Owner, 2 Nov 2026: each gap row says why it could matter, with the applications linked; on a phone the sentence
     is a second line under the row and the table is not wider than the screen."""
@@ -1511,3 +1537,76 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
     expect(page.locator("#cp-plan h2")).to_contain_text("Si5332A-GM1")
     go(page, "/clocks/plans")
     expect(page.locator("main")).to_contain_text("Browser clock plan")
+
+
+def test_data_center_shows_timing_sub_system_deep_dive_and_diagrams(page):
+    """Owner, 2 Nov 2026: timing solutions in the data center: the Data center system has a "Timing and
+    synchronization" sub-system with its deep dive (which links the Clock planner) and its block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-timing")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Timing and synchronization")
+    with page.expect_navigation():
+        card.locator("a.sys-btn-deep").click()
+    assert page.url.endswith("/library/dc_timing")
+    expect(page.locator("main h1")).to_contain_text("Timing in the AI data center")
+    expect(page.locator('main a[href="/clocks"]').first).to_be_visible()
+    go(page, "/blocks?system=datacenter&sub=timing#sub-timing")
+    expect(page.locator("details#area-datacenter[open]")).to_have_count(1)
+    expect(page.locator("main")).to_contain_text("AI / GPU server clock tree")
+
+
+def test_data_center_shows_cooling_and_hvac(page):
+    """Owner, 2 Nov 2026 ("Also add cooling and HVAC to data centers"): Data center opens with a Cooling and HVAC card
+    whose buttons lead to the deep dive and to its block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-cooling")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Cooling and HVAC")
+    expect(card.locator("a.sys-btn")).to_have_count(2)
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/dc_cooling")
+    expect(page.locator("main h1")).to_contain_text("Data-center cooling")
+    go(page, "/library#sys-datacenter")
+    with page.expect_navigation():
+        page.locator("#card-datacenter-cooling a.sys-btn-dg").click()
+    expect(page.locator("#sub-cooling")).to_be_in_viewport()
+    expect(page.locator("#sub-cooling + .tpl-grid a.tpl-card")).to_have_count(5)
+
+
+def test_drones_show_satellite_navigation_and_anti_jamming(page):
+    """Owner, 2 Nov 2026 (worker P): Drones gets "Satellite link (NTN / direct-to-cell)", "Navigation" and
+    "Anti-jamming and anti-spoofing", each with diagrams and a deep dive; the radio-links deep dive shows "Which link
+    when"."""
+    go(page, "/blocks?system=drones")
+    for sub in ("satellite-link", "navigation", "anti-jamming"):
+        card = page.locator(f"#card-drones-{sub}")
+        expect(card).to_have_count(1)
+        expect(card.locator(".sys-btn-deep")).to_have_count(1)
+    go(page, "/library/drone_satellite_link")
+    expect(page.locator("h1")).to_contain_text("satellite link")
+    go(page, "/library/drone_radio_links")
+    expect(page.locator("#k-drone_link_choice table")).to_be_visible()
+    go(page, "/library/drone_antijam")
+    expect(page.locator('a[href="/library/drone_navigation"]').first).to_be_visible()
+
+
+# --- Systems library > Industrial > Robotics (European view) (owner, 3 Nov 2026, worker Q) ---------------------------
+def test_industrial_shows_robotics_and_its_deep_dive_opens(page):
+    """Owner, 3 Nov 2026 ("something for robotics ... a Euro-centric view"): Industrial & energy opens with the
+    Robotics (European view) card; its deep dive opens and links back to the factory-automation diagrams."""
+    go(page, "/library#sys-industrial")
+    expect(page.locator("details#sys-industrial[open]")).to_have_count(1)
+    card = page.locator("#card-industrial-robotics")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Robotics (European view)")
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/robotics_europe")
+    expect(page.locator("main h1")).to_contain_text("Robotics in Europe")
+    with page.expect_navigation():
+        page.locator(".lib-see-also a", has_text="Factory automation").click()
+    expect(page.locator("#sub-factory-automation")).to_be_in_viewport()
+    go(page, "/blocks?system=industrial&sub=robotics#sub-robotics")
+    expect(page.locator("#sub-robotics")).to_be_in_viewport()

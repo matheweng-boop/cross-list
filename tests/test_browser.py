@@ -1673,3 +1673,17 @@ def test_powerpoint_templates_page_downloads_the_files(page):
     with page.expect_download() as dl:
         page.get_by_role("button", name="Download Harbor (.pptx)").click()
     assert dl.value.suggested_filename == "bizdev-animated-template.pptx"
+
+
+def test_shareable_row_downloads_an_animated_powerpoint(page):
+    """Shareable (owner, 6 Nov 2026): each report row offers "Animated .pptx" next to Preview; it downloads the
+    report as an animated PowerPoint."""
+    go(page, "/shareable")
+    btn = page.locator('.sh-row a[href="/shareable/animated/uwb"]')
+    expect(btn).to_have_text("Animated .pptx")
+    expect(btn).to_be_visible()
+    with page.expect_download() as dl:
+        btn.click()
+    assert dl.value.suggested_filename == "skyworks-qorvo-uwb-animated.pptx"
+    with open(dl.value.path(), "rb") as f:
+        assert f.read(2) == b"PK"

@@ -14,6 +14,7 @@ from app.db import get_session
 from app.services import logo, site_guard, tech_overview, uploads
 from app.services import pptx_template as pt
 from app.services import presentation_pptx as pp
+from app.services import share_animated as sa
 from app.services import share_doc as sd
 from app.services import share_explain as sx
 from app.services import share_pdf as spdf
@@ -306,6 +307,24 @@ def shareable_pptx(request: Request, session: Session = Depends(get_session)):
     if [h for t in pp.texts(data) for x in t for h in site_guard.hits(x)]:  # never expected: the pages pass it
         raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
     return _download(data, pp.MEDIA_TYPE, "skyworks-qorvo-" + "-".join(keys) + ".pptx")
+
+
+@router.get("/shareable/animated/{key}")
+def shareable_animated(key: str, request: Request, session: Session = Depends(get_session)):
+    """Animated presentation (owner, 6 Nov 2026): one report's slides (the same words as Create PowerPoint, with the
+    owner's edits) as a .pptx with the animated template's look: Morph from the agenda into each section, bullets
+    and diagrams that build (app/services/share_animated.py). Built on every click; the public-safe check applies."""
+    entry = sr.registry().get(key)
+    if entry is None:
+        raise HTTPException(404, "No such report.")
+    today = date.today()
+    found, _, _ = _versions(request, session, [key])
+    e, data, vals = found[0]
+    slides = e.slides(data, vals, today, sr.PATENT_NOTE)
+    deck = sa.build(slides, str(slides[0].get("head") or e.label) if slides else e.label, today)
+    if [h for t in sa.texts(deck) for h in site_guard.hits(t)]:  # never expected: the pages pass it
+        raise HTTPException(409, "This report cannot be downloaded: it failed the public-safe word check.")
+    return _download(deck, sa.MEDIA_TYPE, sa.filename(key))
 
 
 @router.get("/shareable/templates", response_class=HTMLResponse)

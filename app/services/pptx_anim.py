@@ -71,7 +71,7 @@ PRESETS = {  # kind -> (presetID, presetClass, presetSubtype by direction)
     "appear": (1, "entr", {"": 0}),
     "fly": (2, "entr", {"bottom": 4, "left": 8, "right": 2, "top": 1}),
     "fade": (10, "entr", {"": 0}),
-    "wipe": (22, "entr", {"left": 8, "bottom": 4, "top": 1}),
+    "wipe": (22, "entr", {"left": 8, "bottom": 4, "top": 1, "right": 2}),
     "wheel": (21, "entr", {"": 1}),
     "float": (42, "entr", {"": 0}),
     "spinner": (49, "entr", {"": 0}),
@@ -80,7 +80,7 @@ PRESETS = {  # kind -> (presetID, presetClass, presetSubtype by direction)
     "spin": (8, "emph", {"": 0}),
     "pulse": (26, "emph", {"": 0}),
 }
-WIPE_FILTER = {"left": "wipe(left)", "bottom": "wipe(down)", "top": "wipe(up)"}
+WIPE_FILTER = {"left": "wipe(left)", "bottom": "wipe(down)", "top": "wipe(up)", "right": "wipe(right)"}
 
 
 class Ids:

@@ -125,6 +125,8 @@ def test_new_areas_in_the_platform_format():
 
 
 def test_portfolio_totals_per_year():
+    text = patents.FILE.read_text()  # one block each (a repeated key would silently win in YAML)
+    assert text.count("\nportfolio:\n") == 1 and text.count("\nplatforms:\n") == 1
     pf = patents.portfolio()
     assert str(pf["searched"]) == "2026-11-06" and ".aanm." in pf["query_skyworks"]
     for co in ("skyworks", "qorvo"):

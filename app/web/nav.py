@@ -53,6 +53,8 @@ NAV = (
     # combined PDF and the presentation builder open from /shareable)
     ("shareable", "Shareable", (
         ("Reports", "/shareable", "Pick reports, preview them and save one PDF"),
+        # owner, 6 Nov 2026: animated PowerPoint templates (Morph, zoom, moving diagrams) to download and fill in
+        ("PowerPoint templates", "/shareable/templates", "Animated slides to fill in: Morph, zooms, moving diagrams"),
     )),
 )  # fmt: skip
 

@@ -593,7 +593,9 @@ def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
     """Owner, 2 Nov 2026: each gap row says why it could matter, with the applications linked; on a phone the sentence
     is a second line under the row and the table is not wider than the screen."""
     go(page, "/business/rf-coverage")
-    why = page.locator("table.rf-gaps td.rf-why").first
+    # owner, 3 Nov 2026: one row per function; its bands (each with its own sentence) open under it
+    page.locator("details.vg-subs > summary").first.click()
+    why = page.locator("table.vg-table td.rf-why").first
     expect(why).to_contain_text("Needed by")
     link = why.locator("a").first
     with page.expect_navigation():
@@ -605,7 +607,7 @@ def test_rf_coverage_why_it_could_matter(page, chromium, live_server):
     row = tab.locator("table.rf-gaps tbody tr").first
     first, sentence = row.locator("td").first.bounding_box(), row.locator("td.rf-why").bounding_box()
     assert sentence["y"] > first["y"] + 5 and sentence["x"] < 40  # its own line, from the left edge
-    box = tab.locator("table.rf-gaps").bounding_box()
+    box = tab.locator("table.rf-gaps").first.bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 391
     assert overflow(tab) <= 1
     ctx.close()
@@ -1610,3 +1612,44 @@ def test_industrial_shows_robotics_and_its_deep_dive_opens(page):
     expect(page.locator("#sub-factory-automation")).to_be_in_viewport()
     go(page, "/blocks?system=industrial&sub=robotics#sub-robotics")
     expect(page.locator("#sub-robotics")).to_be_in_viewport()
+
+
+def test_one_function_in_many_bands_is_one_row_that_opens(page):
+    """Owner, 3 Nov 2026 ("group all of these together"): Frequency multiplier is one card on Gaps & new technology and
+    one row in its detailed table and on RF coverage; a tap opens its bands; setting the group aside and restoring it
+    works from the table (the 390 px check follows)."""
+    go_built_on_first_use(page, "/business/opportunities?show=all")
+    card = page.locator('.vg-card[data-fn="frequency_multiplier"]')
+    expect(card).to_have_count(1)
+    expect(card).to_contain_text("6 bands · L–Ka (1–40 GHz)")
+    bands = card.locator(".vg-subs li")
+    expect(bands.first).to_be_hidden()
+    card.locator(".vg-subs summary").click()
+    expect(bands).to_have_count(6)
+    expect(bands.first).to_be_visible()
+
+    go(page, "/business/explorer/table")
+    head = page.locator('tr.vg-head[data-fn="frequency_multiplier"]')
+    expect(head).to_have_count(1)
+    subs = head.locator("xpath=following-sibling::tr[1]")
+    expect(subs.locator(".vg-table tbody tr").first).to_be_hidden()
+    subs.locator(".vg-subs > summary").click()
+    expect(subs.locator(".vg-table tbody tr")).to_have_count(6)
+    expect(subs.locator(".vg-table tbody tr").first).to_be_visible()
+    head.locator(".aside-form summary").click()
+    head.locator('.aside-form input[name="note"]').fill("not this year")
+    with page.expect_navigation():
+        head.locator(".aside-form button").click()
+    expect(page.locator('tr.vg-head[data-fn="frequency_multiplier"]')).to_have_count(0)
+    aside = page.locator("table.explorer tr", has_text="not this year")
+    expect(aside).to_contain_text("6 bands")
+    with page.expect_navigation():
+        aside.get_by_role("button", name="Restore all").click()
+    expect(page.locator('tr.vg-head[data-fn="frequency_multiplier"]')).to_have_count(1)
+
+    go(page, "/business/rf-coverage")
+    row = page.locator('.rf-gaps tr.vg-head[data-fn="rf_synthesizer"]')
+    expect(row).to_have_count(1)
+    more = row.locator("xpath=following-sibling::tr[1]")
+    more.locator("summary").click()
+    expect(more.locator(".vg-table tbody tr")).to_have_count(7)

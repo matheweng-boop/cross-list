@@ -54,7 +54,8 @@ def test_markets_chips_and_groups(client):
 
 def test_candidates_to_business_case(client):
     page = client.get("/business/explorer/table").text
-    fn = re.search(KEEP, page).group(1)
+    groups = set(re.findall(r'<tr class="vg-head[^"]*" data-fn="(\w+)"', page))  # bands are shortlisted one by one
+    fn = next(f for f in re.findall(KEEP, page) if f not in groups)
     form = {"origin": "explorer", "key": fn, "title": "Candidate one", "fn": fn, "back": "/business/explorer"}
     assert client.post("/business/shortlist", data=form, follow_redirects=False).status_code == 303
     client.post("/business/shortlist", data=form)  # pushing twice keeps one

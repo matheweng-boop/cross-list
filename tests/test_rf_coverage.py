@@ -292,10 +292,11 @@ def test_why_it_matters_competition_and_starting_point(monkeypatch):
 def test_gap_rows_carry_the_sentence(client):
     html = client.get("/business/rf-coverage").text
     table = html[html.index('class="striped small rf-gaps"') :]
-    table = table[: table.index("</table>")]
+    table = table[: table.index('class="small rf-method"')]
     assert "<th scope=\"col\">Why it could matter</th>" in table
     cells = re.findall(r'<td class="rf-why">(.*?)</td>', table, re.S)
-    assert cells and len(cells) == table.count("<tr>") - 1  # one per gap row
+    # one per gap row: plain rows and the band rows inside each function's group (owner, 3 Nov 2026)
+    assert cells and len(cells) == table.count("<tr>") - table.count("<thead><tr>")
     linked = 0
     for cell in cells:
         assert re.search(r"(demand is proven|hard to enter|demand unproven)\.", cell)

@@ -38,6 +38,7 @@ from app.services import (
     schedule,
     scoring,
     tam,
+    variants,
     vocab,
     walk,
 )
@@ -378,10 +379,12 @@ def gaps_new_tech(request: Request, co: str = "combined", show: str = "", wt: st
     rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
     priority.annotate(rows, w)
     decisions = {d.fn: d.status for d in session.scalars(select(OpportunityDecision))}
-    rows = [{**e, "decision": decisions.get(e["key"])} for e in rows]
+    rows = [{**e, "decision": variants.decision_of(e, decisions)[0]} for e in rows]
     open_rows = [e for e in rows if e["gap_type"] != "not_ours" and e["decision"] != "set_aside"]
-    new = priority.ranked([e for e in open_rows if (e["path"] or {}).get("path") == "new_capability"])
-    gaps = priority.ranked([e for e in open_rows if e not in new])
+    new_flat = [e for e in open_rows if (e["path"] or {}).get("path") == "new_capability"]
+    # one card per function: the bands of one function fold into one card, ranked by its best band (owner, 3 Nov 2026)
+    new = variants.group(priority.ranked(new_flat))
+    gaps = variants.group(priority.ranked([e for e in open_rows if e not in new_flat]))
     show = "all" if show == "all" else "focus"
     shortlisted = {i.key for i in session.scalars(select(ShortlistItem).where(ShortlistItem.origin == "explorer"))}
     pc = priority.config()
@@ -395,7 +398,7 @@ def gaps_new_tech(request: Request, co: str = "combined", show: str = "", wt: st
              prio_unmapped=priority.unmapped(open_rows), prio_sliders=not _is_guest(request),
              prio_owner=[(vocab.fn_label(fn), o) for fn, o in (pc["likeliness"].get("owner") or {}).items()],
              n_not_ours=sum(e["gap_type"] == "not_ours" for e in rows),
-             n_aside=sum(e["decision"] == "set_aside" for e in rows))  # fmt: skip
+             n_aside=variants.count(e for e in rows if e["decision"] == "set_aside"))  # fmt: skip
     return templates.TemplateResponse(request, "business/gaps_new.html", c)
 
 
@@ -423,23 +426,23 @@ def opportunity_explorer(
     rows = op.explorer(c["apps"], c["asp"], c["vol"], scoring.for_session(session, c["apps"], c["asp"], c["vol"]))
     priority.annotate(rows, w)
     decisions = {d.fn: d for d in session.scalars(select(OpportunityDecision))}
-    for e in rows:
-        d = decisions.get(e["key"])
-        e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at} if d else None
+    for e in rows:  # a band row without its own decision follows its function's (variants.decision_of)
+        d, up = variants.decision_of(e, decisions)
+        e["decision"] = {"status": d.status, "note": d.note, "date": d.updated_at, "inherited": up} if d else None
     sort = sort if sort in EXPLORER_SORTS else VIEW_TO_SORT.get(view, "priority")
     dir = dir if dir in ("asc", "desc") else EXPLORER_SORTS[sort][1]
-    c["type_counts"] = Counter(e["gap_type"] for e in rows)
+    c["type_counts"] = _fn_counts(rows, "gap_type")  # counts are functions: the bands of one count once
     if t in op.GAP_TYPE_LABEL:
         rows = [e for e in rows if e["gap_type"] == t]
     elif f != "chips":  # chips we do not make only on request
         rows = [e for e in rows if e["gap_type"] != "not_ours"]
     if f in EXPLORER_FILTERS:
         rows = [e for e in rows if EXPLORER_FILTERS[f][1](e)]
-    c["sugg_counts"] = Counter(e["suggestion"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
+    c["sugg_counts"] = _fn_counts([e for e in rows if (e["decision"] or {}).get("status") != "set_aside"], "suggestion")
     s = s if s in SUGGESTION_ORDER else ""
     if s:
         rows = [e for e in rows if e["suggestion"] == s]
-    c["group_counts"] = Counter(e["group"] for e in rows if (e["decision"] or {}).get("status") != "set_aside")
+    c["group_counts"] = _fn_counts([e for e in rows if (e["decision"] or {}).get("status") != "set_aside"], "group")
     g = g if g in c["group_counts"] else ""
     if g:
         rows = [e for e in rows if e["group"] == g]
@@ -452,12 +455,15 @@ def opportunity_explorer(
                  "crowd": len(crowds) == 1 and len(shown) > 1 and sort != "competition",
                  "tam": not any(e["tam_apps"] for e in shown) and sort != "tam"}  # fmt: skip
     order = [*op.GROUPS, "Other"]
+    # the bands of one function fold into one parent row where its first band sits in this order (owner, 3 Nov 2026)
     c.update(
         rows=shown,
-        groups=[(n, [e for e in shown if e["group"] == n]) for n in order if any(e["group"] == n for e in shown)],
+        n_items=variants.count(shown),
+        groups=[(n, variants.group(e for e in shown if e["group"] == n)) for n in order
+                if any(e["group"] == n for e in shown)],  # fmt: skip
         g=g,
         s=s,
-        aside=[e for e in rows if (e["decision"] or {}).get("status") == "set_aside"],
+        aside=variants.group(e for e in rows if (e["decision"] or {}).get("status") == "set_aside"),
         sort=sort,
         dir=dir,
         sorts=EXPLORER_SORTS,
@@ -472,6 +478,11 @@ def opportunity_explorer(
         wts={priority.PARAMS[k]: v for k, v in priority.percent(w).items()} if custom else {},
     )
     return templates.TemplateResponse(request, "business/explorer.html", c)
+
+
+def _fn_counts(rows: list[dict], field: str) -> Counter:
+    """How many functions per value of a field: the bands of one function count once."""
+    return Counter(v for _, v in {(e["fn"], e[field]) for e in rows})
 
 
 def _back(request: Request, form, default: str) -> str:
@@ -1104,7 +1115,10 @@ def rf_coverage_page(request: Request, fn: str = "", band: str = "", power: str 
     gaps = rf.gaps(rs)
     for g in gaps:  # "Why it could matter" (owner, 2 Nov 2026)
         g["why"] = rf.why_it_matters(g, rs)
-    ctx = {"rows": rs, "gaps": gaps, "cfg": rf.config(), "apps": apps, "unknown": unknown, "n_rf": n_rf,
+        g.update(band_id=g["band"]["id"], power_label=g["power_label"] or None, reach=g["need"])
+    # gap_groups: one row per function, its bands below (owner, 3 Nov 2026)
+    ctx = {"rows": rs, "gaps": gaps, "gap_groups": variants.group(gaps), "cfg": rf.config(), "apps": apps,
+           "unknown": unknown, "n_rf": n_rf,
            "n_parts": len(rf.parts()), "no_freq": sum(1 for p in rf.parts() if not p["bands"]),
            "fn": fn, "band": band, "power": power,
            "slot": rf.slot_parts(fn, band, power or None) if fn and band else None,

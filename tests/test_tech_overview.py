@@ -58,7 +58,8 @@ def test_menu_has_a_shareable_section_after_engineering_knowledge():
     keys = [s[0] for s in nav.NAV]
     assert keys[-2:] == ["knowledge", "shareable"]
     items = next(s for s in nav.NAV if s[0] == "shareable")[2]
-    assert [i[1] for i in items] == ["/shareable"]  # owner, 25 Oct 2026: one page, the reports open from there
+    # owner, 25 Oct 2026: one page, the reports open from there; 6 Nov 2026: plus the PowerPoint templates
+    assert [i[1] for i in items] == ["/shareable", "/shareable/templates"]
     assert nav.HOMES["shareable"] == "/shareable"
     assert nav.place(URL) == ("shareable", "/shareable") and nav.place("/shareable") == ("shareable", "/shareable")
     assert nav.page_title(URL) == "Technology overview – Shareable – BizDev"

@@ -576,6 +576,9 @@ def method(request: Request, co: str = "combined", session: Session = Depends(ge
              path_label=op.PATH_LABEL, cfg=scoring.config(), tam_n=tam.counts(session)["n"],
              cross={"categories": list(engine.CATEGORY_LABELS.values()), "max_dev": engine.DEFAULT_MAX_DEVIATIONS,
                     "weights": engine.PRIORITY_WEIGHT, "unknown": engine.UNKNOWN_SEVERITY})  # fmt: skip
+    # the patent barrier and the counts behind it (owner, 6 Nov 2026)
+    c.update(pat_rows=priority.patent_table(), pat_cfg=priority.config()["patents"], pat_portfolio=patents.portfolio(),
+             pat_comp=patents.competitors())  # fmt: skip
     return templates.TemplateResponse(request, "business/method.html", c)
 
 
@@ -966,7 +969,10 @@ def evidence(request: Request, fn: str, co: str = "combined", session: Session =
                         if g["fn"] == fn), None),  # fmt: skip
              rev=_rev(session), path_label=op.PATH_LABEL, prox_label=op.PROXIMITY_LABEL)  # fmt: skip
     c["verdicts"] = quality.VERDICTS
-    c["pat_platform"], c["pat_bonus"] = patents.platform_for(fn), priority.patent_bonus(fn)
+    c["pat_platform"] = patents.platform_for(fn)
+    c["pat_effect"] = priority.patent_effect(fn, (row or {}).get("distance"))  # patent barrier (owner, 6 Nov 2026)
+    c["pat_portfolio"], c["pat_comp"] = patents.portfolio(), patents.competition_for(fn)
+    c["pat_rivals"] = patents.rivals(c["pat_comp"])
     c["walk_parts"] = walk.competitor_parts(session, fn)
     c["library"] = library.for_function(fn)
     from app.services import qspice  # "Seen in practice (QSPICE forum)" (owner, 27 Oct 2026)

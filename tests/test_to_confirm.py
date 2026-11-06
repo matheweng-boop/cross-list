@@ -182,6 +182,7 @@ def test_one_evidence_card_per_function_and_no_patent_items():
     # no patent item is put to the owner: none of the old patent keys, no patent change while nothing changed
     keys = {r["key"] for r in digest.items()}
     assert not any(k.startswith(("evidence:patents/", "evidence:platforms/", "evidence:automotive/")) for k in keys)
+    # owner, 6 Nov 2026: depth changes from the method fix of that day (5G NR, isolation) are not real changes
     assert not any(r["type"] == "patent-change" for r in digest.items())
     # patents are shown read-only on the card
     ldo = digest.by_key()["evidence:pol_ldo"]

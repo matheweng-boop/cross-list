@@ -7,7 +7,8 @@
 #
 # T, technology relation: how close the function is to our RF and power strengths (the tables below).
 # L, likeliness: how likely we can build it and win with it (feasibility from the path to product, a platform of ours
-#    that already serves it, US patent depth as a small bonus, the owner's review answers).
+#    that already serves it, the owner's review answers).
+# Plus a signed patent adjustment of at most ± 6 points from the patent barrier (end of this file; owner, 6 Nov 2026).
 # D, diagrams: how many diagrams of the Block diagram library need it, on a log scale: D = log(1 + n) / log(1 + n_max),
 #    so 40 diagrams is not 10 × better than 4.
 #
@@ -118,15 +119,7 @@ likeliness:
   not_pursue: 0.1                  # path to product "not ours to build" (Markets only; Gaps & new technology leaves it out)
   # a current public platform of ours (data/business/capabilities.yaml, processes and design IP) already serves it
   platform_bonus: 0.1
-  # owner, 25 Oct 2026: US patent depth of Skyworks / Qorvo (data/business/evidence/patents.yaml per function, else the
-  # platform entry in patents_platforms.yaml that covers the function); added after the platform bonus, L capped at 1.0;
-  # not added to the owner's review answers. Indicative public searches, not legal advice.
-  # Owner, 26 Oct 2026 ("I can't check patents"): patents are machine-checked, not reviewed by the owner, so they stay
-  # background with a small, labelled weight ("indicative, not reviewed"). patent_bonus_cap caps any bonus at half the
-  # platform bonus (the smallest other part of the score): at most 0.05 of L = 1.5 points of 100 at the default
-  # weights (5 points even with all weight on likeliness), less than any step between the feasibility groups (0.3).
-  patent_bonus: {strong: 0.05, some: 0.025, little: 0.0, none_found: 0.0}
-  patent_bonus_cap: 0.05
+  # (owner, 6 Nov 2026: the depth-based patent bonus to L that sat here was replaced by the patent barrier below)
   # the owner's review answers; the value replaces the computed one
   owner:
     temperature_sensor: {value: 0.3, note: "Owner, 22 Oct 2026: ASP most likely too low; the focus is RF."}
@@ -143,3 +136,49 @@ diagrams:
   # Markets & customers: n = the applications in the markets chosen there (all markets: the same count), and n_max the
   # most-needed function in its three tables, so choosing markets reorders by those markets' needs.
   background_weight: 1.0
+
+# Patent barrier (owner, 6 Nov 2026): "some metric between similarity to our technology, distance to our technology,
+# and difficulty in recreating that technology". Per gap / new-technology function, from the technology platform that
+# covers it (patents_platforms.yaml functions) and the competitor counts of data/business/evidence/patents_competitors.yaml
+# (US families first filed in the last 5 years). Machine-checked keyword counts: est, not legal advice, not reviewed.
+#
+#   similarity  S = ours / (ours + strongest competitor), 0.5 = parity. High: we patent in the same field ourselves,
+#               so less blocking and a cross-licensing position; it lowers the barrier.
+#   difficulty  D = density × log(1 + leader) / log(1 + density_full) + crowding × (competitors at crowd_ratio of the
+#               leader or more, beyond the leader) / (competitors − 1) + recency × min(1, share of their families first
+#               filed in the last 3 years / recency_full) + process_gap where the function needs a process we do not
+#               hold (capabilities.yaml: not held / divested / closing), capped at 1. It raises the barrier.
+#   barrier     = 100 × (similarity_weight × (1 − S) + difficulty_weight × D), 0–100.
+#   distance    the portfolio distance 0–4 already lowers likeliness (feasibility) and is the Opportunity score's
+#               distance factor, so it is NOT added to the barrier again: it only scales the patent effect (the barrier
+#               matters more when we are far), see distance_scale.
+#   adjustment  = −(barrier − 50) / 50 × points × distance_scale, capped at ± cap points of the 0–100 priority:
+#               barrier 50 → 0, a low barrier a small bonus, a high one a penalty. It replaced the fixed depth bonus.
+patents:
+  similarity_weight: 0.4
+  difficulty_weight: 0.6
+  difficulty:
+    density: 0.5           # the strongest competitor's 5-year families
+    density_full: 300      # ... this many or more count fully (log scale)
+    crowding: 0.25         # how many competitors are near the leader
+    crowd_ratio: 0.5       # "near" = at least half the leader's count
+    recency: 0.25          # a live thicket vs ageing patents
+    recency_full: 0.6      # 3 of 5 years: even filing; recent years are under-counted (18-month publication lag)
+    process_gap: 0.15      # est: added where the function needs a process we do not hold
+  points: 6                # barrier 0 or 100 at distance 4: ± 6 points
+  cap: 6                   # never more than ± 6 points of 100
+  distance_scale: {0: 0.5, 1: 0.6, 2: 0.75, 3: 0.9, 4: 1.0, none: 0.75}
+  process_gaps: {}         # function: "process" (est), on top of those read from capabilities.yaml
+  words:                   # the plain-words line on the cards
+    similar_from: 0.4      # S at or above: "similar to our ... work"
+    partly_from: 0.15      # S at or above: "partly similar"; below: "little of ours"
+    recent_from: 0.3       # their last-3-year share at or above: "recent filings"
+    hard_from: 0.6         # D at or above: "hard to recreate"
+    moderate_from: 0.35    # D at or above: "moderate"; below: "easy"
+    distance:
+      0: near our portfolio (sell or document)
+      1: near our portfolio (a variant)
+      2: near our process (a package or module)
+      3: on our process (a new chip)
+      4: far from our process (new technology)
+      none: distance not assessed

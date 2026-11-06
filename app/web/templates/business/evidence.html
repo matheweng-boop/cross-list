@@ -64,17 +64,22 @@
       {% if t.sources %}<p class="small muted">Sources: {{ t.sources|join('; ') }}</p>{% endif %}{% else %}<p class="muted">no trend data</p>{% endif %}{{ checked(t) }}</article>
 </div>
 
-<h2>Background evidence <span class="small muted">· shown for judgement; only patents add a small bonus to the priority score</span></h2>
+<h2>Background evidence <span class="small muted">· shown for judgement; only patents move the priority score (at most ± 6 points)</span></h2>
 <div class="bo-ev-grid">
   {% set pt = ev.patents %}{% set pl = patent_line(fn) %}
-  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">small bonus in the priority score</span></span><span class="rv"><span class="rv-st rv-auto" title="Patent searches are re-run by the quarterly check, not reviewed by you (owner, 26 Oct 2026)">{{ checked_auto(pl.date if pl else none) }}</span></span></header>
+  <article class="bo-ev"><header><span>Patents <span class="bo-notscore">± a few points in the priority score</span></span><span class="rv"><span class="rv-st rv-auto" title="Patent searches are re-run by the quarterly check, not reviewed by you (owner, 26 Oct 2026)">{{ checked_auto(pl.date if pl else none) }}</span></span></header>
     <p class="small muted pt-auto">Indicative, not reviewed: machine-checked against USPTO records, re-run every quarter. You only see a patent item in To confirm when its depth changes or a check fails.</p>
     {% if pl and pl.changed %}<p class="small"><b>Changed {{ pl.changed.date }}:</b> {{ (pl.changed.old_depth or '')|replace('_', ' ') }} → {{ (pl.changed.new_depth or '')|replace('_', ' ') }}{{ ' · ' ~ pl.changed.check if pl.changed.check }}</p>{% endif %}
     {% if pt %}<p><b>{{ pt.depth|replace('_', ' ')|capitalize }}</b>{% if pt.count %} · about {{ pt.count }} results{% endif %}</p><p>{{ pt.note }}</p>
       {% if pt.examples %}<ul>{% for x in pt.examples %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
       {% if pt.query %}<p class="small muted">Re-run: <code>{{ pt.query }}</code></p>{% endif %}{% elif not pat_platform %}<p class="muted">not researched yet</p>{% endif %}{{ checked(pt) }}
     {% if pat_platform %}{% include "business/_patent_platform.html" %}{% endif %}
-    <p class="small">Priority score: {% if pat_bonus.bonus %}+ {{ '%g'|format(pat_bonus.bonus) }} to likeliness for {{ pat_bonus.depth }} patent depth{{ ' (from the ' ~ pat_bonus.label ~ ' platform)' if pat_bonus.source == 'platform' }}, up to 1.0 (indicative, not reviewed){% else %}no patent bonus{% endif %}.</p></article>
+    {% set pe = pat_effect %}<div class="pt-barrier small">{% if pe %}<p><b>Patent barrier {{ pe.barrier }}</b> → priority {{ '%+g'|format(pe.points) }} points (est)</p>
+      <ul class="pt-parts"><li><b>Similarity to our technology:</b> {{ pe.words.similarity }}</li>
+        <li><b>Distance to our technology:</b> {{ pe.words.distance }} (scales the effect × {{ pe.scale }}; distance itself is in likeliness)</li>
+        <li><b>Difficulty of recreating it:</b> {{ pe.words.difficulty }}</li></ul>
+      <p>{{ pe.line }}.</p><p class="muted">{{ pe.note }}; searched {{ pe.date }}. <a href="/business/method#patents">How the barrier works</a></p>
+      {% else %}<p>Priority score: no patent adjustment (no competitor counts for this function's technology yet; patents are indicative, not reviewed).</p>{% endif %}</div></article>
   {% set fo = ev.foundry %}
   <article class="bo-ev"><header><span>Foundry route <span class="bo-notscore">not in score</span></span>{{ review('foundry', fn, rev, fo.confidence if fo else none, fo.check if fo else none) }}</header>
     {% if fo %}<p><b>{{ fo.foundry_route }}</b> · {{ fo.typical_process }}</p>{% if fo.foundries %}<p>{{ fo.foundries|join(', ') }}</p>{% endif %}

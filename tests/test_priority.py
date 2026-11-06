@@ -28,11 +28,12 @@ def test_formula_and_rf_above_ldo_and_mcu():
     pa, ldo, mcu = (e["priority"] for e in rows)
     w = pr.default_weights()
     assert w == pytest.approx({"technology": 0.45, "likeliness": 0.30, "diagrams": 0.25})
-    # power amplifier: RF core 1.0; feasibility 2 -> 0.6, + 0.1 for a platform of ours (GaAs HBT), + 0.05 for strong US
-    # patents (GaAs HBT platform, owner 25 Oct 2026; capped at 0.05, owner 26 Oct 2026); 12 of 128 diagrams
+    # power amplifier: RF core 1.0; feasibility 2 -> 0.6, + 0.1 for a platform of ours (GaAs HBT); 12 of 128 diagrams;
+    # plus the signed patent adjustment of its GaAs HBT platform (owner, 6 Nov 2026; at most ± 6 points)
     d = math.log(13) / math.log(129)
-    assert (pa["T"], pa["L"], pa["D"]) == (1.0, 0.75, pytest.approx(d, abs=1e-3))
-    assert pa["score"] == pytest.approx(100 * (0.45 * 1.0 + 0.30 * 0.75 + 0.25 * d), abs=0.05)
+    assert (pa["T"], pa["L"], pa["D"]) == (1.0, 0.7, pytest.approx(d, abs=1e-3))
+    assert pa["patent"]["platform"] == "gaas_hbt" and abs(pa["adj"]) <= 6
+    assert pa["score"] == pytest.approx(100 * (0.45 * 1.0 + 0.30 * 0.7 + 0.25 * d) + pa["adj"], abs=0.05)
     # the LDO is in the most diagrams and likely, yet general power: 100 × (0.45 × 0.4 + 0.30 × 1 + 0.25 × 1) = 73
     assert (ldo["T"], ldo["L"], ldo["D"]) == (0.4, 1.0, 1.0) and ldo["score"] == pytest.approx(73.0)
     assert mcu["T"] == 0.2 and mcu["L"] == 0.3 and mcu["outside"] and not mcu["focus"]
@@ -40,8 +41,9 @@ def test_formula_and_rf_above_ldo_and_mcu():
     # with the same diagrams and likeliness, the technology relation decides: RF, then LDO, then MCU
     same = pr.annotate([row("lna", 40, 1), row("pol_ldo", 40, 1), row("mcu", 40, 1)])
     assert [e["fn"] for e in pr.ranked(same)] == ["lna", "pol_ldo", "mcu"]
-    assert pr.chips(same[0]) == ["RF core", "40 diagrams", "likely", "patents: strong"]
-    assert pr.chips(same[2]) == ["Outside our technology", "40 diagrams", "likely"]  # no chip without a bonus
+    lna = same[0]["priority"]["patent"]
+    assert pr.chips(same[0]) == ["RF core", "40 diagrams", "likely", f"patents: barrier {lna['barrier']}"]
+    assert pr.chips(same[2]) == ["Outside our technology", "40 diagrams", "likely"]  # no chip without patent data
     assert pr.example(same[1]) == "100 × (0.45 × 0.40 + 0.30 × 1.00 + 0.25 × 1.00) = 73.0"
 
 

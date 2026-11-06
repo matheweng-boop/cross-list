@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>PowerPoint templates</h1>
+<p class="subtitle">An animated 16:9 template to fill in: Morph zooms, slides that build, a flow chart that moves, a timeline that grows. No logos; colours follow the theme.</p>
+{# owner, 6 Nov 2026: made by scripts/build_pptx_template.py; the four files differ only in their theme colours #}
+<section class="pt-files" aria-label="Downloads">
+  {% for key, name, line, href, chips in files %}
+  <article class="pt-file" id="pt-{{ key }}">
+    <div class="pt-chips" aria-hidden="true">{% for c in chips %}<span style="background: {{ c }}"></span>{% endfor %}</div>
+    <h2>{{ name }}{% if key == 'default' %} <span class="muted small">main template</span>{% endif %}</h2>
+    <p class="small">{{ line }}</p>
+    <a role="button" class="pt-dl{{ ' outline' if key != 'default' }}" href="{{ href }}" download>Download {{ name }} (.pptx)</a>
+  </article>
+  {% endfor %}
+</section>
+
+<h2>How to use it</h2>
+<ol class="pt-how">
+  <li>Open it in PowerPoint, click any “Your …” text and type. Delete the slides you do not need.</li>
+  <li>Morph slides come in pairs or runs: duplicate them together and keep the names that start with <b>!!</b> (Home › Arrange › Selection Pane).</li>
+  <li>Change all colours at once: Design › Variants › Colors (Windows and Mac). On an iPad, phone or the web, download a colour version above instead.</li>
+  <li>Pictures: right-click › Change Picture on both zoom slides. Charts: right-click › Edit Data.</li>
+  <li>Play it as a slide show to see the movement; the last two slides repeat these tips.</li>
+  <li>Each report under <a href="/shareable">Reports</a> also has <b>Animated .pptx</b>: the report itself, laid out with this look.</li>
+</ol>
+
+<h2>What is inside</h2>
+<div class="pt-wrap">
+<table class="pt-slides">
+  <thead><tr><th>Slides</th><th>What it is</th><th>How it moves</th></tr></thead>
+  <tbody>
+  {% for n, what, how in slides %}
+  <tr><td>{{ n }}</td><td>{{ what }}</td><td>{{ how }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="small muted">Morph works in PowerPoint 2019 and later, Microsoft 365 on Windows and Mac, the iPad and the web; older versions show a fade instead.</p>
+{% endblock %}

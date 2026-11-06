@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 import pytest
 
 from app.services import patents
-from app.services import priority as pr
 from app.web import nav
 
 try:  # the browser fixture (a tab on the live app, checked at 390 px afterwards); skipped without Playwright
@@ -19,6 +18,10 @@ except pytest.skip.Exception:
 PLATFORMS = {"baw", "saw", "gaas_hbt", "gaas_phemt", "gan", "soi", "sige", "modules", "beamformers", "isolation",
              "timing", "broadcast", "power", "motor", "uwb", "ble", "envelope_tracking", "antenna_tuning", "lna",
              "wifi_filters", "nr_5g", "gnss"}  # fmt: skip
+# the areas added on 6 Nov 2026 (owner's item 2)
+NEW = {"pcie_timing", "isolated_sensing", "desat_gate_drivers", "ntn", "gnss_antijam", "motor_hvac", "robotics",
+       "efuse"}  # fmt: skip
+PLATFORMS |= NEW
 AUTO = {"auto_uwb", "auto_isolation", "auto_timing", "auto_fem", "auto_gnss", "auto_broadcast", "auto_power_motor"}
 
 
@@ -47,7 +50,7 @@ def test_yaml_validates():
     for k, e in patents.platforms().items():
         assert e["depth"] in patents.DEPTHS and e["leader"] in ("skyworks", "qorvo", "both"), k
         assert all(len(e["trend"][co]) == 3 and sum(e["trend"][co]) == e[co] for co in patents.COMPANIES), k
-        assert 1 <= sum(len(e["examples"][co]) for co in patents.COMPANIES), k
+        assert e["count"] == 0 or 1 <= sum(len(e["examples"][co]) for co in patents.COMPANIES), k
         assert e["examples"]["skyworks"][:3] == e["examples"]["skyworks"] and len(e["examples"]["qorvo"]) <= 3, k
     for e in patents.automotive().values():
         assert e["platform"] in PLATFORMS and "vehicle" in e["query"] and e["broad_count"] >= e["count"]
@@ -84,58 +87,6 @@ def test_depth_per_function_then_platform():
     assert patents.depth("frequency_multiplier") is None and patents.depth("no_such_function") is None
 
 
-def _row(fn, feas):
-    return {"fn": fn, "key": fn, "label": fn, "reach": 4, "background": 0, "feasibility": feas, "distance": None,
-            "gap_type": "true_gap"}  # fmt: skip
-
-
-def test_a_large_bonus_is_capped(monkeypatch):
-    """Owner, 26 Oct 2026: patents are machine-checked, so the bonus stays small: whatever the table says, it never
-    exceeds patent_bonus_cap (half the platform bonus), and L never exceeds 1.0."""
-    cfg = pr.config()["likeliness"]
-    assert cfg["patent_bonus_cap"] == 0.05 and cfg["patent_bonus_cap"] <= cfg["platform_bonus"] / 2
-    monkeypatch.setitem(cfg["patent_bonus"], "strong", 0.5)
-    li = pr.likeliness(_row("power_amplifier", 2))  # 0.6 + 0.1 (GaAs HBT platform of ours) + 0.05 (capped)
-    assert li["value"] == pytest.approx(0.75) and li["patent"]["bonus"] == 0.05
-    assert "+ 0.05 for US patents (strong, GaAs HBT power amplifiers platform; indicative, not reviewed)" in li["basis"]
-    monkeypatch.setitem(cfg, "patent_bonus_cap", 0.5)  # a raised cap still stops L at 1.0
-    li = pr.likeliness(_row("power_amplifier", 2))
-    assert li["value"] == 1.0 and "(capped at 1.0)" in li["basis"]
-
-
-def test_the_patent_bonus_never_decides_more_than_a_few_points():
-    """At the default weights the patent bonus moves a priority by at most 1.5 of 100 points, less than any other
-    part of the score can (platform bonus 3 points, a feasibility step 9 points)."""
-    cfg, w = pr.config()["likeliness"], pr.default_weights()
-    assert max(cfg["patent_bonus"].values()) <= cfg["patent_bonus_cap"]
-    assert 100 * w["likeliness"] * cfg["patent_bonus_cap"] <= 1.5 + 1e-9
-    assert cfg["patent_bonus_cap"] < cfg["platform_bonus"]
-    steps = sorted(f["value"] for f in cfg["feasibility"].values())
-    assert cfg["patent_bonus_cap"] < min(b - a for a, b in zip(steps, steps[1:], strict=False))
-
-
-def test_patent_bonus_in_likeliness_capped_and_not_on_owner_answers():
-    bonus = pr.config()["likeliness"]["patent_bonus"]
-    assert bonus == {"strong": 0.05, "some": 0.025, "little": 0.0, "none_found": 0.0}
-    assert pr.patent_bonus("pol_ldo")["bonus"] == 0.05  # strong
-    assert pr.patent_bonus("adc")["bonus"] == 0.025  # some
-    assert pr.patent_bonus("supervisor")["bonus"] == 0.0  # little
-    assert pr.patent_bonus("frequency_multiplier") == {"depth": None, "bonus": 0.0, "source": "", "label": ""}
-    adc = pr.likeliness(_row("adc", 2))  # 0.6 (+ 0.1 for a platform of ours) + 0.025
-    plat = pr.config()["likeliness"]["platform_bonus"] if pr._platforms().get("adc") else 0
-    assert adc["value"] == pytest.approx(0.6 + plat + 0.025)
-    assert "+ 0.025 for US patents (some; indicative, not reviewed)" in adc["basis"]
-    ldo = pr.likeliness(_row("pol_ldo", 1))  # 1.0 + 0.05 stays 1.0
-    assert ldo["value"] == 1.0 and "L already 1.0" in ldo["basis"]
-    flt = pr.likeliness(_row("filter_saw_baw", 3))  # 0.3 + 0.1 (platform of ours) + 0.05 (BAW platform, strong)
-    assert flt["value"] == pytest.approx(0.45) and "BAW filters platform" in flt["basis"]
-    temp = pr.likeliness(_row("temperature_sensor", 1))  # the owner's answer replaces the value: no bonus
-    assert temp["value"] == 0.3 and temp["patent"]["bonus"] == 0.0
-    for fn in ("pol_ldo", "adc", "filter_saw_baw", "power_amplifier", "circulator_isolator", "rf_synthesizer"):
-        for feas in (1, 2, 3, None):
-            assert 0 <= pr.likeliness(_row(fn, feas))["value"] <= 1.0
-
-
 def test_no_patent_landscape_page(client):
     assert client.get("/business/competitors/patents").status_code == 404
     assert client.get("/business/patent-landscape").status_code == 404
@@ -143,14 +94,17 @@ def test_no_patent_landscape_page(client):
     assert not any("patent" in x.lower() for x in labels)
 
 
-def test_evidence_page_shows_the_platform_and_bonus(client):
+def test_evidence_page_shows_the_platform_and_barrier(client):
     r = client.get("/business/evidence/uwb_soc")
     assert r.status_code == 200
-    assert "small bonus in the priority score" in r.text and "Platform: UWB" in r.text
+    assert "± a few points in the priority score" in r.text and "Platform: UWB" in r.text
     assert "image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/" in r.text
-    assert "Priority score: + 0.025 to likeliness" in r.text or "Priority score: + 0.05 to likeliness" in r.text
-    r = client.get("/business/evidence/pol_ldo")  # no platform: only its own entry and the bonus line
-    assert "Platform:" not in r.text and "Priority score: + 0.05 to likeliness for strong patent depth" in r.text
+    assert "Patent barrier " in r.text and "Similarity to our technology:" in r.text
+    assert "Distance to our technology:" in r.text and "Difficulty of recreating it:" in r.text
+    assert "Patents (US, 5 years): ours " in r.text and "not legal advice" in r.text
+    assert "Competitors, last 5 years" in r.text and "Whole US portfolio" in r.text
+    r = client.get("/business/evidence/pol_ldo")  # no platform: only its own entry, no adjustment
+    assert "Platform:" not in r.text and "no patent adjustment" in r.text
     assert "indicative, not reviewed" in r.text
 
 
@@ -173,12 +127,13 @@ def test_patents_are_checked_automatically_not_reviewed(client):
     assert "US patents:" in caps and "checked automatically, 25 Oct 2026" in caps and "indicative, not reviewed" in caps
 
 
-def test_how_the_score_works_lists_the_patent_bonus(client):
+def test_how_the_score_works_explains_the_patent_barrier(client):
     r = client.get("/business/opportunities?show=all")
     assert r.status_code == 200
-    assert "US patents of Skyworks / Qorvo: strong / some depth" in r.text
-    assert "patents: strong" in r.text or "patents: some" in r.text
-    assert "for US patents" in r.text  # a worked example or a tooltip writes the bonus out
+    assert 'id="how-patents"' in r.text and "Similarity to our technology" in r.text
+    assert "Difficulty of recreating it" in r.text and "Distance to our technology" in r.text
+    assert "patents: barrier " in r.text and "Patents (US, 5 years): ours " in r.text
+    assert "(patents) = " in r.text  # the worked example writes the adjustment out
 
 
 @pytest.mark.browser
@@ -189,7 +144,7 @@ def test_browser_evidence_patent_box_fits_a_phone(page):  # noqa: F811
     from tests.test_browser import go
 
     go(page, "/business/evidence/filter_saw_baw")
-    box = page.locator("article.bo-ev", has_text="small bonus in the priority score")
+    box = page.locator("article.bo-ev", has_text="± a few points in the priority score")
     assert box.locator(".pt-plat").is_visible() and box.locator(".pt-bar").count() == 2
     assert box.get_by_text("Platform: BAW filters").is_visible()
 
@@ -197,4 +152,4 @@ def test_browser_evidence_patent_box_fits_a_phone(page):  # noqa: F811
 def test_maintenance_says_patents_feed_the_priority_score():
     from app.services import maintenance
 
-    assert "likeliness" in maintenance.AFFECTS["patents"] and "not scored" not in maintenance.AFFECTS["patents"]
+    assert "patent barrier" in maintenance.AFFECTS["patents"] and "not scored" not in maintenance.AFFECTS["patents"]

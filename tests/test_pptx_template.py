@@ -12,6 +12,7 @@ import pytest
 from lxml import etree
 from pptx import Presentation
 
+from app.services import pptx_anim as pa
 from app.services import pptx_template as pt
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,20 +38,20 @@ def test_committed_files_are_a_fresh_build(built):
 
 def test_build_is_deterministic(built):
     again = bt.build("default")
-    assert bt.xml_parts(again) == bt.xml_parts(built["default"])
+    assert pa.xml_parts(again) == pa.xml_parts(built["default"])
     assert again == built["default"]
 
 
 def test_every_file_passes_the_checks(built):
     for key, blob in built.items():
-        assert bt.check(blob) == [], key
+        assert pa.check(blob) == [], key
 
 
 def test_opens_in_python_pptx_as_16_9(built):
     prs = Presentation(io.BytesIO(built["default"]))
     assert (prs.slide_width, prs.slide_height) == (12192000, 6858000)
-    assert len(prs.slides) == 29
-    assert int(pt.SLIDES[-1][0].split("–")[-1]) == 29  # the page's slide list ends at the last slide
+    assert len(prs.slides) == 43
+    assert int(pt.SLIDES[-1][0].split("–")[-1]) == 43  # the page's slide list ends at the last slide
     texts = " ".join(sh.text_frame.text for s in prs.slides for sh in s.shapes if sh.has_text_frame)
     for placeholder in ("Your presentation title", "Point one", "Step one", "Milestone one", "Your caption"):
         assert placeholder in texts
@@ -61,7 +62,7 @@ def test_opens_in_python_pptx_as_16_9(built):
 def test_theme_colours_only_on_slides_and_charts(built):
     z = zipfile.ZipFile(io.BytesIO(built["default"]))
     parts = [n for n in z.namelist() if re.match(r"ppt/(slides/slide\d+|charts/chart\d+)\.xml$", n)]
-    assert len(parts) == 30
+    assert len(parts) == 44
     for n in parts:
         x = z.read(n).decode()
         assert not re.search(r"<a:(srgbClr|sysClr|scrgbClr|hslClr|prstClr)\b", x), n
@@ -69,16 +70,16 @@ def test_theme_colours_only_on_slides_and_charts(built):
 
 
 def test_variants_differ_only_in_theme_colours(built):
-    base = bt.xml_parts(built["default"])
+    base = pa.xml_parts(built["default"])
     for key in ("ocean", "graphite", "sunrise"):
-        other = bt.xml_parts(built[key])
+        other = pa.xml_parts(built[key])
         assert set(other) == set(base)
         diff = {n for n in base if base[n] != other[n]}
         # the theme, and the colours slide that names the set
-        assert diff == {"ppt/theme/theme1.xml", "ppt/slides/slide29.xml"}, (key, diff)
+        assert diff == {"ppt/theme/theme1.xml", "ppt/slides/slide43.xml"}, (key, diff)
         theme = other["ppt/theme/theme1.xml"].decode()
         name, _, hexes = pt.PALETTES[key]
-        assert f'clrScheme name="BizDev {name}"' in theme
+        assert f'clrScheme name="{name}"' in theme
         assert hexes.split()[4] in theme  # accent1
 
 
@@ -117,18 +118,18 @@ def test_presets_used(built):
     for el in _slides(built["default"]):
         used |= {(c.get("presetClass"), c.get("presetID")) for c in el.iter(f"{P}cTn") if c.get("presetClass")}
     want = {("entr", "10"), ("entr", "2"), ("entr", "22"), ("entr", "42"), ("entr", "49"), ("entr", "53"),
-            ("emph", "6"), ("emph", "8"), ("emph", "26")}  # fmt: skip
+            ("entr", "21"), ("emph", "6"), ("emph", "8"), ("emph", "26")}  # fmt: skip
     assert want <= used
 
 
 MORPH_RUNS = [  # (first slide, last slide): one Morph run whose slides keep the same "!!" names
-    (7, 8), (10, 13), (15, 17), (19, 22), (23, 24)]
+    (7, 8), (10, 13), (15, 17), (19, 22), (23, 24), (28, 29), (30, 31), (35, 37)]
 
 
 def test_morph_slides_and_names(built):
     slides = _slides(built["default"])
     morph = [i for i, el in enumerate(slides, 1) if el.find(f".//{P159}morph") is not None]
-    assert morph == [3, 4, 5, 8, 11, 12, 13, 16, 17, 20, 21, 22, 24]
+    assert morph == [3, 4, 5, 8, 11, 12, 13, 16, 17, 20, 21, 22, 24, 29, 31, 36, 37]
     for i in morph:  # Morph inside mc:AlternateContent, with a Fade fallback
         alt = slides[i - 1].find("{http://schemas.openxmlformats.org/markup-compatibility/2006}AlternateContent")
         assert alt is not None and alt[0].get("Requires") == "p159"
@@ -155,7 +156,7 @@ def test_check_catches_problems(built):
             if n == "ppt/slides/slide1.xml":
                 data = data.replace(b'name="Accent bar"', b'name="!!Lonely"')
             zo.writestr(n, data)
-    problems = " | ".join(bt.check(out.getvalue()))
+    problems = " | ".join(pa.check(out.getvalue()))
     assert "slide 6: animation targets missing shape" in problems
     assert "!!Lonely" in problems
 

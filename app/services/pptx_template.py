@@ -38,8 +38,18 @@ SLIDES = (
     ("23–24", "Comparison", "The cards fly in; Morph grows the winner and colours it"),
     ("25", "Numbers", "The numbers zoom in one after another; one pulses"),
     ("26", "Chart reveal", "The chart wipes in one category per click (edit the data in PowerPoint)"),
-    ("27", "Closing", "Text and circles zoom in"),
-    ("28–29", "How to use, how to change colours", "Delete these two before presenting"),
+    ("27", "Block diagram that builds", "Blocks zoom in, connections wipe in, then a frame shows where our part fits"),
+    ("28–29", "2×2 matrix", "Dots fly in; Morph moves them from today to in 3 years"),
+    ("30–31", "Venn overlap", "Morph slides the two circles together; the overlap label pops in"),
+    ("32", "Funnel", "One level per click wipes in with its number"),
+    ("33", "Pyramid", "Builds from the base up, one level per click"),
+    ("34", "Roadmap swimlanes", "Bars grow in lane by lane; the time gone by shades in and a Today line drops"),
+    ("35–37", "Big number that counts up", "Morph grows the number and its bar over three slides"),
+    ("38", "Table with a highlighted row", "The table fades in; a frame zooms onto one row and pulses"),
+    ("39", "Progress rings", "Each ring fills like a clock hand; the percentage zooms in"),
+    ("40", "Quote or key message", "Quote mark zooms, quote floats in, then grows a little on click"),
+    ("41", "Closing", "Text and circles zoom in"),
+    ("42–43", "How to use, how to change colours", "Delete these two before presenting"),
 )
 
 

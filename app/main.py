@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import mimetypes
 import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -139,6 +140,8 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
 
     bootstrap(engine, seed)
     app = FastAPI(title="BizDev", lifespan=lifespan)
+    # .pptx downloads (Shareable > PowerPoint templates): slim images have no /etc/mime.types to name the type
+    mimetypes.add_type("application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx")
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "web" / "static"), name="static")
 
     from app.api.routes import router as api_router

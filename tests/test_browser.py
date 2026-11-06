@@ -1653,3 +1653,23 @@ def test_one_function_in_many_bands_is_one_row_that_opens(page):
     more = row.locator("xpath=following-sibling::tr[1]")
     more.locator("summary").click()
     expect(more.locator(".vg-table tbody tr")).to_have_count(7)
+
+
+def test_powerpoint_templates_page_downloads_the_files(page):
+    """Shareable > PowerPoint templates (owner, 6 Nov 2026): the menu opens the page, four colour versions each with a
+    download button, and every file arrives as a PowerPoint file."""
+    go(page, "/shareable")
+    page.locator("nav.sub-nav a", has_text="PowerPoint templates").click()
+    expect(page).to_have_url(re.compile(r"/shareable/templates$"))
+    expect(page.locator("main h1")).to_have_text("PowerPoint templates")
+    buttons = page.locator("a.pt-dl")
+    expect(buttons).to_have_count(4)
+    for name in ("Harbor", "Ocean", "Graphite", "Sunrise"):
+        expect(page.get_by_role("button", name=f"Download {name} (.pptx)")).to_be_visible()
+    for i in range(4):
+        r = page.request.get(buttons.nth(i).get_attribute("href"))
+        assert r.status == 200
+        assert r.headers["content-type"] == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    with page.expect_download() as dl:
+        page.get_by_role("button", name="Download Harbor (.pptx)").click()
+    assert dl.value.suggested_filename == "bizdev-animated-template.pptx"

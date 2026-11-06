@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.auth.session import signed_in_owner
 from app.db import get_session
 from app.services import logo, site_guard, tech_overview, uploads
+from app.services import pptx_template as pt
 from app.services import presentation_pptx as pp
 from app.services import share_doc as sd
 from app.services import share_explain as sx
@@ -305,6 +306,14 @@ def shareable_pptx(request: Request, session: Session = Depends(get_session)):
     if [h for t in pp.texts(data) for x in t for h in site_guard.hits(x)]:  # never expected: the pages pass it
         raise HTTPException(409, "These reports cannot be downloaded: they failed the public-safe word check.")
     return _download(data, pp.MEDIA_TYPE, "skyworks-qorvo-" + "-".join(keys) + ".pptx")
+
+
+@router.get("/shareable/templates", response_class=HTMLResponse)
+def pptx_templates(request: Request):
+    """PowerPoint templates (owner, 6 Nov 2026): the animated fill-in template and its three colour versions, as
+    static downloads (made by scripts/build_pptx_template.py), with the slide list and how to change colours."""
+    files = [(k, name, line, pt.URL_DIR + pt.FILES[k], pt.swatches(k)) for k, (name, line, _) in pt.PALETTES.items()]
+    return templates.TemplateResponse(request, "shareable/templates.html", {"files": files, "slides": pt.SLIDES})
 
 
 @router.get("/shareable/{slug}/explain", response_class=HTMLResponse)

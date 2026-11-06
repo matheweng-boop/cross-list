@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "business/_common.html" import about, company_switch, crowd, path_chip, push, score_chip with context %}
-{% from "business/_priority.html" import prio_bar, prio_chips, prio_weights %}
+{% from "business/_priority.html" import patent_why, prio_bar, prio_chips, prio_weights %}
 {% from "_refs.html" import found_in with context %}
 {% block title %}Gaps & new technology{% endblock %}
 {% block content %}
@@ -25,6 +25,7 @@
   {{ prio_bar(e) }}
   <small>{{ prio_chips(e) }}{% if e.tam_apps and not guest_blocked(request, '/business/tam') %} · TAM {{ e.tam_src.band if e.tam_src and e.tam_src.band else '$' ~ '{:,.0f}'.format(e.tam) }} / year{% if e.tam_src and e.tam_src.layer %} ({{ e.tam_src.layer }}){% endif %}{% endif %}</small>
   <small>{{ score_chip(e) }} {{ path_chip(e.path, path_label) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}</small>
+  {{ patent_why(e) }}
   <small class="csg-row">{% if e.competition %}{{ crowd(e.competition, crowding_label) }}{% endif %}{{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</small>{{ found_in(e.fn) }}{% set dm = demand_seen(request) %}{{ dmd.line(dm.fn(e.fn) if dm else none, 'Demand seen', 'small') }}</article>{% endmacro %}
 
 {# one function in several bands or power classes: one card with its best band's scores; the bands open below it
@@ -39,6 +40,7 @@
       <span class="muted">{{ e.band_note }}{% if e.rf_link %} · <a href="{{ e.rf_link }}">RF coverage</a>{% endif %} · {{ e.reach }} diagram{{ 's' if e.reach != 1 }}</span> {{ score_chip(e) }}{% if e.decision == 'keep' %} <span class="kept-chip">✓ kept</span>{% endif %}
       {{ push('explorer', e.key, e.label, 'needed in ' ~ e.reach ~ ' architectures', e.fn, e.key in shortlisted) }}</li>{% endfor %}
   </ul></details>
+  {{ patent_why(p) }}
   <small class="csg-row">{% if p.competition %}{{ crowd(p.competition, crowding_label) }}{% endif %}</small>{{ found_in(p.fn) }}{% set dm = demand_seen(request) %}{{ dmd.line(dm.fn(p.fn) if dm else none, 'Demand seen', 'small') }}</article>{% endmacro %}
 
 {% macro card(e) %}{% if e.subs %}{{ group_card(e) }}{% else %}{{ gap_card(e) }}{% endif %}{% endmacro %}
@@ -80,11 +82,11 @@
     <tr><td class="n">{{ '%.2f'|format(L.not_assessed) }}</td><td>Not assessed yet</td></tr>
     <tr><td class="n">{{ '%.2f'|format(L.not_pursue) }}</td><td>Path to product “not ours to build” (only on Markets; left out here)</td></tr>
     <tr><td class="n">+ {{ L.platform_bonus }}</td><td>A current platform of ours serves it (up to 1.0)</td></tr>
-    <tr><td class="n">+ {{ '%g'|format(L.patent_bonus.strong) }} / + {{ '%g'|format(L.patent_bonus.some) }}</td><td>US patents of Skyworks / Qorvo: strong / some depth (per function, else its technology platform; public USPTO searches, checked automatically: <b>indicative, not reviewed</b>; never more than + {{ '%g'|format(L.patent_bonus_cap or 0.05) }}, so it cannot decide a ranking on its own; up to 1.0)</td></tr>
     {% for label, o in prio_owner %}<tr><td class="n">{{ '%.2f'|format(o.value) }}</td><td>{{ label }}: {{ o.note }}</td></tr>{% endfor %}
   </tbody></table></div>
   <p><b>Diagrams</b> = log(1 + n) / log(1 + n<sub>max</sub>), n = the diagrams that need the function{% if prio_top %}, n<sub>max</sub> = {{ '%g'|format(prio_top.priority.n_max) }}{% endif %}. On a log scale, 40 diagrams is not 10 × better than 4. On <a href="/business/markets">Markets</a>, n counts the applications in the markets chosen there; technology relation and likeliness are the same on both pages.</p>
-  {% for label, e in (('Top item', prio_top), ('An LDO', prio_ldo), ('With a patent bonus', prio_patent)) if e %}<p class="pr-ex"><b>{{ label }}: {{ e.label }}</b> · {{ e.priority.t_label }} {{ '%.1f'|format(e.priority.T) }} · likeliness {{ '%.2f'|format(e.priority.L) }} ({{ e.priority.l_basis }}) · {{ '%g'|format(e.priority.n) }} diagrams → {{ '%.2f'|format(e.priority.D) }}<br><code>{{ prio_example(e) }}</code></p>{% endfor %}
+  {% set PT = prio.patents %}<p id="how-patents"><b>Patents</b> (owner, 6 Nov 2026; est, machine-checked, not legal advice): a <b>patent barrier</b> 0–100 per function from its technology platform, in three parts. <b>Similarity to our technology</b>: our US families of the last 5 years on the platform against the strongest competitor's (ours ÷ (ours + theirs); half and half = parity). <b>Difficulty of recreating it</b>: how many families the leader holds, how many competitors are near the leader (at least {{ '%g'|format(100 * PT.difficulty.crowd_ratio) }}% of its count), how many of their families are recent (first filed in the last 3 years), and a flag where the function needs a process we do not hold. Barrier = 100 × ({{ PT.similarity_weight }} × (1 − similarity) + {{ PT.difficulty_weight }} × difficulty). <b>Distance to our technology</b> is already in likeliness, so it is not counted twice: it only scales the effect (× {{ PT.distance_scale[0] }} near our portfolio up to × {{ PT.distance_scale[4] }} for new technology). The priority then moves by −(barrier − 50) ÷ 50 × {{ PT.points }} × that scale, never more than ± {{ PT.cap }} points: a low barrier adds a little, a high one takes off a little. Each card says why (tap “Patents: barrier …”). Counts per platform: <a href="/business/method#patents">method</a>.</p>
+  {% for label, e in (('Top item', prio_top), ('An LDO', prio_ldo), ('With a patent adjustment', prio_patent)) if e %}<p class="pr-ex"><b>{{ label }}: {{ e.label }}</b> · {{ e.priority.t_label }} {{ '%.1f'|format(e.priority.T) }} · likeliness {{ '%.2f'|format(e.priority.L) }} ({{ e.priority.l_basis }}) · {{ '%g'|format(e.priority.n) }} diagrams → {{ '%.2f'|format(e.priority.D) }}<br><code>{{ prio_example(e) }}</code></p>{% endfor %}
   {% if prio_sliders %}
   {{ prio_weights('/business/opportunities', {'co': co, 'show': 'all' if show == 'all' else ''}, w, prio.labels, prio_custom, prio_default, '/business/opportunities?co=' ~ co ~ sq) }}
   {% endif %}

@@ -9,7 +9,13 @@
     <tr><th scope="row">{{ name }}</th><td class="n">{{ pp[co] }}</td>
       <td class="pt-bar-cell"><span class="pt-bar pt-{{ co }}" style="width: {{ '%.0f'|format(100 * pp[co] / top) }}%"></span></td>
       <td class="muted" title="US families by earliest filing: up to 2019 / 2020–2022 / 2023–2026">{{ t|join(' / ') }} {{ {'rising': '↑', 'steady': '→', 'falling': '↓'}.get(pp.trend_dir[co], '') }}</td></tr>{% endfor %}
+    {% if pp.ex_silabs %}{% set xs = pp.ex_silabs %}<tr class="pt-xsl"><th scope="row">{{ xs.label }}</th><td class="n">{{ xs.count }}</td>
+      <td class="pt-bar-cell"><span class="pt-bar pt-xslbar" style="width: {{ '%.0f'|format([100, 100 * xs.count / top]|min) }}%"></span></td>
+      <td class="muted" title="Filed under Silicon Laboratories before the July 2021 transfer, not yet recorded under Skyworks">{{ xs.trend|join(' / ') }}</td></tr>{% endif %}
   </tbody></table>
+  {% if pp.ex_silabs %}<p class="small muted">{{ pp.ex_silabs.note }}</p>{% endif %}
+  {% if pat_comp is defined and pat_comp %}{% set cc = pat_comp[2] %}<p class="small"><b>Competitors, last 5 years</b> (US families first filed {{ cc.window or '2021–2026' }}): ours {{ cc.ours.last5 }}{% for name, n in pat_rivals %} · {{ name }} {{ n }}{% endfor %} <span class="muted">(est; keyword counts)</span></p>{% endif %}
+  {% if pat_portfolio is defined and pat_portfolio %}{% set pf = pat_portfolio %}<p class="small muted">Whole US portfolio ({{ pf.searched }}): Skyworks {{ pf.skyworks.total }} families, Qorvo group {{ pf.qorvo.total }}; per year on the <a href="/business/method#patents">method page</a>.</p>{% endif %}
   {% if pp.auto %}<p class="small">In the car ({{ pp.auto.label }}): Skyworks {{ pp.auto.skyworks }} / Qorvo group {{ pp.auto.qorvo }} families with automotive terms in title, abstract or claims; {{ pp.auto.broad_skyworks }} / {{ pp.auto.broad_qorvo }} in the wider text.</p>{% endif %}
   <ul class="small">{% for co in ('skyworks', 'qorvo') %}{% for x in (pp.examples[co] or [])[:1] %}<li><a href="{{ x.url }}" rel="noopener">{{ x.id }}</a> {{ x.title }} ({{ x.year }})</li>{% endfor %}{% endfor %}</ul>
   <p class="small muted">US families, {{ pp.date }}, USPTO Patent Public Search; keyword counts, indicative, not legal advice. Re-run: <code>{{ pp.query }}</code></p>

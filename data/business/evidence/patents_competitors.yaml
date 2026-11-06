@@ -1,0 +1,1149 @@
+# US patent families of the strongest competitors per technology platform, next to ours, for the patent barrier of the
+# priority score (owner, 6 Nov 2026: similarity to our technology, distance to it, difficulty of recreating it; weights in
+# data/business/priority.yaml patents). Keyword counts of public data: est, not legal advice.
+# Source: USPTO Patent Public Search (ppubs.uspto.gov, anonymous BRS), US grants + published applications, searched
+#   2026-11-06, one request at a time, >= 11 s apart; no block or bot check. Espacenet, Lens, WIPO and Google Patents block
+#   automated access (see patents.yaml), so US only.
+# Method: one query per platform with the platform's own terms (patents_platforms.yaml) and the chosen competitors' names
+#   OR-ed in the assignee and applicant fields, documents filed from 2020 on; each family is counted once per competitor
+#   whose name it carries, by its earliest US filing (the application or a parent / provisional it claims).
+#   last5 = first filed 2021-2026, last3 = 2024-2026, prior3 = 2021-2023 (the last two years are under-counted: 18-month
+#   publication lag, for us and them alike). ours = the platform's own query (Skyworks + Qorvo group), same windows.
+#   At most 4 competitors per area, the most relevant (est). Names: TI; ADI incl. Maxim, Linear, Hittite; NXP incl.
+#   Freescale; Murata incl. pSemi / Peregrine; Broadcom incl. Avago; Qualcomm incl. RF360; Microchip incl. Microsemi;
+#   onsemi = Semiconductor Components Industries; Renesas incl. IDT, Intersil.
+# Limits: keyword hits, not a legal or technical review; generic terms (e.g. "5G") would swamp a platform, so platforms
+#   without a function (GaAs pHEMT, Wi-Fi filters, 5G NR, GNSS) have no competitor search.
+source: USPTO Patent Public Search (ppubs.uspto.gov), US grants and published applications
+searched: '2026-11-06'
+window: 2021-2026
+disclaimer: Indicative public patent counts (est), not legal advice.
+names:
+  ti: TI
+  adi: ADI (incl. Maxim, Linear)
+  infineon: Infineon
+  nxp: NXP
+  murata: Murata (incl. pSemi)
+  broadcom: Broadcom
+  qualcomm: Qualcomm (incl. RF360)
+  st: STMicro
+  microchip: Microchip
+  onsemi: onsemi
+  renesas: Renesas (incl. IDT, Intersil)
+  sitime: SiTime
+platforms:
+  baw:
+    query: ((broadcom OR avago OR qualcomm OR rf360 OR murata OR psemi OR peregrine).as. OR (broadcom OR avago OR qualcomm
+      OR rf360 OR murata OR psemi OR peregrine).aanm.) AND ("bulk acoustic wave" OR BAW OR FBAR OR "film bulk acoustic").ti,ab,clm.
+      AND @ad>=20200101
+    ours:
+      last5: 171
+      prior3: 115
+      last3: 56
+    competitors:
+      broadcom:
+        last5: 6
+        last3: 3
+        prior3: 3
+        example:
+          id: US12763750B2
+          title: Beat mode suppression in powerbars and quadbars
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12763750
+      qualcomm:
+        last5: 23
+        last3: 3
+        prior3: 20
+        example:
+          id: US12738918B2
+          title: Die package with sealed die enclosures
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12738918
+      murata:
+        last5: 100
+        last3: 15
+        prior3: 85
+        example:
+          id: US12785652B2
+          title: Electronic device
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785652
+  saw:
+    query: ((murata OR psemi OR peregrine OR qualcomm OR rf360 OR broadcom OR avago).as. OR (murata OR psemi OR peregrine
+      OR qualcomm OR rf360 OR broadcom OR avago).aanm.) AND ("surface acoustic wave" OR "TC-SAW" OR TCSAW OR "temperature
+      compensated SAW" OR "interdigital transducer").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 193
+      prior3: 130
+      last3: 63
+    competitors:
+      murata:
+        last5: 272
+        last3: 58
+        prior3: 214
+        example:
+          id: US12785648B2
+          title: Acoustic wave device with interdigital transducer electrodes on both surfaces of a piezoelectric film
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785648
+      qualcomm:
+        last5: 60
+        last3: 19
+        prior3: 41
+        example:
+          id: US12785660B2
+          title: Acoustic resonator cascade
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785660
+      broadcom:
+        last5: 3
+        last3: 2
+        prior3: 1
+        example:
+          id: US11581853B2
+          title: Wideband filter for direct connection to differential power amplifier
+          year: 2023
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11581853
+  gaas_hbt:
+    query: ((murata OR psemi OR peregrine OR qualcomm OR rf360 OR broadcom OR avago OR nxp OR freescale).as. OR (murata OR
+      psemi OR peregrine OR qualcomm OR rf360 OR broadcom OR avago OR nxp OR freescale).aanm.) AND ("heterojunction bipolar"
+      OR HBT).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 15
+      prior3: 12
+      last3: 3
+    competitors:
+      murata:
+        last5: 13
+        last3: 3
+        prior3: 10
+        example:
+          id: US12609655B2
+          title: Radio-frequency circuit
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12609655
+      qualcomm:
+        last5: 5
+        last3: 1
+        prior3: 4
+        example:
+          id: US11749746B2
+          title: Radio frequency front end (RFFE) hetero-integration
+          year: 2023
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11749746
+      broadcom:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US12107550B2
+          title: Linearization of differential RF power amplifier by bias control using cross-coupling components
+          year: 2024
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12107550
+      nxp:
+        last5: 13
+        last3: 3
+        prior3: 10
+        example:
+          id: US12615788B2
+          title: Utilization of sacrificial material for current electrode formation
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12615788
+  gan:
+    query: ((infineon OR nxp OR freescale OR "texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology"
+      OR hittite).as. OR (infineon OR nxp OR freescale OR "texas instruments" OR "analog devices" OR "maxim integrated" OR
+      "linear technology" OR hittite).aanm.) AND ("gallium nitride" OR GaN).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 42
+      prior3: 28
+      last3: 14
+    competitors:
+      infineon:
+        last5: 128
+        last3: 60
+        prior3: 68
+        example:
+          id: US12776770B2
+          title: Temperature dependent driving of gate of III-nitride high electron mobility transistor
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776770
+      nxp:
+        last5: 33
+        last3: 14
+        prior3: 19
+        example:
+          id: US12665594B2
+          title: Protection structure for an enhancement-mode FET of a circuit and corresponding method
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12665594
+      ti:
+        last5: 76
+        last3: 30
+        prior3: 46
+        example:
+          id: US12776772B2
+          title: Half-bridge GaN driver with integrated GaN FET
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776772
+      adi:
+        last5: 28
+        last3: 10
+        prior3: 18
+        example:
+          id: US12635158B2
+          title: Gallium nitride superjunction transistor
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12635158
+  soi:
+    query: ((murata OR psemi OR peregrine OR qualcomm OR rf360 OR infineon OR nxp OR freescale).as. OR (murata OR psemi OR
+      peregrine OR qualcomm OR rf360 OR infineon OR nxp OR freescale).aanm.) AND ("silicon-on-insulator" OR "silicon on insulator"
+      OR SOI).ti,ab,clm. AND (switch OR tuner OR tuning OR tunable).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 11
+      prior3: 10
+      last3: 1
+    competitors:
+      murata:
+        last5: 13
+        last3: 0
+        prior3: 13
+        example:
+          id: US12712540B2
+          title: RF switch with improved isolation at target frequencies
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12712540
+      qualcomm:
+        last5: 9
+        last3: 4
+        prior3: 5
+        example:
+          id: US12512593B2
+          title: Antenna module as a radio-frequency (RF) integrated circuit (IC) die with an integrated antenna substrate,
+            and related fabrication methods
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12512593
+      infineon:
+        last5: 2
+        last3: 0
+        prior3: 2
+        example:
+          id: US12483232B2
+          title: Gate driver circuit and power switching assembly with gate driver circuit
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12483232
+      nxp:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US20210250199A1
+          title: MONOLITHIC HIGH-VOLTAGE TRANSCEIVER CONNECTED TO TWO DIFFERENT SUPPLY VOLTAGE DOMAINS
+          year: 2021
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/20210250199
+  sige:
+    query: ((infineon OR nxp OR freescale OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR stmicroelectronics).as.
+      OR (infineon OR nxp OR freescale OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR stmicroelectronics).aanm.)
+      AND (SiGe OR "silicon germanium" OR "silicon-germanium" OR BiCMOS).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 2
+      prior3: 2
+      last3: 0
+    competitors:
+      infineon:
+        last5: 4
+        last3: 0
+        prior3: 4
+        example:
+          id: US12733458B2
+          title: Semiconductor device with termination structure and field-free region
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12733458
+      nxp:
+        last5: 29
+        last3: 7
+        prior3: 22
+        example:
+          id: US12690207B2
+          title: Semiconductor device with a monocrystalline extrinsic base and method therefor
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12690207
+      adi:
+        last5: 2
+        last3: 0
+        prior3: 2
+        example:
+          id: US12612303B2
+          title: Stress isolation for integrated circuit package integration
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12612303
+      st:
+        last5: 21
+        last3: 9
+        prior3: 12
+        example:
+          id: US12588259B2
+          title: Lateral bipolar transistor
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12588259
+  modules:
+    query: ((murata OR psemi OR peregrine OR qualcomm OR rf360 OR broadcom OR avago OR nxp OR freescale).as. OR (murata OR
+      psemi OR peregrine OR qualcomm OR rf360 OR broadcom OR avago OR nxp OR freescale).aanm.) AND ("front end module" OR
+      "front-end module" OR FEM OR "system in package" OR "system-in-package" OR "multi-chip module" OR "multichip module").ti,ab,clm.
+      AND @ad>=20200101
+    ours:
+      last5: 161
+      prior3: 118
+      last3: 43
+    competitors:
+      murata:
+        last5: 9
+        last3: 3
+        prior3: 6
+        example:
+          id: US12622289B2
+          title: Double-sided laminate package with 3D interconnection structure
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12622289
+      qualcomm:
+        last5: 25
+        last3: 9
+        prior3: 16
+        example:
+          id: US12785727B2
+          title: Envelope tracking for radio frequency (RF) front end modules
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785727
+      broadcom:
+        last5: 3
+        last3: 2
+        prior3: 1
+        example:
+          id: US12640771B2
+          title: Compact RF front-end module and method of packaging
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12640771
+      nxp:
+        last5: 3
+        last3: 1
+        prior3: 2
+        example:
+          id: US12549140B2
+          title: Circuit
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12549140
+  beamformers:
+    query: (("analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR qualcomm OR rf360 OR nxp OR freescale
+      OR renesas OR "integrated device technology" OR intersil).as. OR ("analog devices" OR "maxim integrated" OR "linear
+      technology" OR hittite OR qualcomm OR rf360 OR nxp OR freescale OR renesas OR "integrated device technology" OR intersil).aanm.)
+      AND (beamform$ OR "phased array" OR "phased-array").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 37
+      prior3: 30
+      last3: 7
+    competitors:
+      adi:
+        last5: 18
+        last3: 5
+        prior3: 13
+        example:
+          id: US12750057B2
+          title: Apparatus and methods for nonlinearity cancellation in electronic systems
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12750057
+      qualcomm:
+        last5: 519
+        last3: 110
+        prior3: 409
+        example:
+          id: US12785769B2
+          title: Codebook design and feedback for circular antenna array beamforming
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785769
+      nxp:
+        last5: 58
+        last3: 22
+        prior3: 36
+        example:
+          id: US12736663B2
+          title: Radar system transmitter beamforming using occupancy map data
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12736663
+      renesas:
+        last5: 2
+        last3: 0
+        prior3: 2
+        example:
+          id: US12308531B2
+          title: Gain variation compensation using temperature attenuator
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12308531
+  isolation:
+    query: (("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR infineon OR
+      broadcom OR avago).as. OR ("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite
+      OR infineon OR broadcom OR avago).aanm.) AND ("digital isolator" OR "galvanic isolation" OR "galvanically isolated"
+      OR "isolation barrier" OR "isolated gate driver" OR "capacitive isolation").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 3
+      prior3: 3
+      last3: 0
+    competitors:
+      ti:
+        last5: 42
+        last3: 13
+        prior3: 29
+        example:
+          id: US12713629B2
+          title: Wire bonds for galvanic isolation device
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12713629
+      adi:
+        last5: 15
+        last3: 9
+        prior3: 6
+        example:
+          id: US12658937B2
+          title: Overcurrent detection with multi-bit analog-to-digital converters
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12658937
+      infineon:
+        last5: 62
+        last3: 23
+        prior3: 39
+        example:
+          id: US12776711B2
+          title: Method and control circuit for operating a power converter arrangement and power converter arrangement
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776711
+      broadcom:
+        last5: 1
+        last3: 1
+        prior3: 0
+        example:
+          id: US20260068358A1
+          title: OPTICAL POWER CONVERTERS AND GALVANICALLY ISOLATED POWER SUPPLIES
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/20260068358
+  timing:
+    query: (("texas instruments" OR renesas OR "integrated device technology" OR intersil OR "microchip technology" OR microsemi
+      OR sitime).as. OR ("texas instruments" OR renesas OR "integrated device technology" OR intersil OR "microchip technology"
+      OR microsemi OR sitime).aanm.) AND ("clock generator" OR "clock buffer" OR "jitter attenuator" OR "jitter attenuation"
+      OR "crystal oscillator" OR "clock synthesizer" OR "timing device" OR "BAW oscillator").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 16
+      prior3: 13
+      last3: 3
+    competitors:
+      ti:
+        last5: 54
+        last3: 12
+        prior3: 42
+        example:
+          id: US12756172B2
+          title: Clock sync input dropout protection
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756172
+      renesas:
+        last5: 14
+        last3: 6
+        prior3: 8
+        example:
+          id: US12683587B2
+          title: Semiconductor device and semiconductor system
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12683587
+      microchip:
+        last5: 9
+        last3: 4
+        prior3: 5
+        example:
+          id: US12756306B2
+          title: Device and methods for digital switched capacitor DC-DC converters with reduced analog circuitry
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756306
+      sitime:
+        last5: 0
+        last3: 0
+        prior3: 0
+  broadcast:
+    query: ((nxp OR freescale OR stmicroelectronics OR qualcomm OR rf360 OR infineon).as. OR (nxp OR freescale OR stmicroelectronics
+      OR qualcomm OR rf360 OR infineon).aanm.) AND ("FM radio" OR "AM radio" OR "FM receiver" OR "AM receiver" OR "FM tuner"
+      OR "broadcast radio" OR "digital audio broadcasting" OR DAB OR "HD radio" OR "broadcast receiver" OR "radio tuner" OR
+      "television tuner" OR "TV tuner").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 4
+      prior3: 4
+      last3: 0
+    competitors:
+      nxp:
+        last5: 6
+        last3: 3
+        prior3: 3
+        example:
+          id: US12597889B2
+          title: Distortion compensation for a switch in an amplifier circuit
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12597889
+      st:
+        last5: 0
+        last3: 0
+        prior3: 0
+      qualcomm:
+        last5: 109
+        last3: 15
+        prior3: 94
+        example:
+          id: US12764306B2
+          title: Intra spatial geometric partition mode and matrix intra partition mode transform set selection in video coding
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12764306
+      infineon:
+        last5: 4
+        last3: 0
+        prior3: 4
+        example:
+          id: US12205826B2
+          title: Method for forming a semiconductor substrate arrangement
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12205826
+  power:
+    query: (("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR infineon OR
+      renesas OR "integrated device technology" OR intersil).as. OR ("texas instruments" OR "analog devices" OR "maxim integrated"
+      OR "linear technology" OR hittite OR infineon OR renesas OR "integrated device technology" OR intersil).aanm.) AND ("power
+      management integrated circuit" OR PMIC OR "DC-DC converter" OR "DC-to-DC converter" OR "buck converter" OR "boost converter"
+      OR "switching regulator").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 74
+      prior3: 56
+      last3: 18
+    competitors:
+      ti:
+        last5: 102
+        last3: 22
+        prior3: 80
+        example:
+          id: US12749886B2
+          title: Methods and apparatus to disconnect circuitry responsive to a fault condition
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12749886
+      adi:
+        last5: 33
+        last3: 9
+        prior3: 24
+        example:
+          id: US12756288B2
+          title: Frequency dithering systems and methods
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12756288
+      infineon:
+        last5: 54
+        last3: 16
+        prior3: 38
+        example:
+          id: US12776711B2
+          title: Method and control circuit for operating a power converter arrangement and power converter arrangement
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776711
+      renesas:
+        last5: 44
+        last3: 18
+        prior3: 26
+        example:
+          id: US12785536B2
+          title: Control unit and method for providing hysteretic current mode control for power converter
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785536
+  motor:
+    query: (("texas instruments" OR infineon OR stmicroelectronics OR "microchip technology" OR microsemi).as. OR ("texas
+      instruments" OR infineon OR stmicroelectronics OR "microchip technology" OR microsemi).aanm.) AND ("motor control" OR
+      "motor controller" OR "motor driver" OR BLDC OR "brushless DC" OR "brushless motor").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 3
+      prior3: 1
+      last3: 2
+    competitors:
+      ti:
+        last5: 34
+        last3: 3
+        prior3: 31
+        example:
+          id: US12695463B2
+          title: Low-latency data acquisition using sigma-delta modulators
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12695463
+      infineon:
+        last5: 41
+        last3: 13
+        prior3: 28
+        example:
+          id: US12738871B2
+          title: Motor controller
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12738871
+      st:
+        last5: 17
+        last3: 7
+        prior3: 10
+        example:
+          id: US12718845B2
+          title: Method of operating hard disk drives, corresponding hard disk drive and processing device
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12718845
+      microchip:
+        last5: 2
+        last3: 0
+        prior3: 2
+        example:
+          id: US12722500B2
+          title: Control of a regenerative brake for a motor system and related systems, methods, and devices
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12722500
+  uwb:
+    query: ((nxp OR freescale OR qualcomm OR rf360 OR infineon OR stmicroelectronics).as. OR (nxp OR freescale OR qualcomm
+      OR rf360 OR infineon OR stmicroelectronics).aanm.) AND ("ultra-wideband" OR "ultra wideband" OR UWB).ti,ab,clm. AND
+      @ad>=20200101
+    ours:
+      last5: 45
+      prior3: 33
+      last3: 12
+    competitors:
+      nxp:
+        last5: 134
+        last3: 53
+        prior3: 81
+        example:
+          id: US12769815B2
+          title: Authentication hardware token ensuring control of user data
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12769815
+      qualcomm:
+        last5: 112
+        last3: 46
+        prior3: 66
+        example:
+          id: US12776888B2
+          title: Frequency-selective rank augmentation
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776888
+      infineon:
+        last5: 22
+        last3: 18
+        prior3: 4
+        example:
+          id: US12741611B2
+          title: Approach intent probability determination adaptive to characteristic information of an initiator device
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12741611
+      st:
+        last5: 11
+        last3: 9
+        prior3: 2
+        example:
+          id: US12532263B2
+          title: Wireless communication device configured for ultra-wideband communication
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12532263
+  ble:
+    query: ((qualcomm OR rf360 OR nxp OR freescale OR "texas instruments" OR infineon).as. OR (qualcomm OR rf360 OR nxp OR
+      freescale OR "texas instruments" OR infineon).aanm.) AND (bluetooth OR BLE OR "802.15.4" OR zigbee).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 18
+      prior3: 13
+      last3: 5
+    competitors:
+      qualcomm:
+        last5: 151
+        last3: 50
+        prior3: 101
+        example:
+          id: US12772291B2
+          title: Btoip low power design with adaptive low power mode and data burst interval
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12772291
+      nxp:
+        last5: 61
+        last3: 27
+        prior3: 34
+        example:
+          id: US12769815B2
+          title: Authentication hardware token ensuring control of user data
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12769815
+      ti:
+        last5: 38
+        last3: 7
+        prior3: 31
+        example:
+          id: US12681191B2
+          title: Time-of-flight estimation using sampling error values
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12681191
+      infineon:
+        last5: 20
+        last3: 4
+        prior3: 16
+        example:
+          id: US12773883B2
+          title: Systems, devices and methods for dynamically generating tire firmness values in response to user selection
+            and/or other data
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12773883
+  envelope_tracking:
+    query: ((qualcomm OR rf360 OR murata OR psemi OR peregrine OR broadcom OR avago OR "analog devices" OR "maxim integrated"
+      OR "linear technology" OR hittite).as. OR (qualcomm OR rf360 OR murata OR psemi OR peregrine OR broadcom OR avago OR
+      "analog devices" OR "maxim integrated" OR "linear technology" OR hittite).aanm.) AND ("envelope tracking" OR "envelope
+      tracker" OR "average power tracking").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 79
+      prior3: 64
+      last3: 15
+    competitors:
+      qualcomm:
+        last5: 15
+        last3: 2
+        prior3: 13
+        example:
+          id: US12785727B2
+          title: Envelope tracking for radio frequency (RF) front end modules
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785727
+      murata:
+        last5: 32
+        last3: 9
+        prior3: 23
+        example:
+          id: US12609655B2
+          title: Radio-frequency circuit
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12609655
+      broadcom:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US12463635B2
+          title: Amplifier with output AC coupled envelope tracking supply
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12463635
+      adi:
+        last5: 6
+        last3: 4
+        prior3: 2
+        example:
+          id: US12695652B2
+          title: Transmit signal squelch at symbol boundaries
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12695652
+  antenna_tuning:
+    query: ((qualcomm OR rf360 OR murata OR psemi OR peregrine OR infineon OR nxp OR freescale).as. OR (qualcomm OR rf360
+      OR murata OR psemi OR peregrine OR infineon OR nxp OR freescale).aanm.) AND ("antenna tuning" OR "antenna tuner" OR
+      "aperture tuning" OR "aperture tuner" OR "impedance tuner").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 2
+      prior3: 2
+      last3: 0
+    competitors:
+      qualcomm:
+        last5: 21
+        last3: 8
+        prior3: 13
+        example:
+          id: US12726281B2
+          title: In-device characterization of antenna coupling
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12726281
+      murata:
+        last5: 2
+        last3: 1
+        prior3: 1
+        example:
+          id: US12761687B2
+          title: Optimal timer array
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12761687
+      infineon:
+        last5: 3
+        last3: 1
+        prior3: 2
+        example:
+          id: US12658969B2
+          title: Devices and methods controlling a radio frequency path
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12658969
+      nxp:
+        last5: 3
+        last3: 1
+        prior3: 2
+        example:
+          id: US12431844B2
+          title: Antenna tuning circuit for an RFID transponder
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12431844
+  lna:
+    query: ((murata OR psemi OR peregrine OR qualcomm OR rf360 OR infineon OR nxp OR freescale).as. OR (murata OR psemi OR
+      peregrine OR qualcomm OR rf360 OR infineon OR nxp OR freescale).aanm.) AND ("low noise amplifier" OR "low-noise amplifier"
+      OR LNA).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 116
+      prior3: 85
+      last3: 31
+    competitors:
+      murata:
+        last5: 256
+        last3: 52
+        prior3: 204
+        example:
+          id: US12785728B2
+          title: Composite filter component and radio frequency module
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12785728
+      qualcomm:
+        last5: 119
+        last3: 30
+        prior3: 89
+        example:
+          id: US12776766B2
+          title: Systems and techniques for magnetic field cancellation for a radio architecture
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776766
+      infineon:
+        last5: 3
+        last3: 2
+        prior3: 1
+        example:
+          id: US20260238237A1
+          title: DIFFERENTIATED ULTRA-WIDEBAND SENSING ARCHITECTURE
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/20260238237
+      nxp:
+        last5: 20
+        last3: 10
+        prior3: 10
+        example:
+          id: US12554006B2
+          title: Radar data signal compression techniques
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12554006
+  pcie_timing:
+    query: (("texas instruments" OR renesas OR "integrated device technology" OR intersil OR "microchip technology" OR microsemi
+      OR sitime).as. OR ("texas instruments" OR renesas OR "integrated device technology" OR intersil OR "microchip technology"
+      OR microsemi OR sitime).aanm.) AND ("PCI express" OR PCIe OR "network synchronizer" OR "synchronous ethernet" OR SyncE
+      OR "IEEE 1588" OR "precision time protocol").ti,ab,clm. AND (clock OR jitter OR timing OR oscillator).ti,ab,clm. AND
+      @ad>=20200101
+    ours:
+      last5: 1
+      prior3: 1
+      last3: 0
+    competitors:
+      ti:
+        last5: 0
+        last3: 0
+        prior3: 0
+      renesas:
+        last5: 2
+        last3: 1
+        prior3: 1
+        example:
+          id: US11979481B2
+          title: Time synchronisation
+          year: 2024
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11979481
+      microchip:
+        last5: 5
+        last3: 3
+        prior3: 2
+        example:
+          id: US12625836B2
+          title: System and method for flexibly crossing packets of different protocols
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12625836
+      sitime:
+        last5: 0
+        last3: 0
+        prior3: 0
+  isolated_sensing:
+    query: (("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR infineon OR
+      broadcom OR avago).as. OR ("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite
+      OR infineon OR broadcom OR avago).aanm.) AND ("isolated amplifier" OR "isolation amplifier" OR "isolated current sensor"
+      OR "isolated current sensing" OR "isolated modulator" OR "isolated delta-sigma" OR "isolated sigma-delta" OR (("current
+      sense" OR "current sensing" OR "current sensor" OR shunt OR "delta-sigma modulator" OR "sigma-delta modulator") AND
+      ("galvanic isolation" OR "galvanically isolated" OR "isolation barrier"))).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 2
+      prior3: 2
+      last3: 0
+    competitors:
+      ti:
+        last5: 6
+        last3: 2
+        prior3: 4
+        example:
+          id: US12615059B2
+          title: Low-latency delta-sigma modulator
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12615059
+      adi:
+        last5: 0
+        last3: 0
+        prior3: 0
+      infineon:
+        last5: 9
+        last3: 2
+        prior3: 7
+        example:
+          id: US12535508B2
+          title: Current sensor, system comprising a current sensor and method for measuring a current to be measured
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12535508
+      broadcom:
+        last5: 0
+        last3: 0
+        prior3: 0
+  desat_gate_drivers:
+    query: (("texas instruments" OR infineon OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR
+      stmicroelectronics).as. OR ("texas instruments" OR infineon OR "analog devices" OR "maxim integrated" OR "linear technology"
+      OR hittite OR stmicroelectronics).aanm.) AND ("gate driver" OR "gate drive" OR "gate driving").ti,ab,clm. AND (desaturation
+      OR DESAT OR "short circuit protection" OR "short-circuit protection" OR "short circuit detection" OR "short-circuit
+      detection" OR "overcurrent protection" OR "over-current protection").ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 0
+      prior3: 0
+      last3: 0
+    competitors:
+      ti:
+        last5: 4
+        last3: 1
+        prior3: 3
+        example:
+          id: US12237662B2
+          title: Short circuit protection
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12237662
+      infineon:
+        last5: 11
+        last3: 3
+        prior3: 8
+        example:
+          id: US12640720B2
+          title: Power electronics device and sensing method for a GaN die included in the power electronics device
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12640720
+      adi:
+        last5: 3
+        last3: 3
+        prior3: 0
+        example:
+          id: US12706599B2
+          title: Gate driver circuit fault detection techniques
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12706599
+      st:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US12394971B2
+          title: Electronic fuse systems and devices
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12394971
+  ntn:
+    query: ((qualcomm OR rf360 OR murata OR psemi OR peregrine OR "analog devices" OR "maxim integrated" OR "linear technology"
+      OR hittite OR broadcom OR avago).as. OR (qualcomm OR rf360 OR murata OR psemi OR peregrine OR "analog devices" OR "maxim
+      integrated" OR "linear technology" OR hittite OR broadcom OR avago).aanm.) AND ("non-terrestrial" OR "satellite communication"
+      OR "satellite communications" OR satcom OR "low earth orbit" OR "direct-to-device" OR "direct to cell" OR "direct-to-cell").ti,ab,clm.
+      AND (amplifier OR "front end" OR "front-end" OR transceiver OR antenna OR filter).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 1
+      prior3: 0
+      last3: 1
+    competitors:
+      qualcomm:
+        last5: 126
+        last3: 31
+        prior3: 95
+        example:
+          id: US12776829B2
+          title: Delaying downlink channel monitoring in a non-terrestrial network
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12776829
+      murata:
+        last5: 4
+        last3: 1
+        prior3: 3
+        example:
+          id: US12574055B2
+          title: Radio-frequency circuit
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12574055
+      adi:
+        last5: 0
+        last3: 0
+        prior3: 0
+      broadcom:
+        last5: 0
+        last3: 0
+        prior3: 0
+  gnss_antijam:
+    query: ((qualcomm OR rf360 OR broadcom OR avago OR stmicroelectronics OR "analog devices" OR "maxim integrated" OR "linear
+      technology" OR hittite).as. OR (qualcomm OR rf360 OR broadcom OR avago OR stmicroelectronics OR "analog devices" OR
+      "maxim integrated" OR "linear technology" OR hittite).aanm.) AND (GNSS OR GPS OR "satellite navigation" OR "global navigation
+      satellite").ti,ab,clm. AND (jamming OR jammer OR "anti-jam" OR antijam OR "interference mitigation" OR "interference
+      suppression" OR "controlled reception pattern" OR CRPA OR "null steering" OR nulling).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 0
+      prior3: 0
+      last3: 0
+    competitors:
+      qualcomm:
+        last5: 8
+        last3: 5
+        prior3: 3
+        example:
+          id: US12184408B2
+          title: Cooperative early threat detection and avoidance in C-V2X
+          year: 2024
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12184408
+      broadcom:
+        last5: 0
+        last3: 0
+        prior3: 0
+      st:
+        last5: 0
+        last3: 0
+        prior3: 0
+      adi:
+        last5: 0
+        last3: 0
+        prior3: 0
+  motor_hvac:
+    query: (("texas instruments" OR infineon OR stmicroelectronics OR "microchip technology" OR microsemi).as. OR ("texas
+      instruments" OR infineon OR stmicroelectronics OR "microchip technology" OR microsemi).aanm.) AND ("motor control" OR
+      "motor controller" OR "motor driver" OR "motor drive" OR BLDC OR brushless OR PMSM OR "field oriented control").ti,ab,clm.
+      AND (fan OR compressor OR HVAC OR pump OR cooling OR "air conditioning" OR "air conditioner" OR "heat pump").ti,ab,clm.
+      AND @ad>=20200101
+    ours:
+      last5: 0
+      prior3: 0
+      last3: 0
+    competitors:
+      ti:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US11539315B1
+          title: Driver circuit for full-bridge DC motor driver system
+          year: 2022
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11539315
+      infineon:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US12381499B2
+          title: Automated load torque ripple compensation using feedforward signals calculated using a cross-correlation
+            function
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12381499
+      st:
+        last5: 2
+        last3: 1
+        prior3: 1
+        example:
+          id: US11885849B2
+          title: Method for monitoring a machine on the basis of electric current signals and device for implementing such
+            a method
+          year: 2024
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11885849
+      microchip:
+        last5: 0
+        last3: 0
+        prior3: 0
+  robotics:
+    query: (("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR infineon OR
+      renesas OR "integrated device technology" OR intersil).as. OR ("texas instruments" OR "analog devices" OR "maxim integrated"
+      OR "linear technology" OR hittite OR infineon OR renesas OR "integrated device technology" OR intersil).aanm.) AND (robot$
+      OR servo OR EtherCAT OR "industrial ethernet" OR "safe torque off").ti,ab,clm. AND (motor OR drive OR driver OR encoder
+      OR actuator OR "gate driver" OR isolat$).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 1
+      prior3: 1
+      last3: 0
+    competitors:
+      ti:
+        last5: 1
+        last3: 0
+        prior3: 1
+        example:
+          id: US12237662B2
+          title: Short circuit protection
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12237662
+      adi:
+        last5: 3
+        last3: 1
+        prior3: 2
+        example:
+          id: US12506399B2
+          title: Hybrid linear-boost DC-DC converter with continuous input current regulation
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12506399
+      infineon:
+        last5: 0
+        last3: 0
+        prior3: 0
+      renesas:
+        last5: 1
+        last3: 1
+        prior3: 0
+        example:
+          id: US20260312523A1
+          title: SEMICONDUCTOR DEVICE
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/20260312523
+  efuse:
+    query: (("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear technology" OR hittite OR infineon OR
+      "semiconductor components industries").as. OR ("texas instruments" OR "analog devices" OR "maxim integrated" OR "linear
+      technology" OR hittite OR infineon OR "semiconductor components industries").aanm.) AND ("electronic fuse" OR eFuse
+      OR "hot swap" OR "hot-swap" OR "hot plug" OR "hot-plug" OR "inrush current").ti,ab,clm. AND (load OR switch OR "power
+      path" OR overcurrent OR "over-current" OR rail).ti,ab,clm. AND @ad>=20200101
+    ours:
+      last5: 1
+      prior3: 1
+      last3: 0
+    competitors:
+      ti:
+        last5: 4
+        last3: 3
+        prior3: 1
+        example:
+          id: US12261429B2
+          title: Short detection circuit
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12261429
+      adi:
+        last5: 3
+        last3: 1
+        prior3: 2
+        example:
+          id: US12199582B2
+          title: Digital communication systems and associated methods
+          year: 2025
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12199582
+      infineon:
+        last5: 7
+        last3: 4
+        prior3: 3
+        example:
+          id: US12726117B2
+          title: Voltage booster and voltage booster system
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12726117
+      onsemi:
+        last5: 2
+        last3: 1
+        prior3: 1
+        example:
+          id: US12771113B2
+          title: Simplified thermal model for electronic fuse
+          year: 2026
+          url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771113

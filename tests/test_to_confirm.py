@@ -171,6 +171,9 @@ def _fns() -> set[str]:
     return {fn for t in digest.EVIDENCE_ASPECTS for fn, e in op.evidence(t).items() if isinstance(e, dict)}
 
 
+REAL_CHANGE = "patent-change:platforms/nr_5g@2026-11-06"  # patents_platforms.yaml, 6 Nov 2026 re-run
+
+
 def test_one_evidence_card_per_function_and_no_patent_items():
     rows = [r for r in digest.items() if r["type"] == "evidence"]
     assert len(_fns()) == 70 and len(rows) == 70  # 70: +uwb_soc trend, 28 Oct
@@ -182,7 +185,8 @@ def test_one_evidence_card_per_function_and_no_patent_items():
     # no patent item is put to the owner: none of the old patent keys, no patent change while nothing changed
     keys = {r["key"] for r in digest.items()}
     assert not any(k.startswith(("evidence:patents/", "evidence:platforms/", "evidence:automotive/")) for k in keys)
-    assert not any(r["type"] == "patent-change" for r in digest.items())
+    # the one real change: 5G NR some -> strong in the 6 Nov 2026 re-run (applicant names added to the query)
+    assert [r["key"] for r in digest.items() if r["type"] == "patent-change"] == [REAL_CHANGE]
     # patents are shown read-only on the card
     ldo = digest.by_key()["evidence:pol_ldo"]
     assert ldo["patents"] == "Patents: strong · checked automatically, 19 Oct 2026; indicative, not reviewed."
@@ -209,7 +213,7 @@ def test_patent_change_item_appears_only_on_change(monkeypatch, client):
     def items_after(**ch):
         changes.clear(), changes.update(ch)
         digest._all.cache_clear(), digest._index.cache_clear()
-        return [r for r in digest.items() if r["type"] == "patent-change"]
+        return [r for r in digest.items() if r["type"] == "patent-change" and r["key"] != REAL_CHANGE]
 
     monkeypatch.setattr(digest, "_load", load)
     try:
@@ -219,7 +223,7 @@ def test_patent_change_item_appears_only_on_change(monkeypatch, client):
         assert "strong → little" in got[0]["gist"] and digest.words(got[0]["gist"]) <= digest.MAX_WORDS
         assert got[0]["href"] == "/business/evidence/pol_ldo"
         html = client.get("/manage/to-confirm?type=patent-change").text
-        assert html.count('class="tc-card"') == 1 and "Patent change: PoL LDO" in html
+        assert html.count('class="tc-card"') == 2 and "Patent change: PoL LDO" in html  # + the real 5G NR one
         # a failed check with the depth unchanged is a change too
         got = items_after(adc={"date": "2027-01-20", "old_depth": "some", "new_depth": "some",
                                "check": "US12345678B2 no longer resolves"})  # fmt: skip

@@ -3,9 +3,11 @@ gap, so RF and power work comes first and an LDO is listed but ranks low.
 
     Priority = 100 × (wT × T + wL × L + wD × D)
 
-T technology relation (curated table), L likeliness (feasibility, a platform of ours, US patent depth, the owner's
-review answers) and D diagrams (log scale), each 0–1. Weights and tables live in data/business/priority.yaml. The
-Opportunity score (app/services/scoring.py) is a different measure and stays as it is.
+T technology relation (curated table), L likeliness (feasibility, a platform of ours, the owner's review answers) and
+D diagrams (log scale), each 0–1, plus a signed patent adjustment of at most ± patents.cap points from the patent
+barrier of the function's technology platform (owner, 6 Nov 2026; it replaced the depth-based bonus to L).
+Weights and tables live in data/business/priority.yaml. The Opportunity score (app/services/scoring.py) is a different
+measure and stays as it is.
 """
 
 import math
@@ -19,9 +21,8 @@ from app.services import opportunity as op
 FILE = PROJECT_ROOT / "data" / "business" / "priority.yaml"
 KEYS = ("technology", "likeliness", "diagrams")
 PARAMS = {"technology": "wt", "likeliness": "wl", "diagrams": "wd"}  # URL parameters of the owner's sliders
-# owner, 26 Oct 2026: patents are machine-checked, never reviewed by the owner: a small, labelled bonus, capped
+# owner, 26 Oct 2026: patents are machine-checked, never reviewed by the owner: small and labelled
 PATENT_LABEL = "indicative, not reviewed"
-PATENT_CAP = 0.05  # default cap on the patent bonus to L (priority.yaml patent_bonus_cap)
 
 
 @lru_cache
@@ -100,26 +101,120 @@ def _platforms() -> dict[str, list[str]]:
     return out
 
 
-def patent_bonus(fn: str) -> dict:
-    """The likeliness bonus for US patent depth (owner, 25 Oct 2026): from the function's entry in patents.yaml, else
-    the platform entry of patents_platforms.yaml that covers it. {depth, bonus, source, label}; bonus 0 without data."""
-    got = patents.depth(fn)
+# ---- patent barrier (owner, 6 Nov 2026) -------------------------------------------------------------------------
+# "some metric between similarity to our technology, distance to our technology, and difficulty in recreating that
+# technology": a barrier 0-100 per function from its technology platform, and a signed adjustment of the priority
+# (a low barrier a small bonus, a high one a penalty) that replaces the fixed depth-based patent bonus. Keyword counts
+# of public US families: est, not legal advice. Weights: priority.yaml patents.
+PATENT_NOTE = "est; US keyword counts, not legal advice"
+GAP_STATUS = ("not held", "divested", "closing")
+
+
+@lru_cache
+def process_gaps() -> dict[str, str]:
+    """Function -> a process it needs that we do not hold (est): listed only under a capabilities.yaml entry that is
+    not held, divested or closing and served by no current platform of ours; plus priority.yaml patents.process_gaps."""
+    out: dict[str, str] = {}
+    for p in op.capabilities().values():
+        if p.get("status") in GAP_STATUS:
+            for fn in p.get("functions") or []:
+                if fn not in _platforms():
+                    out.setdefault(fn, p.get("name", ""))
+    out.update((config().get("patents") or {}).get("process_gaps") or {})
+    return out
+
+
+def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return max(lo, min(hi, x))
+
+
+def distance_scale(distance) -> float:
+    """How much the patent effect counts at this portfolio distance (0-4; None = not assessed): more when we are far.
+    Distance is already in likeliness (feasibility), so here it only scales the patent effect (no double count)."""
+    t = config()["patents"]["distance_scale"]
+    return float(t.get(distance, t["none"]))
+
+
+def barrier_parts(ours: int, rivals: dict[str, dict], process_gap: str = "") -> dict:
+    """The parts and the barrier from counts: ours = our families in the last 5 years on the platform; rivals =
+    {competitor: {last5, last3}}. similarity = ours / (ours + strongest competitor), 0.5 = parity; difficulty from the
+    leader's density (log scale), crowding (competitors with crowd_ratio of the leader's count) and recency (share of
+    their families first filed in the last 3 years), plus a flag for a process we do not hold."""
+    cfg = config()["patents"]
+    d = cfg["difficulty"]
+    lead_key = max(rivals, key=lambda c: (rivals[c]["last5"], c)) if rivals else ""
+    lead = rivals[lead_key]["last5"] if rivals else 0
+    sim = ours / (ours + lead) if ours + lead else 0.5
+    density = _clamp(math.log1p(lead) / math.log1p(float(d["density_full"])))
+    near = [c for c, v in rivals.items() if lead and v["last5"] >= float(d["crowd_ratio"]) * lead]
+    crowd = (len(near) - 1) / (len(rivals) - 1) if lead and len(rivals) > 1 else 0.0
+    t5, t3 = sum(v["last5"] for v in rivals.values()), sum(v["last3"] for v in rivals.values())
+    share3 = t3 / t5 if t5 else 0.0
+    recency = _clamp(share3 / float(d["recency_full"]))
+    diff = _clamp(float(d["density"]) * density + float(d["crowding"]) * crowd + float(d["recency"]) * recency
+                  + (float(d["process_gap"]) if process_gap else 0.0))  # fmt: skip
+    barrier = round(100 * (float(cfg["similarity_weight"]) * (1 - sim) + float(cfg["difficulty_weight"]) * diff))
+    return {"ours": ours, "lead": lead_key, "lead_n": lead, "similarity": round(sim, 3), "density": round(density, 3),
+            "crowded": len(near), "crowding": round(crowd, 3), "recent_share": round(share3, 3),
+            "recency": round(recency, 3), "process_gap": process_gap, "difficulty": round(diff, 3),
+            "barrier": int(_clamp(barrier, 0, 100))}  # fmt: skip
+
+
+def barrier_points(barrier: int, distance=None) -> float:
+    """The signed priority adjustment: barrier 50 -> 0, lower a bonus, higher a penalty, scaled by distance, capped."""
+    cfg = config()["patents"]
+    cap = float(cfg["cap"])
+    pts = -(barrier - 50) / 50 * float(cfg["points"]) * distance_scale(distance)
+    return round(_clamp(pts, -cap, cap), 1) + 0.0
+
+
+def patent_words(p: dict, label: str, distance) -> dict:
+    """The three parts in plain words: similarity, distance, difficulty."""
+    cfg = config()["patents"]["words"]
+    sim = p["similarity"]
+    lead = patents.competitor_label(p["lead"]) if p["lead"] else "competitors"
+    s = (f"similar to our {label} work" if sim >= cfg["similar_from"] else
+         f"partly similar to our {label} work" if sim >= cfg["partly_from"] else
+         f"little of ours in {label}")  # fmt: skip
+    why = [x for x, on in (("crowded", p["crowded"] >= 2), ("recent filings", p["recent_share"] >= cfg["recent_from"]),
+                           (f"needs {p['process_gap']}", p["process_gap"])) if on]  # fmt: skip
+    hard = ("hard to recreate" if p["difficulty"] >= cfg["hard_from"] else
+            "moderate to recreate" if p["difficulty"] >= cfg["moderate_from"] else "easy to recreate")  # fmt: skip
+    return {"similarity": f"{s} (ours {p['ours']} vs {lead} {p['lead_n']})",
+            "distance": cfg["distance"].get(distance, cfg["distance"]["none"]),
+            "difficulty": hard + (f" ({', '.join(why)})" if why else "")}  # fmt: skip
+
+
+def patent_effect(fn: str, distance=None) -> dict | None:
+    """The patent barrier of a function and its priority adjustment, from the platform that covers it, or None:
+    {platform, label, barrier, points, the parts, words, counts, line, date}."""
+    got = patents.competition_for(fn)
     if not got:
-        return {"depth": None, "bonus": 0.0, "source": "", "label": ""}
-    cfg = config()["likeliness"]
-    table = cfg.get("patent_bonus") or {}
-    cap = float(cfg.get("patent_bonus_cap", PATENT_CAP))
-    return {**got, "bonus": min(cap, float(table.get(got["depth"]) or 0))}
+        return None
+    key, plat, comp = got
+    rivals = {c: {"last5": int(v.get("last5") or 0), "last3": int(v.get("last3") or 0)}
+              for c, v in (comp.get("competitors") or {}).items()}  # fmt: skip
+    p = barrier_parts(int((comp.get("ours") or {}).get("last5") or 0), rivals, process_gaps().get(fn, ""))
+    pts = barrier_points(p["barrier"], distance)
+    label = plat.get("label", key)
+    words = patent_words(p, label, distance)
+    them = ", ".join(f"{patents.competitor_label(c)} {v['last5']}"
+                     for c, v in sorted(rivals.items(), key=lambda kv: (-kv[1]["last5"], kv[0])))  # fmt: skip
+    counts = f"ours {p['ours']}, {them}"
+    line = (f"Patents (US, 5 years): {counts} · {words['similarity']}, {words['distance']}, {words['difficulty']} → "
+            f"barrier {p['barrier']}, {pts:+g}")  # fmt: skip
+    return {**p, "platform": key, "label": label, "distance": distance, "scale": distance_scale(distance),
+            "points": pts, "words": words, "counts": counts, "line": line, "note": PATENT_NOTE,
+            "date": str(patents.competitors().get("searched", ""))}  # fmt: skip
 
 
 def likeliness(e: dict) -> dict:
-    """L for a row: from its feasibility group (1–3), plus a bonus for a platform of ours and one for US patent depth
-    (capped at 1.0), or the owner's answer (no bonus then)."""
+    """L for a row: from its feasibility group (1–3), plus a bonus for a platform of ours (capped at 1.0), or the
+    owner's answer (no bonus then). Patents are no longer in L: see patent_effect (owner, 6 Nov 2026)."""
     cfg = config()["likeliness"]
     own = (cfg.get("owner") or {}).get(e["fn"])
     path = e.get("path")
     path = path.get("path") if isinstance(path, dict) else path
-    pat = {"depth": None, "bonus": 0.0, "source": "", "label": ""}
     if own:
         v, basis = float(own["value"]), own["note"]
     elif path == "not_pursue":
@@ -137,15 +232,8 @@ def likeliness(e: dict) -> dict:
         if plats and v < 1.0:
             v = min(1.0, v + float(cfg["platform_bonus"]))
             basis += f" · + {cfg['platform_bonus']:g} for a platform of ours ({plats[0]})"
-        pat = patent_bonus(e["fn"])
-        if pat["bonus"]:
-            where = f", {pat['label']} platform" if pat["source"] == "platform" else ""
-            capped = (" (L already 1.0)" if v >= 1.0 - 1e-9 else
-                      " (capped at 1.0)" if v + pat["bonus"] > 1.0 + 1e-9 else "")  # fmt: skip
-            v = min(1.0, v + pat["bonus"])
-            basis += f" · + {pat['bonus']:g} for US patents ({pat['depth']}{where}; {PATENT_LABEL}){capped}"
     label = next(x["label"] for x in cfg["labels"] if v >= x["from"] - 1e-9)
-    return {"value": round(v, 3), "label": label, "basis": basis, "owner": bool(own), "patent": pat}
+    return {"value": round(v, 3), "label": label, "basis": basis, "owner": bool(own)}
 
 
 def diagrams_n(e: dict) -> float:
@@ -165,12 +253,16 @@ def score(e: dict, n_max: float, w: dict[str, float] | None = None, n: float | N
     t, li = relation(e["fn"]), likeliness(e)
     n = diagrams_n(e) if n is None else n
     d = diagrams(n, n_max)
-    total = 100 * (w["technology"] * t["value"] + w["likeliness"] * li["value"] + w["diagrams"] * d)
+    base = 100 * (w["technology"] * t["value"] + w["likeliness"] * li["value"] + w["diagrams"] * d)
+    pat = patent_effect(e["fn"], e.get("distance"))
+    adj = pat["points"] if pat else 0.0
+    total = _clamp(base + adj, 0.0, 100.0)
     cfg = config()
     return {
         "score": round(total, 1), "T": t["value"], "L": li["value"], "D": round(d, 3), "n": n, "n_max": n_max,
         "t_level": t["level"], "t_label": t["label"], "t_help": t["help"], "mapped": t["mapped"],
-        "l_label": li["label"], "l_basis": li["basis"], "l_owner": li["owner"], "patent": li["patent"],
+        "l_label": li["label"], "l_basis": li["basis"], "l_owner": li["owner"], "patent": pat,
+        "base": round(base, 1), "adj": adj,
         "focus": t["value"] >= cfg["focus_from"] - 1e-9, "outside": t["value"] < cfg["outside_below"] - 1e-9,
         "w": w,
     }  # fmt: skip
@@ -230,22 +322,23 @@ def chips(e: dict) -> list[str]:
     p = e["priority"]
     n = round(p["n"]) if abs(p["n"] - round(p["n"])) < 1e-9 else p["n"]
     out = [p["t_label"], f"{n:g} diagram{'' if n == 1 else 's'}", p["l_label"]]
-    return out + ([f"patents: {p['patent']['depth']}"] if p["patent"]["bonus"] else [])
+    return out + ([f"patents: barrier {p['patent']['barrier']}"] if p["patent"] else [])
 
 
 def example(e: dict) -> str:
-    """The sum written out, e.g. 100 × (0.45 × 1.00 + 0.30 × 0.70 + 0.25 × 0.43) = 76.7."""
+    """The sum written out, e.g. 100 × (0.45 × 1.00 + 0.30 × 0.70 + 0.25 × 0.43) = 76.7, with the patent adjustment
+    when there is one: ... − 2.6 (patents) = 74.1."""
     p, w = e["priority"], e["priority"]["w"]
+    pat = f" {'+' if p['adj'] >= 0 else '−'} {abs(p['adj']):g} (patents)" if p.get("patent") else ""
     return (f"100 × ({w['technology']:.2f} × {p['T']:.2f} + {w['likeliness']:.2f} × {p['L']:.2f} + "
-            f"{w['diagrams']:.2f} × {p['D']:.2f}) = {p['score']:.1f}")  # fmt: skip
+            f"{w['diagrams']:.2f} × {p['D']:.2f}){pat} = {p['score']:.1f}")  # fmt: skip
 
 
 def patent_example(rows: list[dict]) -> dict | None:
-    """The highest-priority row whose likeliness the patent bonus raised, other than the top item, for the worked
-    examples."""
+    """The highest-priority row with a patent adjustment, other than the top item, for the worked examples."""
     top = (ranked(rows) or [None])[0]
-    hit = [e for e in rows if e is not top and "for US patents" in e["priority"]["l_basis"]
-           and "already 1.0" not in e["priority"]["l_basis"] and "@" not in e.get("key", e["fn"])]  # fmt: skip
+    hit = [e for e in rows if e is not top and e["priority"].get("patent") and e["priority"]["adj"]
+           and "@" not in e.get("key", e["fn"])]  # fmt: skip
     return (ranked(hit) or [None])[0]
 
 
@@ -262,3 +355,22 @@ def ldo_example(rows: list[dict]) -> dict | None:
 def levels() -> list[tuple[str, dict]]:
     lv = config()["technology"]["levels"]
     return sorted(lv.items(), key=lambda kv: -kv[1]["value"])
+
+
+def patent_table() -> list[dict]:
+    """The counts behind the patent barrier per platform, for the method page: label, functions, ours and the
+    competitors (5 years), the ex-Silicon Labs column, the barrier (without a process flag) and its adjustment at
+    distance 0 and 4."""
+    out = []
+    for key, comp in (patents.competitors().get("platforms") or {}).items():
+        plat = patents.platforms().get(key) or {}
+        rivals = {c: {"last5": int(v.get("last5") or 0), "last3": int(v.get("last3") or 0)}
+                  for c, v in (comp.get("competitors") or {}).items()}  # fmt: skip
+        p = barrier_parts(int((comp.get("ours") or {}).get("last5") or 0), rivals)
+        fns = blocks.catalogue()["functions"]
+        out.append({"key": key, "label": plat.get("label", key),
+                    "functions": [(fns.get(f) or {}).get("label", f) for f in plat.get("functions") or []],
+                    "ours_n": comp.get("ours") or {}, "rivals": patents.rivals((key, plat, comp)),
+                    "ex_silabs": (plat.get("ex_silabs") or {}).get("count"), **p,
+                    "near": barrier_points(p["barrier"], 0), "far": barrier_points(p["barrier"], 4)})  # fmt: skip
+    return out

@@ -98,3 +98,41 @@ def patent_summary() -> dict:
             "platforms": rows, "overlap": list(ov.get("overlap") or []), "complement": dict(ov.get("complement") or {}),
             "automotive": {k: {"label": a.get("label", k), "skyworks": _round(a.get("skyworks")),
                                "qorvo": _round(a.get("qorvo"))} for k, a in automotive().items()}}  # fmt: skip
+
+
+# ---- portfolio totals, ex-Silicon Labs I&A and the competitors per platform (owner, 6 Nov 2026) --------------------
+COMPETITORS = PROJECT_ROOT / "data" / "business" / "evidence" / "patents_competitors.yaml"
+
+
+@lru_cache
+def competitors() -> dict:
+    """US families of the strongest competitors per platform in the last 5 years, with ours for the same years
+    (data/business/evidence/patents_competitors.yaml)."""
+    return (yamlio.load(COMPETITORS.read_text()) if COMPETITORS.exists() else None) or {}
+
+
+def portfolio() -> dict:
+    """Portfolio totals: {searched, query, skyworks / qorvo: {total, trend, per_year}} or {}."""
+    return load().get("portfolio") or {}
+
+
+def competition_for(fn: str) -> tuple[str, dict, dict] | None:
+    """(platform key, platform entry, its competitor entry) for a function, or None without competitor data."""
+    plat = platform_for(fn)
+    if not plat:
+        return None
+    comp = (competitors().get("platforms") or {}).get(plat[0])
+    return (plat[0], plat[1], comp) if comp else None
+
+
+def competitor_label(key: str) -> str:
+    return (competitors().get("names") or {}).get(key, key)
+
+
+def rivals(got: tuple | None) -> list[tuple[str, int]]:
+    """(competitor name, 5-year families) of a competition_for result, most first."""
+    if not got:
+        return []
+    comp = got[2].get("competitors") or {}
+    return [(competitor_label(k), int(v.get("last5") or 0))
+            for k, v in sorted(comp.items(), key=lambda kv: (-int(kv[1].get("last5") or 0), kv[0]))]  # fmt: skip

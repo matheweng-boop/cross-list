@@ -96,6 +96,27 @@
     <td class="muted">a curated feasibility in reports.yaml is kept and flagged when it differs</td></tr>
 </tbody></table></div>
 
+{% if pat_rows %}{% set PT = pat_cfg %}{% set pf = pat_portfolio %}
+<h2 id="patents">Patents <small class="muted">· portfolio, competitors and the patent barrier (est; keyword counts, not legal advice)</small></h2>
+{% if pf %}<p class="small"><b>Whole US portfolio</b> ({{ pf.searched }}, USPTO Patent Public Search): Skyworks <b>{{ pf.skyworks.total }}</b> families, Qorvo group <b>{{ pf.qorvo.total }}</b> ({{ pf.qorvo_names }}). By earliest US filing in the family; the last two years are under-counted (applications publish after 18 months). Query: <code>{{ pf.query_skyworks }}</code>, <code>{{ pf.query_qorvo }}</code>.</p>
+<div class="table-wrap"><table class="bo-formulas small pt-years"><thead><tr><th scope="col">First filed</th><th scope="col" class="n">Skyworks</th><th scope="col" class="n">Qorvo group</th></tr></thead><tbody>
+  {% for y in pf.years %}<tr><th scope="row">{{ y }}</th><td class="n">{{ pf.skyworks.per_year[y] }}</td><td class="n">{{ pf.qorvo.per_year[y] }}</td></tr>{% endfor %}
+  <tr><th scope="row">Buckets {{ pf.buckets|join(' / ') }}</th><td class="n">{{ pf.skyworks.trend|join(' / ') }}</td><td class="n">{{ pf.qorvo.trend|join(' / ') }}</td></tr>
+</tbody></table></div>{% endif %}
+<p class="small"><b>Patent barrier</b> (0–100, per gap / new-technology function, from its technology platform; owner, 6 Nov 2026): three parts.
+  <b>Similarity to our technology</b> = our US families of the last 5 years on the platform ÷ (ours + the strongest competitor's); 0.5 is parity, and a high value means we patent in the same field (less blocking, a cross-licensing position).
+  <b>Difficulty of recreating it</b> = {{ PT.difficulty.density }} × the leader's families (log scale, {{ PT.difficulty.density_full }} or more = 1) + {{ PT.difficulty.crowding }} × crowding (competitors with at least {{ '%g'|format(100 * PT.difficulty.crowd_ratio) }}% of the leader's count) + {{ PT.difficulty.recency }} × recency (share of their families first filed in the last 3 years, {{ '%g'|format(100 * PT.difficulty.recency_full) }}% = 1) + {{ PT.difficulty.process_gap }} where the function needs a process we do not hold (capabilities: not held, divested or closing), capped at 1.
+  <b>Barrier</b> = 100 × ({{ PT.similarity_weight }} × (1 − similarity) + {{ PT.difficulty_weight }} × difficulty).
+  <b>Distance to our technology</b> (the 0–4 scale above) is already in likeliness and in the Opportunity score, so it is not added again: it scales the effect, × {% for k, v in PT.distance_scale.items() %}{{ v }} at {{ k }}{{ ', ' if not loop.last }}{% endfor %}.
+  <b>Priority adjustment</b> = −(barrier − 50) ÷ 50 × {{ PT.points }} × scale, at most ± {{ PT.cap }} points; it replaced the fixed bonus for patent depth. Weights: <code>data/business/priority.yaml</code> (patents).</p>
+<div class="table-wrap"><table class="bo-formulas small pt-comp"><thead><tr><th scope="col">Platform</th><th scope="col" class="n">Ours</th><th scope="col">Competitors (5 years)</th><th scope="col" class="n">ex-Silicon Labs I&amp;A (likely transferred to Skyworks)</th><th scope="col" class="n">Similarity</th><th scope="col" class="n">Difficulty</th><th scope="col" class="n">Barrier</th><th scope="col" class="n">Points near / far</th></tr></thead><tbody>
+  {% for r in pat_rows %}<tr><th scope="row">{{ r.label }}{% if r.functions %}<br><span class="muted">{{ r.functions|join(', ') }}</span>{% endif %}</th><td class="n">{{ r.ours }}</td>
+    <td>{% for name, n in r.rivals %}{{ name }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</td><td class="n">{{ r.ex_silabs if r.ex_silabs is not none else '–' }}</td>
+    <td class="n">{{ '%.2f'|format(r.similarity) }}</td><td class="n">{{ '%.2f'|format(r.difficulty) }}</td><td class="n"><b>{{ r.barrier }}</b></td><td class="n">{{ '%+g'|format(r.near) }} / {{ '%+g'|format(r.far) }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="small muted">US families first filed {{ pat_comp.window }}, searched {{ pat_comp.searched }} on USPTO Patent Public Search; the competitor queries use the platform's own terms and are in <code>data/business/evidence/patents_competitors.yaml</code>. Keyword hits in title, abstract or claims: est, not a legal or technical review. “Points near / far”: the adjustment at distance 0 and 4.</p>
+{% endif %}
+
 <h2 id="terms">Definitions</h2>
 <dl class="bo-defs">{% for k, t in help.terms.items() %}<dt id="t-{{ k }}">{{ t.term }}</dt><dd>{{ t.long }}{% if t.href %} <a href="{{ t.href }}" target="_blank" rel="noopener">Source: {{ t.href_label or t.href }}</a>{% endif %}</dd>{% endfor %}</dl>
 

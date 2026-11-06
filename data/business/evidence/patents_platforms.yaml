@@ -36,6 +36,13 @@
 #   filed under Silicon Laboratories before July 2021 that carry no Skyworks name yet, shown apart as "ex-Silicon Labs
 #   I&A (likely transferred to Skyworks)", never merged. Eight areas added (pcie_timing ... efuse). Competitor counts per
 #   platform: patents_competitors.yaml.
+#   Owner, 6 Nov 2026: "SiLabs patents for power isolation should be counted as Skyworks": the ex-Silicon Labs isolation
+#   families (digital isolators, isolated gate drivers, isolated power / DC-DC, isolated amplifiers) are counted in the
+#   Skyworks figures of isolation, isolated_sensing and desat_gate_drivers ("incl. ex-Silicon Labs I&A", block
+#   ex_silabs_counted); the ex-Silicon Labs timing families stay apart in their own column (ex_silabs on timing).
+#   Re-runs from 7 Nov 2026 need a signed-in USPTO account session on ppubs.uspto.gov (anonymous search ends then).
+#   Depth changes from these 6 Nov method fixes (5G NR some -> strong, isolation little -> strong) carry no `changed:`
+#   block, so they put no Patent change item in To confirm (owner, 6 Nov 2026: not a real change).
 source: "USPTO Patent Public Search (ppubs.uspto.gov), US grants and published applications"
 searched: 2026-11-06
 disclaimer: "Indicative public patent counts, not legal advice."
@@ -725,16 +732,16 @@ platforms:
       carbide" OR anokiwave).as. OR (skyworks OR qorvo OR "rf micro devices" OR triquint OR "active-semi" OR decawave OR greenpeak
       OR "united silicon carbide" OR anokiwave).aanm.) AND ("digital isolator" OR "galvanic isolation" OR "galvanically isolated"
       OR "isolation barrier" OR "isolated gate driver" OR "capacitive isolation").ti,ab,clm.
-    count: 14
-    skyworks: 11
+    count: 113
+    skyworks: 110
     qorvo: 3
-    depth: little
+    depth: strong
     leader: skyworks
     trend:
       skyworks:
-      - 2
-      - 9
-      - 0
+      - 98
+      - 11
+      - 1
       qorvo:
       - 2
       - 1
@@ -774,37 +781,22 @@ platforms:
       - 'US12316256B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
       - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12592683 - USPTO full-text PDF of US12592683B2 served
         (HTTP 200, application/pdf)
-    ex_silabs:
-      label: ex-Silicon Labs I&A (likely transferred to Skyworks)
+    skyworks_label: Skyworks incl. ex-Silicon Labs I&A
+    ex_silabs_counted:
+      label: incl. ex-Silicon Labs I&A
       count: 99
-      already_skyworks: 2
-      trend:
-      - 94
-      - 5
-      - 0
       queries:
       - (("silicon laboratories" OR "silicon labs").as. OR ("silicon laboratories" OR "silicon labs").aanm.) AND ("digital
         isolator" OR "galvanic isolation" OR "galvanically isolated" OR "isolation barrier" OR "isolated gate driver" OR "capacitive
-        isolation").ti,ab,clm. AND @ad<20210701
+        isolation").ti,ab,clm.
       - (("silicon laboratories" OR "silicon labs").as. OR ("silicon laboratories" OR "silicon labs").aanm.) AND ("isolated
-        amplifier" OR "isolation amplifier" OR "gate driver" OR "isolator").ti,ab,clm. AND @ad<20210701
+        amplifier" OR "isolation amplifier" OR "gate driver" OR isolator OR "isolated DC-DC" OR "isolated power" OR "isolated
+        converter" OR "isolated power supply").ti,ab,clm.
       date: '2026-11-06'
-      examples:
-      - id: US11057029B2
-        title: Gate driver with integrated miller clamp
-        year: 2021
-        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11057029
-      - id: US11031778B2
-        title: High-voltage tolerant bi-directional electrostatic discharge protection circuit
-        year: 2021
-        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11031778
-      - id: US10942217B2
-        title: Calibration of digital isolators
-        year: 2021
-        url: https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10942217
-      note: 'ex-Silicon Labs I&A (likely transferred to Skyworks): 99 US families filed under Silicon Laboratories before
-        July 2021 with isolation terms and no Skyworks name on record; likely part of the 2021 I&A sale, not merged into the
-        Skyworks count. 2 more are already recorded under Skyworks and counted there. Keyword counts, est.'
+      last5: 1
+      note: 'Owner, 6 Nov 2026: Silicon Labs isolation patents count as Skyworks. 99 US families filed under Silicon Laboratories
+        (any date; none of them 2021 or later unless stated in last5) are counted in the Skyworks figure and the barrier''s
+        similarity.'
   timing:
     label: Timing, clocks and oscillators
     tech_overview: timing
@@ -1535,13 +1527,6 @@ platforms:
       - 'US12750036B2: Patent Public Search record found, title matches, assignee Skyworks Solutions, Inc.'
       - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12771386 - USPTO full-text PDF of US12771386B2 served
         (HTTP 200, application/pdf)
-    changed:
-      date: '2026-11-06'
-      old_depth: some
-      new_depth: strong
-      check: re-run with the applicant name as well as the assignee (published applications often name the company only as
-        applicant)
-      note: 125 families (was fewer with the assignee name only)
   gnss:
     label: GNSS
     tech_overview: wireless
@@ -1665,14 +1650,14 @@ platforms:
       sensor" OR "isolated current sensing" OR "isolated modulator" OR "isolated delta-sigma" OR "isolated sigma-delta" OR
       (("current sense" OR "current sensing" OR "current sensor" OR shunt OR "delta-sigma modulator" OR "sigma-delta modulator")
       AND ("galvanic isolation" OR "galvanically isolated" OR "isolation barrier"))).ti,ab,clm.
-    count: 3
-    skyworks: 1
+    count: 10
+    skyworks: 8
     qorvo: 2
     depth: little
     leader: both
     trend:
       skyworks:
-      - 1
+      - 8
       - 0
       - 0
       qorvo:
@@ -1709,6 +1694,21 @@ platforms:
         US, Inc.'
       - https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12395133 - USPTO full-text PDF of US12395133B2 served
         (HTTP 200, application/pdf)
+    skyworks_label: Skyworks incl. ex-Silicon Labs I&A
+    ex_silabs_counted:
+      label: incl. ex-Silicon Labs I&A
+      count: 7
+      queries:
+      - (("silicon laboratories" OR "silicon labs").as. OR ("silicon laboratories" OR "silicon labs").aanm.) AND ("isolated
+        amplifier" OR "isolation amplifier" OR "isolated current sensor" OR "isolated current sensing" OR "isolated modulator"
+        OR "isolated delta-sigma" OR "isolated sigma-delta" OR (("current sense" OR "current sensing" OR "current sensor"
+        OR shunt OR "delta-sigma modulator" OR "sigma-delta modulator") AND ("galvanic isolation" OR "galvanically isolated"
+        OR "isolation barrier"))).ti,ab,clm.
+      date: '2026-11-06'
+      last5: 0
+      note: 'Owner, 6 Nov 2026: Silicon Labs isolation patents count as Skyworks. 7 US families filed under Silicon Laboratories
+        (any date; none of them 2021 or later unless stated in last5) are counted in the Skyworks figure and the barrier''s
+        similarity.'
   desat_gate_drivers:
     label: Gate drivers with DESAT / short-circuit protection
     functions:
@@ -1747,6 +1747,20 @@ platforms:
       date: '2026-11-06'
       evidence:
       - No US family matched the query on 2026-11-06 (Patent Public Search), so there is no example to spot-check
+    skyworks_label: Skyworks incl. ex-Silicon Labs I&A
+    ex_silabs_counted:
+      label: incl. ex-Silicon Labs I&A
+      count: 0
+      queries:
+      - (("silicon laboratories" OR "silicon labs").as. OR ("silicon laboratories" OR "silicon labs").aanm.) AND ("gate driver"
+        OR "gate drive" OR "gate driving").ti,ab,clm. AND (desaturation OR DESAT OR "short circuit protection" OR "short-circuit
+        protection" OR "short circuit detection" OR "short-circuit detection" OR "overcurrent protection" OR "over-current
+        protection").ti,ab,clm.
+      date: '2026-11-06'
+      last5: 0
+      note: 'Owner, 6 Nov 2026: Silicon Labs isolation patents count as Skyworks. 0 US families filed under Silicon Laboratories
+        (any date; none of them 2021 or later unless stated in last5) are counted in the Skyworks figure and the barrier''s
+        similarity.'
   ntn:
     label: NTN / satellite RF front ends
     functions: []

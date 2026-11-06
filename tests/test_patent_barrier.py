@@ -136,14 +136,22 @@ def test_portfolio_totals_per_year():
         assert set(pf["years"]) <= set(t["per_year"])
 
 
-def test_ex_silicon_labs_column_kept_apart():
-    for k in ("isolation", "timing"):
-        x = patents.platforms()[k]["ex_silabs"]
-        assert x["label"] == "ex-Silicon Labs I&A (likely transferred to Skyworks)" and x["count"] >= 0
-        assert sum(x["trend"]) == x["count"] and "likely" in x["note"]
-        assert all("@ad<20210701" in q and "silicon laboratories" in q for q in x["queries"])
-    iso = patents.platforms()["isolation"]
-    assert iso["skyworks"] + iso["qorvo"] >= iso["count"]  # not merged into the Skyworks count
+def test_ex_silicon_labs_isolation_counted_as_skyworks_timing_kept_apart():
+    """Owner, 6 Nov 2026: "SiLabs patents for power isolation should be counted as Skyworks"; timing was not named."""
+    plats, comp = patents.platforms(), patents.competitors()["platforms"]
+    for k in ("isolation", "isolated_sensing", "desat_gate_drivers"):
+        p = plats[k]
+        x = p["ex_silabs_counted"]
+        assert x["label"] == "incl. ex-Silicon Labs I&A" and p["skyworks_label"].endswith("incl. ex-Silicon Labs I&A")
+        assert p["skyworks"] >= x["count"] and sum(p["trend"]["skyworks"]) == p["skyworks"]
+        assert all("silicon laboratories" in q and "@ad" not in q for q in x["queries"])  # any date
+        assert comp[k]["ours"]["note"] == "Skyworks incl. ex-Silicon Labs I&A"
+    assert plats["isolation"]["ex_silabs_counted"]["count"] > 50 and "ex_silabs" not in plats["isolation"]
+    e = pr.patent_effect("isolated_can", 3)
+    assert "(Skyworks incl. ex-Silicon Labs I&A)" in e["line"]
+    t = plats["timing"]["ex_silabs"]  # timing stays apart, "likely"
+    assert t["label"] == "ex-Silicon Labs I&A (likely transferred to Skyworks)" and sum(t["trend"]) == t["count"]
+    assert all("@ad<20210701" in q for q in t["queries"]) and "ex_silabs_counted" not in plats["timing"]
 
 
 def test_competitor_file_format():
@@ -168,7 +176,8 @@ def test_method_page_shows_the_counts(client):
     assert 'id="patents"' in html and "Whole US portfolio" in html
     pf = patents.portfolio()
     assert f"Skyworks <b>{pf['skyworks']['total']}</b>" in html and f"Qorvo group <b>{pf['qorvo']['total']}</b>" in html
-    assert "ex-Silicon Labs I&amp;A (likely transferred to Skyworks)" in html
+    assert "ex-Silicon Labs I&amp;A (likely transferred to Skyworks)" in html and 'id="patents-silabs"' in html
+    assert "counted in ours (" in html
     row = next(r for r in pr.patent_table() if r["key"] == "baw")
     name, n = row["rivals"][0]
     assert f"{name} {n}" in html and "BAW filters" in html

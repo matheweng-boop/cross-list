@@ -200,7 +200,8 @@ def patent_effect(fn: str, distance=None) -> dict | None:
     words = patent_words(p, label, distance)
     them = ", ".join(f"{patents.competitor_label(c)} {v['last5']}"
                      for c, v in sorted(rivals.items(), key=lambda kv: (-kv[1]["last5"], kv[0])))  # fmt: skip
-    counts = f"ours {p['ours']}, {them}"
+    incl = f" ({comp['ours']['note']})" if (comp.get('ours') or {}).get('note') else ""
+    counts = f"ours {p['ours']}{incl}, {them}"
     line = (f"Patents (US, 5 years): {counts} · {words['similarity']}, {words['distance']}, {words['difficulty']} → "
             f"barrier {p['barrier']}, {pts:+g}")  # fmt: skip
     return {**p, "platform": key, "label": label, "distance": distance, "scale": distance_scale(distance),
@@ -371,6 +372,7 @@ def patent_table() -> list[dict]:
         out.append({"key": key, "label": plat.get("label", key),
                     "functions": [(fns.get(f) or {}).get("label", f) for f in plat.get("functions") or []],
                     "ours_n": comp.get("ours") or {}, "rivals": patents.rivals((key, plat, comp)),
-                    "ex_silabs": (plat.get("ex_silabs") or {}).get("count"), **p,
+                    "ex_silabs": (plat.get("ex_silabs") or {}).get("count"),
+                    "ex_silabs_counted": (plat.get("ex_silabs_counted") or {}).get("count"), **p,
                     "near": barrier_points(p["barrier"], 0), "far": barrier_points(p["barrier"], 4)})  # fmt: skip
     return out

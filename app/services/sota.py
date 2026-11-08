@@ -140,6 +140,7 @@ def with_unit(v: float | None, fig: dict) -> str:
 
 
 _IN_DATASHEET = re.compile(r"\.pdf\b", re.I)
+_FILE = re.compile(r"([\w.()\-]+\.pdf)\b", re.I)
 _PAGE = re.compile(r"([\w.()\-]+\.pdf)\b[^;]*?\bp\.?\s?(\d+)", re.I)
 
 
@@ -150,7 +151,9 @@ def short_source(src: str | None) -> str:
     m = _PAGE.search(src)
     if m and from_datasheet(src):
         return f"{m[1]} p.{m[2]}"
-    return src if len(src) <= 60 else src[:57] + "…"
+    if (f := _FILE.search(src)) and not is_estimate_source(src):
+        return f[1]  # a datasheet, section named but no page
+    return src if len(src) <= 40 else src[:37] + "…"
 
 
 @dataclass

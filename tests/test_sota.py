@@ -13,7 +13,8 @@ from app.web import nav
 from tests.conftest import ids
 
 FILES = ("ti_digital_isolators", "skyworks_si86", "ti_gate_drivers", "skyworks_si823x", "ti_isolated_amplifiers",
-         "skyworks_isolated_amplifiers", "skyworks_switches", "psemi_switches", "skyworks_timing", "ti_timing")  # fmt: skip
+         "skyworks_isolated_amplifiers", "skyworks_switches", "psemi_switches", "skyworks_timing",
+         "ti_timing")  # fmt: skip
 PRELOAD = {"sota_data": (FILES, None)}
 
 

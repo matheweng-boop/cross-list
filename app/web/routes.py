@@ -36,6 +36,7 @@ from app.services import (
     price_builder,
     price_model,
     pricing,
+    sota,
     text,
     vocab,
 )
@@ -441,6 +442,7 @@ def _part_context(
         "no_cross": not graded,
         "requested": _requested(session, part.mpn),
         "verified_ids": crosslist.Verified(session).of(part.id),  # pairs and confirmed datasheet families
+        "vs_best": lambda c: sota.vs_best(session, part, c),  # owner, 8 Nov 2026: State of the art on every cross
     }
 
 

@@ -190,7 +190,7 @@ LIGHT_FILLS = {"Green": PatternFill("solid", fgColor="C6EFCE"), "Amber": Pattern
 CROSS_LIST_WIDTHS = {"#": 5, "Your part": 20, "Maker": 14, "Status": 11, "Light": 8, "Drop-in part": 20,
                      "Drop-in maker": 12, "Drop-in type": 22, "Drop-in comment": 60, "Functional fit part": 20,
                      "Functional fit maker": 12, "Functional fit type": 24, "Functional fit comment": 60,
-                     "Checked on (P1 specs)": 40, "Verified": 11,
+                     "Checked on (P1 specs)": 40, "Our best (key figures)": 50, "Best in our data": 50, "Verified": 11,
                      "Your comment": 30}  # fmt: skip
 
 
@@ -205,7 +205,8 @@ def cross_list_xlsx(rows, summary: dict, over: int = 0, accuracy: dict | None = 
         cell.font = BOLD
         cell.alignment = Alignment(wrap_text=True, vertical="top")
     light_col = EXPORT_HEADER.index("Light") + 1
-    wrap = {i + 1 for i, h in enumerate(EXPORT_HEADER) if "comment" in h.lower() or h.startswith("Checked")}
+    wrap = {i + 1 for i, h in enumerate(EXPORT_HEADER)
+            if "comment" in h.lower() or h.startswith("Checked") or "best" in h.lower()}
     for line in (x for r in rows for x in export_lines(r)):
         ws.append(line)
         n = ws.max_row

@@ -5,6 +5,7 @@
 <span class="cx-ty cx-ty-{{ kinds.get(c.type, 'fn') }}">{{ c.type }}</span>{% if c.answer == 'wrong' %} <span class="badge bad">Marked wrong</span>{% endif %}
 <div class="cx-cm">{{ c.comment }}</div>
 {% if r.checked_on %}<details class="cx-p1"><summary>P1 specs checked ({{ r.checked_on|length }})</summary>{{ r.checked_on|join(', ') }}</details>{% endif %}
+{% if c.vs %}{% set vb = c.vs %}{% include "_vs_best.html" %}{% endif %}
 <a href="/compare?ids={{ r.part.id }},{{ c.part.id }}&amp;baseline={{ r.part.id }}" class="cx-cmp">Compare →</a>
 {% endmacro %}
 {% macro feedback(r, c, label) %}

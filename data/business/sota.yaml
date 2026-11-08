@@ -1,0 +1,104 @@
+# Parts & components > State of the art (owner, 8 Nov 2026: "what is the best of the best in technology that each
+# company, in each part category, has to offer", and on every cross "compared with the best the company has to
+# offer, what are we actually offering").
+#
+# One entry per part category (a family in rules/<family>.yaml with datasheet data in data/real). The key figures are
+# the number-valued priority-1 rules the cross engine uses (p1: true; tests/test_sota.py checks none is missing), plus a
+# few useful extras. Per figure:
+#   key        the parameter (param_values.key); with pick: max/min, the top or bottom of a [min, max] range
+#   label      column heading, short
+#   unit       shown after the value
+#   direction  higher | lower: which way is better
+#   note       optional; shown under the table and as the heading's tooltip
+#   p1         true for a priority-1 rule of the family
+#   decimals   optional: fixed decimals (6.0 kVrms)
+# A figure with count: automotive counts the maker's automotive-grade parts instead (never marked best: it follows
+# how many parts we imported).
+#
+# Sub-types (chips) are derived from the data in app/services/sota.py; labels and order are set here. A sub-type
+# with no parts is not shown.
+categories:
+  - family: digital_isolator
+    label: Digital isolators
+    subtypes:
+      general: General purpose
+      i2c: I²C
+      usb: USB
+      power: With isolated power
+    subtype_note: Sub-types are compared separately (USB isolators run at 480 Mbps by design; I²C parts are slow open-drain links).
+    figures:
+      - {key: isolation_rating_kvrms, label: Isolation, unit: kVrms, decimals: 1, direction: higher, p1: true}
+      - {key: data_rate_mbps, label: Data rate, unit: Mbps, direction: higher, p1: true}
+      - {key: cmti_kv_us, label: CMTI (typ), unit: kV/µs, direction: higher, p1: true, note: "CMTI: typical where the datasheet gives one, else the minimum."}
+      - {key: prop_delay_ns, label: Delay (typ), unit: ns, direction: lower, note: "Delay: typical where the datasheet gives one, else the maximum (owner's rule: typ first)."}
+      - {key: temp_range_c, pick: max, label: Max temp, unit: °C, direction: higher}
+      - {key: creepage_mm, label: Creepage, unit: mm, decimals: 1, direction: higher}
+      - {count: automotive, label: Automotive}
+  - family: gate_driver
+    label: Isolated gate drivers
+    subtypes:
+      single: Single
+      single_desat: Single with DESAT
+      dual: Dual
+      dual_desat: Dual with DESAT
+      half_bridge: Half-bridge (PWM input)
+      half_bridge_desat: Half-bridge with DESAT
+    subtype_note: "Half-bridge = one PWM input drives both outputs. DESAT = desaturation, overcurrent or short-circuit protection."
+    figures:
+      - {key: isolation_rating_kvrms, label: Isolation, unit: kVrms, decimals: 1, direction: higher, p1: true}
+      - {key: cmti_kv_us, label: CMTI (typ), unit: kV/µs, direction: higher, p1: true, note: "CMTI: typical where the datasheet gives one, else the minimum."}
+      - {key: peak_source_a, label: Peak source, unit: A, direction: higher, p1: true}
+      - {key: peak_sink_a, label: Peak sink, unit: A, direction: higher, p1: true}
+      - {key: prop_delay_ns, label: Delay (typ), unit: ns, direction: lower, note: "Delay: typical where the datasheet gives one, else the maximum (owner's rule: typ first)."}
+      - {key: temp_range_c, pick: max, label: Max temp, unit: °C, direction: higher}
+      - {key: creepage_mm, label: Creepage, unit: mm, decimals: 1, direction: higher}
+      - {count: automotive, label: Automotive}
+  - family: isolated_amplifier
+    label: Isolated amplifiers / modulators
+    subtypes:
+      amp_current: Current-sense amplifier
+      amp_voltage: Voltage-sense amplifier
+      mod_current: Current-sense modulator
+      mod_voltage: Voltage-sense modulator
+    subtype_note: Amplifiers have an analog output; modulators a digital bitstream for a filter in the controller.
+    figures:
+      - {key: isolation_rating_kvrms, label: Isolation, unit: kVrms, decimals: 1, direction: higher, p1: true}
+      - {key: cmti_kv_us, label: CMTI (min), unit: kV/µs, direction: higher, p1: true}
+      - {key: snr_db, label: SNR, unit: dB, direction: higher}
+      - {key: gain_error_pct, label: Gain error, unit: "%", direction: lower}
+      - {key: offset_uv, label: Offset, unit: µV, direction: lower}
+      - {key: bandwidth_khz, label: Bandwidth, unit: kHz, direction: higher}
+      - {key: temp_range_c, pick: max, label: Max temp, unit: °C, direction: higher}
+      - {key: creepage_mm, label: Creepage, unit: mm, decimals: 1, direction: higher}
+      - {count: automotive, label: Automotive}
+  - family: rf_switch
+    label: RF switches
+    subtypes:
+      spst: SPST
+      spdt: SPDT
+      sp3t_4t: SP3T–SP4T
+      sp5t_up: SP5T and up
+      multi_pole: Multi-pole (DPDT, 3P4T…)
+    subtype_note: Grouped by throw count. Insertion loss and isolation are each datasheet's headline value, often at different frequencies.
+    figures:
+      - {key: max_input_power_dbm, label: Max power, unit: dBm, direction: higher, p1: true, note: "Max power: absolute maximum input power."}
+      - {key: freq_range_ghz, pick: max, label: Top frequency, unit: GHz, direction: higher, p1: true}
+      - {key: insertion_loss_db, label: Insertion loss, unit: dB, direction: lower}
+      - {key: isolation_db, label: Isolation, unit: dB, direction: higher}
+      - {key: iip3_dbm, label: IIP3, unit: dBm, direction: higher}
+      - {key: temp_range_c, pick: max, label: Max temp, unit: °C, direction: higher}
+      - {count: automotive, label: Automotive}
+  - family: timing
+    label: Timing
+    subtypes:
+      clock_generator: Clock generators
+      jitter_attenuator: Jitter attenuators
+      pcie_buffer: Buffers (PCIe)
+      crystal_oscillator: Oscillators
+    subtype_note: Grouped by function. Jitter is each datasheet's typical RMS figure at its own test frequency.
+    figures:
+      - {key: jitter_fs, label: Jitter (typ), unit: fs, direction: lower, p1: true}
+      - {key: outputs, label: Outputs, unit: "", direction: higher, p1: true}
+      - {key: freq_range_mhz, pick: max, label: Top frequency, unit: MHz, direction: higher, p1: true}
+      - {key: temp_range_c, pick: max, label: Max temp, unit: °C, direction: higher}
+      - {count: automotive, label: Automotive}

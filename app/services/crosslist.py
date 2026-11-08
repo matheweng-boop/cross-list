@@ -49,7 +49,7 @@ from app.matching.engine import (
 from app.matching.rules import FamilyRules, get_rules, load_all_rules
 from app.models import CrossFeedback, DataReview, FeedbackVerdict, Part, VerifyTask
 from app.partnumbers import normalize_pn, reel_q1_variants
-from app.services import cross_notes, lifecycle
+from app.services import cross_notes, lifecycle, sota
 from app.services.queries import candidates_for, feedback_for
 
 MAX_LINES = 500
@@ -698,6 +698,7 @@ class Column:
     comment: str
     verified: bool = False
     answer: str | None = None  # latest Right / Wrong
+    vs: dict | None = None  # "vs best" (app/services/sota.py): theirs, offered, our best, best in our data
 
     @property
     def part(self) -> Part:
@@ -722,6 +723,7 @@ class Row:
     checked_on: list[str] = field(default_factory=list)
     other: Column | None = None  # third column: the other Skyworks isolator family's best part (Si86 / Si86S)
     nearest: Column | None = None  # no cross within the deviation limit: the nearest part, marked (rule 13)
+    best: tuple[str, str] = ("", "")  # our best and the best in our data per key figure (Excel; app/services/sota.py)
 
     @property
     def maker(self) -> str:
@@ -814,6 +816,7 @@ def cross_list(session: Session, entries: list[Entry], supply_v: float | None = 
         if part.is_reference:
             row.light, row.reason = "green", f"Already a {part.manufacturer.name} part – nothing to cross."
             continue
+        row.best = sota.best_cells(session, part)
         crosses = crosser.crosses(part)
         c1, c2 = columns(part, crosses)
         alt = other_family([c1, c2], _pool(part, crosses))
@@ -827,6 +830,7 @@ def cross_list(session: Session, entries: list[Entry], supply_v: float | None = 
             c = Column(r, cross_type(r, col), note, (part.id, r.candidate.id) in verified, a.verdict if a else None)
             if c.answer == "wrong":
                 c.verified = False
+            c.vs = sota.vs_best(session, part, r.candidate)  # the best values are cached per data version
             if col == 1:
                 row.drop_in = c
             elif col == 2:
@@ -848,7 +852,8 @@ def cross_list(session: Session, entries: list[Entry], supply_v: float | None = 
 
 EXPORT_HEADER = ["#", "Your part", "Maker", "Status", "Light", "Drop-in part", "Drop-in maker", "Drop-in type",
                  "Drop-in comment", "Functional fit part", "Functional fit maker", "Functional fit type",
-                 "Functional fit comment", "Checked on (P1 specs)", "Verified", "Your comment"]  # fmt: skip
+                 "Functional fit comment", "Checked on (P1 specs)", "Our best (key figures)", "Best in our data",
+                 "Verified", "Your comment"]  # fmt: skip
 OTHER_LINE = "↳ other family"  # first cell of the other-family line under a part's line
 
 
@@ -866,7 +871,8 @@ def export_cells(r: Row) -> list:
         second = col(r.functional) if r.functional else ["= Drop-in", "", "", ""]
     part = r.text + (f" ×{r.count}" if r.count > 1 else "")
     return [r.n, part, r.maker or ("not recognised" if r.part is None and not r.catalogue else ""), r.status,
-            LIGHTS[r.light], *first, *second, ", ".join(r.checked_on), "✓ Verified" if r.main_verified else "", ""]
+            LIGHTS[r.light], *first, *second, ", ".join(r.checked_on), *r.best,
+            "✓ Verified" if r.main_verified else "", ""]
 
 
 def other_cells(r: Row) -> list:
@@ -876,7 +882,7 @@ def other_cells(r: Row) -> list:
     c = r.other
     cells = [c.part.mpn, c.part.manufacturer.name, c.type, c.comment]
     first, second = (cells, ["", "", "", ""]) if c.result.fit.fits else (["", "", "", ""], cells)
-    return [OTHER_LINE, "", "", "", LIGHTS[r.light], *first, *second, ", ".join(r.checked_on),
+    return [OTHER_LINE, "", "", "", LIGHTS[r.light], *first, *second, ", ".join(r.checked_on), "", "",
             "✓ Verified" if c.verified else "", ""]  # fmt: skip
 
 

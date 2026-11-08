@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>State of the art</h1>
+<p class="subtitle muted">Per part category: the best value each maker offers for each key figure, with the part that has it. "Best" is per figure: no single part leads on everything.</p>
+
+{% if not cat %}
+<p>No part category has datasheet data yet.</p>
+{% else %}
+<nav class="sota-chips" aria-label="Part category">
+  {% for c in cats %}<a class="sota-chip{{ ' on' if c.family == cat.family }}" href="/state-of-the-art?cat={{ c.family }}"{% if c.family == cat.family %} aria-current="page"{% endif %}>{{ c.label }}</a>{% endfor %}
+</nav>
+<nav class="sota-chips" aria-label="Sub-type">
+  {% for key, x in groups.items() %}<a class="sota-chip{{ ' on' if x is sameas g }}" href="/state-of-the-art?cat={{ cat.family }}&amp;sub={{ key }}"{% if x is sameas g %} aria-current="true"{% endif %}>{{ x.label }} <span class="muted">{{ x.n }}</span></a>{% endfor %}
+  {% if cat.subtype_note %}<span class="sota-note">{{ cat.subtype_note }}</span>{% endif %}
+</nav>
+
+{% if g.demo %}<p class="sota-note" role="note"><b>Demo data:</b> no real {{ cat.label|lower }} are loaded on this server, so the table shows the made-up demo parts.</p>{% endif %}
+<div class="sota-card">
+<div class="sota-tw">
+<table class="sota-table">
+  <thead><tr><th scope="col">Maker <small>parts in our data</small></th>
+    {% for f in figs %}<th scope="col"{% if f.note %} title="{{ f.note }}"{% endif %}>{{ f.label }}{% if f.unit and f.key %} <small>{{ f.unit }}</small>{% elif not f.key %} <small>parts</small>{% endif %}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for m in g.makers %}
+  <tr class="{{ 'sota-ours' if m.ours }}">
+    <th scope="row"><b>{{ m.name|vendor }}</b><small>{{ '{:,}'.format(m.n) }}</small></th>
+    {% for f in figs %}
+    {% if f.key %}{% set c = m.cells.get(f.key) %}
+    <td class="{{ 'sota-best' if f.key in m.best }}"{% if f.key in m.best %} data-best="1"{% endif %}>{% if c %}
+      {{ sota.fmt(c.value, f) }}{% if c.table %}<span class="sota-mark" title="Not read in a datasheet: {{ c.where }}">{{ mark }}</span>{% endif %}
+      <small><a href="/parts/{{ c.part_id }}">{{ c.mpn }}</a>{% if c.others %} and {{ c.others }} other{{ 's' if c.others != 1 }}{% endif %}</small>
+      <small class="sota-src" title="{{ c.source }}">{{ c.where }}</small>
+    {% else %}<span class="muted">–</span>{% endif %}</td>
+    {% else %}
+    <td>{{ m.automotive }}</td>
+    {% endif %}
+    {% endfor %}
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="sota-gaps"><b>{{ gap_line }}</b></p>
+<p class="sota-note">Green = best in our data for that figure. {{ scope_note }} {{ mark }} = value from a product table or selection guide, not read in a datasheet (check the datasheet). Each value links to its part; the small line under it is where we read it. Skyworks and Qorvo first, then the other makers by part count. Parts not for new designs (NRND, last time buy, obsolete) are left out. Automotive = AEC-Q qualified parts of the sub-type.
+  {% for f in figs if f.note %}{{ f.note }} {% endfor %}</p>
+</div>
+<p class="small muted">The same comparison shows under every cross, folded, as "vs best" (the part page and Cross a list).</p>
+{% endif %}
+{% endblock %}

@@ -189,7 +189,8 @@ def test_excel_download_mirrors_the_table(client):
     assert body[1][5] == "No drop-in" and body[1][11].startswith("Functional")
     assert body[2][9] == "No functional fit" and body[2][12]  # the reason
     assert body[3][2] == "not recognised" and body[3][12] == "Not in our data."
-    assert "Isolation rating" in body[0][13] and body[0][15] is None  # checked on; the owner's comment column
+    assert "Isolation rating" in body[0][13] and body[0][-1] is None  # checked on; the owner's comment column
+    assert "Isolation" in body[0][14] and "Isolation" in body[0][15]  # our best and the best in our data (8 Nov 2026)
     assert cl.OTHER_LINE not in [v[0] for v in body]  # no other-family line for synthetic parts
     summary = {r[0]: r[1] for r in wb["Summary"].iter_rows(values_only=True)}
     assert summary["Parts"] == 4 and summary["Red"] == 2 and summary["Coverage"] == "50 %"

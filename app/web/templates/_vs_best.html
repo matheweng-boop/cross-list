@@ -1,0 +1,25 @@
+{# "vs best" under a cross (owner, 8 Nov 2026): their part, the offered part, our best and the best in our data per key
+   figure (app/services/sota.py). Needs vb = sota.vs_best(...) (None: nothing shown). Folded by default. #}
+{% if vb %}
+<details class="sota-vs">
+  <summary>vs best <span class="muted">· {{ vb.category }} · {{ vb.subtype }}</span></summary>
+  <div class="sota-tw">
+  <table class="sota-vs-table">
+    <thead><tr><th scope="col">Figure</th><th scope="col">Theirs</th><th scope="col">Offered</th><th scope="col">Our best</th><th scope="col">Best in our data</th><th scope="col"><span class="visually-hidden">Tag</span></th></tr></thead>
+    <tbody>
+    {% for x in vb.rows %}{% set f = x.fig %}
+    <tr>
+      <th scope="row">{{ f.label }}{% if f.unit %} <small>{{ f.unit }}</small>{% endif %}</th>
+      <td>{{ sota.fmt(x.theirs, f) }}</td>
+      <td class="{{ 'sota-gap' if 'better' in x.tags }}">{{ sota.fmt(x.offered, f) }}</td>
+      <td>{% if x.ours %}{{ sota.fmt(x.ours.value, f) }}{% if not sota.same(x.ours.value, x.offered) %}<small><a href="/parts/{{ x.ours.part_id }}">{{ x.ours.mpn }}</a></small>{% endif %}{% else %}–{% endif %}</td>
+      <td>{% if x.market %}{{ sota.fmt(x.market.value, f) }}<small>{{ x.market.maker|vendor }} <a href="/parts/{{ x.market.part_id }}">{{ x.market.mpn }}</a></small>{% else %}–{% endif %}</td>
+      <td>{% for t in x.tags %}<span class="sota-tag sota-tag-{{ t }}">{{ sota.TAGS[t] }}</span>{% endfor %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="sota-note">Reading: {{ vb.reading }} <a href="/state-of-the-art?cat={{ vb.family }}&amp;sub={{ vb.subtype_key }}">State of the art →</a></p>
+</details>
+{% endif %}

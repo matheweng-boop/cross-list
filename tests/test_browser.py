@@ -1981,3 +1981,46 @@ def test_systems_library_possible_customers_by_region(page):
     whole = page.locator("details#pc-automotive")
     whole.locator("summary").click()
     expect(whole.locator('.pc-region[aria-label="EMEA"] li').first).to_be_visible()
+
+
+def _real_page(page, html: str, base: str):
+    """Shows HTML the in-process app rendered from real data (the live server holds synthetic parts only) under a
+    test address, with the live server as its base, so its stylesheet and scripts are the real ones."""
+    html = html.replace("<head>", f'<head><base href="{base}/">', 1)
+    page.route("http://xref.test/check", lambda route: route.fulfill(status=200, content_type="text/html", body=html))
+    page.goto("http://xref.test/check", wait_until="load")
+
+
+def test_skyworks_cross_reference_check_mark(chromium, live_server, client, real, session):
+    """Worker X, 10 Nov 2026 (owner: "just put a little check mark behind it"): a ✓ behind our part when Skyworks'
+    cross reference lists the pair, on the part page and on Cross a list; it links to the official page (the tap
+    equivalent on an iPad). Real TI and Skyworks isolators, on a 390 px phone: the mark adds no width."""
+    from sqlalchemy import select
+
+    from app.models import Part
+
+    phone = chromium.new_context(viewport=PHONE, is_mobile=True, has_touch=True)
+    page = Watch(live_server).attach(phone.new_page())
+    page.set_default_timeout(PAGE_TIMEOUT)
+    errors = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    _real_page(page, client.post("/cross-list", data={"parts": "ISO7731DWR"}).text, live_server)
+    mark = page.locator(".cx-table a.sky-check")
+    expect(mark).to_have_count(1)
+    expect(mark).to_be_visible()
+    expect(mark).to_have_text("✓")
+    expect(mark).to_have_attribute("href", "https://www.skyworksinc.com/cross-reference?PartNumber=ISO7731DWR")
+    assert "Drop-In Replacement" in mark.get_attribute("aria-label")
+    with_mark = overflow(page)
+    page.evaluate("document.querySelectorAll('.sky-check').forEach(e => e.remove())")
+    # the mark adds no width. (A real-data row is ~110 px too wide at 390 px with or without it: the "vs best"
+    # table inside the card; left for later, 10 Nov 2026.)
+    assert overflow(page) == with_mark
+    pid = session.scalar(select(Part.id).where(Part.mpn == "ISO7720DR"))
+    _real_page(page, client.get(f"/parts/{pid}").text, live_server)
+    expect(page.locator("table.results a.sky-check").first).to_be_visible()
+    with_mark = overflow(page)
+    page.evaluate("document.querySelectorAll('.sky-check').forEach(e => e.remove())")
+    assert overflow(page) == with_mark  # (the results table scrolls; this rendered copy is wider, with or without it)
+    assert not errors
+    phone.close()

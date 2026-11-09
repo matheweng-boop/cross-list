@@ -11,7 +11,9 @@ Sharing, chosen per answer by the owner (the default is internal):
 - 🔒 Internal only: on the site for the owner only. Never in a Shareable (pages, PDF, PowerPoint), an export (Excel,
   CSV, text, any download), the Telegram summary, a guest's view or the review history; the daily-run inbox
   (/api/inbox) gets a count only, so an internal answer is never used to revise a report.
-- ✅ Can be shared: in full in the inbox, so the next revision can use it; guests see it (without who answered, as they
+- ✅ Can be shared (on a segment question worded "✅ Can be used for research (inbox)", SEG_SHARING; owner, 9 Nov 2026:
+  no question and no answer, of either kind, is ever in a Shareable output): in full in the inbox, so the next
+  revision can use it; guests see it (without who answered, as they
   see no author names elsewhere). The data-protection screen (docs/plan_data_protection.md, 2b) runs on it like on any
   free text: a flagged answer is held (the owner sees why; guests and the inbox do not get its text) until the owner
   releases it.
@@ -37,6 +39,15 @@ from app.models import Answer, AnswerVersion, DataReview, aware
 FILE = PROJECT_ROOT / "data" / "business" / "questions_to_ask.yaml"
 INTERNAL, SHARED = "internal", "shared"
 SHARING = {INTERNAL: "🔒 Internal only", SHARED: "✅ Can be shared"}
+# owner, 9 Nov 2026: "Do not include shareable with questions": no question and no answer is ever in a Shareable output,
+# so on a segment question the switch only says whether the daily update may use the answer (inbox in full) and
+# guests may read it. Same stored values; only the words differ.
+SEG_SHARING = {INTERNAL: "🔒 Internal only", SHARED: "✅ Can be used for research (inbox)"}
+
+
+def labels(slug: str) -> dict[str, str]:
+    """The switch's words for an answer under ``slug``: a segment's (research use) or a report's (can be shared)."""
+    return SEG_SHARING if (slug or "").startswith("seg:") else SHARING
 WARNING = "Don't record confidential figures or plans; summarise instead"
 RETENTION_MONTHS = 12
 TEXT_MAX, WHO_MAX = 4000, 200
@@ -255,7 +266,7 @@ def page(session: Session, request, slug: str) -> dict:
     post, hidden = action(slug)
     grp = sq.GROUPS if sq.is_segment(slug) else groups(prelim.raw(slug) is not None)
     return {"owner": owner, "guest": bool(p and p.is_guest), "by_q": by_q, "questions": questions(slug),
-            "warning": WARNING, "sharing": SHARING, "slug": slug, "action": post, "hidden": hidden,
+            "warning": WARNING, "sharing": labels(slug), "slug": slug, "action": post, "hidden": hidden,
             "href": href(slug), "groups": grp}  # fmt: skip
 
 
@@ -270,7 +281,7 @@ def _clean(text: str, who: str) -> tuple[str, str | None]:
 def _sharing(value: str) -> str:
     value = (value or INTERNAL).strip()
     if value not in SHARING:
-        raise ValueError("Choose Internal only or Can be shared.")
+        raise ValueError("Choose Internal only or Can be shared (Can be used for research).")
     return value
 
 
@@ -305,7 +316,7 @@ def edit(session: Session, aid: int, text: str, who: str = "", sharing: str | No
     if (text, who_, sharing) == (a.text, a.who, a.sharing):
         return a
     new_words = (text, who_) != (a.text, a.who)
-    _keep(session, a, "edited" if new_words else f"switched to {SHARING[sharing]}")
+    _keep(session, a, "edited" if new_words else f"switched to {labels(a.slug)[sharing]}")
     a.flags = screen(text, who_ or "") or None
     if new_words:
         a.released_at = None
@@ -321,7 +332,7 @@ def set_sharing(session: Session, aid: int, sharing: str) -> Answer:
         raise KeyError(aid)
     sharing = _sharing(sharing)
     if sharing != a.sharing:
-        _keep(session, a, f"switched to {SHARING[sharing]}")
+        _keep(session, a, f"switched to {labels(a.slug)[sharing]}")
         a.sharing, a.updated_at = sharing, datetime.now(UTC)
         a.flags = screen(a.text, a.who or "") or None  # the screen as it is today
         session.commit()
@@ -450,10 +461,11 @@ def inbox_lines(session: Session, start: datetime) -> list[str]:
     internal answers as counts only (owner, 2 Nov 2026: never used to revise a report)."""
     purge(session)
     out = ["\n## Questions to ask: answers\n",
-           "Shareable answers (the owner chose “Can be shared”), in full: use them in the report's or case's next "
-           "revision (reports.yaml, questions_to_ask.yaml, data/business/cases/<slug>.yaml) as owner input; a segment "
-           "answer (seg:<system>/<sub-system>) updates that segment's deep dive or block diagram. Internal answers are "
-           "counted only: never ask for their text and never use them.\n"]  # fmt: skip
+           "Shareable answers (the owner chose “Can be shared”, on a segment “Can be used for research”), in full: "
+           "use them in the report's or case's next revision (reports.yaml, questions_to_ask.yaml, "
+           "data/business/cases/<slug>.yaml) as owner input; a segment answer (seg:<system>/<sub-system>) updates "
+           "that segment's deep dive or block diagram. Internal answers are counted only: never ask for their text "
+           "and never use them.\n"]  # fmt: skip
     changed = list(session.scalars(select(Answer).where(Answer.updated_at >= start)
                                    .order_by(Answer.updated_at, Answer.id)))  # fmt: skip
     shared = [a for a in changed if a.sharing == SHARED]

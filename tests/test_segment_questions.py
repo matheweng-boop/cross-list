@@ -80,7 +80,7 @@ def test_sub_system_page_shows_three_tabs_with_answer_boxes(client):
     q = _q(group="developers")
     box = sec.split(f'id="i-{q["id"]}"', 1)[1][:3000]
     assert WARN in box and "<textarea" in box and 'name="who"' in box and f'value="{SUB}"' in box
-    assert "🔒 Internal only" in box and "✅ Can be shared" in box
+    assert "🔒 Internal only" in box and "✅ Can be used for research (inbox)" in box
     assert 'action="/library/questions/automotive/answers"' in box
     assert "Why we ask:" in sec and "/business/reports/auto-charging-power#questions-to-ask" in page
     system = _page(client, SYS)
@@ -91,12 +91,53 @@ def test_sub_system_page_shows_three_tabs_with_answer_boxes(client):
     assert client.get("/library/questions/nope").status_code == 404
 
 
-def test_deep_dive_shows_its_sub_system_questions_folded(client):
+def test_deep_dive_shows_its_sub_system_questions_open_at_the_bottom(client):
+    """Owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system": after the references, the last thing."""
     page = html.unescape(client.get("/library/dc_timing").text)
-    sec = page.split('id="questions-to-ask"', 1)
-    assert len(sec) == 2 and "<details" in sec[0][-200:] and " open" not in sec[0][-200:]
-    assert _q("datacenter/timing")["text"] in sec[1]
-    assert "/library/questions/datacenter/timing" in page
+    before, sec = page.split('id="questions-to-ask"', 1)
+    assert "<details" in before[-60:] and sec.startswith(" open>")
+    assert before.index('id="refs"') < len(before) and 'href="#questions-to-ask"' in before
+    assert _q("datacenter/timing")["text"] in sec
+    assert "/library/questions/datacenter/timing" in sec
+    assert "<h2" not in sec.split("</details>")[-1]  # nothing after it but the "all questions" link
+
+
+def test_block_diagram_library_shows_the_picked_sub_systems_questions_at_the_bottom(client):
+    page = html.unescape(client.get(f"/blocks?system={SYS}&sub={SUB}").text)
+    assert page.count('id="questions-to-ask"') == 1
+    before, sec = page.split('id="questions-to-ask"', 1)
+    assert before.rindex('id="sub-charging"') < before.rindex("Cross-sell in")  # after its diagrams and cross-sell
+    assert "Questions to ask: " in sec[:400] and _q()["text"] in sec and _q(group="bu")["text"] in sec
+    assert f'name="back" value="/blocks?system={SYS}&sub={SUB}"' in sec
+    # only the picked sub-system's: no other segment's questions, and none without a pick
+    other = _q(next(f"{SYS}/{x['key']}" for x in systems.get(SYS)["subsystems"] if x["key"] != SUB))["text"]
+    assert other not in page
+    for url in ("/blocks", f"/blocks?system={SYS}", "/library"):
+        assert 'id="questions-to-ask"' not in client.get(url).text, url
+    assert "/library/questions/automotive/charging" in client.get("/library").text  # the button stays there
+    # every sub-system gets its own
+    for s in systems.systems():
+        for x in s["subsystems"][:1]:
+            p = html.unescape(client.get(f"/blocks?system={s['key']}&sub={x['key']}").text)
+            assert sq.questions(f"{s['key']}/{x['key']}")[0]["text"] in p, (s["key"], x["key"])
+
+
+def test_an_answer_saved_at_the_bottom_comes_back_to_that_page(client, session):
+    back = f"/blocks?system={SYS}&sub={SUB}&saved=1"
+    r = client.post("/library/questions/automotive/answers", follow_redirects=False,
+                    data={"key": _q()["id"], "sub": SUB, "text": "Back to blocks", "back": back})  # fmt: skip
+    loc = r.headers["location"]
+    assert r.status_code == 303 and loc.startswith(f"/blocks?system={SYS}&sub={SUB}&saved=") and "saved=1&" not in loc
+    assert loc.endswith(f"#i-{_q()['id']}") and "Back to blocks" in client.get(loc.split("#")[0]).text
+    r = client.post("/library/questions/automotive/answers", follow_redirects=False,
+                    data={"key": _q()["id"], "sub": SUB, "text": "No back", "back": "//evil.example"})  # fmt: skip
+    assert r.headers["location"].startswith("/library/questions/automotive/charging?saved=")
+
+
+def test_cross_sell_with_a_sub_system_shows_its_questions_at_the_bottom(client):
+    page = html.unescape(client.get(f"/blocks/cross-sell?system={SYS}&sub={SUB}").text)
+    assert page.count('id="questions-to-ask"') == 1 and _q()["text"] in page.split('id="questions-to-ask"', 1)[1]
+    assert 'id="questions-to-ask"' not in client.get(f"/blocks/cross-sell?system={SYS}").text
 
 
 def test_an_answer_to_a_segment_question_works_like_a_report_answer(client, session):

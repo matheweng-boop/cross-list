@@ -104,4 +104,5 @@
   <small><a href="{{ url(fn=e.fn, part='') }}">Systems that use it</a></small></article>{% endfor %}</div>
 {% if sell|length > 12 %}<details class="csg-more small"><summary>Show {{ sell|length - 12 }} more</summary><div class="csg-grid">{% for e in sell[12:] %}<article class="csg-card"><b>{{ e.label }}</b><small>Needed in {{ e.n_apps }} diagram{{ 's' if e.n_apps != 1 }}</small><small><a href="{{ url(fn=e.fn, part='') }}">Systems that use it</a></small></article>{% endfor %}</div></details>{% endif %}
 {% endif %}
+{% if seg_qa %}{% from "library/_segment_questions.html" import sub_questions %}{{ sub_questions(seg_qa) }}{% endif %}
 {% endblock %}

@@ -23,7 +23,7 @@
   {% if related.visuals %}<p><b>Try it in Interactive visuals:</b> {% for x in related.visuals %}<a class="kn-chip vz" href="{{ x.href }}">{{ x.title }}</a>{% endfor %}</p>{% endif %}
 </section>{% endif %}
 {% if t.see_also %}<p class="small lib-see-also"><b>See also:</b> {% for label, href in t.see_also %}<a href="{{ href }}">{{ label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
-<nav class="bo-toc small">{% if t.why_customer %}<a href="#customer">Why it matters to the customer</a> · {% endif %}{% if t.block_diagram %}<a href="#diagram">Block diagram ✓</a>{% else %}<span class="muted">No block diagram yet</span>{% endif %} · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a>{% if t.competitors %} · <a href="#competitors">Competitors</a>{% endif %}{% if t.market %} · <a href="#market">Market</a>{% endif %} · <a href="#questions">Open questions</a> · <a href="#refs">References</a></nav>
+<nav class="bo-toc small">{% if t.why_customer %}<a href="#customer">Why it matters to the customer</a> · {% endif %}{% if t.block_diagram %}<a href="#diagram">Block diagram ✓</a>{% else %}<span class="muted">No block diagram yet</span>{% endif %} · <a href="#rules">Design rules</a> · <a href="#trends">Where research is heading</a> · <a href="#ours">Our parts</a>{% if t.competitors %} · <a href="#competitors">Competitors</a>{% endif %}{% if t.market %} · <a href="#market">Market</a>{% endif %} · <a href="#questions">Open questions</a> · <a href="#refs">References</a>{% if seg_qa %} · <a href="#questions-to-ask">Questions to ask</a>{% endif %}</nav>
 {% if t.why_customer %}<h2 id="customer">Why it matters to the customer</h2>
 <ul class="pc-list small">{% for w in t.why_customer %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
 
@@ -71,11 +71,12 @@
 
 {% if t.open_questions %}<h2 id="questions">Open questions</h2><ul class="small">{% for q in t.open_questions %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
 
-{% if seg_qa %}{% from "library/_segment_questions.html" import segment_section %}{{ segment_section(seg_qa.qa, "/library/" ~ key, seg_qa.tabs, seg_qa.ask, seg_qa.reports, heading="Questions to ask: " ~ where.title) }}<p class="small"><a href="{{ seg_qa.href }}">All questions for {{ where.title }} on one page</a></p><script src="/static/segment_questions.js"></script>{% endif %}
 <h2 id="refs">References</h2>
 <ol class="small lib-refs">{% for r in t.references or [] %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved|date }}</span><br><small>{{ r.why }}</small></li>{% endfor %}</ol>
 <p class="small muted">Summaries are ours; quotes are short and cited. The block diagram is drawn by us from the references.</p>
 {% if t.background_references %}<details class="lib-notes"><summary><b>Background sources</b> <span class="small muted">· {{ t.background_references|length }} more documents read for context, not used for the rules above</span></summary>
 <ol class="small lib-refs">{% for r in t.background_references %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved|date }}</span><br><small>{{ r.why }}</small>{% if r.points %}<ul class="small">{% for p in r.points %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ol></details>{% endif %}
 {% if notes %}<details class="lib-notes"><summary><b>Full research notes</b> <span class="small muted">· what was read, the reasoning, and the sources that were blocked</span></summary><pre>{{ notes }}</pre></details>{% endif %}
+{# the sub-system's Questions to ask, last on the page (owner, 9 Nov 2026: "at the bottom of each sub-system") #}
+{% if seg_qa %}{% from "library/_segment_questions.html" import sub_questions %}{{ sub_questions(seg_qa) }}{% endif %}
 {% endblock %}

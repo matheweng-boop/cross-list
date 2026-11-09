@@ -71,6 +71,11 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
         from app.services import opportunity as op
 
         ctx["xsell"] = sy.bottom_up(session, sy.sub(system, subsystem)["idx"], op.company("combined")[2], n_parts=6)
+        # owner, 9 Nov 2026: and its Questions to ask at the bottom, after its diagrams (only this sub-system's)
+        from app.services import segment_questions as sq
+
+        back = str(request.url.path) + (f"?{request.url.query}" if request.url.query else "")
+        ctx["seg_qa"] = sq.view(session, request, f"{system}/{subsystem}", back)
     return templates.TemplateResponse(request, "blocks/index.html", ctx)
 
 

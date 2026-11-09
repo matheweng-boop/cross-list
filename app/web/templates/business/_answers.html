@@ -33,11 +33,12 @@
 {% endmacro %}
 
 {# under one question: its answers, then the answer box (open when nothing is answered yet, else "Add another answer") #}
-{% macro qa_box(q, qa, back) %}{% set rows = qa.by_q.get(q.id, []) %}
+{# back_save: where a new answer returns to (a segment's questions shown at the bottom of another page) #}
+{% macro qa_box(q, qa, back, back_save='') %}{% set rows = qa.by_q.get(q.id, []) %}
 <div class="aq" id="i-{{ q.id }}">
   {% for a in rows %}{{ answer_card(a, qa, back) }}{% endfor %}
-  {% if rows %}<details class="aq-add"><summary class="small">Add another answer</summary>{{ answer_form(qa, qa.action or ('/business/reports/' ~ qa.slug ~ '/answers'), q.id) }}</details>
-  {% else %}{{ answer_form(qa, qa.action or ('/business/reports/' ~ qa.slug ~ '/answers'), q.id) }}{% endif %}
+  {% if rows %}<details class="aq-add"><summary class="small">Add another answer</summary>{{ answer_form(qa, qa.action or ('/business/reports/' ~ qa.slug ~ '/answers'), q.id, back=back_save) }}</details>
+  {% else %}{{ answer_form(qa, qa.action or ('/business/reports/' ~ qa.slug ~ '/answers'), q.id, back=back_save) }}{% endif %}
 </div>
 {% endmacro %}
 

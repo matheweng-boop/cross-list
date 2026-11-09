@@ -1496,11 +1496,38 @@ def test_segment_questions_tabs_answer_and_find_it_by_segment(page):
     with page.expect_navigation():
         item.locator(".aq-where a").click()
     expect(page.locator(f"#i-{q['id']} article.aq-a").first).to_be_visible()
-    go(page, "/library/dc_timing")  # a deep dive: its sub-system's questions, folded (390 px checked after)
+    go(page, "/library/dc_timing")  # a deep dive: its sub-system's questions, open at the bottom (390 px after)
     sec = page.locator("details#questions-to-ask")
-    expect(sec).not_to_have_attribute("open", "")
-    sec.locator("summary").click()
+    expect(sec).to_have_attribute("open", "")
     expect(sec.locator(".sq-tabs")).to_be_visible()
+
+
+def test_questions_at_the_bottom_of_a_picked_sub_system(page):
+    """Owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system." Block diagram library with Automotive >
+    Charging picked: below its diagrams and cross-sell come its Questions to ask, open, with the three tabs; an answer
+    saved there comes back to the same page, on its tab (phone width; 390 px checked after the test)."""
+    from app.services import segment_questions as sq
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    go(page, "/blocks?system=automotive&sub=charging")
+    sec = page.locator("details#questions-to-ask")
+    expect(sec).to_have_attribute("open", "")
+    expect(sec.locator("summary")).to_contain_text("Questions to ask: Charging")
+    tabs = sec.locator(".sq-tabs")
+    expect(tabs).to_be_visible()
+    tabs.get_by_role("button", name=re.compile("^Business unit")).click()
+    expect(sec.locator("#sq-bu")).to_be_visible()
+    expect(sec.locator("#sq-customer")).to_be_hidden()
+    q = next(x for x in sq.questions("automotive/charging") if x["group"] == "bu")
+    form = sec.locator(f"#i-{q['id']} form.aq-form")
+    expect(form.get_by_text("✅ Can be used for research (inbox)")).to_be_visible()
+    form.locator("textarea[name=text]").fill("The business unit wants the OBC first.")
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save answer").click()
+    assert "/blocks?system=automotive&sub=charging" in page.url and "saved=" in page.url
+    expect(page.locator(f"#i-{q['id']} article.aq-a").first).to_contain_text("OBC first")
+    expect(page.locator("#sq-bu")).to_be_visible()
+    assert overflow(page) <= 1
 
 
 # --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------

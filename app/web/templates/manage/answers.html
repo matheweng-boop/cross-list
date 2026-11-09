@@ -2,13 +2,13 @@
 {% from "business/_answers.html" import answer_card %}
 {% block content %}{% set c = ov.counts %}
 <h1>Answers</h1>
-<p class="subtitle muted">Every answer to the Questions to ask on Research &amp; ideas and in the Systems library (per segment), newest first. 🔒 Internal only answers are yours alone: never shown to guests, never in a Shareable, an export or the daily inbox (it gets a count). ✅ Can be shared answers go to the inbox in full for the next revision, after the data-protection check. Kept 12 months after the last change.</p>
+<p class="subtitle muted">Every answer to the Questions to ask on Research &amp; ideas and in the Systems library (per segment), newest first. 🔒 Internal only answers are yours alone: never shown to guests, never in an export or the daily inbox (it gets a count). ✅ Can be shared (on a segment: ✅ Can be used for research) answers go to the inbox in full for the next revision, after the data-protection check, and guests may read them. No question and no answer is ever in a Shareable. Kept 12 months after the last change.</p>
 
 <form method="get" action="/manage/answers" class="aq-filter" role="search">
   <label>Sharing <select name="sharing">
     <option value=""{{ ' selected' if not sharing }}>All ({{ c.all }})</option>
     <option value="internal"{{ ' selected' if sharing == 'internal' }}>{{ labels.internal }} ({{ c.internal }})</option>
-    <option value="shared"{{ ' selected' if sharing == 'shared' }}>{{ labels.shared }} ({{ c.shared }})</option>
+    <option value="shared"{{ ' selected' if sharing == 'shared' }}>{{ labels.shared }} / used for research ({{ c.shared }})</option>
     <option value="held"{{ ' selected' if sharing == 'held' }}>Held for your look ({{ c.held }})</option>
   </select></label>
   <label>Report <select name="report"><option value="">All reports</option>{% for s, t in ov.reports %}<option value="{{ s }}"{{ ' selected' if report == s }}>{{ t }}</option>{% endfor %}</select></label>
@@ -28,8 +28,7 @@
 <section id="all-answers" aria-labelledby="ans-t">
   <h2 id="ans-t">Answers <span class="badge muted">{{ ov.answers|length }}</span></h2>
   {% if not ov.answers %}<p class="ov-none">{{ 'No answer yet.' if not c.all else 'No answer matches the filter.' }}</p>{% endif %}
-  {% set qa = {"owner": true, "sharing": labels, "warning": warning} %}
-  <ol class="aq-list">{% for a in ov.answers %}
+  <ol class="aq-list">{% for a in ov.answers %}{% set qa = {"owner": true, "sharing": seg_labels if a.slug.startswith('seg:') else labels, "warning": warning} %}
     <li><p class="aq-where small"><a href="{{ ov.hrefs.get(a.slug, '/business/reports/' ~ a.slug) }}#i-{{ a.question }}">{% if a.slug.startswith('seg:') %}Segment: {% endif %}{{ ov.titles.get(a.slug, a.slug) }}</a>{% if (a.slug, a.question) in ov.gone %} <span class="badge muted" title="The question is no longer on the page; the answer keeps its wording">question removed</span>{% endif %}</p>
       <p class="aq-q"><b>{{ a.question_text }}</b></p>
       {{ answer_card(a, qa, here) }}</li>{% endfor %}</ol>

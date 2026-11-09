@@ -73,7 +73,12 @@ async def segment_answer_add(request: Request, system: str, session: Session = D
     if sq.segment(key) is None:
         raise HTTPException(404, "Segment not found")
     a = _add(request, session, sq.slug_of(key), form)
-    return RedirectResponse(f"{sq.href(a.slug)}?saved={a.id}#i-{a.question}", status_code=303)
+    # back: the page the questions sat at the bottom of (a picked sub-system, a deep dive, owner 9 Nov 2026)
+    from urllib.parse import parse_qsl, urlencode, urlsplit
+
+    page = urlsplit(_back(form, sq.href(a.slug)))
+    query = urlencode([*((k, v) for k, v in parse_qsl(page.query) if k != "saved"), ("saved", a.id)])
+    return RedirectResponse(f"{page.path}?{query}#i-{a.question}", status_code=303)
 
 
 def _segment_page(request: Request, session: Session, key: str):
@@ -160,7 +165,7 @@ def answers_overview(request: Request, sharing: str = "", report: str = "", segm
     report = report if rp.report(report) else ""
     segment = segment if sq.segment(segment) else ""
     ctx = {"ov": answers.overview(session, sharing, report, segment), "sharing": sharing, "report": report,
-           "segment": segment, "labels": answers.SHARING,
+           "segment": segment, "labels": answers.SHARING, "seg_labels": answers.SEG_SHARING,
            "groups": dict(sq.GROUPS) | dict(answers.groups(case=False)), "warning": answers.WARNING,
            "here": str(request.url.path) +
            (f"?{request.url.query}" if request.url.query else "")}  # fmt: skip

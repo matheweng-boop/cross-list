@@ -111,3 +111,18 @@ def reports(key: str) -> list[dict]:
 def counts() -> dict[str, int]:
     """Number of questions per segment key."""
     return {s["key"]: len(questions(s["key"])) for s in segments()}
+
+
+def view(session, request, key: str, back: str) -> dict | None:
+    """One sub-system's Questions to ask as shown at the bottom of its own views (owner, 9 Nov 2026: "Put the
+    questions at the bottom of each sub-system"): the Block diagram library with the sub-system picked, its deep
+    dives and its cross-sell. Only this segment's questions and answers are read, so the page stays light; the
+    Systems library overview, which lists every sub-system, keeps the "❓ Questions to ask" button instead.
+    ``back``: the page to return to after saving an answer. None for an unknown segment."""
+    from app.services import answers
+
+    seg = segment(key)
+    if seg is None:
+        return None
+    return {"qa": answers.page(session, request, slug_of(key)), "tabs": TABS, "ask": ASK, "reports": reports(key),
+            "href": seg["href"], "title": seg["short"], "back": back}  # fmt: skip

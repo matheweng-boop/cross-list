@@ -29,6 +29,8 @@ MORE_LINKS = (("/reviews", r"/reviews/(?!suggest|request)[\w-]+"), ("/blocks", r
               ("/rf-bands", r"/rf-bands/[\w-]+"), ("/business/cases", r"/business/cases/\d+"),
               ("/business/applications", r"/business/applications/\d+"),
               ("/library", r"/library/questions/[\w-]+/[\w-]+"))  # fmt: skip  # a segment's questions (9 Nov 2026)
+# pages with a fixed address: a sub-system picked in the Block diagram library, its questions below (9 Nov 2026)
+FIXED_PAGES = ("/blocks?system=automotive&sub=charging",)
 
 
 class _Forms(HTMLParser):
@@ -151,7 +153,7 @@ def detail_pages(client) -> list[str]:
         assert found, (page, pattern)
         out.append(found.group(1))
     more = [re.search(f'href="({pattern})"', client.get(page).text) for page, pattern in MORE_LINKS]
-    return out[:1] + [out[0] + "/walk"] + out[1:] + [m.group(1) for m in more if m]
+    return out[:1] + [out[0] + "/walk"] + out[1:] + [m.group(1) for m in more if m] + list(FIXED_PAGES)
 
 
 def menu_pages() -> list[str]:

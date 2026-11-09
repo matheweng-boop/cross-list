@@ -16,6 +16,12 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    its converter); the "main band" for the RF-switch partial-band rule; which part "QPF5001Q" meant (the page keeps the
    QPF5100Q + QM14068 / QM14070 / SKY5A2108 reading, est).
 
+6. **Pricing rework (9 Nov 2026).** Once the owner's price levels are entered, our isolators imply a gross margin above
+   the 55-70 % range against the cost model: raise the cost inputs for our isolators, or accept a higher margin there?
+   Blend weights (public curve 85 / 60 / 45 % at 10k / 100k / 1M, the rest cost-based) and maker scale tiers (TI,
+   Infineon 1; ADI, NXP, ST, Skyworks / Qorvo 2; Novosense, Mini-Circuits 3; est): right? Show the single 1M price in
+   the solution builder and the radio market summaries too?
+
 ## Settled (owner, 9 Nov 2026)
 
 - Questions to ask: at the bottom of each sub-system (Block diagram library with a sub-system picked, deep dives),
@@ -27,6 +33,9 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
   clock generators: "pose as question" (business-unit question and deep-dive open question). Non-China / non-Taiwan
   supply: "do not talk about it" (removed everywhere). NIC / DPU and scale-up tray makers from more public sources:
   "yes", for a later daily run.
+- Pricing: gross margin typically 55-70 % ("adjust the overall model"); the model scales with die, lead frame and
+  package and with each maker's volume in a technology (not patents); a single price at 1M a year with its floor; the
+  owner's own price levels stay on the site only (the repository is public).
 
 ## Settled (owner, 3 Nov 2026)
 

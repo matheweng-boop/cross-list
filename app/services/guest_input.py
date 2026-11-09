@@ -37,6 +37,7 @@ KINDS = (
     (r"^/(reviews|library)/[^/]+/react$", "Agree / disagree"),
     (r"^/business/reports/questions/", "Answer to a report question"),
     (r"^/business/reports/[^/]+/answers$", "Answer to a question to ask"),
+    (r"^/library/questions/[^/]+/answers$", "Answer to a segment question"),
     (r"^/business/reports/[^/]+/react$", "Agree / disagree"),
     (r"^/business/reports/[^/]+/ask$", "Question on a report"),
     (r"^/blocks/area-request$", "Application area request"),
@@ -61,7 +62,8 @@ KINDS = (
 )
 _FILE_PATH = re.compile(r"^/site-feedback/r(\d+)/file$")
 # answers to the Questions to ask land as internal: never quoted in the daily inbox (app/services/answers.py)
-_ANSWER, _REACT = re.compile(r"^/business/reports/[^/]+/answers$"), re.compile(r"^/business/reports/[^/]+/react$")
+_ANSWER = re.compile(r"^/(business/reports|library/questions)/[^/]+/answers$")  # report and segment questions
+_REACT = re.compile(r"^/business/reports/[^/]+/react$")
 _HIDDEN_FIELDS = {"client"}
 
 

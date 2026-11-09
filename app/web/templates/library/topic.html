@@ -71,6 +71,7 @@
 
 {% if t.open_questions %}<h2 id="questions">Open questions</h2><ul class="small">{% for q in t.open_questions %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
 
+{% if seg_qa %}{% from "library/_segment_questions.html" import segment_section %}{{ segment_section(seg_qa.qa, "/library/" ~ key, seg_qa.tabs, seg_qa.ask, seg_qa.reports, heading="Questions to ask: " ~ where.title) }}<p class="small"><a href="{{ seg_qa.href }}">All questions for {{ where.title }} on one page</a></p><script src="/static/segment_questions.js"></script>{% endif %}
 <h2 id="refs">References</h2>
 <ol class="small lib-refs">{% for r in t.references or [] %}<li id="ref-{{ r.id }}"><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>, {{ r.publisher }}, {{ r.year }} · <span class="muted">{{ r.type|replace('_', ' ') }} · {{ r.licence }} · read {{ r.retrieved|date }}</span><br><small>{{ r.why }}</small></li>{% endfor %}</ol>
 <p class="small muted">Summaries are ours; quotes are short and cited. The block diagram is drawn by us from the references.</p>

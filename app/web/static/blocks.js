@@ -52,6 +52,48 @@
 
   // ---- layout
   const CELL = 250, GAP_X = 56, GAP_Y = 52, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
+  // Text is measured, not counted (owner, 9 Nov 2026: "the text overflows"): every label is wrapped to the pixel width
+  // of its box, made smaller when it still does not fit, and cut with "…" only as a last resort (full text on hover).
+  const FONT = getComputedStyle(document.getElementById("bk-svg") || document.body).fontFamily || "system-ui, sans-serif";
+  const ctx2d = document.createElement("canvas").getContext("2d");
+  const textW = (t, size, weight) => { ctx2d.font = `${weight || 400} ${size}px ${FONT}`; return ctx2d.measureText(t).width; };
+  const cut = (t, maxW, size, weight) => {
+    if (textW(t, size, weight) <= maxW) return t;
+    while (t.length > 1 && textW(t + "…", size, weight) > maxW) t = t.slice(0, -1);
+    return t.trimEnd() + "…";
+  };
+  // lines of at most maxW px; a word too long for a line is broken; more than maxLines: the last line ends in "…"
+  function fitLines(text, maxW, size, weight, maxLines) {
+    const lines = [];
+    let line = "";
+    for (let w of String(text || "").split(/\s+/).filter(Boolean)) {
+      while (textW(w, size, weight) > maxW) {  // a single word wider than the box: break it
+        let k = w.length - 1;
+        while (k > 1 && textW(w.slice(0, k) + "-", size, weight) > maxW) k--;
+        if (line) { lines.push(line); line = ""; }
+        lines.push(w.slice(0, k) + "-"); w = w.slice(k);
+      }
+      const t = line ? line + " " + w : w;
+      if (line && textW(t, size, weight) > maxW) { lines.push(line); line = w; } else line = t;
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) {
+      const rest = lines.slice(maxLines - 1).join(" ");
+      lines.length = maxLines - 1;
+      lines.push(cut(rest, maxW, size, weight));
+    }
+    return lines.length ? lines : [""];
+  }
+  // a block label: 12 px on up to two lines, else 10.5 px on up to three
+  // (an "Anchor" tag sits in the top right corner: its label keeps clear of it)
+  function blockLabel(label, anchor) {
+    const pad = anchor ? 34 : 8;
+    const two = fitLines(label, BW - pad, 12, 600, 99);
+    if (two.length <= 2) return {size: 12, step: 13, top: anchor ? 18 : 15, lines: two};
+    return {size: 10, step: 10, top: anchor ? 13 : 11, lines: fitLines(label, BW - pad + 2, 10, 600, 3)};
+  }
+  const TITLE_FS = 14, TITLE_LH = 16;
+  const titleLines = (g, w) => fitLines(g.label, w - 8 - 32, TITLE_FS, 600, 3);  // room for the + button
   function layout() {
     const rects = {};
     const rowH = {};
@@ -59,8 +101,9 @@
       const w = (g.w || 1) * CELL + ((g.w || 1) - 1) * GAP_X;
       const cols = Math.max(1, Math.floor((w - 2 * PAD + BG) / (BW + BG)));
       const rows = Math.max(1, Math.ceil(g.blocks.length / cols));
-      const h = HEAD + rows * (BH + BG) + PAD;
-      rects[g.id] = {w, h, cols};
+      const tl = titleLines(g, w), head = HEAD + (tl.length - 1) * TITLE_LH;
+      const h = head + rows * (BH + BG) + PAD;
+      rects[g.id] = {w, h, cols, head, tl};
       rowH[g.row] = Math.max(rowH[g.row] || 0, h);
     }
     const rowsSorted = Object.keys(rowH).map(Number).sort((a, b) => a - b);
@@ -129,7 +172,7 @@
       list.sort((p, q) => vert ? (p.other.y + p.other.h / 2) - (q.other.y + q.other.h / 2) : (p.other.x + p.other.w / 2) - (q.other.x + q.other.w / 2));
       list.forEach((p, k) => {
         const f = (k + 1) / (list.length + 1);
-        p.it[p.end === "a" ? "pa" : "pb"] = vert ? {x: side === "r" ? r.x + r.w : r.x, y: r.y + HEAD + (r.h - HEAD) * f}
+        p.it[p.end === "a" ? "pa" : "pb"] = vert ? {x: side === "r" ? r.x + r.w : r.x, y: r.y + r.head + (r.h - r.head) * f}
           : {x: r.x + r.w * (0.1 + 0.8 * f), y: side === "b" ? r.y + r.h : r.y};
       });
     }
@@ -153,10 +196,11 @@
         it.lx = (pa.x + pb.x) / 2; it.ly = Math.min(pa.y, pb.y) - 5;
       } else if (it.kind === "V" || it.kind === "U") {
         it.d = Math.abs(pa.x - pb.x) < 1 && it.kind === "V" ? `M${pa.x} ${pa.y}V${pb.y}` : `M${pa.x} ${pa.y}V${it.my}H${pb.x}V${pb.y}`;
-        it.lx = (pa.x + pb.x) / 2; it.ly = it.my - 4;
+        it.lx = (pa.x + pb.x) / 2; it.ly = it.my - 4; it.room = Math.max(90, Math.abs(pb.x - pa.x) - 6);
       } else {
         it.d = `M${pa.x} ${pa.y}V${it.ya}H${it.cx}V${it.yb}H${pb.x}V${pb.y}`;
-        it.lx = it.cx + 4; it.ly = (it.ya + it.yb) / 2; it.lanchor = "start";
+        // on the first horizontal run, in the gap between two rows (a label in the column gap ran under the frames)
+        it.lx = (pa.x + it.cx) / 2; it.ly = it.ya - 4; it.room = Math.max(90, Math.abs(it.cx - pa.x) - 6);
       }
     }
     return items;
@@ -167,25 +211,35 @@
     parts.push(`<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3a3f47"/></marker></defs>`);
     const R = routes(L);
     for (const it of R) parts.push(`<path class="link" d="${it.d}"/>`);
-    for (const it of R) if (it.label) parts.push(`<text class="link-label" x="${it.lx}" y="${it.ly}" text-anchor="${it.lanchor || "middle"}">${esc(it.label)}</text>`);
     for (const g of S.groups) {
       const r = L.rects[g.id];
       parts.push(`<g class="grp${sel && sel.group === g.id && !sel.block ? " sel" : ""}" data-gid="${g.id}"><rect class="frame" data-drag-group="${g.id}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="4"><title>Drag to move this frame</title></rect>` +
-        `<text class="grp-title" data-group="${g.id}" x="${r.x + 8}" y="${r.y + 17}" tabindex="0" role="button">${esc(g.label)}</text>` +
+        `<text class="grp-title" data-group="${g.id}" x="${r.x + 8}" y="${r.y + 17}" tabindex="0" role="button"><title>${esc(g.label)}</title>` +
+        r.tl.map((t, k) => `<tspan x="${r.x + 8}" dy="${k ? TITLE_LH : 0}">${esc(t)}</tspan>`).join("") + `</text>` +
         `<g class="grp-add" data-add-to="${g.id}" tabindex="0" role="button" aria-label="Add a block to ${esc(g.label)}"><title>Add a block to this frame</title>` +
         `<rect x="${r.x + r.w - 26}" y="${r.y + 4}" width="20" height="18" rx="4"/><text x="${r.x + r.w - 16}" y="${r.y + 17.5}" text-anchor="middle">+</text></g>`);
       g.blocks.forEach((b, i) => {
-        const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + HEAD + Math.floor(i / r.cols) * (BH + BG);
+        const cx = r.x + PAD + (i % r.cols) * (BW + BG), cy = r.y + r.head + Math.floor(i / r.cols) * (BH + BG);
         const st = status(b), f = fnOf(b);
         const label = b.label || f.label;
-        const sub = b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "gap" : st === "ext" ? "customer part" : "");
+        const sub = (b.part || (st === "have" ? `${COUNTS[b.fn]} parts` : st === "opp" ? "gap" : st === "ext" ? "customer part" : "")) + (b.qty > 1 ? ` ×${b.qty}` : "");
+        const bl = blockLabel(label, REFS.anchors[b.fn]);
         parts.push(`<g class="blk st-${st}${DIM.has(st) ? " dim" : ""}${sel && sel.block === b.id ? " sel" : ""}" data-group="${g.id}" data-block="${b.id}" tabindex="0" role="button" aria-label="${esc(label)}">` +
           `<rect x="${cx}" y="${cy}" width="${BW}" height="${BH}"/>` +
-          (REFS.anchors[b.fn] ? `<text class="b-anchor" x="${cx + BW - 3}" y="${cy + 9}" text-anchor="end"><title>Anchor: ${esc(REFS.anchors[b.fn])}</title>Anchor</text>` : "") +
-          wrap(label, 16).slice(0, 2).map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + 15 + k * 13}" text-anchor="middle">${esc(t)}</text>`).join("") +
-          `<text class="b-sub" x="${cx + BW / 2}" y="${cy + BH - 5}" text-anchor="middle">${esc(sub.slice(0, 19))}${b.qty > 1 ? ` ×${b.qty}` : ""}</text></g>`);
+          (REFS.anchors[b.fn] ? `<text class="b-anchor" x="${cx + BW - 3}" y="${cy + 8}" text-anchor="end"><title>Anchor: ${esc(REFS.anchors[b.fn])}</title>Anchor</text>` : "") +
+          `<title>${esc(label)}${sub ? " · " + esc(sub) : ""}</title>` +
+          bl.lines.map((t, k) => `<text class="b-label" x="${cx + BW / 2}" y="${cy + bl.top + k * bl.step}" text-anchor="middle" style="font-size:${bl.size}px">${esc(t)}</text>`).join("") +
+          `<text class="b-sub" x="${cx + BW / 2}" y="${cy + BH - 4}" text-anchor="middle">${esc(cut(sub, BW - 6, 10, 400))}</text></g>`);
       });
       parts.push(`</g>`);
+    }
+    // connection labels last, so no frame covers them (white halo in the CSS)
+    for (const it of R) if (it.label) {
+      // a label over a short side-to-side link wraps to the gap between the frames, upwards from the line
+      const room = it.kind === "H" ? Math.max(40, Math.abs(it.pb.x - it.pa.x) - 6) : it.room;
+      const ls = fitLines(it.label, room, 10, 400, 3);
+      parts.push(`<text class="link-label" x="${it.lx}" y="${it.ly - (ls.length - 1) * 11}" text-anchor="${it.lanchor || "middle"}"><title>${esc(it.label)}</title>` +
+        ls.map((t, k) => `<tspan x="${it.lx}" dy="${k ? 11 : 0}">${esc(t)}</tspan>`).join("") + `</text>`);
     }
     if (!S.groups.length) parts.push(`<text x="40" y="80" fill="#888" font-size="14">Add a frame with + Frame, then add blocks to it.</text>`);
     const svg = $("#bk-svg");
@@ -197,15 +251,6 @@
     renderLegend();
     if (!(sel && sel.block)) renderBelow();
   }
-  const wrap = (s, n) => {
-    const out = [];
-    let line = "";
-    for (const w of String(s).split(" ")) {
-      if ((line + " " + w).trim().length > n && line) { out.push(line); line = w; } else line = (line + " " + w).trim();
-    }
-    if (line) out.push(line);
-    return out;
-  };
 
   // ---- magnifier: fit the window, zoom in / out, drag to pan
   let lastL = null, view = null;
@@ -775,7 +820,7 @@
       const from = group(d.gid), b = blockOf(from, d.bid), to = frameAt(p) || from;
       const r = L.rects[to.id];
       const c = Math.max(0, Math.min(r.cols - 1, Math.floor((p.x - r.x - PAD) / (BW + BG))));
-      const rr = Math.max(0, Math.floor((p.y - r.y - HEAD) / (BH + BG)));
+      const rr = Math.max(0, Math.floor((p.y - r.y - r.head) / (BH + BG)));
       from.blocks = from.blocks.filter(x => x !== b);
       const idx = Math.min(to.blocks.length, rr * r.cols + c);
       to.blocks.splice(idx, 0, b);

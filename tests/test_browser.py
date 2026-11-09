@@ -1535,6 +1535,40 @@ def test_questions_at_the_bottom_of_a_picked_sub_system(page):
     assert overflow(page) <= 1
 
 
+# --- Block diagrams: no text outside its box (owner, 9 Nov 2026) ------------------------------------------------------
+_FITS = """() => {
+  const bad = [], svg = document.querySelector('#bk-svg');
+  svg.querySelectorAll('g.blk').forEach(g => { const r = g.querySelector('rect').getBBox();
+    g.querySelectorAll('text').forEach(t => { const b = t.getBBox();
+      if (b.x < r.x - 0.5 || b.x + b.width > r.x + r.width + 0.5 || b.y + b.height > r.y + r.height + 1)
+        bad.push('block: ' + t.textContent); }); });
+  svg.querySelectorAll('g.grp').forEach(g => { const r = g.querySelector('rect.frame').getBBox();
+    const t = g.querySelector('.grp-title'), b = t.getBBox(), first = g.querySelector('g.blk rect');
+    if (b.x + b.width > r.x + r.width - 26 || (first && b.y + b.height > first.getBBox().y))
+      bad.push('frame: ' + t.textContent); });
+  return bad; }"""
+
+
+def test_block_diagram_text_stays_inside_its_boxes(page):
+    """Owner, 9 Nov 2026: "On all the block diagrams, the text overflows". Frame titles wrap inside their frame (clear
+    of the + button and of the first block); block labels and part counts stay inside the block, also next to an Anchor
+    tag. Checked on the library diagrams with the longest frame titles and block labels."""
+    from app.services import blocks
+
+    def longest(t):  # the longest frame title and block (function or custom) label in a library diagram
+        labels = [g["label"] for g in t["groups"]]
+        labels += [b if isinstance(b, str) else str(b.get("label") or b.get("fn") or "") for g in t["groups"]
+                   for b in g["blocks"]]  # fmt: skip
+        return max(map(len, labels), default=0)
+
+    lib = blocks.templates()
+    picks = sorted(range(len(lib)), key=lambda i: -longest(lib[i]))[:16] + list(range(0, len(lib), 23))
+    for i in dict.fromkeys(picks):
+        go(page, f"/blocks/new?template={i}")
+        expect(page.locator("#bk-svg g.blk").first).to_be_attached()
+        assert page.evaluate(_FITS) == [], (i, lib[i]["name"])
+
+
 # --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------
 def test_describe_your_system_builds_blocks_at_ipad_size(page):
     """Type a sentence, Build: the 48 V input, protection, buck, LDO and MCU frames appear, linked left to right, with

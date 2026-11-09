@@ -209,6 +209,11 @@ def build(family: str = "digital_isolator", log=print) -> dict:
         put("surge_10kv", (_num(row.get("parameter9")) or 0) >= 10, table)
         if expect:
             put("channel_config", f"{expect[0]}/{expect[1]}", table)
+        if rule := by_part_number(opn):  # the product table has wrong rows (NSI8221 as 2/1, defaults swapped)
+            for key, value in rule.items():
+                if params.get(key) != value:
+                    put(key, value, PN_RULE_SOURCE)
+            expect = tuple(int(n) for n in rule["channel_config"].split("/"))
 
         pinout, notes = [], []
         if sheet and sheet.ok:
@@ -274,6 +279,25 @@ def build(family: str = "digital_isolator", log=print) -> dict:
         "parts": parts,
         "skipped": skipped,
     }
+
+
+PN_RULE_SOURCE = (
+    "Novosense datasheets, order information (part number rule NSI8<s><n><r>, last digit 0 = default "
+    "low, 1 = high; the product table had wrong rows, 10 Nov 2026)"
+)
+
+
+def by_part_number(opn: str) -> dict | None:
+    """Channel directions and default output of a Novosense NSI8xxx digital isolator from its ordering code, as the
+    datasheets' order information lists them (checked 10 Nov 2026 in NSI822x, NSI824x, NSI836x): NSI82<n><r> has n
+    channels, r of them reverse (NSI8x22 is the other 1/1 pinout, NSI8x66 six forward); the digit after the package
+    letters is the default output, 0 = low, 1 = high. None for other codes (e.g. the NSI8241BW1 option code)."""
+    m = re.match(r"NSI8\d(\d)(\d)([A-Z])([01])-", opn.upper())
+    if not m:
+        return None
+    n, r = int(m.group(1)), int(m.group(2))
+    cfg = {"22": "1/1", "66": "6/0"}.get(m.group(1) + m.group(2), f"{n - r}/{r}")
+    return {"channel_config": cfg, "default_output": "high" if m.group(4) == "1" else "low"}
 
 
 def _pins(facts: dict, code: str) -> int:

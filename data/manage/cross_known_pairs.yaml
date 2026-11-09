@@ -16,3 +16,75 @@ pairs:
     expect: right
     date: 2026-10-27
     note: Marked Right 26 and 27 Oct 2026.
+  # Pairs from Skyworks' public cross reference (data/manage/skyworks_cross_reference.yaml, read 9 Nov 2026), each
+  # checked against both datasheets on 10 Nov 2026 (docs/cross_reference_check_2026-11-10.md). source: skyworks_xref
+  # marks them; "wrong" = the official row does not match the datasheets.
+  - their: ISO7720DR
+    ours: SI86S620EC-IS
+    expect: right
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In; same pinout (iso7720.pdf Figure 5-3, si86s61x_2x_Ox), default high, 1/1 package SOIC-8.
+  - their: ISO7731DWR
+    ours: SI86S631EE-IS2
+    expect: right
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In; 2/1, default high, WB SOIC-16, same pin positions in our data from both datasheets.
+  - their: UCC21540DWR
+    ours: SI82E29ABE-IS3
+    expect: right
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In; dual inputs INA / INB, 6 kVrms, SOIC-14W pin-compatible in our data.
+  - their: ISO6760LDWR
+    ours: SI86S660BE-IS2
+    expect: right
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In. ISO6760L outputs low with its input side unpowered (iso6760l.pdf function table); our data
+      said high (TI product table) and was corrected 10 Nov 2026.
+  - their: NSI8221N0-DSPR
+    ours: SI86S622BC-IS
+    expect: right
+    date: 2026-11-10
+    source: skyworks_xref
+    note: NSI8221 pin 2 is OUTA (NSI822x datasheet Figure 1.2), as Si86S622. The official table gives Si86S622 for the
+      N1 code and Si86S621 for N0.
+  - their: NSI8221N0-DSPR
+    ours: SI86S621BC-IS
+    expect: wrong
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In, but the channel directions are reversed (NSI8221 pin 2 OUTA, Si86S621 pin 2 input).
+  - their: ISO7721DR
+    ours: SI86S622EC-IS
+    expect: right
+    date: 2026-11-10
+    source: skyworks_xref
+    note: ISO7721 pin 2 is OUTA (iso7721.pdf Figure 5-4), as Si86S622; the official table gives Si86S622 for ADUM1201
+      and ISO6721 with the same pinout.
+  - their: ISO7721DR
+    ours: SI86S621EC-IS
+    expect: wrong
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In, but the channel directions are reversed (Si86S621 pin 2 is an input).
+  - their: UCC21540DWR
+    ours: SI82E89ABE-IS3
+    expect: wrong
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Drop-In, but Si82E89 has one PWM input; UCC21540 has two inputs (INA / INB).
+  - their: ISO7761FDBQR
+    ours: SI86S661EB-IU
+    expect: wrong
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Pin-to-Pin, but F means default low and the E code is default high (Si86S661BB-IU fits).
+  - their: ISO7742DBQR
+    ours: SI86S662EB-IU
+    expect: wrong
+    date: 2026-11-10
+    source: skyworks_xref
+    note: Official Pin-to-Pin, but Si86S662 has six channels; Si86S642EB-IU is the 4-channel 2/2 part.

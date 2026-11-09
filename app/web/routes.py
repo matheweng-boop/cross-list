@@ -36,6 +36,7 @@ from app.services import (
     price_builder,
     price_model,
     pricing,
+    skyworks_xref,
     sota,
     text,
     vocab,
@@ -102,6 +103,8 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
+# a check mark behind our part when Skyworks' own cross reference lists the pair (owner, 10 Nov 2026)
+templates.env.globals["sky_xref"] = skyworks_xref.mark
 
 PASSKEY_NUDGE_COOKIE = "crosslist_pk_nudge"
 

@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% from "_macros.html" import sky_check %}
 {% block content %}
 {% macro col(r, c) %}
-<div class="cx-mpn"><a href="/parts/{{ c.part.id }}">{{ c.part.mpn }}</a> <span class="cx-tag cx-tag-{{ c.part.manufacturer.name|lower|replace(' ', '-') }}">{{ c.part.manufacturer.name|vendor }}</span></div>
+<div class="cx-mpn"><a href="/parts/{{ c.part.id }}">{{ c.part.mpn }}</a>{{ sky_check(r.part.mpn if r.part else r.text, c.part.mpn) }} <span class="cx-tag cx-tag-{{ c.part.manufacturer.name|lower|replace(' ', '-') }}">{{ c.part.manufacturer.name|vendor }}</span></div>
 {% set s1 = p1m(c.part) %}{% if s1 %}<div class="cx-mk p1m" title="Model price at 1,000,000 a year (estimate), never below the cost floor">{{ p1m_text(s1, true) }}</div>{% endif %}
 <span class="cx-ty cx-ty-{{ kinds.get(c.type, 'fn') }}">{{ c.type }}</span>{% if c.answer == 'wrong' %} <span class="badge bad">Marked wrong</span>{% endif %}
 <div class="cx-cm">{{ c.comment }}</div>

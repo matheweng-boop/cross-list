@@ -45,8 +45,28 @@
     <label class="pe-paste">Paste them, one per line: quantity and unit price
       <textarea name="breaks" rows="4" placeholder="1   18,66&#10;10  16,263&#10;100 14,2928&#10;500 13,13008">{{ pasted }}</textarea></label>
   </fieldset>
+  {% if loaded %}<p class="small muted pe-loaded">Prices saved for {{ f.name }} on {{ loaded.date|date('short') if loaded.date else 'an earlier day' }} filled in{% if loaded.currency and loaded.currency != 'USD' %} ({{ loaded.currency }}){% endif %}. Paste new ones to replace them.</p>{% endif %}
+  {% if can_save %}<label class="small pe-remember"><input type="checkbox" name="remember" value="1" checked> Save these prices for this part number (public distributor prices only), so you need not paste them again</label>{% endif %}
   <button type="submit">Estimate</button>
 </form>
+{% if can_save %}<script>
+(() => {  // owner, 10 Nov 2026: pasted prices are saved for the part number (owner-only form, /business/tam/prices)
+  const form = document.querySelector(".pe-form"), saved = {{ saved_text|tojson }};
+  const rows = () => [...form.querySelectorAll(".pe-row")].map(r => [...r.querySelectorAll("input")].map(i => i.value.trim()))
+    .filter(([q, p]) => q && p).map(([q, p]) => `${q} ${p}`);
+  form.addEventListener("submit", ev => {
+    const name = form.elements.name.value.trim();
+    const text = [form.elements.breaks.value.trim(), ...rows()].filter(Boolean).join("\n").trim();
+    const box = form.elements.remember;
+    if (!box || !box.checked || !name || !text || text === saved.trim()) return;
+    ev.preventDefault();
+    const body = new URLSearchParams({mpn: name, breaks: text, currency: form.elements.currency.value,
+      note: "pasted on Price estimate", back: "/pricing/estimate"});
+    const go = () => { box.checked = false; form.submit(); };
+    fetch("/business/tam/prices", {method: "POST", body, redirect: "manual", credentials: "same-origin"}).then(go, go);
+  });
+})();
+</script>{% endif %}
 <script>
 (() => {  // picking a part fills family, package, pins, release year and automotive from the part data at once
   const form = document.querySelector(".pe-form"), name = form.elements.name, vsel = form.querySelector(".pe-variants");

@@ -124,6 +124,7 @@ def test_price_estimate_picks_a_part_override_and_estimate(page):
     form.locator("select[name=family]").select_option(value)
     form.locator("input[name=bq]").first.fill("1000")
     form.locator("input[name=bp]").first.fill("2.64")
+    form.locator("input[name=remember]").uncheck()  # not kept: other flows read this part's prices
     with page.expect_navigation():
         form.get_by_role("button", name="Estimate").click()
     result = page.locator("#price-model.pe-result h2")
@@ -131,6 +132,25 @@ def test_price_estimate_picks_a_part_override_and_estimate(page):
     assert label in result.inner_text()  # the family I picked, not the part data's
     assert "override=true" in page.url and f"family={value}" in page.url
     assert page.locator("form.pe-form select[name=family]").input_value() == value
+
+
+def test_pasted_prices_are_saved_and_filled_in_next_time(page):
+    """Owner, 10 Nov 2026: "Save the pricing information I paste in from DigiKey. Otherwise I have to repaste it every
+    time." Paste once (phone width), estimate; opening the same part again fills the prices in. Synthetic part."""
+    page.set_viewport_size(PHONE)
+    go(page, "/pricing/estimate")
+    form = page.locator("form.pe-form")
+    form.locator("input[name=name]").fill("SYN-SAVE-7")
+    form.locator("select[name=family]").select_option("digital_isolator")
+    form.locator("textarea[name=breaks]").fill("1 2.10\n100 1.60\n1000 1.31")
+    expect(form.locator("input[name=remember]")).to_be_checked()
+    with page.expect_navigation():
+        form.get_by_role("button", name="Estimate").click()
+    expect(page.locator("#price-model.pe-result")).to_be_visible()
+    go(page, "/pricing/estimate?name=SYN-SAVE-7&family=digital_isolator")
+    expect(page.locator("form.pe-form textarea[name=breaks]")).to_have_value(re.compile(r"1000 1\.31"))
+    expect(page.locator(".pe-loaded")).to_contain_text("Prices saved for SYN-SAVE-7")
+    expect(page.locator("#price-model.pe-result")).to_be_visible()  # estimated at once from the saved prices
 
 
 def test_price_level_entered_on_a_phone(page):

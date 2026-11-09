@@ -128,3 +128,26 @@ def test_tam_page_shows_coverage(client):
     page = client.get("/business/tam").text
     assert "covers the whole market" in page and "covers less than the whole market" in page
     assert "Total radio market" in page
+
+
+def test_saved_prices_fill_the_estimate_and_price_the_part(client, session):
+    """Owner, 10 Nov 2026: prices pasted once are kept per part number: the Price estimate form fills them in, and a
+    part without cached DigiKey prices is priced from them. Synthetic part number and invented prices."""
+    from sqlalchemy import select
+
+    from app.models import Part
+    from app.services import price_model as pm
+
+    r = client.post("/business/tam/prices", data={"mpn": "syn-save-1", "breaks": "1 2.10\n1000 1.31", "currency": "EUR",
+                                                   "back": "/pricing/estimate"}, follow_redirects=False)  # fmt: skip
+    assert r.status_code == 303
+    page = client.get("/pricing/estimate", params={"name": "SYN-SAVE-1", "family": "digital_isolator"}).text
+    assert "1000 1.31" in page and "Prices saved for SYN-SAVE-1" in page and 'id="price-model"' in page
+    assert 'value="EUR" selected' in page or "<option selected>EUR" in page
+    pasted = client.get("/pricing/estimate", params={"name": "SYN-SAVE-1", "family": "digital_isolator",
+                                                     "breaks": "1000 0.90"}).text  # fmt: skip
+    assert "Prices saved for" not in pasted  # pasting new prices wins
+    part = session.scalars(select(Part).where(Part.family == "digital_isolator")).first()
+    pm.record_breaks(session, part.mpn, [(1000, 1.31), (2500, 1.2)], "USD")
+    m = pm.model(session, part, None)
+    assert m["points"] and m["source"].startswith("your saved")

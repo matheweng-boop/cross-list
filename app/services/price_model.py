@@ -287,6 +287,12 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
     family factor rests on them when there are any, and a part's own level re-centres its band."""
     cfg = config()
     pts, source, list_cur = breaks(pq), "DigiKey", None
+    saved = entered(session).get(str(part.mpn).strip().upper()) if not pts and session is not None else None
+    if not pts and saved:  # owner, 10 Nov 2026: prices pasted once (Price estimate) are kept for the part
+        list_cur = (saved.get("currency") or "USD").upper()
+        pts = [(int(q), float(p) * usd_rate(list_cur)) for q, p in saved["breaks"]]
+        when = f" ({saved['date']:%d %b %Y})" if saved.get("date") else ""
+        source = f"your saved distributor prices{when}"
     if not pts and part.mpn in list_prices():  # no DigiKey breaks cached: the maker's own public list price tiers
         lp = list_prices()[part.mpn]
         list_cur = (lp.get("currency") or "USD").upper()

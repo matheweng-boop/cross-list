@@ -1701,7 +1701,7 @@ def test_data_center_shows_cooling_and_hvac(page):
     card = page.locator("#card-datacenter-cooling")
     expect(card).to_be_visible()
     expect(card).to_contain_text("Cooling and HVAC")
-    expect(card.locator("a.sys-btn")).to_have_count(2)
+    expect(card.locator("a.sys-btn")).to_have_count(3)  # deep dive, block diagrams, ❓ Questions to ask
     with page.expect_navigation():
         card.get_by_role("link", name="📖 Read the deep dive").click()
     assert page.url.endswith("/library/dc_cooling")

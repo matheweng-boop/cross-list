@@ -54,9 +54,29 @@
   const CELL = 250, GAP_X = 56, GAP_Y = 52, BW = 112, BH = 46, BG = 8, HEAD = 26, PAD = 9;
   // Text is measured, not counted (owner, 9 Nov 2026: "the text overflows"): every label is wrapped to the pixel width
   // of its box, made smaller when it still does not fit, and cut with "…" only as a last resort (full text on hover).
-  const FONT = getComputedStyle(document.getElementById("bk-svg") || document.body).fontFamily || "system-ui, sans-serif";
-  const ctx2d = document.createElement("canvas").getContext("2d");
-  const textW = (t, size, weight) => { ctx2d.font = `${weight || 400} ${size}px ${FONT}`; return ctx2d.measureText(t).width; };
+  // Measured with a real SVG text in the diagram's own font: a canvas ignores "system-ui" on iPad Safari and
+  // measured a smaller default font, so labels still ran out of their boxes there (owner, 9 Nov 2026).
+  const NS = "http://www.w3.org/2000/svg", widths = new Map();
+  let probe = null;
+  const textW = (t, size, weight) => {
+    const key = `${weight || 400}|${size}|${t}`;
+    if (widths.has(key)) return widths.get(key);
+    if (!probe) {
+      const host = document.createElementNS(NS, "svg");
+      host.setAttribute("aria-hidden", "true");
+      host.style.cssText = "position:absolute;left:-9999px;top:0;width:10px;height:10px;overflow:hidden;visibility:hidden";
+      host.style.fontFamily = getComputedStyle(document.getElementById("bk-svg") || document.body).fontFamily;
+      probe = document.createElementNS(NS, "text");
+      host.appendChild(probe);
+      document.body.appendChild(host);
+    }
+    probe.style.fontSize = `${size}px`;
+    probe.style.fontWeight = String(weight || 400);
+    probe.textContent = t;
+    const w = probe.getComputedTextLength() * 1.04;  // 4 % spare for rounding between browsers
+    widths.set(key, w);
+    return w;
+  };
   const cut = (t, maxW, size, weight) => {
     if (textW(t, size, weight) <= maxW) return t;
     while (t.length > 1 && textW(t + "…", size, weight) > maxW) t = t.slice(0, -1);
@@ -245,11 +265,29 @@
     const svg = $("#bk-svg");
     lastL = L;
     svg.innerHTML = parts.join("");
+    squeeze(svg, L);
     applyView();
     renderSummary();
     renderReqs();
     renderLegend();
     if (!(sel && sel.block)) renderBelow();
+  }
+
+  // Safety net for any browser: a line still wider than its box once drawn is squeezed to the box (owner, 9 Nov 2026).
+  function squeeze(svg, L) {
+    const fit = (el, maxW) => {
+      try {
+        if (el.getComputedTextLength() > maxW) { el.setAttribute("textLength", maxW); el.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
+      } catch (e) { /* not rendered (hidden): nothing to measure */ }
+    };
+    svg.querySelectorAll("g.blk").forEach(g => {
+      const w = Number(g.querySelector("rect").getAttribute("width"));
+      g.querySelectorAll("text.b-label, text.b-sub").forEach(t => fit(t, w - 6));
+    });
+    svg.querySelectorAll("g.grp").forEach(g => {
+      const r = L.rects[g.dataset.gid];
+      if (r) g.querySelectorAll(".grp-title tspan").forEach(t => fit(t, r.w - 40));
+    });
   }
 
   // ---- magnifier: fit the window, zoom in / out, drag to pan

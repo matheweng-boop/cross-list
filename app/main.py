@@ -127,6 +127,18 @@ def _warm_caches() -> None:
         logging.getLogger(__name__).exception("cache warm-up failed")
 
 
+class _RevalidatedStatic(StaticFiles):
+    """Scripts and styles are checked with the server on every page load (a short 304 when unchanged), so a release
+    reaches an iPad at once: without it Safari kept the old block-diagram script (owner, 9 Nov 2026)."""
+
+    def file_response(self, *args, **kwargs):
+        resp = super().file_response(*args, **kwargs)
+        path = str(args[0] if args else kwargs.get("full_path", ""))
+        if path.endswith((".js", ".css")):
+            resp.headers["Cache-Control"] = "no-cache"
+        return resp
+
+
 def create_app(database_url: str | None = None, seed_synthetic: bool | None = None) -> FastAPI:
     settings = get_settings()
     engine = init_engine(database_url)
@@ -142,7 +154,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     app = FastAPI(title="BizDev", lifespan=lifespan)
     # .pptx downloads (Shareable > PowerPoint templates): slim images have no /etc/mime.types to name the type
     mimetypes.add_type("application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx")
-    app.mount("/static", StaticFiles(directory=Path(__file__).parent / "web" / "static"), name="static")
+    app.mount("/static", _RevalidatedStatic(directory=Path(__file__).parent / "web" / "static"), name="static")
 
     from app.api.routes import router as api_router
     from app.auth.gate import PasswordGate

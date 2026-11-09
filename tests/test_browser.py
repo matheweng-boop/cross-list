@@ -1496,23 +1496,28 @@ def test_segment_questions_tabs_answer_and_find_it_by_segment(page):
     with page.expect_navigation():
         item.locator(".aq-where a").click()
     expect(page.locator(f"#i-{q['id']} article.aq-a").first).to_be_visible()
-    go(page, "/library/dc_timing")  # a deep dive: its sub-system's questions, open at the bottom (390 px after)
+    go(page, "/library/dc_timing")  # a deep dive: its sub-system's questions, folded at the bottom (390 px after)
     sec = page.locator("details#questions-to-ask")
+    expect(sec).not_to_have_attribute("open", "")
+    sec.locator("> summary").click()
     expect(sec).to_have_attribute("open", "")
     expect(sec.locator(".sq-tabs")).to_be_visible()
 
 
 def test_questions_at_the_bottom_of_a_picked_sub_system(page):
     """Owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system." Block diagram library with Automotive >
-    Charging picked: below its diagrams and cross-sell come its Questions to ask, open, with the three tabs; an answer
-    saved there comes back to the same page, on its tab (phone width; 390 px checked after the test)."""
+    Charging picked: below its diagrams and cross-sell come its Questions to ask, folded ("Question should be
+    foldable"), with the three tabs once opened; an answer saved there comes back to the same page, opened on its tab
+    (phone width; 390 px checked after the test)."""
     from app.services import segment_questions as sq
 
     page.set_viewport_size({"width": 390, "height": 844})
     go(page, "/blocks?system=automotive&sub=charging")
     sec = page.locator("details#questions-to-ask")
+    expect(sec).not_to_have_attribute("open", "")
+    expect(sec.locator("> summary")).to_contain_text("Questions to ask: Charging")
+    sec.locator("> summary").click()
     expect(sec).to_have_attribute("open", "")
-    expect(sec.locator("summary")).to_contain_text("Questions to ask: Charging")
     tabs = sec.locator(".sq-tabs")
     expect(tabs).to_be_visible()
     tabs.get_by_role("button", name=re.compile("^Business unit")).click()

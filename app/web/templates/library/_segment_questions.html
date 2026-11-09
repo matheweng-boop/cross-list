@@ -23,11 +23,12 @@
 </details>{% endif %}{% endmacro %}
 
 {# At the bottom of a sub-system's own view (owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system"):
-   the Block diagram library with the sub-system picked, its deep dive, its cross-sell. v: segment_questions.view().
-   Open, with the tabs; saving an answer comes back to this page. #}
+   the Block diagram library with the sub-system picked and its deep dive (not Cross-sell: owner, 9 Nov 2026).
+   v: segment_questions.view(). Folded ("Question should be foldable", owner, 9 Nov 2026); a link to a question or
+   answer (after saving) opens it. #}
 {% macro sub_questions(v) %}{% if v and v.qa.questions %}
 <div class="sq-bottom" id="sub-questions">
-{{ segment_section(v.qa, v.back, v.tabs, v.ask, v.reports, open=true, heading="Questions to ask: " ~ v.title, back_save=v.back) }}
+{{ segment_section(v.qa, v.back, v.tabs, v.ask, v.reports, open=false, heading="Questions to ask: " ~ v.title, back_save=v.back) }}
 <p class="small"><a href="{{ v.href }}">All questions for {{ v.title }} on one page</a></p>
 </div>
 <script src="/static/segment_questions.js"></script>{% endif %}{% endmacro %}

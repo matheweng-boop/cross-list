@@ -91,11 +91,12 @@ def test_sub_system_page_shows_three_tabs_with_answer_boxes(client):
     assert client.get("/library/questions/nope").status_code == 404
 
 
-def test_deep_dive_shows_its_sub_system_questions_open_at_the_bottom(client):
-    """Owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system": after the references, the last thing."""
+def test_deep_dive_shows_its_sub_system_questions_folded_at_the_bottom(client):
+    """Owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system": after the references, the last thing;
+    "Question should be foldable": folded until opened."""
     page = html.unescape(client.get("/library/dc_timing").text)
     before, sec = page.split('id="questions-to-ask"', 1)
-    assert "<details" in before[-60:] and sec.startswith(" open>")
+    assert "<details" in before[-60:] and sec.startswith(">")
     assert before.index('id="refs"') < len(before) and 'href="#questions-to-ask"' in before
     assert _q("datacenter/timing")["text"] in sec
     assert "/library/questions/datacenter/timing" in sec
@@ -107,6 +108,7 @@ def test_block_diagram_library_shows_the_picked_sub_systems_questions_at_the_bot
     assert page.count('id="questions-to-ask"') == 1
     before, sec = page.split('id="questions-to-ask"', 1)
     assert before.rindex('id="sub-charging"') < before.rindex("Cross-sell in")  # after its diagrams and cross-sell
+    assert sec.startswith(">")  # folded (owner, 9 Nov 2026)
     assert "Questions to ask: " in sec[:400] and _q()["text"] in sec and _q(group="bu")["text"] in sec
     assert f'name="back" value="/blocks?system={SYS}&sub={SUB}"' in sec
     # only the picked sub-system's: no other segment's questions, and none without a pick
@@ -134,10 +136,11 @@ def test_an_answer_saved_at_the_bottom_comes_back_to_that_page(client, session):
     assert r.headers["location"].startswith("/library/questions/automotive/charging?saved=")
 
 
-def test_cross_sell_with_a_sub_system_shows_its_questions_at_the_bottom(client):
-    page = html.unescape(client.get(f"/blocks/cross-sell?system={SYS}&sub={SUB}").text)
-    assert page.count('id="questions-to-ask"') == 1 and _q()["text"] in page.split('id="questions-to-ask"', 1)[1]
-    assert 'id="questions-to-ask"' not in client.get(f"/blocks/cross-sell?system={SYS}").text
+def test_cross_sell_has_no_questions(client):
+    """Owner, 9 Nov 2026: "do not include question on the cross sell"."""
+    for url in (f"/blocks/cross-sell?system={SYS}&sub={SUB}", f"/blocks/cross-sell?system={SYS}"):
+        page = html.unescape(client.get(url).text)
+        assert 'id="questions-to-ask"' not in page and _q()["text"] not in page, url
 
 
 def test_an_answer_to_a_segment_question_works_like_a_report_answer(client, session):

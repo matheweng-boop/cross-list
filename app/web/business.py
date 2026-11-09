@@ -355,10 +355,6 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
         c["sell"] = sorted(sell, key=lambda e: (-e["n_apps"], e["label"]))
     c["aec"] = aec_on
     c["aec_base"] = url(aec="")  # the filter toggle adds its own aec=
-    if c["sub"]:  # a sub-system picked: its Questions to ask at the bottom (owner, 9 Nov 2026)
-        from app.services import segment_questions as sq
-
-        c["seg_qa"] = sq.view(session, request, f"{c['system']}/{c['sub']}", url())
     return templates.TemplateResponse(request, "business/cross_sell.html", c)
 
 

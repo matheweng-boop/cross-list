@@ -1577,6 +1577,25 @@ def test_data_center_shows_cooling_and_hvac(page):
     expect(page.locator("#sub-cooling + .tpl-grid a.tpl-card")).to_have_count(5)
 
 
+def test_data_center_rack_power_shows_its_deep_dive(page):
+    """Owner, 9 Nov 2026 ("Do a Data Center Rack Power deep dive"): the Rack power card leads to the deep dive and
+    to its five block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-rack-power")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Rack power")
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/dc_rack_power")
+    expect(page.locator("main h1")).to_contain_text("Data-center rack power")
+    expect(page.locator("main")).to_contain_text("Si8273AB-IS1")
+    go(page, "/library#sys-datacenter")
+    with page.expect_navigation():
+        page.locator("#card-datacenter-rack-power a.sys-btn-dg").click()
+    expect(page.locator("#sub-rack-power")).to_be_in_viewport()
+    expect(page.locator("#sub-rack-power + .tpl-grid a.tpl-card")).to_have_count(5)
+
+
 def test_drones_show_satellite_navigation_and_anti_jamming(page):
     """Owner, 2 Nov 2026 (worker P): Drones gets "Satellite link (NTN / direct-to-cell)", "Navigation" and
     "Anti-jamming and anti-spoofing", each with diagrams and a deep dive; the radio-links deep dive shows "Which link

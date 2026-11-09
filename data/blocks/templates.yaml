@@ -16627,3 +16627,74 @@
   questions:
   - {id: antennas, question: Receive antennas, choices: [one, two with an RF switch (as drawn)], source: NISSHINBO-AUTO-BCM}
   - {id: key_type, question: Key, choices: [remote keyless entry (button), passive smart key, phone as a key (BLE / UWB)], source: NISSHINBO-AUTO-BCM ('Smart Key'); car access diagrams in this library}
+
+# owner, 9 Nov 2026: "Do a Data Center Rack Power deep dive in Systems & applications" (deep dive dc_rack_power)
+- name: "Open Rack v3 power shelf with battery backup (six 3 kW PSUs at 51 V, N+1; six 3 kW BBUs at 48 V, 5+1; PMBus / Modbus monitoring) (after OCP Open Rack V3 and TI)"
+  category: Enterprise & data center
+  note: "After OCP-ORV3-PSU (Open Rack V3 48V PSU Specification rev 1.0, Meta, Nov 2022: single-phase 3 kW rectifier, 200-277 V AC (180-305 V), fixed 51 V output with 0.5 V droop, 48 V when commanded, >97.5 % peak efficiency, power factor >0.98, 20 ms / 60 J hold-up, hot plug, analog current-share bus, PMBus and Modbus, blackbox, IEC 62368-1, 3050 m), OCP-ORV3-BBU (Open Rack V3 48V BBU rev 1.4, Sep 2023: six 3 kW BBUs per shelf with 5+1 redundancy, 11S6P Li-ion pack with BMS, bidirectional charger / discharger at 47.5-48 V, at least 240 s at full power, 2 ms start-up, 97 % efficiency, fuse / hot-swap / ORing, Modbus and I2C) and TI-PMP41155 (TI's six-phase 12 kW four-switch buck-boost BBU converter for ORv3, 28.6-60 V in, 50 V out, >99 % peak efficiency). Drawn by us: the PSU's reinforced barrier sits in the LLC stage and in every control and sense signal that crosses it. The BBU output sits about 3 V below the PSU output, so power flows to the batteries' side without software when AC is lost. Our parts: Si823x / Si827x isolated gate drivers (LLC, synchronous rectifier, GaN totem-pole PFC), Si860x isolated PMBus / I2C, Si864x / Si866x isolators, Si892x isolated amplifiers, Si88xx isolators with DC-DC, Qorvo PAC22140 battery monitor (10-20 cells) for the 11S pack."
+  sources:
+  - {doc: OCP-ORV3-PSU, title: 'Open Rack V3 48V PSU Specification, rev 1.0 (Meta, OCP, 10 Nov 2022)', url: 'https://www.opencompute.org/documents/orv3-48v-psu-spec-rev-1-0-docx-1/'}
+  - {doc: OCP-ORV3-BBU, title: 'Open Rack V3 48V BBU Specification, rev 1.4 (Meta, OCP, 12 Sep 2023)', url: 'https://www.opencompute.org/documents/open-rack-v3-bbu-module-spec-1-4-pdf/'}
+  - {doc: TI-PMP41155, title: 'PMP41155: OCP Open Rack V3 12 kW battery backup unit (BBU) reference design (TI)', url: 'https://www.ti.com/tool/PMP41155'}
+  groups:
+  - {id: ac, label: 'AC input 200-277 V (180-305 V), fuses, inrush relay (30 A max)', col: 0, row: 0, blocks: [{fn: external_block, label: AC whip from the PDU}, tvs_esd]}
+  - {id: pfc, label: 'PSU: PFC stage (power factor > 0.98, current THD < 5 %)', col: 1, row: 0, blocks: [acdc_controller, {fn: gate_driver, label: 'PFC gate drivers (totem-pole GaN / SiC)'}, power_fets]}
+  - {id: llc, label: 'PSU: isolated LLC DC/DC across the reinforced barrier, synchronous rectifier to 51 V', col: 2, row: 0, blocks: [{fn: gate_driver, label: LLC primary isolated gate drivers}, power_fets, {fn: gate_driver, label: Synchronous-rectifier drivers}]}
+  - {id: oring, label: 'PSU output: ORing, hot plug, current-share bus (±2 %)', col: 3, row: 0, blocks: [{fn: efuse_hotswap, label: ORing / hot-plug controller}, power_fets, current_sensor]}
+  - {id: psu_ctrl, label: 'PSU control across the barrier (primary and secondary controllers, blackbox log)', col: 1, row: 1, blocks: [{fn: mcu, label: Primary and secondary digital controllers}, {fn: digital_isolator, label: PWM / fault signals across the barrier}, {fn: isolated_amplifier, label: PFC bus voltage and current sense}, {fn: isolated_dcdc, label: Isolated bias supply}]}
+  - {id: aux, label: Standby and auxiliary supply, col: 0, row: 1, blocks: [hv_flyback, pol_buck]}
+  - {id: busbar, label: '48 V busbar to the IT trays (51 V from the PSUs, 47.5-48 V from the BBUs)', col: 3, row: 1, blocks: [{fn: external_block, label: Rack busbar}]}
+  - {id: bbu, label: 'BBU module x6 (5+1): 3 kW for at least 4 minutes, 11S6P Li-ion', col: 2, row: 2, blocks: [{fn: battery_pack, label: 11S6P Li-ion pack}, {fn: battery_monitor, label: 'BMS: cell balancing ±1 %, SOC, state of health'}, {fn: buck_boost, label: Bidirectional 4-switch buck-boost charger / discharger}, {fn: efuse_hotswap, label: Fuse / hot-swap / ORing}, {fn: amplifier, label: Current-sense amplifier}, {fn: mcu, label: BBU controller}]}
+  - {id: monitor, label: 'Shelf power monitor (PMI): PMBus, Modbus, Ethernet to the rack manager', col: 1, row: 2, blocks: [mcu, {fn: digital_isolator, label: Isolated PMBus / I2C}, {fn: rs485_transceiver, label: Modbus RS-485}, ethernet_phy]}
+  links:
+  - [ac, pfc, AC]
+  - [pfc, llc, about 400 V PFC bus]
+  - [llc, oring, 51 V]
+  - [oring, busbar, 51 V]
+  - [bbu, busbar, 47.5-48 V on AC loss]
+  - [busbar, bbu, charging]
+  - [pfc, aux, '']
+  - [psu_ctrl, pfc, '']
+  - [psu_ctrl, llc, '']
+  - [monitor, psu_ctrl, PMBus / Modbus]
+  - [monitor, bbu, 'Modbus, state-of-health test']
+  questions:
+  - {id: psu_power, question: PSU rating, choices: [3 kW (ORv3), '5.5 kW (AI power shelves, est)', '12 kW and more (est)'], source: OCP-ORV3-PSU}
+  - {id: pfc_switch, question: PFC and LLC switches, choices: [Si superjunction, SiC, GaN]}
+  - {id: backup, question: Backup in the rack, choices: [BBU shelf (Li-ion), capacitor backup unit, none (facility UPS only)], source: OCP-ORV3-BBU}
+  - {id: link, question: Telemetry to the rack manager, choices: [PMBus, Modbus, both]}
+
+- name: "AI compute tray power from the 48 / 54 V busbar to the GPU core (hot-swap / eFuse with PMBus, 48 V to 12 V or 6 V bus converter, multiphase regulators, vertical power delivery, hold-up) (after Infineon, OCP and NVIDIA)"
+  category: Enterprise & data center
+  note: "After IFX-VPD (Infineon OptiMOS TDM2454xx quad-phase vertical power delivery modules, 10 Mar 2025: up to 280 A in 10 x 9 mm, 2 A/mm², an embedded capacitor layer, with XDP controllers), IFX-APP-IBC (Infineon intermediate bus converter page: fixed-ratio 8:1 hybrid switched-capacitor stage with half-bridge drivers and a digital controller, or an IBC module), OCP-ORV3-PSU (the 48 V narrow-range bus is chosen so that 4:1 fixed-ratio converters and conventional 12 V point-of-load stages can follow; load steps at 1 A/µs and pulse power to 150 %) and NVIDIA-800VDC-ECO (GPU rack power swings from about 30 % to 100 % in milliseconds; Kyber moves to one 64:1 LLC stage from 800 V to 12 V next to the GPU). Drawn by us: there is no isolation barrier in the tray on a 48 V bus, so our isolated parts sit upstream; the tray needs hot-swap / eFuse, bus converters, multiphase regulators and power stages, which are gaps for us, plus Qorvo's ACT power-loss protection ICs and PMICs for the 12 V side rails and SSDs, and Skyworks clocks for the processors."
+  sources:
+  - {doc: IFX-VPD, title: 'Infineon unveils next generation of high-density power modules for vertical power delivery (VPD) in AI data centers (Infineon, 10 Mar 2025)', url: 'https://www.infineon.com/technology-news/2025/infpss202503-073'}
+  - {doc: IFX-APP-IBC, title: 'Infineon Intermediate bus converter (IBC) application page - block diagram', url: 'https://www.infineon.com/applications/ai-data-center/data-center-power-solutions/server-rack-power-management/ibc'}
+  - {doc: OCP-ORV3-PSU, title: 'Open Rack V3 48V PSU Specification, rev 1.0 (Meta, OCP, 10 Nov 2022)', url: 'https://www.opencompute.org/documents/orv3-48v-psu-spec-rev-1-0-docx-1/'}
+  - {doc: NVIDIA-800VDC-ECO, title: 'Building the 800 VDC ecosystem for efficient, scalable AI factories (NVIDIA technical blog, 13 Oct 2025)', url: 'https://developer.nvidia.com/blog/building-the-800-vdc-ecosystem-for-efficient-scalable-ai-factories/'}
+  groups:
+  - {id: bus, label: 48 / 54 V busbar input (blind-mate connector), col: 0, row: 0, blocks: [{fn: external_block, label: Rack busbar}]}
+  - {id: hotswap, label: 'Tray hot-swap / eFuse: inrush, short circuit, PMBus power telemetry', col: 1, row: 0, blocks: [efuse_hotswap, power_fets, {fn: current_sensor, label: Power monitor}]}
+  - {id: ibc, label: 'Intermediate bus converter 48 V to 12 V or 6 V (fixed ratio 4:1 / 8:1, switched capacitor or LLC)', col: 2, row: 0, blocks: [{fn: power_module, label: IBC module}, {fn: half_bridge_driver, label: Half-bridge drivers}, power_fets]}
+  - {id: vr, label: 'Processor regulator: multiphase controller and smart power stages (hundreds of A to kA)', col: 3, row: 0, blocks: [multiphase, {fn: power_fets, label: Smart power stages}]}
+  - {id: vpd, label: 'Vertical power delivery under the processor (2 A/mm², up to 280 A per 10 x 9 mm module)', col: 3, row: 1, blocks: [{fn: power_module, label: Quad-phase VPD modules}, {fn: dc_link_cap, label: Embedded capacitor layer}]}
+  - {id: gpu, label: 'GPU / CPU, HBM, NICs (core below 1 V)', col: 2, row: 1, blocks: [soc]}
+  - {id: rails, label: 'Other rails: memory, NICs, retimers, management', col: 1, row: 1, blocks: [pol_buck, pmic, pol_ldo]}
+  - {id: holdup, label: 'Hold-up and power smoothing: SSD power-loss protection, capacitors for GPU load steps', col: 0, row: 1, blocks: [power_loss_protection, {fn: dc_link_cap, label: Hold-up / smoothing capacitors}]}
+  - {id: bmc, label: 'Board management (BMC): PMBus telemetry, power capping, clocks', col: 1, row: 2, blocks: [mcu, ethernet_phy, clock_generator]}
+  links:
+  - [bus, hotswap, 48-54 V]
+  - [hotswap, ibc, 48-54 V]
+  - [ibc, vr, 12 V or 6 V]
+  - [vr, vpd, PWM]
+  - [vpd, gpu, below 1 V]
+  - [ibc, rails, 12 V]
+  - [rails, gpu, '']
+  - [ibc, holdup, 12 V]
+  - [bmc, hotswap, PMBus]
+  - [bmc, ibc, PMBus]
+  - [bmc, vr, PMBus / SVID]
+  questions:
+  - {id: bus_v, question: Intermediate bus, choices: [12 V, 6 V], source: IFX-APP-IBC; NVIDIA-800VDC-ECO}
+  - {id: ibc_type, question: Bus converter, choices: [fixed-ratio switched capacitor, LLC (unregulated), regulated buck]}
+  - {id: vpd, question: Regulator placement, choices: [lateral (beside the processor), vertical (under the processor)], source: IFX-VPD}

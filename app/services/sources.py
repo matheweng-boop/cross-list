@@ -150,6 +150,7 @@ def page_for(rel: str, entry: str | None = None) -> str | None:
         "data/knowledge_by_product.yaml": "/knowledge",
         "data/blocks/templates.yaml": "/blocks",
         "data/business/customers.yaml": "/business/markets",
+        "data/business/possible_customers.yaml": "/library",
         "data/manage/schedule.yaml": "/manage/schedule",
         "data/manage/data_flow.yaml": "/manage/data-flow",
     }.get(rel)

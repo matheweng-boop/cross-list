@@ -211,17 +211,17 @@ def test_systems_library_systems_open_and_close(page):
     auto = page.locator("details#sys-automotive")
     card = auto.locator(".sys-sub").first
     expect(card).to_be_hidden()
-    auto.locator("summary").click()
+    auto.locator("> summary").click()
     expect(card).to_be_visible()
     expect(auto.locator(".lib-card").first).to_be_visible()  # its deep dives
-    auto.locator("summary").click()
+    auto.locator("> summary").click()
     expect(card).to_be_hidden()
     button = page.locator('.sys-pick a[href="#sys-drones"]')
     button.click()
     drones = page.locator("details#sys-drones")
     expect(page.locator("details#sys-drones[open]")).to_have_count(1)
-    expect(drones.locator("summary")).to_be_in_viewport()
-    drones.locator("summary").click()  # closed again, then the same button (same hash) opens it once more
+    expect(drones.locator("> summary")).to_be_in_viewport()
+    drones.locator("> summary").click()  # closed again, then the same button (same hash) opens it once more
     expect(page.locator("details#sys-drones[open]")).to_have_count(0)
     button.click()
     expect(page.locator("details#sys-drones[open]")).to_have_count(1)
@@ -358,7 +358,8 @@ def test_sub_system_card_buttons_open_the_deep_dive_and_the_diagrams(page):
     diagrams" (the editor is visited last: leaving a library diagram asks before unload)."""
     go(page, "/library#sys-automotive")
     card = page.locator("#card-automotive-car-access")
-    expect(card.locator("a.sys-btn")).to_have_count(2)
+    expect(card.locator("a.sys-btn:not(.sys-btn-q)")).to_have_count(2)  # and "❓ Questions to ask" (9 Nov 2026)
+    expect(card.locator("a.sys-btn-q")).to_have_attribute("href", "/library/questions/automotive/car-access")
     with page.expect_navigation():
         card.get_by_role("link", name="📖 Read the deep dive").click()
     assert page.url.endswith("/library/auto_uwb")
@@ -1454,6 +1455,120 @@ def test_answer_a_question_to_ask_switch_edit_and_find_it_in_answers(page):
     expect(page.locator("#i-q-bu-ab form.aq-form .aq-warn")).to_be_visible()
 
 
+def test_segment_questions_tabs_answer_and_find_it_by_segment(page):
+    """Owner, 9 Nov 2026: Systems library > Automotive > Charging > Questions to ask. Three tabs (Customer, Developers,
+    Business unit) show one group at a time; an answer under a developers question saves as Internal only, stays on its
+    tab after saving, and Data management > Answers finds it with the segment filter (iPad upright; 390 px after)."""
+    from app.services import segment_questions as sq
+
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/library#sys-automotive")
+    card = page.locator("#card-automotive-charging")
+    with page.expect_navigation():
+        card.get_by_role("link", name="❓ Questions to ask").click()
+    assert page.url.endswith("/library/questions/automotive/charging")
+    tabs = page.locator(".sq-tabs")
+    expect(tabs).to_be_visible()
+    expect(page.locator("#sq-customer")).to_be_visible()
+    expect(page.locator("#sq-developers")).to_be_hidden()
+    tabs.get_by_role("button", name=re.compile("^Developers")).click()
+    expect(page.locator("#sq-developers")).to_be_visible()
+    expect(page.locator("#sq-customer")).to_be_hidden()
+    q = next(x for x in sq.questions("automotive/charging") if x["group"] == "developers")
+    form = page.locator(f"#i-{q['id']} form.aq-form")
+    expect(form.locator(".aq-warn")).to_have_text("Don't record confidential figures or plans; summarise instead")
+    expect(form.locator("input[name=sharing][value=internal]")).to_be_checked()
+    form.locator("textarea[name=text]").fill("They plan SiC at higher frequency next.")
+    form.locator("input[name=who]").fill("Charger design team")
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save answer").click()
+    card = page.locator(f"#i-{q['id']} article.aq-a").first
+    expect(card).to_be_visible()  # the developers tab opened again for the saved answer
+    expect(card.get_by_role("button", name="🔒 Internal only")).to_have_attribute("aria-pressed", "true")
+    assert overflow(page) <= 1
+    go(page, "/manage/answers")
+    page.locator("select[name=segment]").select_option("automotive/charging")
+    with page.expect_navigation():
+        page.get_by_role("button", name="Show").click()
+    item = page.locator(".aq-list > li", has_text="SiC at higher frequency").first
+    expect(item.locator(".aq-where")).to_contain_text("Automotive › Charging")
+    expect(page.locator("#open-questions")).to_contain_text("Still open")
+    with page.expect_navigation():
+        item.locator(".aq-where a").click()
+    expect(page.locator(f"#i-{q['id']} article.aq-a").first).to_be_visible()
+    go(page, "/library/dc_timing")  # a deep dive: its sub-system's questions, folded at the bottom (390 px after)
+    sec = page.locator("details#questions-to-ask")
+    expect(sec).not_to_have_attribute("open", "")
+    sec.locator("> summary").click()
+    expect(sec).to_have_attribute("open", "")
+    expect(sec.locator(".sq-tabs")).to_be_visible()
+
+
+def test_questions_at_the_bottom_of_a_picked_sub_system(page):
+    """Owner, 9 Nov 2026: "Put the questions at the bottom of each sub-system." Block diagram library with Automotive >
+    Charging picked: below its diagrams and cross-sell come its Questions to ask, folded ("Question should be
+    foldable"), with the three tabs once opened; an answer saved there comes back to the same page, opened on its tab
+    (phone width; 390 px checked after the test)."""
+    from app.services import segment_questions as sq
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    go(page, "/blocks?system=automotive&sub=charging")
+    sec = page.locator("details#questions-to-ask")
+    expect(sec).not_to_have_attribute("open", "")
+    expect(sec.locator("> summary")).to_contain_text("Questions to ask: Charging")
+    sec.locator("> summary").click()
+    expect(sec).to_have_attribute("open", "")
+    tabs = sec.locator(".sq-tabs")
+    expect(tabs).to_be_visible()
+    tabs.get_by_role("button", name=re.compile("^Business unit")).click()
+    expect(sec.locator("#sq-bu")).to_be_visible()
+    expect(sec.locator("#sq-customer")).to_be_hidden()
+    q = next(x for x in sq.questions("automotive/charging") if x["group"] == "bu")
+    form = sec.locator(f"#i-{q['id']} form.aq-form")
+    expect(form.get_by_text("✅ Can be used for research (inbox)")).to_be_visible()
+    form.locator("textarea[name=text]").fill("The business unit wants the OBC first.")
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save answer").click()
+    assert "/blocks?system=automotive&sub=charging" in page.url and "saved=" in page.url
+    expect(page.locator(f"#i-{q['id']} article.aq-a").first).to_contain_text("OBC first")
+    expect(page.locator("#sq-bu")).to_be_visible()
+    assert overflow(page) <= 1
+
+
+# --- Block diagrams: no text outside its box (owner, 9 Nov 2026) ------------------------------------------------------
+_FITS = """() => {
+  const bad = [], svg = document.querySelector('#bk-svg');
+  svg.querySelectorAll('g.blk').forEach(g => { const r = g.querySelector('rect').getBBox();
+    g.querySelectorAll('text').forEach(t => { const b = t.getBBox();
+      if (b.x < r.x - 0.5 || b.x + b.width > r.x + r.width + 0.5 || b.y + b.height > r.y + r.height + 1)
+        bad.push('block: ' + t.textContent); }); });
+  svg.querySelectorAll('g.grp').forEach(g => { const r = g.querySelector('rect.frame').getBBox();
+    const t = g.querySelector('.grp-title'), b = t.getBBox(), first = g.querySelector('g.blk rect');
+    if (b.x + b.width > r.x + r.width - 26 || (first && b.y + b.height > first.getBBox().y))
+      bad.push('frame: ' + t.textContent); });
+  return bad; }"""
+
+
+def test_block_diagram_text_stays_inside_its_boxes(page):
+    """Owner, 9 Nov 2026: "On all the block diagrams, the text overflows". Frame titles wrap inside their frame (clear
+    of the + button and of the first block); block labels and part counts stay inside the block, also next to an Anchor
+    tag. Checked on the library diagrams with the longest frame titles and block labels."""
+    from app.services import blocks
+
+    def longest(t):  # the longest frame title and block (function or custom) label in a library diagram
+        labels = [g["label"] for g in t["groups"]]
+        labels += [b if isinstance(b, str) else str(b.get("label") or b.get("fn") or "") for g in t["groups"]
+                   for b in g["blocks"]]  # fmt: skip
+        return max(map(len, labels), default=0)
+
+    lib = blocks.templates()
+    picks = sorted(range(len(lib)), key=lambda i: -longest(lib[i]))[:16] + list(range(0, len(lib), 23))
+    for i in dict.fromkeys(picks):
+        go(page, f"/blocks/new?template={i}")
+        expect(page.locator("#bk-svg g.blk").first).to_be_attached()
+        assert page.evaluate(_FITS) == [], (i, lib[i]["name"])
+
+
 # --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------
 def test_describe_your_system_builds_blocks_at_ipad_size(page):
     """Type a sentence, Build: the 48 V input, protection, buck, LDO and MCU frames appear, linked left to right, with
@@ -1542,20 +1657,41 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
 
 
 def test_data_center_shows_timing_sub_system_deep_dive_and_diagrams(page):
-    """Owner, 2 Nov 2026: timing solutions in the data center: the Data center system has a "Timing and
-    synchronization" sub-system with its deep dive (which links the Clock planner) and its block diagrams."""
+    """Owner, 2 Nov 2026: timing solutions in the data center; 9 Nov 2026: Data center in the owner's four application
+    areas, each linking the timing deep dive (which links the Clock planner); old timing links still land."""
     go(page, "/library#sys-datacenter")
-    card = page.locator("#card-datacenter-timing")
+    cards = page.locator("details#sys-datacenter .sys-sub")
+    expect(cards.nth(0)).to_contain_text("Front-end / back-end networking")
+    expect(cards.nth(1)).to_contain_text("Scale-up switches")
+    expect(cards.nth(2)).to_contain_text("NICs / DPUs")
+    expect(cards.nth(3)).to_contain_text("Server and GPU / xPU baseboard")
+    card = page.locator("#card-datacenter-networking")
     expect(card).to_be_visible()
-    expect(card).to_contain_text("Timing and synchronization")
     with page.expect_navigation():
-        card.locator("a.sys-btn-deep").click()
+        card.locator('a.sys-btn-deep[href="/library/dc_timing"]').click()
     assert page.url.endswith("/library/dc_timing")
     expect(page.locator("main h1")).to_contain_text("Timing in the AI data center")
     expect(page.locator('main a[href="/clocks"]').first).to_be_visible()
-    go(page, "/blocks?system=datacenter&sub=timing#sub-timing")
+    go(page, "/blocks?system=datacenter&sub=timing#sub-timing")  # a retired key: redirected to networking
+    assert "sub=networking" in page.url
     expect(page.locator("details#area-datacenter[open]")).to_have_count(1)
-    expect(page.locator("main")).to_contain_text("AI / GPU server clock tree")
+    expect(page.locator("#sub-networking")).to_be_in_viewport()
+    expect(page.locator("main")).to_contain_text("Spine / leaf and scale-out Ethernet switch clock tree")
+    go(page, "/library#card-datacenter-servers")  # a retired card anchor opens the card that took it over
+    expect(page.locator("#card-datacenter-server-board")).to_be_in_viewport()
+
+
+def test_data_center_four_areas_on_a_phone(page):
+    """Owner, 9 Nov 2026: the new Data center layout in the Block diagram library fits a 390 px phone, and each new
+    area lists its diagrams."""
+    page.set_viewport_size(PHONE)
+    for sub, text in (("scale-up", "Scale-up switch tray"), ("nic-dpu", "SmartNIC / DPU card"),
+                      ("server-board", "GPU / xPU baseboard clock tree")):  # fmt: skip
+        go(page, f"/blocks?system=datacenter&sub={sub}#sub-{sub}")
+        expect(page.locator(f"#sub-{sub}")).to_be_in_viewport()
+        expect(page.locator("main")).to_contain_text(text)
+    go(page, "/blocks/cross-sell?system=datacenter&sub=nic-dpu")
+    expect(page.locator("main")).to_contain_text("NICs / DPUs")
 
 
 def test_data_center_shows_cooling_and_hvac(page):
@@ -1565,7 +1701,7 @@ def test_data_center_shows_cooling_and_hvac(page):
     card = page.locator("#card-datacenter-cooling")
     expect(card).to_be_visible()
     expect(card).to_contain_text("Cooling and HVAC")
-    expect(card.locator("a.sys-btn")).to_have_count(2)
+    expect(card.locator("a.sys-btn")).to_have_count(3)  # deep dive, block diagrams, ❓ Questions to ask
     with page.expect_navigation():
         card.get_by_role("link", name="📖 Read the deep dive").click()
     assert page.url.endswith("/library/dc_cooling")
@@ -1575,6 +1711,25 @@ def test_data_center_shows_cooling_and_hvac(page):
         page.locator("#card-datacenter-cooling a.sys-btn-dg").click()
     expect(page.locator("#sub-cooling")).to_be_in_viewport()
     expect(page.locator("#sub-cooling + .tpl-grid a.tpl-card")).to_have_count(5)
+
+
+def test_data_center_rack_power_shows_its_deep_dive(page):
+    """Owner, 9 Nov 2026 ("Do a Data Center Rack Power deep dive"): the Rack power card leads to the deep dive and
+    to its five block diagrams."""
+    go(page, "/library#sys-datacenter")
+    card = page.locator("#card-datacenter-rack-power")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("Rack power")
+    with page.expect_navigation():
+        card.get_by_role("link", name="📖 Read the deep dive").click()
+    assert page.url.endswith("/library/dc_rack_power")
+    expect(page.locator("main h1")).to_contain_text("Data-center rack power")
+    expect(page.locator("main")).to_contain_text("Si8273AB-IS1")
+    go(page, "/library#sys-datacenter")
+    with page.expect_navigation():
+        page.locator("#card-datacenter-rack-power a.sys-btn-dg").click()
+    expect(page.locator("#sub-rack-power")).to_be_in_viewport()
+    expect(page.locator("#sub-rack-power + .tpl-grid a.tpl-card")).to_have_count(5)
 
 
 def test_drones_show_satellite_navigation_and_anti_jamming(page):
@@ -1687,3 +1842,73 @@ def test_shareable_row_downloads_an_animated_powerpoint(page):
     assert dl.value.suggested_filename == "skyworks-qorvo-uwb-animated.pptx"
     with open(dl.value.path(), "rb") as f:
         assert f.read(2) == b"PK"
+
+
+# --- Products > State of the art and "vs best" on crosses (owner, 8 Nov 2026; worker V) ----------------------------
+# The live server has the demo parts only, so the page shows them, marked as demo data.
+def test_state_of_the_art_page_and_chips(page):
+    """The menu entry opens the page; category and sub-type chips switch the table; best values are marked green and
+    link their part (iPad upright; 390 px checked after the test)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/")
+    with page.expect_navigation():
+        page.locator('a[href="/state-of-the-art"]').first.click()
+    expect(page.locator("main h1")).to_have_text("State of the art")
+    expect(page.locator(".sota-table tbody tr").first).to_be_visible()
+    expect(page.locator(".sota-gaps")).to_contain_text("Our gaps at a glance:")
+    expect(page.locator(".sota-table td.sota-best").first).to_be_visible()
+    with page.expect_navigation():
+        page.locator(".sota-chip", has_text="Isolated gate drivers").click()
+    expect(page.locator('.sota-chip[aria-current="page"]')).to_have_text("Isolated gate drivers")
+    subs = page.locator('[aria-label="Sub-type"] .sota-chip')
+    assert subs.count() >= 2
+    label = subs.nth(1).inner_text().rsplit(" ", 1)[0]
+    with page.expect_navigation():
+        subs.nth(1).click()
+    expect(page.locator('.sota-chip[aria-current="true"]')).to_contain_text(label)
+    with page.expect_navigation():
+        page.locator(".sota-table td a").first.click()
+    assert "/parts/" in page.url
+
+
+def test_part_page_and_cross_a_list_fold_vs_best(page):
+    """A competitor part's best cross shows a folded "vs best": tap to open the table and its reading; Cross a list
+    has the same fold per result, inside the narrow table (390 px checked after the test)."""
+    go(page, "/find?q=SC141")
+    page.locator(".detail-toggle").first.click()  # the result's details, where "vs best" sits
+    fold = page.locator("tr.detail-row:not([hidden]) details.sota-vs").first
+    expect(fold).to_be_visible()
+    expect(fold.locator("table")).to_be_hidden()  # folded by default
+    fold.locator("summary").click()
+    expect(fold.locator("table")).to_be_visible()
+    expect(fold).to_contain_text("Best in our data")
+    expect(fold).to_contain_text("Reading: The offered part")
+    go(page, "/cross-list")
+    page.locator("#cx-parts").fill("SC141\nSD4100")
+    page.get_by_role("button", name="Cross all").click()
+    page.wait_for_load_state("load")
+    row = page.locator("tr.cx-row", has_text="SC141").first
+    fold = row.locator("details.sota-vs").first
+    expect(fold.locator("table")).to_be_hidden()
+    fold.locator("summary").click()
+    expect(fold.locator("table")).to_be_visible()
+    expect(fold.locator(".sota-tag").first).to_be_visible()
+    page.set_viewport_size(PHONE)  # opened, the fold scrolls inside its own box: the table does not widen the page
+    page.wait_for_timeout(200)
+    assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll with vs best open on a phone"
+
+
+def test_systems_library_possible_customers_by_region(page):
+    """Owner, 9 Nov 2026: each sub-system card (and each system) has a folded "Possible customers" section with
+    Americas, EMEA and Asia, each company with its line and source link (390 px checked after the test)."""
+    go(page, "/library#sys-automotive")
+    box = page.locator("details#pc-automotive-car-access")
+    expect(box.locator(".pc-region").first).to_be_hidden()  # folded
+    box.locator("summary").click()
+    for r in ("Americas", "EMEA", "Asia"):
+        expect(box.locator(f'.pc-region[aria-label="{r}"] li').first).to_be_visible()
+    expect(box.locator(".pc-src a").first).to_be_visible()
+    expect(box.locator(".pc-note")).to_contain_text("not a customer list")
+    whole = page.locator("details#pc-automotive")
+    whole.locator("summary").click()
+    expect(whole.locator('.pc-region[aria-label="EMEA"] li').first).to_be_visible()

@@ -3,13 +3,17 @@ report or case page under each question, with who answered (optional) and the da
 
 The questions: the business unit's first question of every report and case (bu_opener in reports.yaml, id
 q-bu-opener), a case's own business-unit and customer questions (data/business/cases/<slug>.yaml) and a research
-report's (data/business/questions_to_ask.yaml).
+report's (data/business/questions_to_ask.yaml). Since 9 Nov 2026 also every Systems library segment's (system or
+sub-system, app/services/segment_questions.py), stored under the slug "seg:<system>[/<sub-system>]"; the report and case
+answers keep their slugs and ids.
 
 Sharing, chosen per answer by the owner (the default is internal):
 - 🔒 Internal only: on the site for the owner only. Never in a Shareable (pages, PDF, PowerPoint), an export (Excel,
   CSV, text, any download), the Telegram summary, a guest's view or the review history; the daily-run inbox
   (/api/inbox) gets a count only, so an internal answer is never used to revise a report.
-- ✅ Can be shared: in full in the inbox, so the next revision can use it; guests see it (without who answered, as they
+- ✅ Can be shared (on a segment question worded "✅ Can be used for research (inbox)", SEG_SHARING; owner, 9 Nov 2026:
+  no question and no answer, of either kind, is ever in a Shareable output): in full in the inbox, so the next
+  revision can use it; guests see it (without who answered, as they
   see no author names elsewhere). The data-protection screen (docs/plan_data_protection.md, 2b) runs on it like on any
   free text: a flagged answer is held (the owner sees why; guests and the inbox do not get its text) until the owner
   releases it.
@@ -35,6 +39,15 @@ from app.models import Answer, AnswerVersion, DataReview, aware
 FILE = PROJECT_ROOT / "data" / "business" / "questions_to_ask.yaml"
 INTERNAL, SHARED = "internal", "shared"
 SHARING = {INTERNAL: "🔒 Internal only", SHARED: "✅ Can be shared"}
+# owner, 9 Nov 2026: "Do not include shareable with questions": no question and no answer is ever in a Shareable output,
+# so on a segment question the switch only says whether the daily update may use the answer (inbox in full) and
+# guests may read it. Same stored values; only the words differ.
+SEG_SHARING = {INTERNAL: "🔒 Internal only", SHARED: "✅ Can be used for research (inbox)"}
+
+
+def labels(slug: str) -> dict[str, str]:
+    """The switch's words for an answer under ``slug``: a segment's (research use) or a report's (can be shared)."""
+    return SEG_SHARING if (slug or "").startswith("seg:") else SHARING
 WARNING = "Don't record confidential figures or plans; summarise instead"
 RETENTION_MONTHS = 12
 TEXT_MAX, WHO_MAX = 4000, 200
@@ -60,7 +73,10 @@ def questions(slug: str) -> list[dict]:
     customer), ask (whom to ask), why, opener."""
     from app.services import prelim
     from app.services import reports as rp
+    from app.services import segment_questions as sq
 
+    if sq.is_segment(slug):
+        return sq.questions(sq.key_of(slug))
     r = rp.report(slug)
     if r is None:
         return []
@@ -92,6 +108,42 @@ def all_questions() -> list[dict]:
     from app.services import reports as rp
 
     return [{**q, "slug": r["slug"], "title": r["title"]} for r in rp.reports() for q in questions(r["slug"])]
+
+
+def segment_questions() -> list[dict]:
+    """Every segment's questions, each with its segment (slug seg:<key>, title), in Systems library order."""
+    from app.services import segment_questions as sq
+
+    return [{**q, "slug": sq.slug_of(s["key"]), "title": s["title"]} for s in sq.segments()
+            for q in sq.questions(s["key"])]  # fmt: skip
+
+
+def title(slug: str) -> str:
+    """The report's or segment's name as pages and the inbox show it."""
+    from app.services import reports as rp
+    from app.services import segment_questions as sq
+
+    if sq.is_segment(slug):
+        return sq.title(slug)
+    r = rp.report(slug)
+    return r["title"] if r else slug
+
+
+def href(slug: str) -> str:
+    """The page an answer lives on: the report or case page, or the segment's questions in the Systems library."""
+    from app.services import segment_questions as sq
+
+    return sq.href(slug) if sq.is_segment(slug) else f"/business/reports/{slug}"
+
+
+def action(slug: str) -> tuple[str, dict]:
+    """Where a new answer is sent, and the hidden fields that go with it."""
+    from app.services import segment_questions as sq
+
+    if sq.is_segment(slug):
+        s = sq.segment(sq.key_of(slug)) or {}
+        return f"/library/questions/{s.get('system', '')}/answers", ({"sub": s["sub"]} if s.get("sub") else {})
+    return f"/business/reports/{slug}/answers", {}
 
 
 # ---- the data-protection screen --------------------------------------------------------------------------------------
@@ -180,8 +232,15 @@ def views(session: Session, rows: list[Answer], owner: bool) -> list[View]:
 
 
 def for_slug(session: Session, slug: str) -> list[Answer]:
+    """A page's answers; on a segment also those stored under a retired segment key whose question moved here (owner,
+    9 Nov 2026: Data center regrouped; the stored rows keep their old slug)."""
+    from app.services import segment_questions as sq
+
     purge(session)
-    return list(session.scalars(select(Answer).where(Answer.slug == slug).order_by(Answer.created_at, Answer.id)))
+    key = sq.key_of(slug)
+    olds = {sq.slug_of(k): k for k in sq.old_keys(key)} if key else {}
+    rows = session.scalars(select(Answer).where(Answer.slug.in_([slug, *olds])).order_by(Answer.created_at, Answer.id))
+    return [a for a in rows if a.slug == slug or sq.home_of(olds[a.slug], a.question) == key]
 
 
 def owner_view(request) -> bool:
@@ -209,10 +268,13 @@ def page(session: Session, request, slug: str) -> dict:
     for v in views(session, for_slug(session, slug), owner):
         by_q.setdefault(v.question, []).append(v)
     from app.services import prelim
+    from app.services import segment_questions as sq
 
+    post, hidden = action(slug)
+    grp = sq.GROUPS if sq.is_segment(slug) else groups(prelim.raw(slug) is not None)
     return {"owner": owner, "guest": bool(p and p.is_guest), "by_q": by_q, "questions": questions(slug),
-            "warning": WARNING, "sharing": SHARING, "slug": slug,
-            "groups": groups(prelim.raw(slug) is not None)}  # fmt: skip
+            "warning": WARNING, "sharing": labels(slug), "slug": slug, "action": post, "hidden": hidden,
+            "href": href(slug), "groups": grp}  # fmt: skip
 
 
 # ---- writing ---------------------------------------------------------------------------------------------------------
@@ -226,7 +288,7 @@ def _clean(text: str, who: str) -> tuple[str, str | None]:
 def _sharing(value: str) -> str:
     value = (value or INTERNAL).strip()
     if value not in SHARING:
-        raise ValueError("Choose Internal only or Can be shared.")
+        raise ValueError("Choose Internal only or Can be shared (Can be used for research).")
     return value
 
 
@@ -261,7 +323,7 @@ def edit(session: Session, aid: int, text: str, who: str = "", sharing: str | No
     if (text, who_, sharing) == (a.text, a.who, a.sharing):
         return a
     new_words = (text, who_) != (a.text, a.who)
-    _keep(session, a, "edited" if new_words else f"switched to {SHARING[sharing]}")
+    _keep(session, a, "edited" if new_words else f"switched to {labels(a.slug)[sharing]}")
     a.flags = screen(text, who_ or "") or None
     if new_words:
         a.released_at = None
@@ -277,7 +339,7 @@ def set_sharing(session: Session, aid: int, sharing: str) -> Answer:
         raise KeyError(aid)
     sharing = _sharing(sharing)
     if sharing != a.sharing:
-        _keep(session, a, f"switched to {SHARING[sharing]}")
+        _keep(session, a, f"switched to {labels(a.slug)[sharing]}")
         a.sharing, a.updated_at = sharing, datetime.now(UTC)
         a.flags = screen(a.text, a.who or "") or None  # the screen as it is today
         session.commit()
@@ -348,36 +410,49 @@ def migrate(session: Session) -> int:
 
 
 # ---- the overview (Data management › Answers) and the inbox ---------------------------------------------------------
-def overview(session: Session, sharing: str = "", slug: str = "") -> dict:
-    """Every answer across all reports, newest first, filtered by sharing (internal | shared | held) and report; the
-    questions still open (no answer yet) first."""
+def overview(session: Session, sharing: str = "", slug: str = "", segment: str = "") -> dict:
+    """Every answer across all reports and segments, newest first, filtered by sharing (internal | shared | held),
+    report and segment (a system includes its sub-systems); the questions still open (no answer yet) first. The open
+    segment questions are listed once a segment is chosen (there are hundreds); before that only their count."""
     from app.services import reports as rp
+    from app.services import segment_questions as sq
 
     purge(session)
     rows = list(session.scalars(select(Answer).order_by(Answer.updated_at.desc(), Answer.id.desc())))
     answered = {(a.slug, a.question) for a in rows}
     counts = {"all": len(rows), INTERNAL: sum(a.sharing == INTERNAL for a in rows),
               SHARED: sum(a.sharing == SHARED for a in rows), "held": sum(is_held(a) for a in rows)}  # fmt: skip
+    seg = sq.slug_of(segment) if segment else ""
     if slug:
         rows = [a for a in rows if a.slug == slug]
+    elif seg:
+        rows = [a for a in rows if a.slug == seg or a.slug.startswith(seg + "/")]
     if sharing == "held":
         rows = [a for a in rows if is_held(a)]
     elif sharing in SHARING:
         rows = [a for a in rows if a.sharing == sharing]
-    qs = [q for q in all_questions() if not slug or q["slug"] == slug]
+    seg_qs = segment_questions()
+    if seg and not slug:
+        qs = [q for q in seg_qs if q["slug"] == seg or q["slug"].startswith(seg + "/")]
+    else:
+        qs = [q for q in all_questions() if not slug or q["slug"] == slug]
     open_by: dict[str, dict] = {}
     for q in qs:
         if (q["slug"], q["id"]) not in answered:
             open_by.setdefault(q["slug"], {"slug": q["slug"], "title": q["title"], "rows": []})["rows"].append(q)
-    titles = {r["slug"]: r["title"] for r in rp.reports()}
-    texts = {(q["slug"], q["id"]): q["text"] for q in all_questions()}
+    titles = {r["slug"]: r["title"] for r in rp.reports()} | {sq.slug_of(s["key"]): s["title"] for s in sq.segments()}
+    texts = {(q["slug"], q["id"]): q["text"] for q in [*all_questions(), *seg_qs]}
+    seg_answered = {k for k in answered if sq.is_segment(k[0]) and k in texts}
     vs = views(session, rows, owner=True)
     for v in vs:
         v.question_text = texts.get((v.slug, v.question)) or v.question_text  # today's wording when it still exists
     return {"answers": vs, "titles": titles, "open": list(open_by.values()), "n_open": sum(len(g["rows"])
             for g in open_by.values()), "n_questions": len(qs), "counts": counts,
             "gone": {(v.slug, v.question) for v in vs if (v.slug, v.question) not in texts},
-            "reports": [(r["slug"], r["title"]) for r in rp.reports() if questions(r["slug"])]}  # fmt: skip
+            "reports": [(r["slug"], r["title"]) for r in rp.reports() if questions(r["slug"])],
+            "segments": [(s["key"], s["title"], bool(s["sub"])) for s in sq.segments()],
+            "seg_total": len(seg_qs), "seg_answered": len(seg_answered),
+            "hrefs": {s: href(s) for s in {v.slug for v in vs} | set(open_by)}}  # fmt: skip
 
 
 def _one_line(text: str | None) -> str:
@@ -393,15 +468,18 @@ def inbox_lines(session: Session, start: datetime) -> list[str]:
     internal answers as counts only (owner, 2 Nov 2026: never used to revise a report)."""
     purge(session)
     out = ["\n## Questions to ask: answers\n",
-           "Shareable answers (the owner chose “Can be shared”), in full: use them in the report's or case's next "
-           "revision (reports.yaml, questions_to_ask.yaml, data/business/cases/<slug>.yaml) as owner input. Internal "
-           "answers are counted only: never ask for their text and never use them.\n"]  # fmt: skip
+           "Shareable answers (the owner chose “Can be shared”, on a segment “Can be used for research”), in full: "
+           "use them in the report's or case's next revision (reports.yaml, questions_to_ask.yaml, "
+           "data/business/cases/<slug>.yaml) as owner input; a segment answer (seg:<system>/<sub-system>) updates "
+           "that segment's deep dive or block diagram. Internal answers are counted only: never ask for their text "
+           "and never use them.\n"]  # fmt: skip
     changed = list(session.scalars(select(Answer).where(Answer.updated_at >= start)
                                    .order_by(Answer.updated_at, Answer.id)))  # fmt: skip
     shared = [a for a in changed if a.sharing == SHARED]
     for a in shared:
         state = "new" if aware(a.created_at) >= start else "changed"
-        head = (f"- {aware(a.updated_at):%Y-%m-%d %H:%M} {a.slug} / {a.question} ({state}): "
+        where = f"{a.slug} (segment {title(a.slug)})" if a.slug.startswith("seg:") else a.slug
+        head = (f"- {aware(a.updated_at):%Y-%m-%d %H:%M} {where} / {a.question} ({state}): "
                 f"“{_one_line(a.question_text)}”")
         if is_held(a):
             out.append(f"{head} · [held by the data-protection screen: {', '.join(a.flags or [])}; the owner reads it "

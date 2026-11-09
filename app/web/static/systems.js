@@ -7,7 +7,13 @@
   const target = id => {
     if (!id) return null;
     const el = document.getElementById(id);
-    if (el || !id.startsWith("sub-")) return el;
+    if (el) return el;
+    // a retired sub-system key (owner, 9 Nov 2026: Data center regrouped; #sub-timing, #card-datacenter-servers):
+    // the sub-system that lists it under data-aliases, its diagram heading when shown, else its card
+    const old = id.startsWith("sub-") ? id.slice(4) : (id.match(/^card-[^-]+-(.+)$/) || [])[1];
+    const alias = old && document.querySelector(`.sys-sub[data-aliases~="${CSS.escape(old)}"]`);
+    if (alias) return document.getElementById("sub-" + alias.dataset.sub) || alias;
+    if (!id.startsWith("sub-")) return null;
     // a sub-system whose diagrams are not listed on this page: its card
     return document.querySelector(`.sys-sub[data-sub="${CSS.escape(id.slice(4))}"]`);
   };

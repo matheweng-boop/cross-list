@@ -16,6 +16,18 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    its converter); the "main band" for the RF-switch partial-band rule; which part "QPF5001Q" meant (the page keeps the
    QPF5100Q + QM14068 / QM14070 / SKY5A2108 reading, est).
 
+## Settled (owner, 9 Nov 2026)
+
+- Questions to ask: at the bottom of each sub-system (Block diagram library with a sub-system picked, deep dives),
+  folded until opened ("Question should be foldable"); not on Cross-sell ("do not include question on the cross
+  sell"); never in any Shareable ("do not include shareable with questions"). The overview keeps the button.
+- Block diagrams: text must stay inside its boxes ("On all the block diagrams, the text overflows").
+- Data center rework: office and campus Wi-Fi does not stay in Data center (Home & building › Enterprise Wi-Fi). 3.2T
+  co-packaged vs pluggable: "Not sure", kept as an open question in the dc_timing deep dive. BAW reference in our
+  clock generators: "pose as question" (business-unit question and deep-dive open question). Non-China / non-Taiwan
+  supply: "do not talk about it" (removed everywhere). NIC / DPU and scale-up tray makers from more public sources:
+  "yes", for a later daily run.
+
 ## Settled (owner, 3 Nov 2026)
 
 - Drones: no check of SKY68040-11 for the satellite power class, no drone GNSS LNA product idea, no study of how drone

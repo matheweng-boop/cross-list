@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{# A segment's Questions to ask (owner, 9 Nov 2026): a system (its cross-cutting questions and links to each
+   sub-system's) or a sub-system, from the Systems library. #}
+{% from "library/_segment_questions.html" import segment_section %}
+{% block title %}Questions to ask: {{ seg.short }}{% endblock %}
+{% block content %}
+<nav class="crumbs small" aria-label="Breadcrumb"><a href="/library">Systems library</a><span class="crumb-sep" aria-hidden="true">›</span><a href="/library#sys-{{ system.key }}">{{ system.title }}</a>{% if sub %}<span class="crumb-sep" aria-hidden="true">›</span><a href="/library#card-{{ system.key }}-{{ sub.key }}">{{ sub.title }}</a>{% endif %}</nav>
+<h1>Questions to ask: {{ seg.short }}</h1>
+<p class="subtitle muted">{{ (sub or system).summary }}{% if not sub %} These are the questions that cut across {{ system.title }}; each sub-system has its own below.{% endif %}</p>
+{% if sub %}<p class="small sq-links">{% for t in deep %}<a class="sys-btn sys-btn-deep" href="/library/{{ t.key }}">📖 {{ t.title|truncate(52) }}</a> {% endfor %}{% if sub.idx %}<a class="sys-btn sys-btn-dg" href="/blocks?system={{ system.key }}&amp;sub={{ sub.key }}#sub-{{ sub.key }}">▦ Block diagrams ({{ sub.idx|length }})</a> {% endif %}<a class="sys-btn" href="/library/questions/{{ system.key }}">❓ {{ system.title }}: questions for the whole system</a></p>{% endif %}
+{{ segment_section(qa, here, tabs, ask, reports, open=true) }}
+{% if subs %}<h2 class="sq-subs-h">Questions per sub-system</h2>
+<ul class="sq-subs">{% for y in subs %}<li><a href="{{ y.href }}">{{ y.title }}</a> <small class="muted">{{ y.n }} questions</small></li>{% endfor %}</ul>{% endif %}
+{% if qa.owner %}<p class="small muted">All answers, with filters by segment and sharing: <a href="/manage/answers?segment={{ seg.key|urlencode }}">Data management › Answers</a>.</p>{% endif %}
+<script src="/static/segment_questions.js"></script>
+{% endblock %}

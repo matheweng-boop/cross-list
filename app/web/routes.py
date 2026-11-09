@@ -36,6 +36,7 @@ from app.services import (
     price_builder,
     price_model,
     pricing,
+    sota,
     text,
     vocab,
 )
@@ -441,6 +442,7 @@ def _part_context(
         "no_cross": not graded,
         "requested": _requested(session, part.mpn),
         "verified_ids": crosslist.Verified(session).of(part.id),  # pairs and confirmed datasheet families
+        "vs_best": lambda c: sota.vs_best(session, part, c),  # owner, 8 Nov 2026: State of the art on every cross
     }
 
 
@@ -715,7 +717,7 @@ def library_index(request: Request):
                            for x in s["subsystems"]]}
             for s in sy.systems()]  # fmt: skip
     for s in tree:
-        s["deep"] = [t for x in s["subs"] for t in x["deep"]]
+        s["deep"] = list({t["key"]: t for x in s["subs"] for t in x["deep"]}.values())  # one dive, several subs
         s["n"] = len({i for x in s["subs"] for i in x["idx"]})
     placed = {t["key"] for s in tree for t in s["deep"]}
     ctx = {"tree": tree, "topics": topics, "other": [t for t in topics if t["key"] not in placed],
@@ -742,6 +744,11 @@ def library_topic(request: Request, key: str, session: Session = Depends(get_ses
     ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
            "notes": library.notes(key), "cases": library.cases_using(key), "related": library.related(key),
            "rule_links": library.rule_links, "where": sy.topic_crumb(key)}  # fmt: skip
+    if ctx["where"]:  # the sub-system's Questions to ask, at the bottom of the page (owner, 9 Nov 2026)
+        from app.services import segment_questions as sq
+
+        seg = f"{ctx['where']['system']}/{ctx['where']['sub']}"
+        ctx["seg_qa"] = sq.view(session, request, seg, f"/library/{key}")
     return templates.TemplateResponse(request, "library/topic.html", ctx)
 
 

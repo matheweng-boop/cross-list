@@ -15964,6 +15964,189 @@
   - {id: holdover, question: Holdover oscillator, choices: [miniature atomic clock (±1 µs), OCXO (±22 µs)], source: 'OCP Time Card spec, Clock section'}
   - {id: role, question: Role in the network, choices: [PTP grandmaster, boundary clock, NTP server], source: 'OCP Time Card spec, General'}
   - {id: gnss_security, question: GNSS protection, choices: [holdover only, signed GNSS messages + jump detection], source: 'OCP Time Card spec, Security'}
+# ---- Data center, four application areas (owner, 9 Nov 2026: "Rework the Data Center applications into the following 4
+# categories: Front-End/Back-End Networking, Scale-up Switches, NICs/DPUs, Server and GPU/xPU Baseboard"; "Blocks
+# specific to Scale-up and Scale-out Switches"; "DCI Routers ... network synchronizers"; "224G SerDes Clocks";
+# "Compute Trays ... PCIe Buffers, XOs, CLK Gen ... Spread Spectrum"). Public sources read 9 Nov 2026. ---------------
+
+- name: "Spine / leaf and scale-out Ethernet switch clock tree, 64 x 800G (51.2T) to 1.6T and 3.2T ports (jitter attenuator or network synchronizer for the 312.5 MHz SerDes references, PCIe buffer, management clocks, 156.25 MHz references for co-packaged 3.2T modules) (after Celestica DS5000 OCP spec, OIF and Skyworks public material)"
+  category: Enterprise & data center
+  note: "Drawn by us from the clock topology of the Celestica DS5000 OCP specification (a 51.2 Tb/s, 64 x 800G leaf / spine switch on Broadcom Tomahawk 5): a 48 MHz crystal into a TI LMK05318 network synchronizer gives eight 312.5 MHz LVPECL SerDes references to the switch ASIC; a Skyworks Si53108 PCIe buffer fans the 100 MHz HCSL REFCLK out to the switch, FPGA, I210 NIC and two SSDs; 50 MHz LVPECL fanouts feed the switch core, timestamp and PLL references; a 156.25 MHz fanout feeds the management port. The Skyworks reference design for Broadcom switch SoCs recommends Si5403 or SKY69002 (network synchronizer) and Si536x / SKY6310x with SKY53510 / Si53307 fanout for Tomahawk 5 (<90 fs at 312.5 MHz) and Tomahawk 6 (<35 fs with a 4 MHz high-pass filter, the 224G-class switch for 1.6T ports). OIF's 3.2 Tb/s co-packaged optics module (16 modules around a 51.2T switch) takes a host 156.25 MHz reference: ±100 ppm, ≤220 fs (12 kHz-20 MHz), 100 nF AC coupling, so a CPO switch moves the optics clocks onto the switch board: 16 references from a fanout instead of one XO in each pluggable. Our socket: the LMK05318 position (Si5403 / SKY69002 / Si5361) and the fanouts (SKY53510, Si53307); the Si53108 is already ours. Gaps: TCXO / OCXO (none of our own), the LPC / 25 MHz CMOS fanouts (generic)."
+  sources:
+  - {doc: OCP-DS5000, title: 'Celestica DS5000 64x800G Switch Specification (OCP, Jan 2024), clock topology', url: 'https://www.opencompute.org/documents/celestica-ds5000-64x800gb-switch-specification1-2-pdf/'}
+  - {doc: OIF-CPO-3.2T, title: 'OIF-Co-Packaging-3.2T-Module-01.0, Implementation Agreement for a 3.2 Tb/s Co-Packaged (CPO) Module (Mar 2023), Table 11 reference clock', url: 'https://www.oiforum.com/wp-content/uploads/OIF-Co-Packaging-3.2T-Module-01.0.pdf'}
+  - {doc: SKY-RD-BCM, title: 'Skyworks, Timing Solutions for Broadcom SOCs (reference design, May 2026)', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf'}
+  groups:
+  - {id: ports, label: 'Front-panel ports: 64 x 800G OSFP (8 x 112G), next 1.6T (8 x 224G) and 3.2T; or 16 co-packaged 3.2T modules around the ASIC', col: 0, row: 0, blocks: [{fn: external_block, label: 800G / 1.6T optics or 3.2T CPO modules}]}
+  - {id: asic, label: 'Switch ASIC (51.2T / 102.4T): 112G / 224G PAM4 SerDes, core and timestamp PLLs', col: 1, row: 0, w: 2, blocks: [{fn: soc, label: Switch ASIC}, serdes]}
+  - {id: serdes_ref, label: 'SerDes references: network synchronizer or jitter attenuator, 8 x 312.5 MHz (Tomahawk 5: <90 fs; Tomahawk 6: <35 fs with 4 MHz HPF)', col: 1, row: 1, blocks: [{fn: jitter_attenuator, label: 'Network synchronizer / jitter attenuator (LMK05318 socket: Si5403, SKY69002, Si5361)'}, {fn: crystal_oscillator, label: 48 MHz crystal}]}
+  - {id: core_ref, label: '50 MHz core / timestamp / PLL references and 156.25 MHz management reference (LVPECL fanouts)', col: 2, row: 1, blocks: [{fn: clock_buffer, label: 50 MHz 1:8 fanout}, {fn: clock_buffer, label: 156.25 MHz 1:4 fanout}, {fn: crystal_oscillator, label: 50 / 156.25 MHz XOs}]}
+  - {id: cpo_ref, label: 'CPO module references: 156.25 MHz, ±100 ppm, ≤220 fs (12 kHz-20 MHz), one per 3.2T module (16 per 51.2T switch)', col: 0, row: 1, blocks: [{fn: clock_buffer, label: 156.25 MHz fanout (16 outputs)}]}
+  - {id: pcie, label: 'PCIe: 100 MHz HCSL to the switch, FPGA, I210 NIC and SSDs (Si53108)', col: 3, row: 0, blocks: [{fn: pcie_buffer, label: Si53108 PCIe buffer}, {fn: soc, label: COM-E x86 CPU module}]}
+  - {id: mgmt, label: 'BMC (RunBMC, AST2620), CPLD / FPGA, 25 MHz and 33 MHz LPC clocks, NC-SI 50 MHz', col: 3, row: 1, blocks: [{fn: mcu, label: BMC}, {fn: clock_buffer, label: LPC / NC-SI fanouts}]}
+  - {id: sync, label: 'Optional SyncE / PTP: TCXO / OCXO and 1 PPS from a time card (front-end leaf with 5G or telecom tenants)', col: 0, row: 2, blocks: [{fn: crystal_oscillator, label: TCXO / OCXO}, {fn: external_block, label: Time card 1 PPS + ToD}]}
+  - {id: pwr, label: 'Power: 2+2 2 kW AC PSUs, 12 V busbar, core multiphase, low-noise LDOs for the clocks', col: 2, row: 2, blocks: [multiphase, pol_buck, pol_ldo]}
+  links:
+  - [ports, asic, 112G / 224G lanes]
+  - [serdes_ref, asic, 8 x 312.5 MHz SerDes reference]
+  - [core_ref, asic, 50 MHz core / TS / PLL]
+  - [cpo_ref, ports, 156.25 MHz per CPO module]
+  - [pcie, asic, 100 MHz PCIe REFCLK + PCIe]
+  - [mgmt, pcie, LPC / NC-SI / I2C]
+  - [sync, serdes_ref, TCXO / OCXO + 1 PPS]
+  - [pwr, serdes_ref, clean supply]
+  questions:
+  - {id: port_speed, question: Port speed, choices: ['800G (8 x 112G)', '1.6T (8 x 224G)', '3.2T (co-packaged, 8 x 400G per module)'], source: OIF CPO 3.2T IA; Skyworks reference design for Broadcom SOCs}
+  - {id: serdes_limit, question: SerDes reference limit, choices: ['<90 fs at 312.5 MHz (Tomahawk 5 class)', '<35 fs with 4 MHz HPF at 312.5 MHz (Tomahawk 6 class)'], source: Skyworks reference design for Broadcom SOCs}
+  - {id: optics, question: Optics, choices: [pluggable (one XO per module), co-packaged (156.25 MHz from the switch board)], source: OIF CPO 3.2T IA section 5.4}
+  - {id: sync, question: SyncE / PTP, choices: [none, SyncE + PTP boundary clock], source: Skyworks AN1077}
+
+- name: "Scale-up switch tray for an AI rack (scale-up Ethernet or NVLink-class switch ASICs with 200G-class SerDes, SerDes reference clocks from a jitter attenuator and fanout, cable / backplane retimers, 48-54 V to core power) (after OCP SUE, OIF and Skyworks public material)"
+  category: Enterprise & data center
+  note: "Drawn by us from the OCP Scale Up Ethernet (SUE) specification 1.0 and the Skyworks reference design for Broadcom switch SoCs. A scale-up network joins up to 1024 accelerators (XPUs) through a single switch hop, with under 2 µs round trip and cables up to 10 m; each SUE instance carries 800G (1 x 800G, 2 x 400G or 4 x 200G) on 200G SerDes and scales to 1.6T; SUE's example gives each XPU twelve 800G instances into twelve 64-port switches. A switch tray therefore holds one or more high-radix switch ASICs whose 200G-class SerDes need the newest reference limits (<35 fs with a 4 MHz high-pass filter at 312.5 MHz in the Broadcom table for Tomahawk 6 / Tomahawk Ultra-class parts). Precise time (SyncE / PTP) is not needed inside one scale-up domain (est), so the clock tree is a jitter attenuator or clean clock generator plus fanout, not a network synchronizer. Proprietary NVLink-class trays follow the same pattern (est). Retimers on long copper links and the 48-54 V tray power are generic and drawn by us (est). Our socket: Si536x / SKY6310x jitter attenuators, SKY62101 clock generator (<55 fs), SKY53510 / SKY53512 fanout. Gaps: retimers, switch ASIC (customer), multiphase core power."
+  sources:
+  - {doc: OCP-SUE, title: 'OCP Scale Up Ethernet (SUE) specification 1.0 (Broadcom, Sep 2025)', url: 'https://www.opencompute.org/documents/ocp-sue-spec-final-pdf-1/'}
+  - {doc: SKY-RD-BCM, title: 'Skyworks, Timing Solutions for Broadcom SOCs (reference design, May 2026)', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf'}
+  groups:
+  - {id: xpu, label: 'Compute trays: each XPU with up to twelve 800G scale-up instances (200G SerDes), copper cables up to 10 m', col: 0, row: 0, blocks: [{fn: external_block, label: GPU / xPU compute trays}]}
+  - {id: retimer, label: Cable / backplane retimers on long copper links (est), col: 1, row: 0, blocks: [{fn: redriver, label: 200G-class retimer}]}
+  - {id: asic, label: 'Scale-up switch ASICs (64 x 800G, one hop, <2 µs round trip)', col: 2, row: 0, w: 2, blocks: [{fn: soc, label: Scale-up switch ASIC x1-2}, serdes]}
+  - {id: ref, label: 'SerDes reference: jitter attenuator or ultra-low-jitter clock generator, <35 fs with 4 MHz HPF at 312.5 MHz', col: 2, row: 1, blocks: [{fn: jitter_attenuator, label: 'Jitter attenuator (Si536x / SKY6310x)'}, {fn: clock_generator, label: 'Clock generator (SKY62101)'}, {fn: crystal_oscillator, label: Crystal / XO}]}
+  - {id: fan, label: 'Any-format fanout to each ASIC and retimer reference input', col: 1, row: 1, blocks: [{fn: clock_buffer, label: 'SerDes fanout (SKY53510 / SKY53512)'}]}
+  - {id: mgmt, label: 'Tray controller: CPU or BMC, PCIe to the ASICs, 100 MHz REFCLK', col: 3, row: 1, blocks: [{fn: soc, label: Control CPU}, pcie_buffer]}
+  - {id: pwr, label: 'Tray power from the 48-54 V busbar: hot-swap / eFuse, bus converter, multiphase core rails, low-noise clock LDOs', col: 0, row: 1, blocks: [efuse_hotswap, multiphase, pol_buck, pol_ldo]}
+  links:
+  - [xpu, retimer, 200G lanes (copper)]
+  - [retimer, asic, 200G lanes]
+  - [ref, fan, clean 312.5 / 156.25 MHz]
+  - [fan, asic, SerDes reference per ASIC]
+  - [fan, retimer, retimer reference]
+  - [mgmt, asic, PCIe / I2C]
+  - [pwr, ref, clean supply]
+  - [pwr, asic, core rails]
+  questions:
+  - {id: fabric, question: Scale-up fabric, choices: [scale-up Ethernet (SUE), NVLink-class, UALink], source: OCP SUE spec section 1}
+  - {id: serdes, question: SerDes per lane, choices: [100G, 200G, 400G (next)], source: OCP SUE spec Table 1}
+  - {id: links, question: Links, choices: [copper cable (up to 10 m), backplane, co-packaged / linear optics], source: OCP SUE spec Table 1}
+
+- name: "Data center interconnect (DCI) router for scale-across (1600ZR / 800ZR coherent pluggables up to 120 km, network synchronizer for SyncE and IEEE 1588 PTP with OCXO holdover, jitter attenuators and fanout) (after OIF and Skyworks public material)"
+  category: Enterprise & data center
+  note: "Drawn by us from OIF-1600ZR-01.0 (Sep 2026) and OIF-800ZR-01.0 as listed by OIF, the Skyworks reference design for Broadcom SoCs (Jericho / Qumran routers) and AN1077. A DCI router links data center halls or sites (scale-across): its line side carries coherent pluggables, 1600ZR for single-span amplified DWDM links up to 120 km in a client-optics-size module; each module has separate host-side and line-side clock domains and runs within ±20 ppm. Router-class switch silicon (Jericho 3 / 4, Qumran) takes <90 fs at 312.5 MHz (Jericho 3) or <35 fs with a 4 MHz high-pass filter (Jericho 4), and the reference design recommends the Si5403 or SKY69002 network synchronizer for every generation: DCI routers carry SyncE and IEEE 1588 PTP between sites, so they need holdover (OCXO) when the upstream time is lost (AN1077). The coherent module's own clock is a jitter attenuator (Si5344H class). Standard products for the router: Si5403 / SKY69002 synchronizers, Si5361 / SKY6310x jitter attenuators, SKY53510 fanout, Si545 / Si549 XOs. Gaps: OCXO (none of our own), router ASIC and coherent DSP (customer)."
+  sources:
+  - {doc: OIF-1600ZR, title: 'OIF-1600ZR-01.0, Implementation Agreement 1600ZR (Sep 2026)', url: 'https://www.oiforum.com/wp-content/uploads/OIF-1600ZR-01.0.pdf'}
+  - {doc: SKY-RD-BCM, title: 'Skyworks, Timing Solutions for Broadcom SOCs (reference design, May 2026)', url: 'https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-broadcom.pdf'}
+  - {doc: SKY-AN1077, title: 'Skyworks AN1077, Selecting the right clocks for timing synchronization applications', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/application-notes/an1077-selecting-clocks-for-timing-synchronization.pdf'}
+  groups:
+  - {id: line, label: 'Line side: 1600ZR / 800ZR coherent pluggables, DWDM up to 120 km (scale-across)', col: 0, row: 0, blocks: [{fn: external_block, label: Coherent ZR pluggables}, {fn: jitter_attenuator, label: 'Coherent module clock (Si5344H class)'}]}
+  - {id: asic, label: 'Router / deep-buffer switch ASIC (Jericho / Qumran class), 112G / 224G SerDes, PTP timestamping', col: 1, row: 0, w: 2, blocks: [{fn: soc, label: Router ASIC}, serdes, ddr_flash]}
+  - {id: client, label: 'Client side to the data center fabric: 400G / 800G optics', col: 3, row: 0, blocks: [{fn: external_block, label: Client optics}]}
+  - {id: sync, label: 'Network synchronizer: SyncE (G.8262) and IEEE 1588 PTP boundary clock, hitless switching, holdover', col: 0, row: 1, blocks: [{fn: jitter_attenuator, label: 'Network synchronizer (Si5403 / SKY69002)'}]}
+  - {id: hold, label: 'Holdover and stability reference: OCXO or TCXO, 48-54 MHz crystal', col: 0, row: 2, blocks: [{fn: crystal_oscillator, label: OCXO / TCXO}, {fn: crystal_oscillator, label: Crystal}]}
+  - {id: ja, label: 'SerDes references: jitter attenuator and fanout (<90 fs at 312.5 MHz; <35 fs with 4 MHz HPF for the newest routers)', col: 1, row: 1, blocks: [{fn: jitter_attenuator, label: 'Jitter attenuator (Si5361 / SKY6310x)'}, {fn: clock_buffer, label: 'Fanout (SKY53510)'}]}
+  - {id: cpu, label: 'Route processor: CPU, PTP stack, PCIe clocks', col: 2, row: 1, blocks: [{fn: soc, label: Route processor CPU}, {fn: clock_generator, label: PCIe / platform clock generator}, pcie_buffer]}
+  - {id: tod, label: '1 PPS / time of day from a GNSS grandmaster or time card (or PTP from upstream)', col: 1, row: 2, blocks: [{fn: external_block, label: GNSS / time card}]}
+  - {id: pwr, label: 'Line-card power and low-noise clock LDOs', col: 2, row: 2, blocks: [pol_buck, pol_ldo]}
+  links:
+  - [line, asic, coherent 1.6T / 800G lanes]
+  - [asic, client, 400G / 800G client lanes]
+  - [asic, sync, recovered SyncE clocks]
+  - [hold, sync, OCXO / TCXO + crystal]
+  - [tod, sync, 1 PPS + ToD]
+  - [sync, ja, frequency- and phase-locked clock]
+  - [ja, asic, 312.5 MHz SerDes reference + 1 PPS]
+  - [cpu, sync, I2C / SPI (1588 servo)]
+  - [cpu, asic, PCIe + timestamps]
+  - [pwr, ja, clean supply]
+  questions:
+  - {id: optics, question: DCI optics, choices: ['800ZR', '1600ZR (single span, up to 120 km)'], source: OIF IA list; OIF-1600ZR-01.0 section 1}
+  - {id: router, question: Router silicon class, choices: ['Jericho 3 class (<90 fs at 312.5 MHz)', 'Jericho 4 class (<35 fs, 4 MHz HPF)'], source: Skyworks reference design for Broadcom SOCs}
+  - {id: holdover, question: Holdover reference, choices: [OCXO, TCXO], source: Skyworks AN1077}
+
+- name: "SmartNIC / DPU card (OCP NIC 3.0: PCIe Gen 5 / 6 host with a 100 MHz REFCLK per host, 400G / 800G Ethernet SerDes reference, timing NIC with 10 MHz + 1 PPS, Arm cores, memory and card power) (after OCP NIC 3.0, Marvell OCTEON and Skyworks public material)"
+  category: Enterprise & data center
+  note: "Drawn by us from the OCP NIC 3.0 specification r1.6 and the Skyworks reference design for Marvell SoCs. An OCP NIC 3.0 card takes up to 80 W (SFF) or 150 W (DSFF) and one 100 MHz PCIe REFCLK per host from the baseboard (up to four hosts on SFF, eight REFCLKs on DSFF; REFCLK limits as in PCIe CEM 5.1; Gen 6 limits informative). In a host-to-card link in SRIS (separate reference with independent spread spectrum) the card needs its own PCIe clock with spread spectrum (est from the PCIe architecture, TI SNAA386). Its Ethernet side needs a 156.25 / 312.5 MHz SerDes reference: the Marvell table asks <150 fs (12 kHz-20 MHz) at 156.25 MHz for the OCTEON 10 DPU, where Skyworks recommends the SKY62101 clock generator (<70 fs) or Si5391; OCTEON TX2 parts take a Si5403 synchronizer or Si5332. A timing NIC (Flex I/O timing mode) exchanges a 10 MHz reference with an embedded 1 PPS (or a separate 1 PPS) with the baseboard: a network synchronizer and TCXO / OCXO on the card. Our socket: SKY62101 / Si5332 clock generators with programmable spread spectrum, Si5403 / SKY69002 on timing NICs, Si53xx / SKY535x2 PCIe buffers, Si545 / Si549 XOs. Gaps: Ethernet controller / DPU (customer), TCXO / OCXO."
+  sources:
+  - {doc: OCP-NIC3, title: 'OCP NIC 3.0 Design Specification r1.6 (Apr 2025)', url: 'https://www.opencompute.org/documents/ocp-nic-3-0-r1v60-20250410a-tn-no-cb-pdf/'}
+  - {doc: SKY-RD-MRVL, title: 'Skyworks, Timing Solutions for Marvell SOCs (reference design, May 2026)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/reference-designs/reference-design-timing-solutions-for-marvell.pdf'}
+  groups:
+  - {id: host, label: 'Baseboard: PCIe Gen 5 / 6 x16 (up to 4 hosts), 100 MHz REFCLK per host, NC-SI / RBT to the BMC', col: 0, row: 0, blocks: [{fn: external_block, label: Server baseboard (hosts, BMC)}]}
+  - {id: pcieclk, label: 'Card PCIe clocking: host REFCLK (common clock) or a local clock with spread spectrum (SRIS), buffer to each controller', col: 0, row: 1, blocks: [{fn: clock_generator, label: 'PCIe clock generator with SSC (Si5332 / SKY62101)'}, pcie_buffer]}
+  - {id: dpu, label: 'NIC controller or DPU (Arm cores, crypto, packet engines), memory', col: 1, row: 0, w: 2, blocks: [{fn: soc, label: NIC / DPU (e.g. OCTEON 10)}, ddr_flash, serdes]}
+  - {id: ethref, label: 'Ethernet SerDes reference: 156.25 / 312.5 MHz, <150 fs (OCTEON 10) from a clock generator or XO', col: 1, row: 1, blocks: [{fn: clock_generator, label: 'Clock generator (SKY62101, <70 fs)'}, {fn: crystal_oscillator, label: 'Differential XO (Si545 / Si549)'}]}
+  - {id: ports, label: 'Network ports: 2 x 200G to 1 x 800G (QSFP / OSFP)', col: 3, row: 0, blocks: [{fn: external_block, label: Optical / DAC ports}]}
+  - {id: timing, label: 'Timing NIC option: network synchronizer, TCXO / OCXO, 10 MHz + ePPS to / from the baseboard, PTP hardware clock', col: 2, row: 1, blocks: [{fn: jitter_attenuator, label: 'Network synchronizer (Si5403 / SKY69002)'}, {fn: crystal_oscillator, label: TCXO / OCXO}]}
+  - {id: pwr, label: 'Card power: 12 V and 3.3 V aux from the slot (80 W SFF / 150 W DSFF), core and SerDes rails, clock LDOs', col: 3, row: 1, blocks: [efuse_hotswap, multiphase, pol_buck, pol_ldo]}
+  links:
+  - [host, pcieclk, 100 MHz REFCLK per host]
+  - [pcieclk, dpu, 100 MHz PCIe REFCLK]
+  - [host, dpu, PCIe Gen 5 / 6 lanes]
+  - [ethref, dpu, 156.25 / 312.5 MHz SerDes reference]
+  - [dpu, ports, 112G / 224G lanes]
+  - [timing, dpu, frequency + phase (PTP)]
+  - [host, timing, 10 MHz + ePPS (Flex I/O)]
+  - [pwr, ethref, clean supply]
+  questions:
+  - {id: pcie_arch, question: PCIe clocking, choices: [common clock from the host, SRIS with a local clock and spread spectrum], source: OCP NIC 3.0 section 4.7; TI SNAA386}
+  - {id: timing_nic, question: Timing NIC, choices: [no, '10 MHz + embedded 1 PPS', '10 MHz + separate 1 PPS'], source: OCP NIC 3.0 section 4.5.4.4}
+  - {id: form, question: Form factor and power, choices: ['SFF, up to 80 W', 'DSFF, up to 150 W'], source: OCP NIC 3.0 section 1.4}
+
+- name: "GPU / xPU baseboard clock tree (OCP UBB with 8 accelerator modules: host link in SRIS with spread spectrum, common-clock 100 MHz on the baseboard, local 156.25 / 312.5 MHz references for the 112G / 224G scale-up SerDes, PCIe switches and retimers) (after OCP OAI-UBB and Skyworks public material)"
+  category: Enterprise & data center
+  note: "Drawn by us from the OCP OAI Universal Baseboard (UBB) base specification r2.0 and Skyworks parts data. The UBB carries 8 accelerator modules (OAM, up to 1000 W each from 54 / 48 V through a hot-swap controller per OAM) with up to eight x16 links per OAM between them and to the scale-out expansion (EXP) cards. Clocking per the specification: the host-to-HIB (host interface board) link runs in SRIS, which also allows spread-spectrum clocking for EMC / EMI; HIB to UBB runs in standard common clock (the UBB receives its primary, AUX and downstream clocks from the HIB); for the 112G SerDes links a local clock on each OAM and EXP card is recommended. So the compute tray needs: a PCIe clock generator with spread spectrum on the host side, a common-clock generator and LP-HCSL fanout buffers on the HIB / UBB, and a low-jitter local reference per accelerator and per EXP card (est for the part classes). Our socket: Si5332 / SKY62101 clock generators (programmable down and center spread; SKY62101 PCIe Gen 1-7), Si532xx and SKY535x2 PCIe Gen 6 / 7 buffers, Si545 / Si549 XOs or SKY62101 for the local SerDes references. Gaps: PCIe switches and retimers, OAM hot-swap is listed but power is drawn in the compute tray power diagram."
+  sources:
+  - {doc: OCP-UBB, title: 'OCP OAI-UBB Base Specification r2.0 v1.0 (Sep 2023), section 7.1.1 System Clock Architecture', url: 'https://www.opencompute.org/documents/oai-ubb-base-specification-r2-0-v1-0-20230919-pdf/'}
+  - {doc: SKY-SKY62101, title: 'Skyworks SKY62101 ultra-low-jitter clock generator data sheet (PCIe Gen 1-7, spread spectrum)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/SKY62101_datasheet.pdf'}
+  groups:
+  - {id: host, label: 'Host CPU tray: PCIe link to the HIB in SRIS with spread spectrum', col: 0, row: 0, blocks: [{fn: soc, label: Host CPU}, {fn: clock_generator, label: 'PCIe clock generator with SSC (Si5332 / SKY62101)'}]}
+  - {id: hib, label: 'Host interface board: PCIe switches, retimers, common-clock 100 MHz to the UBB (primary, AUX, downstream clocks)', col: 1, row: 0, blocks: [pcie_switch, {fn: redriver, label: PCIe retimer}, {fn: clock_generator, label: Common-clock generator}, pcie_buffer]}
+  - {id: ubb, label: 'UBB fanout: LP-HCSL PCIe Gen 6 / 7 buffers to the 8 OAMs and EXP cards', col: 2, row: 0, blocks: [{fn: pcie_buffer, label: 'PCIe Gen 6 / 7 buffers (Si532xx / SKY535x2)'}]}
+  - {id: oam, label: '8 accelerator modules (OAM, up to 1000 W each): local reference for the 112G / 224G scale-up SerDes', col: 3, row: 0, blocks: [{fn: soc, label: GPU / xPU x8}, {fn: crystal_oscillator, label: 'Local XO / clock per OAM (Si545 / SKY62101)'}]}
+  - {id: exp, label: 'Scale-out expansion (EXP) cards: NICs or retimers, local clock', col: 3, row: 1, blocks: [{fn: ethernet_phy, label: EXP NIC / retimer card}, {fn: crystal_oscillator, label: Local XO}]}
+  - {id: mgmt, label: 'UBB FPGA / CPLD and BMC link (I3C / I2C), retimer management', col: 1, row: 1, blocks: [{fn: mcu, label: UBB FPGA / CPLD}]}
+  - {id: pwr, label: '54 / 48 V input: hot-swap per OAM, bulk capacitors; low-noise LDOs for the clocks', col: 0, row: 1, blocks: [efuse_hotswap, pol_ldo]}
+  links:
+  - [host, hib, PCIe (SRIS + SSC)]
+  - [hib, ubb, 100 MHz common clock]
+  - [ubb, oam, 100 MHz PCIe REFCLK]
+  - [ubb, exp, 100 MHz PCIe REFCLK]
+  - [oam, exp, 112G scale-out lanes]
+  - [mgmt, hib, I3C / I2C / sideband]
+  - [pwr, oam, 54 / 48 V per OAM]
+  questions:
+  - {id: host_link, question: Host to HIB clocking, choices: [SRIS with spread spectrum, common clock], source: OCP UBB r2.0 section 7.1.1}
+  - {id: serdes_ref, question: Accelerator SerDes reference, choices: [local clock per OAM, distributed from the UBB], source: OCP UBB r2.0 section 7.1.1}
+  - {id: pcie_gen, question: PCIe generation, choices: [Gen 5, Gen 6, Gen 7], source: Skyworks SKY62101 / SKY535x2 data sheets}
+
+- name: "Server CPU compute tray clock tree (dual-socket CPU host board with a DC-SCM management module: platform clock generator with down-spread, PCIe Gen 6 / 7 fanout buffers, XOs for the BMC, NC-SI and NIC) (after OCP DC-SCM 2.0 and Skyworks public material)"
+  category: Enterprise & data center
+  note: "Drawn by us from the OCP DC-SCM 2.0 specification and the Skyworks Si5332, SKY62101 and SKY535x2 data. A modern server splits the host processor module (HPM: CPUs, memory, PCIe slots) from the data center secure control module (DC-SCM: BMC, root of trust, BMC flash). The HPM gives the SCM two 100 MHz PCIe clocks: one for the x4 endpoint (Gen 5), one fanned out through a clock buffer to slower endpoints such as the BMC and USB controller; all SCM endpoints stay in one clock domain, else separate-reference methods are needed. The host board itself needs a 100 MHz PCIe clock generator with down-spread spectrum (common clock, 0 to -0.5 %, TI SNAA386) and fanout buffers to every Gen 6 / 7 slot, retimer and NIC, plus 25 / 33 / 48 MHz platform clocks and 50 MHz NC-SI / RMII clocks for the BMC and NIC sideband (est for the platform frequencies). Our socket: Si5332 (PCIe Gen 1-6, programmable spread) and SKY62101 (Gen 1-7, down and center spread; separate-reference spread -0.3 % to Gen 6, -0.15 % at Gen 7), Si532xx and SKY535x2 buffers (Gen 7: 2 fs typ additive), Si5xx XOs. Gaps: BMC, root of trust and CPU (customer), retimers."
+  sources:
+  - {doc: OCP-DCSCM, title: 'OCP DC-SCM 2.0 specification ver 1.0, section 3.5.1.2 HPM to SCM PCIe clocks', url: 'https://www.opencompute.org/documents/ocp-dc-scm-2-0-ver-1-0-pdf/'}
+  - {doc: SKY-SKY62101, title: 'Skyworks SKY62101 ultra-low-jitter clock generator data sheet (PCIe Gen 1-7, spread spectrum)', url: 'https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/SKY62101_datasheet.pdf'}
+  - {doc: TI-SNAA386, title: 'TI SNAA386, Clocking for PCIe Applications (Nov 2023)', url: 'https://www.ti.com/lit/an/snaa386/snaa386.pdf'}
+  groups:
+  - {id: ref, label: 25 MHz crystal or XO, col: 0, row: 0, blocks: [{fn: crystal_oscillator, label: 25 MHz crystal / XO}]}
+  - {id: clkgen, label: 'Platform clock generator: 100 MHz PCIe REFCLK with down-spread (SSC), 25 / 33 / 48 MHz platform clocks', col: 1, row: 0, blocks: [{fn: clock_generator, label: 'Clock generator with SSC (Si5332 / SKY62101)'}]}
+  - {id: cpu, label: 'Dual-socket CPUs (PCIe Gen 6 / 7, CXL), memory', col: 2, row: 0, blocks: [{fn: soc, label: CPU x2}, ddr_flash]}
+  - {id: fanout, label: 'PCIe Gen 6 / 7 fanout buffers to slots, retimers, NICs and storage', col: 1, row: 1, blocks: [{fn: pcie_buffer, label: 'PCIe buffers (Si532xx / SKY535x2)'}]}
+  - {id: slots, label: 'PCIe / CXL slots, retimers, NIC, NVMe', col: 2, row: 1, blocks: [{fn: redriver, label: PCIe retimer}, {fn: ethernet_phy, label: NIC}, {fn: external_block, label: NVMe / CXL devices}]}
+  - {id: scm, label: 'DC-SCM: BMC, root of trust, flash; two 100 MHz clocks from the HPM (x4 endpoint and a buffer to BMC / USB)', col: 3, row: 0, blocks: [{fn: mcu, label: BMC}, secure_element, {fn: clock_buffer, label: SCM clock buffer}]}
+  - {id: side, label: '50 MHz NC-SI / RMII and 25 MHz Ethernet XOs for the BMC and NIC sideband (est)', col: 3, row: 1, blocks: [{fn: crystal_oscillator, label: 50 / 25 MHz XOs}]}
+  - {id: pwr, label: 'Low-noise LDOs for the clock supplies', col: 0, row: 1, blocks: [pol_ldo]}
+  links:
+  - [ref, clkgen, 25 MHz]
+  - [clkgen, cpu, 100 MHz REFCLK (SSC) + platform clocks]
+  - [clkgen, fanout, 100 MHz]
+  - [fanout, slots, 100 MHz LP-HCSL]
+  - [fanout, scm, 2 x 100 MHz to the SCM]
+  - [cpu, slots, PCIe Gen 6 / 7 lanes]
+  - [scm, side, NC-SI]
+  - [pwr, clkgen, clean supply]
+  questions:
+  - {id: ssc, question: Spread spectrum, choices: ['off', '-0.5 % down-spread (common clock)', 'SRIS: -0.3 % (Gen 5-6), -0.15 % (Gen 7)'], source: SKY62101 data sheet Table 7 notes; TI SNAA386}
+  - {id: pcie_gen, question: PCIe generation, choices: [Gen 5, Gen 6, Gen 7], source: SKY62101 / SKY535x2 data sheets}
+  - {id: scm_clock, question: SCM clock domain, choices: [same domain as the host (common clock), separate reference], source: OCP DC-SCM 2.0 section 3.5.1.2}
+
 # ---- Data center > Cooling and HVAC (owner, 2 Nov 2026: "Also add cooling and HVAC to data centers") ----------------
 
 - name: "Data-center CRAH / CRAC air handler or chiller drive (HVAC compressor and fan drives: PFC front end, 3-phase inverters, isolated gate drivers and current sense, BACnet / Modbus RS-485 and Ethernet) (after TI)"
@@ -16627,3 +16810,74 @@
   questions:
   - {id: antennas, question: Receive antennas, choices: [one, two with an RF switch (as drawn)], source: NISSHINBO-AUTO-BCM}
   - {id: key_type, question: Key, choices: [remote keyless entry (button), passive smart key, phone as a key (BLE / UWB)], source: NISSHINBO-AUTO-BCM ('Smart Key'); car access diagrams in this library}
+
+# owner, 9 Nov 2026: "Do a Data Center Rack Power deep dive in Systems & applications" (deep dive dc_rack_power)
+- name: "Open Rack v3 power shelf with battery backup (six 3 kW PSUs at 51 V, N+1; six 3 kW BBUs at 48 V, 5+1; PMBus / Modbus monitoring) (after OCP Open Rack V3 and TI)"
+  category: Enterprise & data center
+  note: "After OCP-ORV3-PSU (Open Rack V3 48V PSU Specification rev 1.0, Meta, Nov 2022: single-phase 3 kW rectifier, 200-277 V AC (180-305 V), fixed 51 V output with 0.5 V droop, 48 V when commanded, >97.5 % peak efficiency, power factor >0.98, 20 ms / 60 J hold-up, hot plug, analog current-share bus, PMBus and Modbus, blackbox, IEC 62368-1, 3050 m), OCP-ORV3-BBU (Open Rack V3 48V BBU rev 1.4, Sep 2023: six 3 kW BBUs per shelf with 5+1 redundancy, 11S6P Li-ion pack with BMS, bidirectional charger / discharger at 47.5-48 V, at least 240 s at full power, 2 ms start-up, 97 % efficiency, fuse / hot-swap / ORing, Modbus and I2C) and TI-PMP41155 (TI's six-phase 12 kW four-switch buck-boost BBU converter for ORv3, 28.6-60 V in, 50 V out, >99 % peak efficiency). Drawn by us: the PSU's reinforced barrier sits in the LLC stage and in every control and sense signal that crosses it. The BBU output sits about 3 V below the PSU output, so power flows to the batteries' side without software when AC is lost. Our parts: Si823x / Si827x isolated gate drivers (LLC, synchronous rectifier, GaN totem-pole PFC), Si860x isolated PMBus / I2C, Si864x / Si866x isolators, Si892x isolated amplifiers, Si88xx isolators with DC-DC, Qorvo PAC22140 battery monitor (10-20 cells) for the 11S pack."
+  sources:
+  - {doc: OCP-ORV3-PSU, title: 'Open Rack V3 48V PSU Specification, rev 1.0 (Meta, OCP, 10 Nov 2022)', url: 'https://www.opencompute.org/documents/orv3-48v-psu-spec-rev-1-0-docx-1/'}
+  - {doc: OCP-ORV3-BBU, title: 'Open Rack V3 48V BBU Specification, rev 1.4 (Meta, OCP, 12 Sep 2023)', url: 'https://www.opencompute.org/documents/open-rack-v3-bbu-module-spec-1-4-pdf/'}
+  - {doc: TI-PMP41155, title: 'PMP41155: OCP Open Rack V3 12 kW battery backup unit (BBU) reference design (TI)', url: 'https://www.ti.com/tool/PMP41155'}
+  groups:
+  - {id: ac, label: 'AC input 200-277 V (180-305 V), fuses, inrush relay (30 A max)', col: 0, row: 0, blocks: [{fn: external_block, label: AC whip from the PDU}, tvs_esd]}
+  - {id: pfc, label: 'PSU: PFC stage (power factor > 0.98, current THD < 5 %)', col: 1, row: 0, blocks: [acdc_controller, {fn: gate_driver, label: 'PFC gate drivers (totem-pole GaN / SiC)'}, power_fets]}
+  - {id: llc, label: 'PSU: isolated LLC DC/DC across the reinforced barrier, synchronous rectifier to 51 V', col: 2, row: 0, blocks: [{fn: gate_driver, label: LLC primary isolated gate drivers}, power_fets, {fn: gate_driver, label: Synchronous-rectifier drivers}]}
+  - {id: oring, label: 'PSU output: ORing, hot plug, current-share bus (±2 %)', col: 3, row: 0, blocks: [{fn: efuse_hotswap, label: ORing / hot-plug controller}, power_fets, current_sensor]}
+  - {id: psu_ctrl, label: 'PSU control across the barrier (primary and secondary controllers, blackbox log)', col: 1, row: 1, blocks: [{fn: mcu, label: Primary and secondary digital controllers}, {fn: digital_isolator, label: PWM / fault signals across the barrier}, {fn: isolated_amplifier, label: PFC bus voltage and current sense}, {fn: isolated_dcdc, label: Isolated bias supply}]}
+  - {id: aux, label: Standby and auxiliary supply, col: 0, row: 1, blocks: [hv_flyback, pol_buck]}
+  - {id: busbar, label: '48 V busbar to the IT trays (51 V from the PSUs, 47.5-48 V from the BBUs)', col: 3, row: 1, blocks: [{fn: external_block, label: Rack busbar}]}
+  - {id: bbu, label: 'BBU module x6 (5+1): 3 kW for at least 4 minutes, 11S6P Li-ion', col: 2, row: 2, blocks: [{fn: battery_pack, label: 11S6P Li-ion pack}, {fn: battery_monitor, label: 'BMS: cell balancing ±1 %, SOC, state of health'}, {fn: buck_boost, label: Bidirectional 4-switch buck-boost charger / discharger}, {fn: efuse_hotswap, label: Fuse / hot-swap / ORing}, {fn: amplifier, label: Current-sense amplifier}, {fn: mcu, label: BBU controller}]}
+  - {id: monitor, label: 'Shelf power monitor (PMI): PMBus, Modbus, Ethernet to the rack manager', col: 1, row: 2, blocks: [mcu, {fn: digital_isolator, label: Isolated PMBus / I2C}, {fn: rs485_transceiver, label: Modbus RS-485}, ethernet_phy]}
+  links:
+  - [ac, pfc, AC]
+  - [pfc, llc, about 400 V PFC bus]
+  - [llc, oring, 51 V]
+  - [oring, busbar, 51 V]
+  - [bbu, busbar, 47.5-48 V on AC loss]
+  - [busbar, bbu, charging]
+  - [pfc, aux, '']
+  - [psu_ctrl, pfc, '']
+  - [psu_ctrl, llc, '']
+  - [monitor, psu_ctrl, PMBus / Modbus]
+  - [monitor, bbu, 'Modbus, state-of-health test']
+  questions:
+  - {id: psu_power, question: PSU rating, choices: [3 kW (ORv3), '5.5 kW (AI power shelves, est)', '12 kW and more (est)'], source: OCP-ORV3-PSU}
+  - {id: pfc_switch, question: PFC and LLC switches, choices: [Si superjunction, SiC, GaN]}
+  - {id: backup, question: Backup in the rack, choices: [BBU shelf (Li-ion), capacitor backup unit, none (facility UPS only)], source: OCP-ORV3-BBU}
+  - {id: link, question: Telemetry to the rack manager, choices: [PMBus, Modbus, both]}
+
+- name: "AI compute tray power from the 48 / 54 V busbar to the GPU core (hot-swap / eFuse with PMBus, 48 V to 12 V or 6 V bus converter, multiphase regulators, vertical power delivery, hold-up) (after Infineon, OCP and NVIDIA)"
+  category: Enterprise & data center
+  note: "After IFX-VPD (Infineon OptiMOS TDM2454xx quad-phase vertical power delivery modules, 10 Mar 2025: up to 280 A in 10 x 9 mm, 2 A/mm², an embedded capacitor layer, with XDP controllers), IFX-APP-IBC (Infineon intermediate bus converter page: fixed-ratio 8:1 hybrid switched-capacitor stage with half-bridge drivers and a digital controller, or an IBC module), OCP-ORV3-PSU (the 48 V narrow-range bus is chosen so that 4:1 fixed-ratio converters and conventional 12 V point-of-load stages can follow; load steps at 1 A/µs and pulse power to 150 %) and NVIDIA-800VDC-ECO (GPU rack power swings from about 30 % to 100 % in milliseconds; Kyber moves to one 64:1 LLC stage from 800 V to 12 V next to the GPU). Drawn by us: there is no isolation barrier in the tray on a 48 V bus, so our isolated parts sit upstream; the tray needs hot-swap / eFuse, bus converters, multiphase regulators and power stages, which are gaps for us, plus Qorvo's ACT power-loss protection ICs and PMICs for the 12 V side rails and SSDs, and Skyworks clocks for the processors."
+  sources:
+  - {doc: IFX-VPD, title: 'Infineon unveils next generation of high-density power modules for vertical power delivery (VPD) in AI data centers (Infineon, 10 Mar 2025)', url: 'https://www.infineon.com/technology-news/2025/infpss202503-073'}
+  - {doc: IFX-APP-IBC, title: 'Infineon Intermediate bus converter (IBC) application page - block diagram', url: 'https://www.infineon.com/applications/ai-data-center/data-center-power-solutions/server-rack-power-management/ibc'}
+  - {doc: OCP-ORV3-PSU, title: 'Open Rack V3 48V PSU Specification, rev 1.0 (Meta, OCP, 10 Nov 2022)', url: 'https://www.opencompute.org/documents/orv3-48v-psu-spec-rev-1-0-docx-1/'}
+  - {doc: NVIDIA-800VDC-ECO, title: 'Building the 800 VDC ecosystem for efficient, scalable AI factories (NVIDIA technical blog, 13 Oct 2025)', url: 'https://developer.nvidia.com/blog/building-the-800-vdc-ecosystem-for-efficient-scalable-ai-factories/'}
+  groups:
+  - {id: bus, label: 48 / 54 V busbar input (blind-mate connector), col: 0, row: 0, blocks: [{fn: external_block, label: Rack busbar}]}
+  - {id: hotswap, label: 'Tray hot-swap / eFuse: inrush, short circuit, PMBus power telemetry', col: 1, row: 0, blocks: [efuse_hotswap, power_fets, {fn: current_sensor, label: Power monitor}]}
+  - {id: ibc, label: 'Intermediate bus converter 48 V to 12 V or 6 V (fixed ratio 4:1 / 8:1, switched capacitor or LLC)', col: 2, row: 0, blocks: [{fn: power_module, label: IBC module}, {fn: half_bridge_driver, label: Half-bridge drivers}, power_fets]}
+  - {id: vr, label: 'Processor regulator: multiphase controller and smart power stages (hundreds of A to kA)', col: 3, row: 0, blocks: [multiphase, {fn: power_fets, label: Smart power stages}]}
+  - {id: vpd, label: 'Vertical power delivery under the processor (2 A/mm², up to 280 A per 10 x 9 mm module)', col: 3, row: 1, blocks: [{fn: power_module, label: Quad-phase VPD modules}, {fn: dc_link_cap, label: Embedded capacitor layer}]}
+  - {id: gpu, label: 'GPU / CPU, HBM, NICs (core below 1 V)', col: 2, row: 1, blocks: [soc]}
+  - {id: rails, label: 'Other rails: memory, NICs, retimers, management', col: 1, row: 1, blocks: [pol_buck, pmic, pol_ldo]}
+  - {id: holdup, label: 'Hold-up and power smoothing: SSD power-loss protection, capacitors for GPU load steps', col: 0, row: 1, blocks: [power_loss_protection, {fn: dc_link_cap, label: Hold-up / smoothing capacitors}]}
+  - {id: bmc, label: 'Board management (BMC): PMBus telemetry, power capping, clocks', col: 1, row: 2, blocks: [mcu, ethernet_phy, clock_generator]}
+  links:
+  - [bus, hotswap, 48-54 V]
+  - [hotswap, ibc, 48-54 V]
+  - [ibc, vr, 12 V or 6 V]
+  - [vr, vpd, PWM]
+  - [vpd, gpu, below 1 V]
+  - [ibc, rails, 12 V]
+  - [rails, gpu, '']
+  - [ibc, holdup, 12 V]
+  - [bmc, hotswap, PMBus]
+  - [bmc, ibc, PMBus]
+  - [bmc, vr, PMBus / SVID]
+  questions:
+  - {id: bus_v, question: Intermediate bus, choices: [12 V, 6 V], source: IFX-APP-IBC; NVIDIA-800VDC-ECO}
+  - {id: ibc_type, question: Bus converter, choices: [fixed-ratio switched capacitor, LLC (unregulated), regulated buck]}
+  - {id: vpd, question: Regulator placement, choices: [lateral (beside the processor), vertical (under the processor)], source: IFX-VPD}

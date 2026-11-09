@@ -24,6 +24,9 @@ automated runs, don't wait for my confirmation"); flagged non-public data is hel
    them, never guess them, never use them. A "[held ...]" line waits for the owner's release: leave it. New research
    reports get their business-unit and customer questions in `data/business/questions_to_ask.yaml` (cases keep them
    in their case YAML); never change or reuse a question's id.
+   **Segment answers** (owner, 9 Nov 2026; lines "seg:<system>/<sub-system> (segment …)" in the same section): use a
+   shareable one to update that sub-system's deep dive (`data/library/topics/`) or block diagram, or to sharpen its
+   questions in `data/business/segment_questions.yaml`, as owner input; never quote or use an internal one (a count).
 2. **Open questions.** Read `docs/open_questions.md`. Where the inbox answers one, record the answer there and act on
    it; keep the rest.
 3. **Work.** If there is anything to do, branch `update-<YYYY-MM-DD>` from the newest prepared branch that is not

@@ -260,4 +260,7 @@ def create_app(database_url: str | None = None, seed_synthetic: bool | None = No
     from app.web.answers import router as answers_router  # answers to the Questions to ask (2 Nov 2026)
 
     app.include_router(answers_router)
+    from app.web.sota import router as sota_router  # Products › State of the art (8 Nov 2026)
+
+    app.include_router(sota_router)
     return app

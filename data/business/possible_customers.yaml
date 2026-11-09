@@ -1,0 +1,220 @@
+# Possible customers per sub-system and region (owner, 9 Nov 2026: "Include possible customers for each region
+# (Americas, EMEA and Asia). If customers overlap between regions, add them for all regions.")
+#
+# Companies that publicly BUILD the systems of a sub-system (OEMs, Tier-1s, ODMs, module makers): possible
+# customers, never a customer list, and never a claim that they buy from Skyworks or Qorvo. Names only from public
+# sources the site's runs pulled themselves, each with its link and the date it was read; no private list, nothing
+# from memory (owner, 26 Oct 2026).
+#
+# Built from two places (app/services/possible_customers.py):
+# - data/business/customers.yaml (Markets & customers): the segments listed under `subsystems` below; only the
+#   companies there with a checked public source (`evidence`, read on the segment's check date) are used;
+# - `extra` below: companies from the public sources under `sources`, read in the run of 9 Nov 2026 or earlier runs.
+# Region: Americas, EMEA (Europe, Middle East, Africa) or Asia (incl. Asia-Pacific). A company sits in the region
+# of its headquarters (customers.yaml `region`); `presence` adds the regions where its own public pages (or the
+# entity names it uses in a public association list) show significant operations, design or manufacturing, so it
+# appears in each of them. Companies listed as "Global" with no checked headquarters stay under "Region not checked".
+note: "Companies that publicly build these systems (possible customers); not a customer list."
+max_per_region: 8
+
+# where each region comes from
+hq_region:
+  US: Americas
+  Canada: Americas
+  Brazil: Americas
+  Europe: EMEA
+  Israel: EMEA
+  China: Asia
+  Japan: Asia
+  Korea: Asia
+  India: Asia
+  Taiwan: Asia
+  Thailand: Asia
+  Australia: Asia
+
+# source types: company page | public annual report | press release | trade publication | association list |
+# industry specification
+sources:
+  ccc_members: {title: "Car Connectivity Consortium: member list", url: "https://carconnectivity.org/our-members/member-list/", date: 2026-11-09, type: association list}
+  gaa_members: {title: "5GAA: members", url: "https://5gaa.org/members/", date: 2026-11-09, type: association list}
+  gaa_devices: {title: "5GAA: List of C-V2X devices (technical report, April 2024)", url: "https://5gaa.org/content/uploads/2024/12/5gaa-list-of-c-v2x-devices.pdf", date: 2026-10-20, type: trade publication}
+  fira_members: {title: "FiRa Consortium: members", url: "https://www.firaconsortium.org/about/members", date: 2026-11-09, type: association list}
+  ocp_bbu: {title: "Open Compute Project: Open Rack V3 BBU module specification 1.4", url: "https://www.opencompute.org/documents/open-rack-v3-bbu-module-spec-1-4-pdf/", date: 2026-11-09, type: industry specification}
+  ocp_deschutes: {title: "Open Compute Project: Project Deschutes (coolant distribution unit) specification 1.0", url: "https://www.opencompute.org/documents/ocp-specification-deschutes-v1-0-pdf/", date: 2026-11-02, type: industry specification}
+  ocp_nic3: {title: "Open Compute Project: OCP NIC 3.0 specification r1.6 (acknowledgements)", url: "https://www.opencompute.org/documents/ocp-nic-3-0-r1v60-20250410a-tn-no-cb-pdf/", date: 2026-11-09, type: industry specification}
+  ocp_sue: {title: "Open Compute Project: Scale Up Ethernet (SUE) specification 1.0", url: "https://www.opencompute.org/documents/ocp-sue-spec-final-pdf-1/", date: 2026-11-09, type: industry specification}
+  ocp_cooling: {title: "Open Compute Project: Cooling Environments project", url: "https://www.opencompute.org/projects/cooling-environments/", date: 2026-11-02, type: industry specification}
+  bosch_research: {title: "Bosch: research locations", url: "https://www.bosch.com/research/about-bosch-research/research-locations/", date: 2026-11-09, type: company page}
+  mobis_intro: {title: "Hyundai Mobis: company introduction 2026", url: "https://www.mobis.com/resources/pdf/2026_MOBIS_EN.pdf", date: 2026-11-09, type: company page}
+  delta_innovation: {title: "Delta Electronics: innovation (R&D hubs)", url: "https://www.deltaww.com/en-US/company/innovation", date: 2026-11-09, type: company page}
+  delta_emea: {title: "Delta Electronics: business in EMEA", url: "https://www.deltaww.com/en-GB/company/operations-in-emea/business-in-emea", date: 2026-11-09, type: company page}
+  valeo_korea: {title: "Valeo: presence and activities in South Korea", url: "https://www.valeo.com/en/south-korea/", date: 2026-11-09, type: company page}
+  valeo_mcallen: {title: "Valeo: new plant in McAllen, Texas (25 Mar 2026)", url: "https://www.valeo.com/en/valeo-breaks-ground-on-225-million-high-tech-plant-in-mcallen-texas-for-software-defined-vehicle-technology/", date: 2026-11-09, type: press release}
+  zf_usa: {title: "ZF in the USA and Canada", url: "https://www.zf.com/usa_canada/en/home/home.html", date: 2026-11-09, type: company page}
+  magna_history: {title: "Magna: our history", url: "https://www.magna.com/company/company-information/facts-history/our-history", date: 2026-11-09, type: company page}
+
+# regions beyond the headquarters, from the company's own pages or the entities it lists in an association
+presence:
+  "Bosch": {regions: [EMEA, Americas, Asia], where: "HQ Germany; research sites in the US, Mexico, Brazil, China, India and Japan", sources: [bosch_research]}
+  "Hyundai Mobis": {regions: [Asia, Americas, EMEA], where: "HQ Korea; R&D in Plymouth MI (US), Frankfurt (Germany), Shanghai and Hyderabad", sources: [mobis_intro]}
+  "Delta Electronics": {regions: [Asia, Americas, EMEA], where: "HQ Taiwan; power-electronics lab in North Carolina (US); 15 R&D centers and 4 plants in EMEA", sources: [delta_innovation, delta_emea]}
+  "Valeo": {regions: [EMEA, Asia, Americas], where: "HQ Europe; R&D center and plants in South Korea; new plant in McAllen, Texas (US)", sources: [valeo_korea, valeo_mcallen]}
+  "ZF": {regions: [EMEA, Americas], where: "HQ Europe; major supplier with sites in the US and Canada", sources: [zf_usa]}
+  "Magna": {regions: [Americas, EMEA, Asia], where: "HQ Aurora, Ontario (Canada); European operations, joint ventures in China, manufacturing in India", sources: [magna_history]}
+  "Denso": {regions: [Asia, EMEA], where: "HQ Japan; Denso Automotive Deutschland GmbH is a 5GAA member", sources: [gaa_members]}
+  "Huawei": {regions: [Asia, EMEA], where: "HQ China; Huawei Technologies Duesseldorf GmbH is a 5GAA member", sources: [gaa_members]}
+  "Forvia Hella": {regions: [EMEA, Asia], where: "Hella GmbH & Co. KGaA (Germany) and Hella Shanghai Electronics are CCC members", sources: [ccc_members]}
+  "Kostal": {regions: [EMEA, Asia], where: "KOSTAL Automobil Elektrik GmbH & Co KG and Kostal (Shanghai) are CCC members", sources: [ccc_members]}
+  "Tokai Rika": {regions: [Asia, EMEA], where: "Tokai Rika (Jiangsu) and Tokai Rika Belgium are CCC members", sources: [ccc_members]}
+  "Marquardt": {regions: [EMEA, Asia], where: "Marquardt GmbH, Marquardt India and Marquardt Switches (Shanghai) are CCC members", sources: [ccc_members]}
+  "Huf": {regions: [EMEA, Americas], where: "Huf Hülsbeck & Fürst GmbH & Co. KG and HUF North America Automotive are CCC members", sources: [ccc_members]}
+
+# sub-system key (system/sub-system in data/blocks/systems.yaml) -> segments of customers.yaml, most relevant first;
+# extra: companies from the sources above (type: OEM | Tier-1 | Module maker | ODM/EMS | Operator/infrastructure)
+subsystems:
+  automotive/car-access:
+    segments: [digital_key_access, body_control]
+    extra:
+      - {name: "Marquardt", type: Tier-1, note: "Car Connectivity Consortium member (digital key standard)", sources: [ccc_members]}
+      - {name: "Denso", type: Tier-1, note: "Car Connectivity Consortium charter member (digital key standard)", sources: [ccc_members]}
+      - {name: "Hyundai Mobis", type: Tier-1, note: "Car Connectivity Consortium member (digital key standard)", sources: [ccc_members]}
+      - {name: "Bury", type: Tier-1, regions: [EMEA, Asia, Americas], where: "Bury GmbH, Bury Sp. z o.o. (Poland), Bury Automotive Technology (Tianjin) and Bury Tlaxcala (Mexico) are CCC members", note: "Car Connectivity Consortium member (digital key standard)", sources: [ccc_members]}
+      - {name: "WITTE Automotive", type: Tier-1, regions: [EMEA], where: "WITTE Automotive GmbH (Germany)", note: "Car Connectivity Consortium member (digital key standard)", sources: [ccc_members]}
+      - {name: "Hyundai Motor Company", type: OEM, regions: [Asia, Americas, EMEA], where: "HQ Korea; Hyundai America Technical Center, Hyundai Motor Europe Tech Center, Hyundai Motor India Engineering and Hyundai Motor Tech Center China are CCC members", note: "carmaker; Car Connectivity Consortium charter member", sources: [ccc_members]}
+      - {name: "Volkswagen Group", type: OEM, regions: [EMEA, Americas, Asia], where: "Volkswagen AG, Volkswagen Group of America and Volkswagen Group (China) Technology are CCC members", note: "carmaker; Car Connectivity Consortium charter member", sources: [ccc_members]}
+      - {name: "BMW Group", type: OEM, regions: [EMEA], where: "BMW AG (Germany)", note: "carmaker; CCC charter member and FiRa contributor member (UWB)", sources: [ccc_members, fira_members]}
+      - {name: "Mercedes-Benz", type: OEM, regions: [EMEA], where: "Mercedes-Benz AG (Germany)", note: "carmaker; Car Connectivity Consortium member", sources: [ccc_members]}
+      - {name: "Strattec Security", type: Tier-1, note: "Car Connectivity Consortium member (digital key standard)", sources: [ccc_members]}
+  automotive/car-radio:
+    segments: [infotainment_head_unit]
+  automotive/telematics-v2x:
+    segments: [telematics_v2x, infotainment_head_unit]
+    extra:
+      - {name: "Rolling Wireless", type: Module maker, regions: [EMEA], where: "Rolling Wireless Germany GmbH is a 5GAA member", note: "C-V2X modules (RX113A, RN93xx, RN94xx)", sources: [gaa_devices, gaa_members]}
+      - {name: "Alps Alpine", type: Module maker, note: "C-V2X modules (UMCC1B, UMNZ1)", sources: [gaa_devices]}
+      - {name: "LG Innotek", type: Module maker, note: "C-V2X module (LAM-V500)", sources: [gaa_devices]}
+      - {name: "Askey Computer", type: ODM/EMS, note: "5G C-V2X on-board and roadside units", sources: [gaa_devices]}
+      - {name: "ZTE", type: Module maker, note: "C-V2X modules, on-board and roadside units", sources: [gaa_devices]}
+      - {name: "Huawei", type: OEM, note: "C-V2X roadside unit (RSU5201)", sources: [gaa_devices]}
+      - {name: "Cohda Wireless", type: Module maker, regions: [Asia], where: "Cohda Wireless Pty Ltd (Australia, Asia-Pacific)", note: "C-V2X on-board and roadside units (MK6)", sources: [gaa_devices, gaa_members]}
+      - {name: "Kapsch", type: Operator/infrastructure, note: "C-V2X roadside unit (RIS-9260)", sources: [gaa_devices]}
+      - {name: "Danlaw", type: Tier-1, note: "C-V2X on-board and roadside units (listed for the US market)", sources: [gaa_devices]}
+      - {name: "Unex Technology", type: Module maker, note: "C-V2X modules, on-board and roadside units", sources: [gaa_devices]}
+  automotive/adas:
+    segments: [adas_domain_controller, automotive_radar, automotive_lidar]
+  automotive/powertrain:
+    segments: [ev_traction_inverter, automotive_motor_drive]
+  automotive/battery-power:
+    segments: [ev_battery_bms, ev_dcdc, zone_controller]
+  automotive/charging:
+    segments: [ev_onboard_charger, ev_charger]
+  automotive/cockpit:
+    segments: [cockpit_domain, automotive_lighting, body_control]
+  datacenter/rack-power:
+    segments: [server_psu]
+    extra:
+      - {name: "Delta Electronics", type: ODM/EMS, note: "co-author of the Open Rack V3 battery backup unit specification", sources: [ocp_bbu]}
+      - {name: "Meta", type: Operator/infrastructure, note: "author of the Open Rack V3 battery backup unit specification", sources: [ocp_bbu]}
+  datacenter/backup:
+    segments: [ups, energy_storage_bms]
+    extra:
+      - {name: "Delta Electronics", type: ODM/EMS, note: "co-author of the Open Rack V3 battery backup unit specification", sources: [ocp_bbu]}
+      - {name: "Meta", type: Operator/infrastructure, note: "author of the Open Rack V3 battery backup unit specification", sources: [ocp_bbu]}
+  # owner, 9 Nov 2026: Data center regrouped into four application areas (former servers / network / timing)
+  datacenter/networking:
+    segments: [network_switch, optical_module]
+  datacenter/scale-up:
+    segments: [network_switch]
+    few_sources: "Few public sources for scale-up switch tray makers yet: the companies here build Ethernet switches or wrote the OCP Scale Up Ethernet specification (read 9 Nov 2026), which names no tray maker."
+    extra:
+      - {name: "Broadcom", type: Module maker, note: "author of the OCP Scale Up Ethernet (SUE) specification", sources: [ocp_sue]}
+  datacenter/nic-dpu:
+    few_sources: "Few public sources for NIC and DPU makers yet: the companies here contributed to the OCP NIC 3.0 specification (read 9 Nov 2026); a later run checks which of them build cards."
+    extra:
+      - {name: "NVIDIA", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+      - {name: "Broadcom", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+      - {name: "Intel", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+      - {name: "Marvell", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+  datacenter/server-board:
+    segments: [server]
+  datacenter/cooling:
+    few_sources: "Few public sources so far: cooling makers come from the OCP cooling specifications; more in a later run."
+    extra:
+      - {name: "Google", type: Operator/infrastructure, note: "author of the OCP Project Deschutes coolant distribution unit specification", sources: [ocp_deschutes]}
+      - {name: "Meta", type: Operator/infrastructure, note: "OCP contribution on liquid cooling of its AI training platforms", sources: [ocp_cooling]}
+  drones/flight:
+    segments: [drones]
+  drones/radio-links:
+    segments: [drones]
+  drones/cellular-link:
+    segments: [drones, iot_edge_module]
+  drones/satellite-link:
+    segments: [drones]
+    few_sources: "Few public sources for satellite-link makers yet."
+  drones/navigation:
+    segments: [drones]
+    few_sources: "Few public sources for navigation-module makers yet; drone makers shown."
+  drones/anti-jamming:
+    segments: [drones]
+    few_sources: "Few public sources for anti-jamming makers yet; drone makers shown."
+  cellular/radio-unit:
+    segments: [macro_base_station]
+  cellular/small-cell:
+    segments: [small_cell]
+  cellular/transport:
+    segments: [macro_base_station, network_switch]
+  cellular/devices:
+    segments: [smartphone, wearables]
+  cellular/fwa-iot:
+    segments: [fwa_cpe, asset_tracker, iot_edge_module]
+  industrial/factory-automation:
+    segments: [plc_io, process_instrumentation]
+  industrial/motion:
+    segments: [industrial_ac_drive, robots]
+  industrial/solar-wind:
+    segments: [solar_inverter]
+  industrial/storage-grid:
+    segments: [energy_storage_bms, smart_meter]
+  industrial/power-isolation:
+    segments: [power_conversion_gate_drive, server_psu]
+  industrial/e-mobility:
+    segments: [light_ev_drive, forklift_traction]
+  industrial/robotics:
+    segments: [robots, industrial_ac_drive]
+  aerospace/radar:
+    few_sources: "No public source read yet for radar system makers."
+  aerospace/ew:
+    few_sources: "No public source read yet for electronic-warfare system makers."
+  aerospace/satcom:
+    segments: [satellite_payload]
+  aerospace/tactical-radio:
+    segments: [land_mobile_radio]
+  aerospace/test:
+    few_sources: "Few public sources so far: test makers named in the 5GAA and CCC lists."
+    extra:
+      - {name: "Keysight", type: OEM, regions: [EMEA], where: "Keysight Technologies UK Limited (5GAA member) and Keysight Technologies Netherlands (CCC member)", note: "C-V2X test units (WaveBee on-board and roadside)", sources: [gaa_devices, gaa_members]}
+      - {name: "Rohde & Schwarz", type: OEM, regions: [EMEA, Americas], where: "Rohde & Schwarz GmbH & Co. KG (Germany) and Rohde & Schwarz USA, Inc. are CCC members", note: "member of the CCC, FiRa and 5GAA associations", sources: [ccc_members, fira_members, gaa_members]}
+      - {name: "Anritsu", type: OEM, regions: [EMEA], where: "Anritsu EMEA Limited is a 5GAA member", note: "5GAA member", sources: [gaa_members]}
+      - {name: "LitePoint", type: OEM, note: "member of the FiRa and CCC associations", sources: [fira_members, ccc_members]}
+  consumer/wearables-xr:
+    segments: [wearables, xr_glasses]
+  consumer/audio:
+    segments: [earbuds_headphones, smart_speaker]
+  consumer/computing:
+    segments: [pc_laptop, payment_terminal, usb_pd_adapter]
+  consumer/connectivity:
+    segments: [wifi_bt_module, iot_edge_module]
+  home/smart-home:
+    segments: [security_camera_smart_home, building_automation, home_appliances]
+  home/broadband:
+    segments: [broadband_gateway, wifi_access_point]
+  home/enterprise-wifi:
+    segments: [wifi_access_point]
+  home/metering:
+    segments: [smart_meter]
+  medical/imaging:
+    segments: [medical_imaging]
+  medical/monitoring:
+    segments: [patient_monitoring]
+  medical/therapy:
+    segments: [medical_therapy_devices, hearing_aids]

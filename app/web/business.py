@@ -45,6 +45,7 @@ from app.services import (
 from app.services import idea_requests as ir
 from app.services import opportunity as op
 from app.services import portfolio as pf
+from app.services import possible_customers as pcust
 from app.services import priority as priority
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -55,6 +56,7 @@ from app.web.urls import local_path
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
 templates.env.globals["bo_help"] = op.explanations
+templates.env.globals["possible_customers"] = pcust  # owner, 9 Nov 2026: per sub-system and region
 
 
 def _ctx(session: Session, co: str, scope: str = "all") -> dict:
@@ -274,6 +276,7 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
 
     if sel:  # the old picker sent "system" or "system:sub"
         system, _, sub = sel.partition(":")
+    sub = sy.resolve(system, sub) or sub  # a retired sub-system key lands on its new place (owner, 9 Nov 2026)
     aec_on = aec == "1" if aec in ("0", "1") else system == "automotive"
     template = int(template) if template.isdigit() else None
     if template is not None and sy.get(system) and template not in sy.selection(system, sub)["idx"]:

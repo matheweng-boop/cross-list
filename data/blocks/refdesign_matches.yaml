@@ -19217,3 +19217,210 @@ diagrams:
   confirmed: []
   suggested: []
   anchors: []
+- name: Open Rack v3 power shelf with battery backup (six 3 kW PSUs at 51 V, N+1; six 3 kW BBUs at 48 V, 5+1; PMBus / Modbus
+    monitoring) (after OCP Open Rack V3 and TI)
+  key: open-rack-v3-power-shelf-with-battery-backup-six-3-kw-psus-at-51-v-n-1-six-3-kw-
+  n: 0
+  designs: []
+  functions: {}
+  confirmed: []
+  suggested: []
+  anchors: []
+- name: AI compute tray power from the 48 / 54 V busbar to the GPU core (hot-swap / eFuse with PMBus, 48 V to 12 V or 6 V
+    bus converter, multiphase regulators, vertical power delivery, hold-up) (after Infineon, OCP and NVIDIA)
+  key: ai-compute-tray-power-from-the-48-54-v-busbar-to-the-gpu-core-hot-swap-efuse-wit
+  n: 19
+  designs:
+  - TI:PMP11399.1
+  - TI:PMP22510.1
+  - TI:PMP23069.1
+  - TI:PMP23338.1
+  - TI:TIDA-010062.1
+  - TI:PMP22951.1
+  - TI:PMP41017.1
+  - TI:TIDM-02008
+  - TI:PMP11282.1
+  - TI:PMP11303.1
+  - TI:PMP20873.1
+  - TI:PMP21479.1
+  - TI:PMP23126.1
+  - TI:PMP40988.1
+  - TI:PMP41006.1
+  - TI:PMP4320A.1
+  - TI:PMP8740.1
+  - TI:PMP9730.1
+  - TI:TIDA-010008
+  functions:
+    power_fets: 19
+    pol_ldo: 18
+    amplifier: 12
+    half_bridge_driver: 12
+    digital_isolator: 10
+    mcu: 10
+    acdc_controller: 9
+    voltage_reference: 9
+    wide_vin_buck: 8
+    gate_driver: 7
+    temperature_sensor: 6
+    isolated_dcdc: 5
+    current_sensor: 4
+    efuse_hotswap: 3
+    reverse_polarity: 3
+    isolated_amplifier: 2
+    can_transceiver: 1
+    display_driver: 1
+    env_sensor: 1
+    hall_switch: 1
+    isolated_digital_input: 1
+    load_switch: 1
+    pmic: 1
+    relay_driver: 1
+    sequencer: 1
+    supervisor: 1
+    tvs_esd: 1
+    voltage_translator: 1
+  confirmed:
+  - efuse_hotswap
+  - power_fets
+  - current_sensor
+  - half_bridge_driver
+  - pol_ldo
+  - mcu
+  suggested:
+  - fn: amplifier
+    n: 12
+  - fn: digital_isolator
+    n: 10
+  - fn: acdc_controller
+    n: 9
+  - fn: voltage_reference
+    n: 9
+  - fn: wide_vin_buck
+    n: 8
+  anchors:
+  - part: UCC21540
+    fn: gate_driver
+    ours: SI82E29ABE-AS3
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:TIDA-010062.1
+    - TI:PMP41017.1
+    - TI:PMP41006.1
+    n: 3
+  - part: ISO7721
+    fn: digital_isolator
+    ours: SI86S622BC-AS
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:PMP22951.1
+    - TI:PMP23126.1
+    n: 2
+  - part: ISO7741
+    fn: digital_isolator
+    ours: SI8641ET-AS
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:PMP41017.1
+    - TI:PMP40988.1
+    n: 2
+  - part: ISO7831
+    fn: digital_isolator
+    ours: SI86S631EE-IS2
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:TIDM-02008
+    - TI:PMP20873.1
+    n: 2
+  - part: UCC21220
+    fn: gate_driver
+    ours: SI82E29AGC-IS1
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP23069.1
+    - TI:PMP23338.1
+    n: 2
+  - part: AMC1306M05
+    fn: isolated_amplifier
+    ours: SI8941AD-AS4
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP23338.1
+    n: 1
+  - part: AMC1311
+    fn: isolated_amplifier
+    ours: SI8931D-AS4
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP41017.1
+    n: 1
+  - part: ISO7420
+    fn: digital_isolator
+    ours: SI8620EB-IS
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:PMP4320A.1
+    n: 1
+  - part: ISO7710
+    fn: digital_isolator
+    ours: SI86S610BC-AS
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP23069.1
+    n: 1
+  - part: ISO7731
+    fn: digital_isolator
+    ours: SI86S631BC-AS1
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP23069.1
+    n: 1
+  - part: ISO7742
+    fn: digital_isolator
+    ours: SI86SL42BC-AS1
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:TIDA-010062.1
+    n: 1
+  - part: ISOW7821
+    fn: digital_isolator
+    ours: SI86P321BC-IS
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:TIDA-010008
+    n: 1
+  - part: UCC21222
+    fn: gate_driver
+    ours: SI82E29ABC-AS1
+    maker: Skyworks
+    type: Drop-in
+    designs:
+    - TI:PMP41006.1
+    n: 1
+  - part: UCC21225A
+    fn: gate_driver
+    ours: SI82E29AGC-IS1
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP40988.1
+    n: 1
+  - part: UCC5350
+    fn: gate_driver
+    ours: SI82B41ACE-AS4
+    maker: Skyworks
+    type: Functional
+    designs:
+    - TI:PMP23126.1
+    n: 1

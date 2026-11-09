@@ -20,7 +20,10 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    the 55-70 % range against the cost model: raise the cost inputs for our isolators, or accept a higher margin there?
    Blend weights (public curve 85 / 60 / 45 % at 10k / 100k / 1M, the rest cost-based) and maker scale tiers (TI,
    Infineon 1; ADI, NXP, ST, Skyworks / Qorvo 2; Novosense, Mini-Circuits 3; est): right? Show the single 1M price in
-   the solution builder and the radio market summaries too?
+   the solution builder and the radio market summaries too? (Settled: "1M price should appear everywhere possible".)
+   Builder: use the owner's levels and cost correction when the owner is viewing (today never, as guests can open it)?
+   A cross typed by part number is costed as the same die and package as our part at the cross maker's scale: good
+   enough, or enter cross levels from the competitor part's own page?
 
 ## Settled (owner, 9 Nov 2026)
 
@@ -35,7 +38,9 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
   "yes", for a later daily run.
 - Pricing: gross margin typically 55-70 % ("adjust the overall model"); the model scales with die, lead frame and
   package and with each maker's volume in a technology (not patents); a single price at 1M a year with its floor; the
-  owner's own price levels stay on the site only (the repository is public).
+  owner's own price levels stay on the site only (the repository is public). By definition the cost follows from the
+  price at about 60 % margin ("then by definition the cost should be higher"): levels correct the cost per maker and
+  family ("different companies have different costs"), at runtime on the site only.
 
 ## Settled (owner, 3 Nov 2026)
 

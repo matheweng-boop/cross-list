@@ -272,7 +272,7 @@ def test_answers_under_a_retired_segment_key_show_where_their_question_went(clie
     assert {q["id"] for q in sq.questions("home/enterprise-wifi")} >= {"c-ap", "d-wifi7", "b-fem"}
     for key in ("datacenter/scale-up", "datacenter/nic-dpu"):  # new sets in the same three groups
         assert {q["group"] for q in sq.questions(key)} == {"customer", "developers", "bu"}
-    assert any("China and Taiwan" in q["text"] for q in sq.questions("datacenter"))
+    assert not any("Taiwan" in q["text"] for q in sq.questions("datacenter"))  # owner, 9 Nov 2026: "do not talk about it"
     session.add_all([Answer(slug="seg:datacenter/timing", question="d-224g", text="SEG-MOVED-224G"),
                      Answer(slug="seg:datacenter/timing", question="d-pcie7", text="SEG-MOVED-GEN7"),
                      Answer(slug="seg:datacenter/network", question="c-ap", text="SEG-MOVED-AP")])  # fmt: skip

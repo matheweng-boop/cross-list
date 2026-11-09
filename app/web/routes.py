@@ -744,6 +744,13 @@ def library_topic(request: Request, key: str, session: Session = Depends(get_ses
     ctx = {"t": t, "key": key, "refs": library.refs_by_id(t), "horizon": library.HORIZON, "label": vocab.fn_label,
            "notes": library.notes(key), "cases": library.cases_using(key), "related": library.related(key),
            "rule_links": library.rule_links, "where": sy.topic_crumb(key)}  # fmt: skip
+    if ctx["where"]:  # the sub-system's Questions to ask, folded (owner, 9 Nov 2026)
+        from app.services import answers
+        from app.services import segment_questions as sq
+
+        seg = f"{ctx['where']['system']}/{ctx['where']['sub']}"
+        ctx["seg_qa"] = {"qa": answers.page(session, request, sq.slug_of(seg)), "tabs": sq.TABS, "ask": sq.ASK,
+                         "reports": sq.reports(seg), "href": sq.href(sq.slug_of(seg))}  # fmt: skip
     return templates.TemplateResponse(request, "library/topic.html", ctx)
 
 

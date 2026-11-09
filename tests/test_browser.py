@@ -358,7 +358,8 @@ def test_sub_system_card_buttons_open_the_deep_dive_and_the_diagrams(page):
     diagrams" (the editor is visited last: leaving a library diagram asks before unload)."""
     go(page, "/library#sys-automotive")
     card = page.locator("#card-automotive-car-access")
-    expect(card.locator("a.sys-btn")).to_have_count(2)
+    expect(card.locator("a.sys-btn:not(.sys-btn-q)")).to_have_count(2)  # and "❓ Questions to ask" (9 Nov 2026)
+    expect(card.locator("a.sys-btn-q")).to_have_attribute("href", "/library/questions/automotive/car-access")
     with page.expect_navigation():
         card.get_by_role("link", name="📖 Read the deep dive").click()
     assert page.url.endswith("/library/auto_uwb")
@@ -1452,6 +1453,54 @@ def test_answer_a_question_to_ask_switch_edit_and_find_it_in_answers(page):
     expect(page.locator("#open-questions")).to_contain_text("Still open")
     go(page, "/business/reports/auto-uwb-15-4ab#questions-to-ask")  # a case's section 8 (390 px checked after)
     expect(page.locator("#i-q-bu-ab form.aq-form .aq-warn")).to_be_visible()
+
+
+def test_segment_questions_tabs_answer_and_find_it_by_segment(page):
+    """Owner, 9 Nov 2026: Systems library > Automotive > Charging > Questions to ask. Three tabs (Customer, Developers,
+    Business unit) show one group at a time; an answer under a developers question saves as Internal only, stays on its
+    tab after saving, and Data management > Answers finds it with the segment filter (iPad upright; 390 px after)."""
+    from app.services import segment_questions as sq
+
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/library#sys-automotive")
+    card = page.locator("#card-automotive-charging")
+    with page.expect_navigation():
+        card.get_by_role("link", name="❓ Questions to ask").click()
+    assert page.url.endswith("/library/questions/automotive/charging")
+    tabs = page.locator(".sq-tabs")
+    expect(tabs).to_be_visible()
+    expect(page.locator("#sq-customer")).to_be_visible()
+    expect(page.locator("#sq-developers")).to_be_hidden()
+    tabs.get_by_role("button", name=re.compile("^Developers")).click()
+    expect(page.locator("#sq-developers")).to_be_visible()
+    expect(page.locator("#sq-customer")).to_be_hidden()
+    q = next(x for x in sq.questions("automotive/charging") if x["group"] == "developers")
+    form = page.locator(f"#i-{q['id']} form.aq-form")
+    expect(form.locator(".aq-warn")).to_have_text("Don't record confidential figures or plans; summarise instead")
+    expect(form.locator("input[name=sharing][value=internal]")).to_be_checked()
+    form.locator("textarea[name=text]").fill("They plan SiC at higher frequency next.")
+    form.locator("input[name=who]").fill("Charger design team")
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save answer").click()
+    card = page.locator(f"#i-{q['id']} article.aq-a").first
+    expect(card).to_be_visible()  # the developers tab opened again for the saved answer
+    expect(card.get_by_role("button", name="🔒 Internal only")).to_have_attribute("aria-pressed", "true")
+    assert overflow(page) <= 1
+    go(page, "/manage/answers")
+    page.locator("select[name=segment]").select_option("automotive/charging")
+    with page.expect_navigation():
+        page.get_by_role("button", name="Show").click()
+    item = page.locator(".aq-list > li", has_text="SiC at higher frequency").first
+    expect(item.locator(".aq-where")).to_contain_text("Automotive › Charging")
+    expect(page.locator("#open-questions")).to_contain_text("Still open")
+    with page.expect_navigation():
+        item.locator(".aq-where a").click()
+    expect(page.locator(f"#i-{q['id']} article.aq-a").first).to_be_visible()
+    go(page, "/library/dc_timing")  # a deep dive: its sub-system's questions, folded (390 px checked after)
+    sec = page.locator("details#questions-to-ask")
+    expect(sec).not_to_have_attribute("open", "")
+    sec.locator("summary").click()
+    expect(sec.locator(".sq-tabs")).to_be_visible()
 
 
 # --- Block editor: "Describe your system" (owner, 27 Oct 2026) --------------------------------------------------------

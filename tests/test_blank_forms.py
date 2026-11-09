@@ -21,13 +21,14 @@ SKIP_ACTIONS = ("/delete", "/remove", "/cancel", "/manage/people", "/owner/", "/
                 "/logout")  # fmt: skip
 
 # a few detail pages next to the menu pages, each the first link of its kind on a list page: (list page, link pattern)
-DETAIL_LINKS = (("/find?q=SR", r"/parts/\d+"), ("/library", r"/library/(?!sources)[\w-]+"),
+DETAIL_LINKS = (("/find?q=SR", r"/parts/\d+"), ("/library", r"/library/(?!sources|questions)[\w-]+"),
                 ("/business/reports", r"/business/reports/(?!method|questions)[\w-]+"),
                 ("/business/competitors", r"/business/competitors/[\w-]+"))  # fmt: skip
 # more detail pages with forms, sent when the list page links one: a part review, a block diagram, a band, a case
 MORE_LINKS = (("/reviews", r"/reviews/(?!suggest|request)[\w-]+"), ("/blocks", r"/blocks/\d+"),
               ("/rf-bands", r"/rf-bands/[\w-]+"), ("/business/cases", r"/business/cases/\d+"),
-              ("/business/applications", r"/business/applications/\d+"))  # fmt: skip
+              ("/business/applications", r"/business/applications/\d+"),
+              ("/library", r"/library/questions/[\w-]+/[\w-]+"))  # fmt: skip  # a segment's questions (9 Nov 2026)
 
 
 class _Forms(HTMLParser):
@@ -242,6 +243,9 @@ def seed_rows(client) -> None:
     # an answer to a question to ask, so its switch, edit and release forms are on Data management › Answers
     assert client.post("/business/reports/auto-uwb-15-4ab/answers", data={"key": "q-bu-ab", "text": "Confidential",
                        "sharing": "shared"}, follow_redirects=False).status_code in ok  # fmt: skip
+    # and one to a segment question (9 Nov 2026), with the same forms on its segment page
+    assert client.post("/library/questions/automotive/answers", data={"key": "c-what", "sub": "charging",
+                       "text": "OBC only"}, follow_redirects=False).status_code in ok  # fmt: skip
     from app.auth.passkeys import new_invite
 
     with Session(get_engine()) as s:

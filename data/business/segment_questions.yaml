@@ -1,0 +1,920 @@
+# Questions to ask per segment (owner, 9 Nov 2026): "Ideally we should start including questions to customers and to
+# the Business Unit on all of the segments, to understand what the applications are about, and what forward-thinking
+# topics one should ask the customers and the developers."
+#
+# One set per system and per sub-system of data/blocks/systems.yaml (key "<system>" or "<system>/<sub-system>"),
+# shown in the Systems library under "Questions to ask" with an answer box per question
+# (app/services/segment_questions.py, app/services/answers.py; answers stored under slug "seg:<key>").
+#   customer:    to the customer, understanding the application (what it does, where, volume range and lifecycle,
+#                sourcing approach in general terms, pain points, what drives the choice)
+#   developers:  to the customer's design engineers, forward-looking (next architecture, the specs they will need,
+#                technology shifts, what they wish existed)
+#   bu:          to our business unit (what we sell into it, roadmap fit, qualification, competitors met, what wins or
+#                loses sockets)
+#   reports:     research reports or cases whose own Questions to ask cover the segment (linked, not repeated here)
+# Each question: {id, text, why}. Ids are unique per set and never change or get reused (answers are stored by id);
+# the text may be edited. Neutral, public wording (guests see the questions): ask for ranges and approaches, never
+# for confidential figures, prices, customer programmes or roadmaps in detail. A system's own set holds the
+# cross-cutting questions; its sub-systems hold the specific ones.
+segments:
+  # ---- Automotive ---------------------------------------------------------------------------------------------------
+  automotive:
+    customer:
+      - {id: c-arch, text: "How far has your vehicle architecture moved from domain ECUs to zonal controllers and a central computer, and which functions move first?", why: "Zonal and central architectures decide which boxes keep their own RF, power and isolation, and which disappear."}
+      - {id: c-grade, text: "Which temperature grade and qualification level do you ask for by location (cabin, roof, under hood, battery pack)?", why: "AEC-Q100 grade and AEC-Q104 for modules decide which of our consumer and industrial dies can follow."}
+      - {id: c-sourcing, text: "Do you choose key semiconductors yourself (directed buy) or leave them to the Tier-1, and has that changed since the 2021–2023 shortage?", why: "Tells us whether to sell to the OEM, the Tier-1 or both."}
+    developers:
+      - {id: d-voltage, text: "Which voltage levels will your next platform carry (12 V, 48 V, 400 V, 800 V), and where does 48 V replace 12 V?", why: "48 V and 800 V reshape every power, isolation and protection socket in the car."}
+      - {id: d-sdv, text: "What does the software-defined vehicle change for your hardware: over-the-air updates, diagnostics, more sensors per ECU?", why: "Shows where self-test, telemetry and configurable parts gain value."}
+      - {id: d-ntn-radio, text: "Which radios do you expect in every car by about 2030 (5G RedCap, NTN satellite, Wi-Fi 7, UWB, V2X), and which stay options?", why: "Separates standard sockets from premium-only ones for our RF roadmap."}
+    bu:
+      - {id: b-aec, text: "Which of our RF, timing, isolation and power families are AEC-Q100 qualified today, and which could be qualified on existing dies?", why: "Qualification is the gate for almost every car socket on this map."}
+      - {id: b-tier1, text: "Which Tier-1s already buy from us in automotive, and in which functions?", why: "An existing supplier relationship is the shortest path to a new socket."}
+      - {id: b-lost, text: "Where have we lost car sockets recently, and was it price, qualification, supply security or a missing feature?", why: "Lost sockets show what to fix before we chase new ones."}
+  automotive/car-access:
+    reports: [auto-uwb-15-4ab, auto-uwb-cpd]
+    customer:
+      - {id: c-fitment, text: "In which vehicle lines do you fit a UWB digital key today, and is it standard or an option?", why: "Fitment rate drives anchor volume: a standard key means 4 to 8 anchors per car."}
+      - {id: c-anchors, text: "How many UWB anchors per car do you plan, and where do they sit (roof, pillars, bumpers, interior)?", why: "Anchor count and location set the front-end and the temperature grade."}
+      - {id: c-cpd, text: "How do you plan to meet the Euro NCAP child presence detection rules: 60 GHz radar, UWB radar from the key anchors, or both?", why: "Re-using key anchors as radar is the case for our UWB front end in the cabin."}
+      - {id: c-pain, text: "What causes the most trouble today in keyless entry: relay attacks, phone compatibility, wake-up current or range near the car?", why: "Pain points tell us which feature sells (secure ranging, low quiescent current, better link budget)."}
+    developers:
+      - {id: d-4ab, text: "When do you expect to move from 802.15.4z to 802.15.4ab, and will you use the narrowband assist radio?", why: "4ab with narrowband assist adds a second radio near 5.9–6.5 GHz next to V2X; that is a new filter and switch need."}
+      - {id: d-ch9, text: "How exposed is your design to losing UWB channel 9 if 7.125–8.4 GHz goes to mobile networks at WRC-27?", why: "A channel plan change would force new filters and possibly new chips."}
+      - {id: d-sense, text: "Would you use the same UWB anchors for intrusion, kick and gesture sensing, and what update rate and range do you need?", why: "Sensing modes raise duty cycle, power and linearity needs on the anchor."}
+      - {id: d-ble, text: "Do you want BLE, UWB and NFC in one module, or separate chips that you place freely?", why: "Decides whether a combo front end or discrete parts win."}
+      - {id: d-wish, text: "What would you change in today's UWB anchor chips if you could: power, size, cost, transmit power or safety support?", why: "A direct line into a next-generation anchor spec."}
+    bu:
+      - {id: b-uwb-auto, text: "Which of our UWB chips (ex-Qorvo) or 6–8.5 GHz front-end parts could go automotive, and what qualification work is missing?", why: "Measures the distance from today's consumer UWB parts to a car anchor."}
+      - {id: b-ble-fem, text: "Do we sell BLE front ends or switches into phone-as-a-key modules today?", why: "Shows a foothold we can extend to UWB in the same module."}
+      - {id: b-comp, text: "Which competitors do we meet in car access (NXP, Infineon, ST), and what wins there: chipset bundle or RF performance?", why: "A chipset-led socket is hard to win with a stand-alone part."}
+      - {id: b-ref, text: "Is there a reference design with a UWB SoC vendor that we could extend to automotive?", why: "Car anchors are designed around the SoC vendor's reference design."}
+  automotive/car-radio:
+    reports: [radio-auto-fit, radio-tuner-next, auto-wireless-audio]
+    customer:
+      - {id: c-standards, text: "Which broadcast standards does each of your markets need (AM, FM, DAB+, HD Radio, DRM), and are you dropping AM anywhere?", why: "The standard mix decides the tuner and demodulator line-up per region."}
+      - {id: c-box, text: "Is the tuner in the head unit, in a separate tuner box or moving to the antenna?", why: "A radio node at the antenna is our report's case; the location decides the form factor."}
+      - {id: c-diversity, text: "How many tuners do you use per car (background scan, phase diversity), and in which trim levels?", why: "Tuner count per car drives volume more than car count."}
+      - {id: c-pain, text: "What do drivers complain about most: FM reception in cities, AM noise from the EV powertrain, DAB dropouts?", why: "EV noise on AM and long-wave is a growing pain that filters and layout can address."}
+    developers:
+      - {id: d-sdr, text: "Do you plan a software-defined radio that digitises the whole band, or stay with dedicated tuner chips?", why: "A wideband digitiser changes what front end, clock and filter are needed."}
+      - {id: d-ethernet, text: "Would you send the radio as digital audio over automotive Ethernet from the antenna?", why: "Ethernet from the roof removes coax and favours a radio node near the antenna."}
+      - {id: d-hybrid, text: "How much do you rely on hybrid radio (switching between broadcast and IP streams)?", why: "Hybrid radio changes how much broadcast performance still matters."}
+      - {id: d-clock, text: "Which clock and crystal set-up do your tuners use today, and would you share one clock with other radios?", why: "A shared clock is a timing socket for us next to the tuner."}
+    bu:
+      - {id: b-auto-dies, text: "Which of our radio tuner and demodulator dies are already automotive-qualified, and which only lack qualification?", why: "Qualification gaps are cheaper to close than new designs."}
+      - {id: b-lifecycle, text: "What is the expected remaining life of our current car radio families, and is a successor planned?", why: "Car programmes need 10–15 years of supply."}
+      - {id: b-comp, text: "Which competitors win car radio sockets today (NXP, ST, Infineon), and on what: integration, price or software?", why: "Shows whether a reuse-only product can compete."}
+      - {id: b-hd, text: "Do we hold the licences and software stacks needed for HD Radio and DAB+ demodulation?", why: "Licences and software are often the hidden cost of a radio socket."}
+  automotive/telematics-v2x:
+    reports: [auto-ntn-pa, auto-redcap-ecall, auto-cv2x-fe, auto-gnss-l1l5, auto-wifi7-fem, auto-wifi-antenna]
+    customer:
+      - {id: c-tcu-where, text: "Is your telematics unit moving into the roof module, and which radios go with it?", why: "A roof TCU shortens coax and changes coexistence and temperature needs."}
+      - {id: c-regions, text: "Which regions need V2X in your plans (China, US, Europe), and which technology per region?", why: "C-V2X, 802.11p and their mix decide the 5.9 GHz front end."}
+      - {id: c-ecall, text: "How will you meet NG-eCall in Europe and the 2G/3G shutdowns: a full 5G module or a RedCap one?", why: "Value TCUs on RedCap are a one-transmitter front-end opportunity."}
+      - {id: c-lifecycle, text: "How long must the telematics hardware stay supported, and how do you handle network changes during the car's life?", why: "A 15-year life favours parts with long supply and wide band support."}
+    developers:
+      - {id: d-ntn, text: "Do you plan satellite (NTN) messaging or data in the TCU, at which power class, and on which bands (n255/n256, others)?", why: "NTN at 26 dBm on L/S bands needs a new PA and GNSS coexistence filtering."}
+      - {id: d-coex, text: "What isolation do you reach today between cellular, V2X, Wi-Fi and GNSS antennas in one module, and which pair is hardest?", why: "Coexistence filters are where our BAW parts add value."}
+      - {id: d-gnss, text: "Are you moving GNSS to L1 plus L5 (and L2/E6) for lane-level positioning, and with which correction service?", why: "Multi-band GNSS needs a new LNA and filter chain in the fin."}
+      - {id: d-wifi7, text: "Will the car get Wi-Fi 7 in the 6 GHz band, and how will you protect V2X at 5.9 GHz next to it?", why: "Wi-Fi 6/7 next to V2X needs notch and band-pass filters on both paths."}
+      - {id: d-wish, text: "Which part do you wish existed for the roof module: a combined front end, a better GNSS LNA, a 5.9 GHz notch?", why: "A direct pointer to a module spec."}
+    bu:
+      - {id: b-tcu, text: "Which of our cellular front-end modules are in automotive TCUs today, and with which modem platforms?", why: "Modem reference designs decide most TCU front-end sockets."}
+      - {id: b-ntn, text: "Is an automotive NTN power amplifier on the roadmap, and can existing dies reach AEC-Q100?", why: "NTN in cars is a new socket with few suppliers."}
+      - {id: b-comp, text: "Which competitors do we meet in the TCU (Qualcomm RFFE, Murata, Broadcom), and what wins: modem bundle or module size?", why: "Shows where a stand-alone module can still win."}
+      - {id: b-baw, text: "Do we have automotive-grade BAW filters for 5.9 GHz V2X and for the Wi-Fi bands next to it?", why: "Coexistence filters are the most direct car socket for our filter line."}
+  automotive/adas:
+    customer:
+      - {id: c-sensors, text: "Which sensor set do your next vehicles carry (number of radars, cameras, lidar), and which assistance level do you target?", why: "Sensor count per car drives demand for power, clocks and links."}
+      - {id: c-central, text: "Is sensor data processed in each sensor, in a zonal controller or in a central computer?", why: "Central processing moves clocks, SerDes and power into one box."}
+      - {id: c-ncap, text: "Which Euro NCAP or local test protocols drive your sensor choices in the next three years?", why: "Regulation sets timing and fitment rates."}
+      - {id: c-pain, text: "What is hardest in your ADAS hardware today: heat, power, EMC, functional safety or cost?", why: "Points to the part that would help most."}
+    developers:
+      - {id: d-radar, text: "Are you moving to 4D imaging radar, and how many transmit and receive channels do you plan?", why: "Imaging radar multiplies clock, power and supervision needs per radar."}
+      - {id: d-links, text: "Which camera and radar links will you use (GMSL, FPD-Link, ASA, automotive Ethernet), and at what data rates?", why: "Link choice decides SerDes clocks and power over coax."}
+      - {id: d-clock, text: "Do you need a crystal-free or shared clock tree across the central computer and zones?", why: "Our automotive clock-tree case targets exactly this."}
+      - {id: d-power, text: "What power does the central ADAS computer draw, and does it move to 48 V input?", why: "48 V input changes the front-end protection and the converter chain."}
+    bu:
+      - {id: b-timing, text: "Which of our clocks and oscillators are in ADAS computers or radars today?", why: "Timing is our most likely ADAS foothold."}
+      - {id: b-asil, text: "Do we offer ASIL documentation (safety manual, FMEDA) for the parts we would place in ADAS?", why: "Without safety documents ADAS sockets are closed."}
+      - {id: b-comp, text: "Which competitors hold ADAS clock and power sockets (TI, Renesas, Analog Devices), and how do they win?", why: "Sets the bar for a clock or power entry."}
+      - {id: b-isolation, text: "Is there any isolation or RF need in ADAS that our families meet without new silicon?", why: "Finds low-effort fits."}
+  automotive/powertrain:
+    reports: [auto-48v-motor-control, hv-extra-wide-isolation]
+    customer:
+      - {id: c-voltage, text: "What share of your next platforms is 800 V, and do you keep 400 V lines in parallel?", why: "800 V sets the creepage, CMTI and reinforced isolation needed in the inverter."}
+      - {id: c-make-buy, text: "Do you design the traction inverter in-house or buy it from a Tier-1 or e-drive maker?", why: "Tells us who chooses the gate drivers and isolated sensing."}
+      - {id: c-semis, text: "Which power switches do you use (SiC, IGBT, mixed), and how do you source them in general terms?", why: "SiC drives faster switching and stricter isolation needs."}
+      - {id: c-pain, text: "What fails or limits you most in the inverter today: short-circuit detection, EMC, thermal, cost or safety certification?", why: "Guides the gate-driver and sensing features that win."}
+    developers:
+      - {id: d-scp, text: "How fast must short-circuit protection react with your next SiC modules, and which method will you use (DESAT, sense-FET, current mirror)?", why: "SiC withstand times under 3 µs push driver protection features."}
+      - {id: d-active-gate, text: "Are you considering active or programmable gate driving that changes drive strength by temperature and load?", why: "A trend that changes the gate-driver interface and silicon."}
+      - {id: d-creepage, text: "Do you size isolation for 800 V nominal or for the full-charge / 1000 V level, and do you accept conformal coating?", why: "Decides between 8 mm and wider packages."}
+      - {id: d-health, text: "Which health data do you want from the driver (temperature, Vth, switching times) and over which interface?", why: "Gate drivers are absorbing sensing and diagnostics."}
+      - {id: d-asil, text: "Do you need certified SEooC gate drivers with built-in self-test, or is ASIL-D capable enough?", why: "Certification is becoming a selection criterion."}
+    bu:
+      - {id: b-drivers, text: "Which of our isolated gate drivers and isolated amplifiers are in traction inverters today, and at which voltage class?", why: "Our current footprint in the inverter."}
+      - {id: b-asil, text: "What is the certification status of our ASIL-D-pending driver families?", why: "Certification status decides new 800 V sockets."}
+      - {id: b-bias, text: "Do we have, or plan, a reinforced isolated bias supply to pair with the gate drivers?", why: "A missing companion part can lose the whole socket."}
+      - {id: b-comp, text: "Which competitors do we meet in traction (Infineon, TI, ST, NXP), and what decides: CMTI, protection features, price or bundle?", why: "Shows what to stress or fix."}
+  automotive/battery-power:
+    reports: [auto-hv-hot-swap, iso7821dww-isolation]
+    customer:
+      - {id: c-bms, text: "How is your battery management built: centralised, modular with a daisy chain, or wireless BMS?", why: "Wireless BMS removes isolated links but adds a radio per module."}
+      - {id: c-48v, text: "Do your next platforms add a 48 V board net, and which loads move to it first?", why: "48 V distribution needs new protection and DC/DC parts."}
+      - {id: c-pdb, text: "Are you replacing fuses and relays with eFuses and smart switches in the power distribution?", why: "Smart distribution is a growing socket for protection and sensing."}
+      - {id: c-pain, text: "What is hardest in the battery and distribution system today: pre-charge, isolation monitoring, wiring weight or diagnostics?", why: "Points to the function to sell."}
+    developers:
+      - {id: d-precharge, text: "How will you do pre-charge and disconnect at 800 V: mechanical contactors, solid-state switches or both?", why: "Solid-state switching needs isolated drivers and fast sensing."}
+      - {id: d-isolation, text: "Which isolated communication and sensing do you need between the HV battery and the 12 V side, and at what isolation class?", why: "Reinforced isolators and isolated amplifiers are our core fit."}
+      - {id: d-dcdc, text: "What power and topology do you plan for the HV-to-LV DC/DC, and will it be bidirectional?", why: "Bidirectional converters need more isolated drivers and sensing."}
+      - {id: d-wbms, text: "If you use wireless BMS, which radio band and protocol, and what reliability target?", why: "A wireless BMS is an RF front-end socket in the pack."}
+    bu:
+      - {id: b-isolators, text: "Which of our isolators are in BMS and junction boxes today, and do we cover 8 mm creepage at automotive grade?", why: "Creepage and grade decide which 800 V sockets are open."}
+      - {id: b-efuse, text: "Do we have automotive eFuse or smart high-side switch parts, or a path to them?", why: "Smart distribution is a fast-growing socket where we may have no part."}
+      - {id: b-comp, text: "Which competitors hold BMS and distribution sockets (ADI, TI, Infineon, NXP), and what decides?", why: "Shows how open these sockets are."}
+      - {id: b-sense, text: "Can our isolated current-sense amplifiers meet battery shunt accuracy and temperature drift needs?", why: "Shunt sensing is a direct fit for the isolated amplifier line."}
+  automotive/charging:
+    reports: [auto-charging-power, iso-current-sense-charging, iso7821dww-isolation, hv-extra-wide-isolation]
+    customer:
+      - {id: c-what, text: "Which chargers do you build or buy: on-board chargers, AC wallboxes, DC fast chargers or wireless pads, and at which power levels?", why: "Each charger type has a different isolation, sensing and power chain."}
+      - {id: c-bidir, text: "Is bidirectional charging (vehicle-to-grid, vehicle-to-home) in your plans, and in which markets first?", why: "Bidirectional chargers need more isolated drivers and grid-side metering."}
+      - {id: c-volume, text: "Roughly what volume range do your charger lines run at (thousands, tens of thousands, more), and how long is a platform in production?", why: "Volume class and lifecycle tell us whether a socket is worth a design-in."}
+      - {id: c-pain, text: "What causes the most field issues in your chargers: residual-current detection, metering accuracy, thermal stress or communication with the car?", why: "Pain points point to sensing or isolation parts to offer."}
+    developers:
+      - {id: d-800v, text: "Will your next chargers serve 800 V and 1000 V battery systems, and what isolation class (basic, reinforced) and creepage do you design for?", why: "800–1000 V batteries push isolators to 8 mm and wider packages."}
+      - {id: d-gan-sic, text: "Which switches do you plan in the next generation (SiC, GaN, silicon), and at what switching frequency?", why: "Faster switches raise the CMTI needed on isolators and gate drivers."}
+      - {id: d-sense, text: "How do you measure current today (shunt with isolated amplifier, Hall sensor, current transformer), and would a fully integrated isolated sensor help?", why: "Our case for an integrated isolated current sensor answers this directly."}
+      - {id: d-comms, text: "Which charging communication do you implement (ISO 15118-20, plug and charge, PLC over the control pilot), and on which chip?", why: "PLC and secure communication add parts next to the power stage."}
+      - {id: d-wish, text: "What part would make your next charger simpler: an isolated driver with built-in bias, an integrated shunt, a smaller isolated DC/DC?", why: "A direct line to features for our isolation roadmap."}
+    bu:
+      - {id: b-sold, text: "Which of our isolators, gate drivers and isolated amplifiers sell into chargers today, and into which charger types?", why: "Tells us the base to build on."}
+      - {id: b-pd, text: "Is there a plan for a USB-C power delivery controller or buck-boost for in-car charging ports?", why: "In-car USB-C ports are a fast-growing socket close to our power line."}
+      - {id: b-comp, text: "Which competitors do we meet in chargers (TI, ADI, Infineon, ST), and what wins: integration, creepage, price?", why: "Shows the angle to compete on."}
+      - {id: b-qual, text: "Which of our charger-relevant parts are AEC-Q100 for on-board chargers, and which only industrial grade for wallboxes?", why: "On-board chargers need automotive grade; wallboxes do not."}
+  automotive/cockpit:
+    reports: [auto-wireless-audio, auto-wifi-antenna]
+    customer:
+      - {id: c-displays, text: "How many displays does your next cockpit carry, and are they driven from one cockpit computer?", why: "A cockpit domain controller concentrates clocks, links and power."}
+      - {id: c-audio, text: "Which audio features are standard (wireless headphones, zones, AVAS), and which are options?", why: "Wireless audio and zones are our report's fit."}
+      - {id: c-body, text: "Which body functions are moving into zonal controllers (lighting, doors, liftgate)?", why: "Zonal moves change where motor drivers and protection sit."}
+      - {id: c-pain, text: "What is hardest in the cockpit today: EMC from displays, heat, wiring, or connectivity for passengers?", why: "Points to the part that helps most."}
+    developers:
+      - {id: d-links, text: "Which display and camera links will you use, at what data rate, and do you plan a shared clock?", why: "Display links need SerDes clocks; a shared clock is a timing socket."}
+      - {id: d-wireless, text: "Will rear-seat entertainment and headphones move to Wi-Fi 6/7 or Bluetooth LE Audio, and how many links at once?", why: "More concurrent links mean more front ends and coexistence work."}
+      - {id: d-48v-motors, text: "Do power doors, liftgates and seats move to 48 V motors with integrated controllers?", why: "48 V motor control is our report's opportunity."}
+      - {id: d-led, text: "How do you plan to drive headlights and ambient lighting (matrix LED, pixel lighting), and which drivers?", why: "Lighting drivers are a large, growing power socket."}
+    bu:
+      - {id: b-wifi, text: "Which of our Wi-Fi and Bluetooth front ends are qualified for cockpit modules today?", why: "The cockpit is the easiest car socket for our connectivity parts."}
+      - {id: b-motor, text: "Can our motor-control ICs meet AEC-Q100 for doors, seats and liftgates?", why: "Opens a body-electronics socket."}
+      - {id: b-comp, text: "Which competitors do we meet in cockpit connectivity (Murata modules, Qualcomm, Infineon), and what decides?", why: "Modules often win cockpit sockets over discrete parts."}
+      - {id: b-clock, text: "Do we sell clocks into cockpit domain controllers today?", why: "Timing is a likely foothold."}
+  # ---- Data center --------------------------------------------------------------------------------------------------
+  datacenter:
+    reports: [hv-extra-wide-isolation]
+    customer:
+      - {id: c-ai-share, text: "What share of your new capacity is AI racks, and what rack power range do you build for now and in two to three years?", why: "Rack power (tens of kW now, hundreds of kW next) drives every power, cooling and timing socket."}
+      - {id: c-ocp, text: "Do you follow Open Compute Project specifications (ORv3, Mt Diablo, Deschutes), or your own designs?", why: "OCP specs are public and tell us the sockets; own designs need direct contact."}
+      - {id: c-sourcing, text: "Who chooses the power, timing and isolation parts: you, the ODM, or the power-shelf and server makers?", why: "Tells us whom to call for each socket."}
+    developers:
+      - {id: d-800v, text: "When do you expect 800 V DC (or ±400 V) distribution in your halls, and what changes first: the power shelf, the sidecar or the busway?", why: "800 V DC moves isolation, protection and conversion into the rack."}
+      - {id: d-liquid, text: "How fast is liquid cooling replacing air in your halls, and what does that do to fans, pumps and sensing?", why: "Cooling electronics follow the move to liquid."}
+      - {id: d-sync, text: "Do your AI fabrics need precise time (PTP, SyncE) across the cluster, and to what accuracy?", why: "Precise time across the cluster is a new timing socket."}
+    bu:
+      - {id: b-today, text: "What do we sell into data centers today, by function (timing, isolation, power, Wi-Fi), and through which kinds of customers?", why: "Our base in the segment."}
+      - {id: b-roadmap, text: "Which of our roadmaps target AI data centers explicitly (224G clocks, 800 V isolation, eFuses)?", why: "Shows where the roadmap already points."}
+      - {id: b-comp, text: "Which competitors do we meet most in data centers (TI, ADI, Infineon, Renesas, SiTime), and where do we win?", why: "Sets the priorities across sub-systems."}
+  datacenter/rack-power:
+    reports: [hv-extra-wide-isolation, auto-hv-hot-swap]
+    customer:
+      - {id: c-chain, text: "Walk us through your power chain from the grid to the processor: which conversion steps sit in the hall, in the rack and on the board?", why: "Shows which steps exist in your design and who builds each."}
+      - {id: c-shelf, text: "Do you buy power shelves and power supplies as finished units, or specify them to a power-supply maker?", why: "Tells us whether the PSU maker or the operator chooses the isolators and drivers."}
+      - {id: c-density, text: "What rack power range do you design for today and for the next generation (for example 30–50 kW, 100–150 kW, toward 1 MW)?", why: "Power level decides 54 V vs 800 V and the number of conversion stages."}
+      - {id: c-pain, text: "What limits you most in rack power today: efficiency, space, hot-swap and inrush, transient loads from GPUs, or serviceability?", why: "Pain points point to protection, sensing or isolation parts."}
+    developers:
+      - {id: d-800v, text: "If you move to 800 V DC, which isolation class and creepage do you design for, and do you expect solid-state circuit breakers?", why: "800 V DC needs reinforced isolation and fast protection in the rack."}
+      - {id: d-gan-sic, text: "Which switches do you plan in the PSU and the intermediate bus converter (GaN, SiC, silicon), and at what frequency?", why: "Faster switches raise CMTI needs on isolators and gate drivers."}
+      - {id: d-ibc, text: "Will the 48–54 V to 12 V (or direct to core) intermediate bus converter stay, or move to a direct 800 V to 48 V step?", why: "A changed conversion chain moves or removes isolated sockets."}
+      - {id: d-ai-load, text: "How do you handle the fast load steps of AI training on the power chain (energy storage in the shelf, capacitors, power smoothing)?", why: "Load transients drive new sensing and storage functions."}
+      - {id: d-telemetry, text: "Which telemetry do you want from each power stage (current, voltage, temperature), and over which bus (PMBus, I3C)?", why: "Isolated sensing with digital output is a growing need."}
+    bu:
+      - {id: b-sold, text: "Which of our isolators, gate drivers and isolated amplifiers are in server PSUs and power shelves today?", why: "Our base in rack power."}
+      - {id: b-wide, text: "Does the extra-wide SOIC isolation family cover 800 V DC creepage, and when is it qualified?", why: "800 V DC racks need wider creepage than today's 54 V shelves."}
+      - {id: b-efuse, text: "Do we have, or plan, a 48–54 V eFuse or hot-swap controller for the rack?", why: "Every replaceable shelf and tray needs inrush and fault protection."}
+      - {id: b-comp, text: "Which competitors win rack power sockets (TI, ADI, Infineon, Navitas, MPS), and on what: integration with GaN, price, reference designs?", why: "Shows the angle to compete on."}
+  datacenter/backup:
+    customer:
+      - {id: c-where, text: "Where does your backup sit today: a central UPS, battery backup units in the rack, or both?", why: "In-rack BBUs bring battery monitoring and isolated sensing into every rack."}
+      - {id: c-runtime, text: "What hold-up or runtime do you need (seconds for ride-through, minutes for shutdown, hours for storage)?", why: "Runtime sets battery size and the power conversion around it."}
+      - {id: c-chem, text: "Which battery chemistry do you use (lithium iron phosphate, NMC, sodium-ion), and how do you handle fire safety?", why: "Chemistry decides the monitoring and protection needs."}
+      - {id: c-grid, text: "Do you use on-site storage to support the grid or smooth AI load swings?", why: "Grid support turns the backup into a bidirectional converter."}
+    developers:
+      - {id: d-bbu, text: "What power and voltage will the next BBU run at (54 V, 800 V), and is it hot-swappable?", why: "BBU voltage and hot-swap set the isolation and protection parts."}
+      - {id: d-bms, text: "Which BMS architecture do you use in the BBU, and which isolation between the cells and the controller?", why: "Isolated cell monitoring is a direct fit."}
+      - {id: d-smoothing, text: "Will storage in the rack also absorb AI load steps, and how fast must it react?", why: "Fast response needs fast current sensing and control."}
+      - {id: d-wish, text: "What would you change in your BBU design if you could: size, monitoring, fault detection, communication?", why: "A direct line to features."}
+    bu:
+      - {id: b-sold, text: "Do we sell isolators or isolated amplifiers into UPS and BBU makers today?", why: "Our base in backup."}
+      - {id: b-bms, text: "Is there a BMS front end or isolated cell-monitor link we could offer, or only the isolation around it?", why: "Decides whether we sell the core or the periphery."}
+      - {id: b-comp, text: "Which competitors hold BBU sockets (TI, ADI, Infineon, ST)?", why: "Shows how open the socket is."}
+      - {id: b-reuse, text: "Can parts qualified for automotive BMS be offered to BBU makers with no extra work?", why: "Finds a quick reuse."}
+  datacenter/servers:
+    customer:
+      - {id: c-platform, text: "Which server platforms do you build (general compute, AI training, AI inference), and how often does a new generation start?", why: "Platform cadence sets the design-in window."}
+      - {id: c-odm, text: "Who designs the boards: you, an ODM, or the processor vendor's reference design?", why: "Most board sockets follow the reference design."}
+      - {id: c-bmc, text: "What does your board management controller watch and control, and what would you like it to see that it cannot?", why: "Management needs drive telemetry and sensing parts."}
+      - {id: c-pain, text: "What is hardest on the board today: power density, heat, signal integrity at PCIe Gen 6 or reliability?", why: "Points to the part that helps."}
+    developers:
+      - {id: d-vr, text: "How much current will the next processor or accelerator draw, and will power move to vertical delivery under the chip?", why: "Vertical power delivery changes the regulator and sensing sockets."}
+      - {id: d-pcie7, text: "When do you move to PCIe Gen 7 and CXL, and what does that change for clocks and retimers?", why: "Gen 7 tightens clock jitter and adds retimers."}
+      - {id: d-48v, text: "Will 48 V reach the board directly, and which converters will you use to the core?", why: "48 V on the board changes protection and conversion."}
+      - {id: d-security, text: "Which hardware security and monitoring (root of trust, tamper detection) will be required on the board?", why: "New board functions mean new sockets."}
+    bu:
+      - {id: b-clock, text: "Which of our PCIe clocks and buffers are in server reference designs, and for which processor vendors?", why: "Reference designs decide clock sockets."}
+      - {id: b-gen7, text: "Are our clocks and buffers specified for PCIe Gen 7 jitter limits?", why: "Gen 7 readiness keeps the socket."}
+      - {id: b-comp, text: "Which competitors hold server clock and power sockets (Renesas, TI, SiTime, MPS, Infineon)?", why: "Shows where we stand."}
+      - {id: b-isol, text: "Is there any isolation need on the server board (48 V input, sensors) that our parts meet?", why: "Finds a second socket next to timing."}
+  datacenter/network:
+    customer:
+      - {id: c-ap, text: "Which Wi-Fi standard and roughly what access-point density do you deploy in offices and campuses?", why: "Enterprise AP volumes and standard choose the front end."}
+      - {id: c-poe, text: "Which PoE power class do your access points and devices need, and is it rising?", why: "Higher PoE classes change the powered-device design."}
+      - {id: c-refresh, text: "How often do you refresh access points and switches, and what triggers a refresh?", why: "Refresh cycle drives volume timing."}
+      - {id: c-pain, text: "What causes the most trouble in your wireless network: coverage, interference, power budget or management?", why: "Points to front-end or power features."}
+    developers:
+      - {id: d-wifi7, text: "When do you move to Wi-Fi 7 with 320 MHz channels and multi-link operation, and to Wi-Fi 8 after that?", why: "Each step needs new front ends and filters."}
+      - {id: d-6ghz, text: "How will you use 6 GHz: indoor only, standard power with AFC, or outdoor?", why: "Standard power with AFC needs higher output and linearity."}
+      - {id: d-coex, text: "How many radios share one access point (2.4, 5, 6 GHz, BLE, IoT), and what filtering do you need between them?", why: "Tri-band APs depend on sharp 5/6 GHz filters."}
+      - {id: d-poe, text: "Will access points need more than 60 W PoE, and how do you design the powered-device side?", why: "PoE powered-device design is a power and isolation socket."}
+    bu:
+      - {id: b-fem, text: "Which of our Wi-Fi front ends and filters are in enterprise access points today?", why: "Our base."}
+      - {id: b-wifi8, text: "Is our Wi-Fi 7 and Wi-Fi 8 front-end roadmap aligned with the enterprise chipset vendors' timing?", why: "Front ends follow the chipset reference designs."}
+      - {id: b-comp, text: "Which competitors do we meet in enterprise Wi-Fi (Qualcomm RFFE, Broadcom integrated, Murata)?", why: "Shows how open the sockets are."}
+      - {id: b-filter, text: "Do our 5/6 GHz coexistence filters win in tri-band APs, and what decides?", why: "Filters are often where we differentiate."}
+  datacenter/timing:
+    customer:
+      - {id: c-sockets, text: "Which equipment do you design that needs reference clocks (servers, switches, NICs, optical modules, time cards)?", why: "Each type has its own clock socket and jitter limit."}
+      - {id: c-time, text: "Do you run PTP or SyncE in your back-end AI fabric, and why (telemetry, congestion control, scheduling)?", why: "The reason for precise time decides the accuracy needed."}
+      - {id: c-sourcing, text: "Do you select clocks yourself or follow the switch and NIC vendors' reference designs?", why: "Tells us whom to approach."}
+      - {id: c-pain, text: "What causes clock trouble today: jitter margin at 112G/224G, supply, board space or field failures?", why: "Points to the product to offer."}
+    developers:
+      - {id: d-224g, text: "What reference-clock jitter will your 224G and 448G SerDes need, and with which filter mask?", why: "Limits below 35 fs set the next oscillator spec."}
+      - {id: d-pcie7, text: "When do you need PCIe Gen 7 clocks and buffers, and how many outputs per board?", why: "Gen 7 tightens jitter and adds outputs."}
+      - {id: d-cpo, text: "Does co-packaged optics change your clocking (one reference for the switch package instead of one per module)?", why: "Could remove or reshape the optical-module clock socket."}
+      - {id: d-holdover, text: "What holdover and accuracy do you need when GNSS is lost in a time card or grandmaster?", why: "Sets oscillator class (TCXO, OCXO) and synchronizer features."}
+    bu:
+      - {id: b-ref, text: "In which switch, NIC and optical-module reference designs are our clocks recommended today?", why: "Reference designs decide most of these sockets."}
+      - {id: b-roadmap, text: "Is our oscillator roadmap ahead of the 224G/448G jitter limits, and when?", why: "Being first on the next limit wins the socket."}
+      - {id: b-comp, text: "Which competitors do we meet in data-center timing (Renesas, SiTime, TI, Microchip), and what decides?", why: "Shows where we lead or lag."}
+      - {id: b-ptp, text: "Do we offer PTP / SyncE synchronizers for AI back-end fabrics, and is any customer asking?", why: "A new socket in AI clusters."}
+  datacenter/cooling:
+    customer:
+      - {id: c-mix, text: "What is your mix of air and liquid cooling today, and what will it be for new AI halls?", why: "The mix decides which drives and sensors grow."}
+      - {id: c-cdu, text: "Do you buy CDUs, chillers and fan walls as finished units, and from how many suppliers?", why: "Tells us whether to target equipment makers or operators."}
+      - {id: c-reliability, text: "What redundancy and service model do you need for pumps and fans (hot-swap, N+1)?", why: "Hot-swap drives protection and monitoring parts."}
+      - {id: c-pain, text: "What causes the most trouble in cooling: leaks, pump failures, control, energy use?", why: "Points to sensing or drive features."}
+    developers:
+      - {id: d-pumps, text: "What power and voltage do your pump and fan drives run at, and are they moving to EC motors or VFDs?", why: "Drive power sets the gate drivers and isolation."}
+      - {id: d-sensing, text: "Which leak, flow, pressure and temperature sensing do you plan, and how is it isolated and networked?", why: "Sensing networks are a socket for isolators and interfaces."}
+      - {id: d-warm, text: "Will you move to warmer coolant and heat reuse, and what does that change in the electronics?", why: "Shifts load from compressors to pumps and fans."}
+      - {id: d-immersion, text: "Are you considering immersion or two-phase cooling, and which electronics remain?", why: "Immersion removes fans but keeps pumps and sensing."}
+    bu:
+      - {id: b-motor, text: "Are our motor-control ICs used in EC fans or pump drives today, and at what power?", why: "A direct fit for the motor-control line."}
+      - {id: b-isol, text: "Which of our isolated gate drivers fit 1–40 kW pump and compressor drives?", why: "CDU and chiller drives need isolated drivers."}
+      - {id: b-comp, text: "Which competitors hold cooling drive sockets (Infineon, TI, ST, onsemi)?", why: "Shows how open the socket is."}
+      - {id: b-efuse, text: "Would a hot-swap or eFuse part help us in replaceable fans and pumps?", why: "A gap noted in the cooling deep dive."}
+  # ---- Drones -------------------------------------------------------------------------------------------------------
+  drones:
+    customer:
+      - {id: c-mission, text: "Which missions do your drones fly (camera, mapping, spraying, delivery, inspection, public safety, defence), and which is growing fastest?", why: "Mission decides payload, range, links and the regulations that apply."}
+      - {id: c-rules, text: "Which rules shape your design most (Remote ID, BVLOS approvals, EU drone classes, origin rules for components)?", why: "Regulation and origin rules change which suppliers a drone maker can use."}
+      - {id: c-build, text: "Do you design the flight controller, ESCs and radios yourself, or buy modules and reference designs?", why: "Tells us whether to sell chips or work through module makers."}
+    developers:
+      - {id: d-autonomy, text: "How much autonomy will your next drone have (waypoints, detect-and-avoid, swarms), and what does that need from navigation and links?", why: "Autonomy raises demands on GNSS, sensing and resilient links."}
+      - {id: d-resilience, text: "How do you design for GNSS jamming and spoofing and for lost control links?", why: "Resilience is the fastest-moving requirement in drones."}
+      - {id: d-bvlos, text: "Which link will carry beyond-line-of-sight flights: cellular, satellite or a long-range private radio?", why: "Decides between cellular, NTN and sub-GHz front ends."}
+    bu:
+      - {id: b-today, text: "Which of our parts sell into drones today (GNSS LNAs, Wi-Fi front ends, motor control), and through which channels?", why: "Our base in drones."}
+      - {id: b-defence, text: "Which drone customers fall under defence or export rules, and how do we handle them?", why: "Defence drones need a different sales and compliance path."}
+      - {id: b-comp, text: "Which competitors do we meet in drones, and do module makers decide most sockets?", why: "Shows where to focus."}
+  drones/flight:
+    customer:
+      - {id: c-size, text: "Which drone classes do you build by weight and pack voltage (for example under 250 g, 2–6S, 12–14S, higher)?", why: "Pack voltage sets the ESC and power parts."}
+      - {id: c-esc, text: "Do you design your own ESCs or buy them, and how many motors per drone?", why: "ESC count multiplies motor-control sockets."}
+      - {id: c-endurance, text: "What limits flight time and reliability most: battery, motor efficiency, heat or failures in the ESC?", why: "Points to efficiency or protection features."}
+      - {id: c-volume, text: "Roughly what volume range does each drone line reach per year, and how long does a design stay in production?", why: "Volume and lifecycle tell us whether a design-in pays off."}
+    developers:
+      - {id: d-foc, text: "Are your ESCs moving to sinusoidal sensorless FOC and higher PWM (45–60 kHz and above)?", why: "Higher PWM needs stronger MCUs and better gate drive."}
+      - {id: d-gan, text: "Would you use GaN FETs in the ESC, and at which voltage class?", why: "GaN in 48 V drives is a trend that changes the gate driver."}
+      - {id: d-pack, text: "Will heavy-lift drones move to higher pack voltages (18S and up) and smart batteries with cell monitoring?", why: "Higher voltage needs new protection and BMS parts."}
+      - {id: d-antispark, text: "How do you handle inrush and anti-spark when the battery is connected, and would an eFuse or ideal-diode part help?", why: "A gap noted in the drone power deep dive."}
+      - {id: d-remoteid, text: "Is Remote ID built into the flight controller, and does it act as a take-off interlock?", why: "Remote ID makes a radio flight-critical."}
+    bu:
+      - {id: b-pac, text: "Do our PAC55xx motor-control ICs meet drone ESC needs at 45–60 kHz PWM with six external FETs?", why: "A direct fit if the specs hold."}
+      - {id: b-design, text: "Is there a drone ESC reference design with our parts, or a partner who would build one?", why: "Drone makers design from reference designs."}
+      - {id: b-comp, text: "Which competitors hold drone ESC sockets (TI, ST, Infineon, Chinese MCU vendors)?", why: "Shows the price level to meet."}
+      - {id: b-efuse, text: "Is an eFuse or anti-spark controller for 12S+ packs worth adding?", why: "A gap in our portfolio."}
+  drones/radio-links:
+    customer:
+      - {id: c-links, text: "Which radios does your drone carry (control link, video, GNSS, Remote ID, ADS-B In), and on which bands?", why: "Four to five radios per drone means several front ends."}
+      - {id: c-range, text: "What range and latency do you need for control and video, and in which regions?", why: "Range sets output power and LNA needs; regions set bands."}
+      - {id: c-modules, text: "Do you buy radio modules or design the radios on your own board?", why: "Tells us whether to sell to module makers."}
+      - {id: c-pain, text: "What fails most in the field: video drop-outs, control-link loss, GNSS loss near the video transmitter?", why: "Self-interference is a common pain that filters fix."}
+    developers:
+      - {id: d-digital-video, text: "Are you moving from analog to digital HD video, and at which bands and output power?", why: "Digital video at 5.8 GHz drives PA and filter needs."}
+      - {id: d-isolation, text: "What isolation do you reach between the 5.8 GHz video antenna and the GNSS patch, and is it enough?", why: "A GNSS LNA with rejection at 5.8 GHz could solve it."}
+      - {id: d-control, text: "Will your long-range control link use LoRa-type chirp, narrow-band hopping, or a cellular backup?", why: "Sets the sub-GHz front-end need."}
+      - {id: d-wish, text: "Which part would make your radio design simpler: a combined front end, a better GNSS LNA, a higher-power sub-GHz PA?", why: "A direct line to a product idea."}
+    bu:
+      - {id: b-fem, text: "Which of our Wi-Fi and sub-GHz front ends are in drone links today?", why: "Our base."}
+      - {id: b-gnss, text: "What rejection does our GNSS LNA have at 5725–5850 MHz, and is a drone-specific variant worth defining?", why: "An open question from the drone deep dives."}
+      - {id: b-comp, text: "Which competitors do we meet in drone radios (Murata, Maxscend, other Chinese vendors)?", why: "Shows the price and integration bar."}
+      - {id: b-channel, text: "Do we reach drone makers through distributors or directly?", why: "Many drone makers are small; the channel matters."}
+  drones/cellular-link:
+    customer:
+      - {id: c-use, text: "Which flights use 4G/5G today (delivery, inspection, public safety), and in which countries?", why: "Cellular BVLOS adoption differs by country."}
+      - {id: c-plan, text: "Do you use operator drone subscriptions, and what do operators require from the device?", why: "Operator rules may limit power or require certified modules."}
+      - {id: c-module, text: "Which cellular module class do you use (LTE Cat 4, Cat 1, 5G RedCap), and who supplies it?", why: "Module makers choose the front end."}
+      - {id: c-pain, text: "What causes trouble on the cellular link at height: interference to many cells, handovers, uplink rate?", why: "Points to front-end or antenna improvements."}
+    developers:
+      - {id: d-redcap, text: "Will you move to 5G RedCap, and do you need more uplink rate for video?", why: "RedCap reduces the front end; video needs uplink."}
+      - {id: d-ntn, text: "Do you want a satellite (NTN) fallback in the same modem?", why: "NTN fallback adds L/S-band front-end needs."}
+      - {id: d-esim, text: "Do you plan eSIM or integrated SIM, and do you need a secure element?", why: "Open question from the drone cellular deep dive."}
+      - {id: d-power, text: "What output power and power control do you expect for aerial devices?", why: "Height-dependent power control changes PA needs."}
+    bu:
+      - {id: b-modules, text: "Which of our cellular front ends are in IoT modules that drone makers use?", why: "Our base."}
+      - {id: b-redcap, text: "Is our RedCap front-end offer ready for module makers?", why: "Sets timing for the next drone modems."}
+      - {id: b-comp, text: "Which competitors hold IoT module front-end sockets (Qualcomm, Murata, Chinese vendors)?", why: "Shows how open the sockets are."}
+      - {id: b-ntn, text: "Can our NTN front-end work serve drones as well as cars and trackers?", why: "A shared product across segments."}
+  drones/satellite-link:
+    customer:
+      - {id: c-where, text: "Where do your drones fly without cell coverage (sea, mountains, borders), and what must reach them there?", why: "Use case decides data rate and the satellite system."}
+      - {id: c-system, text: "Which satellite system do you use or consider (3GPP NTN, direct-to-cell, Iridium or other L-band services)?", why: "Each needs a different front end."}
+      - {id: c-size, text: "What size, weight and power can a satellite link take on your drone?", why: "Sets antenna and PA constraints."}
+      - {id: c-pain, text: "What stops you from adding satellite today: cost, antenna size, service plans, certification?", why: "Shows the main barrier."}
+    developers:
+      - {id: d-power, text: "Which power class do you need on NTN bands (23, 26 or 31 dBm), and on which bands?", why: "Higher classes need a stronger PA."}
+      - {id: d-gnss-coex, text: "How will you protect GNSS from the NTN transmitter next to it (1559–1610 MHz vs uplink near 1626 MHz)?", why: "A coexistence filter and LNA need."}
+      - {id: d-rel19, text: "Do you plan RedCap over NTN or store-and-forward from Release 19?", why: "Shows the next modem and front-end step."}
+      - {id: d-antenna, text: "Would you use a patch, a helix or a small phased array for the satellite link?", why: "Antenna choice changes front-end needs."}
+    bu:
+      - {id: b-pa, text: "Does our L/S-band PA support NTN power class 2 (26 dBm), and how much noise does it put into the GNSS band?", why: "An open question from the deep dive."}
+      - {id: b-reuse, text: "Can our automotive NTN front-end work be reused for drones?", why: "Cross-segment reuse."}
+      - {id: b-comp, text: "Which competitors offer NTN front ends today?", why: "Few suppliers so far."}
+      - {id: b-partners, text: "Which NTN modem makers would partner with us on a reference design?", why: "Reference designs decide sockets."}
+  drones/navigation:
+    customer:
+      - {id: c-accuracy, text: "What position accuracy do your missions need (metres, decimetres, centimetres), and where?", why: "Accuracy decides single-band, multi-band or RTK."}
+      - {id: c-corrections, text: "Which correction service do you use (RTK base, network RTK, PPP-RTK over satellite)?", why: "Corrections drive the receiver and band choice."}
+      - {id: c-module, text: "Do you buy GNSS modules or active antennas, or design the front end yourself?", why: "Tells us whether the LNA socket is ours to win."}
+      - {id: c-pain, text: "When do you lose position today: near structures, under jamming, near your own transmitters?", why: "Points to rejection or redundancy features."}
+    developers:
+      - {id: d-bands, text: "Are you moving to L1 + L5 (and L2/E6) through one RF input?", why: "All-band front ends need new LNAs and filters."}
+      - {id: d-fusion, text: "Which sensors do you fuse with GNSS (IMU, visual odometry, UWB for docking)?", why: "Sensor fusion sets UWB and IMU sockets."}
+      - {id: d-tcxo, text: "Which reference oscillator do your GNSS and NTN receivers use?", why: "A TCXO gap noted in the deep dive."}
+      - {id: d-wish, text: "What would you want from a GNSS front end: higher compression point, rejection at 5.8 GHz, lower noise?", why: "A direct line to a product spec."}
+    bu:
+      - {id: b-lna, text: "Which of our GNSS LNAs and front-end modules sell into drones, and do they cover L5?", why: "Our base."}
+      - {id: b-tcxo, text: "Should we offer a TCXO for GNSS and NTN modems?", why: "None is in our catalogue."}
+      - {id: b-comp, text: "Which competitors hold drone GNSS front-end sockets (Infineon, Maxscend, module makers' own)?", why: "Shows how open the sockets are."}
+      - {id: b-uwb, text: "Could our UWB chips serve drone docking and indoor flight?", why: "A cross-segment fit."}
+  drones/anti-jamming:
+    customer:
+      - {id: c-threat, text: "How often do your drones meet GNSS interference or spoofing, and where?", why: "Frequency of the problem sets the budget for a fix."}
+      - {id: c-level, text: "Which protection do customers ask for: detection only, multi-band, CRPA arrays, inertial fallback?", why: "Decides the product level."}
+      - {id: c-export, text: "Which export or defence rules apply to the protection you can fit?", why: "CRPA and military GNSS are export-controlled."}
+      - {id: c-buy, text: "Do you buy anti-jam modules or build the protection yourself?", why: "Module or chip sale."}
+    developers:
+      - {id: d-crpa, text: "Would a 2–4 element CRPA fit your drone, and what size and power can it take?", why: "Small CRPAs need multichannel front ends."}
+      - {id: d-linearity, text: "What out-of-band signal level must your GNSS front end survive without losing the fix?", why: "Sets LNA compression and filter rejection."}
+      - {id: d-osnma, text: "Will you use Galileo OSNMA or other authentication against spoofing?", why: "Authentication changes receiver choice."}
+      - {id: d-link, text: "How will the control link resist jamming (frequency hopping, mesh, cellular fallback)?", why: "Shows front-end needs on the control link."}
+    bu:
+      - {id: b-test, text: "Do we have test data showing how much a high-IIP3 LNA plus pre-filter helps under a strong out-of-band signal?", why: "Evidence a drone maker would ask for."}
+      - {id: b-multi, text: "Could we offer a multichannel GNSS front end for small CRPA arrays?", why: "A new product idea from the deep dive."}
+      - {id: b-defence, text: "Which defence rules would apply to such a product, and do we want that market?", why: "A business decision before a product."}
+      - {id: b-comp, text: "Which competitors sell anti-jam GNSS front ends or modules?", why: "Shows how open the market is."}
+  # ---- Cellular -----------------------------------------------------------------------------------------------------
+  cellular:
+    customer:
+      - {id: c-cycle, text: "Where are you in the 5G cycle: still rolling out, upgrading to 5G-Advanced, or planning 6G trials?", why: "The cycle sets which radios and bands are bought next."}
+      - {id: c-bands, text: "Which new bands matter most to you in the next three years (FR3 7–24 GHz, n77/n79 upgrades, satellite bands)?", why: "New bands mean new front ends and filters."}
+      - {id: c-sourcing, text: "How do you choose RF suppliers: modem vendor reference designs, own modules, or an open choice?", why: "Tells us where the decision sits."}
+    developers:
+      - {id: d-6g, text: "Which 6G features do you expect to need first (FR3, AI-native air interface, sensing, NTN)?", why: "Early 6G needs set long-term RF roadmaps."}
+      - {id: d-power, text: "How important is energy efficiency in the radio now, and which part of the chain wastes most?", why: "PA efficiency is where we can help most."}
+      - {id: d-integration, text: "Do you want more integration (front-end modules, PA plus filter) or discrete parts you can tune?", why: "Sets the product format."}
+    bu:
+      - {id: b-today, text: "What share of our cellular business is phones, infrastructure and IoT, and where is it growing?", why: "Our base by sub-segment."}
+      - {id: b-fr3, text: "What is our FR3 (7–24 GHz) front-end plan?", why: "FR3 is the next band battle."}
+      - {id: b-comp, text: "Which competitors do we meet most (Qualcomm RFFE, Murata, Broadcom, Chinese vendors), and where are we losing?", why: "Sets the priorities."}
+  cellular/radio-unit:
+    customer:
+      - {id: c-types, text: "Which radio units do you build or buy (macro, massive MIMO 32T32R or 64T64R, multi-band), and for which operators?", why: "Radio type sets PA power and channel count."}
+      - {id: c-openran, text: "How much of your business moves to Open RAN, and does that change who selects RF parts?", why: "Open RAN opens sockets to new radio makers."}
+      - {id: c-volume, text: "Roughly what volume range of radio units per year, and how long does a platform last?", why: "Sets the value of a design-in."}
+      - {id: c-pain, text: "What limits your radios most: energy use, weight on the mast, heat, supply of key parts?", why: "Points to efficiency or integration."}
+    developers:
+      - {id: d-gan, text: "Which PA technology will you use next (GaN on SiC, GaN on Si, LDMOS), and at what output power per channel?", why: "Sets the PA socket."}
+      - {id: d-bands, text: "Which new bands and bandwidths will your next radio cover, including FR3?", why: "New bands need new filters and LNAs."}
+      - {id: d-dpd, text: "How far do you rely on digital predistortion, and do you want PAs designed for it?", why: "DPD-friendly PAs win on efficiency."}
+      - {id: d-sleep, text: "Do you plan deep-sleep and fast wake modes to cut energy, and what does that need from the RF?", why: "Energy saving changes PA and switch needs."}
+    bu:
+      - {id: b-sold, text: "Which of our PAs, LNAs, switches and filters are in radio units today, and for which radio makers?", why: "Our base."}
+      - {id: b-gan, text: "Is our infrastructure GaN line (ex-Qorvo) competitive in output power and efficiency for 5G-Advanced radios?", why: "GaN is the core infrastructure socket."}
+      - {id: b-comp, text: "Which competitors do we meet (NXP, Ampleon, Sumitomo, Chinese GaN vendors), and what decides?", why: "Shows the bar."}
+      - {id: b-china, text: "How do export rules and local sourcing affect our radio-unit sockets?", why: "A large share of radios is built in markets with local-supplier rules."}
+  cellular/small-cell:
+    customer:
+      - {id: c-where, text: "Where do your small cells and repeaters go (indoor enterprise, stadiums, rural, private networks)?", why: "Location sets power and bands."}
+      - {id: c-private, text: "How much private 5G do your customers deploy, and in which bands (CBRS, n78, n79)?", why: "Private networks drive band-specific small cells."}
+      - {id: c-cost, text: "What cost and size target must a small cell meet compared to a macro radio?", why: "Small cells need integrated, cheaper RF."}
+      - {id: c-pain, text: "What causes trouble in repeaters: oscillation, interference, network operator approval?", why: "Points to filter or isolation features."}
+    developers:
+      - {id: d-integ, text: "Would you use integrated front-end modules for small cells?", why: "Sets the product format."}
+      - {id: d-mmwave, text: "Do you plan mmWave or FR3 small cells, and when?", why: "New bands need new front ends."}
+      - {id: d-power, text: "What output power per antenna do you need, and do you power the unit over PoE?", why: "PoE limits power; sets PA efficiency needs."}
+      - {id: d-wish, text: "What would make your small-cell RF simpler?", why: "A direct line to features."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in small cells and repeaters today?", why: "Our base."}
+      - {id: b-fit, text: "Can our phone or Wi-Fi front ends be reused in small cells?", why: "Cross-segment reuse."}
+      - {id: b-comp, text: "Which competitors hold small-cell and repeater sockets (NXP, Qualcomm small-cell platforms, Chinese RF vendors)?", why: "Small-cell platforms often bundle the RF reference design."}
+      - {id: b-channel, text: "Do we reach small-cell makers directly or through distribution?", why: "Many are small companies."}
+  cellular/transport:
+    reports: []
+    customer:
+      - {id: c-arch, text: "How is your baseband split (central, distributed, cloud RAN), and where do timing and synchronization sit?", why: "Architecture decides timing sockets."}
+      - {id: c-backhaul, text: "Which backhaul do you use (fiber, microwave, satellite), and which is growing?", why: "Microwave backhaul is an RF socket."}
+      - {id: c-sync, text: "Which timing accuracy do your networks need (phase, time), and how do you deliver it?", why: "5G TDD needs tight phase sync."}
+      - {id: c-pain, text: "What causes timing trouble today: GNSS loss, holdover, packet delay variation?", why: "Points to synchronizer features."}
+    developers:
+      - {id: d-ptp, text: "Which PTP profiles and SyncE classes will your next equipment need?", why: "Sets the synchronizer spec."}
+      - {id: d-holdover, text: "What holdover do you need without GNSS, and with which oscillator?", why: "Holdover sets TCXO or OCXO class."}
+      - {id: d-ebands, text: "Will microwave backhaul move to E-band and D-band, and at what capacity?", why: "New bands need new RF."}
+      - {id: d-ai-ran, text: "Does AI-RAN or cloud RAN change your timing needs?", why: "A trend that may move sockets."}
+    bu:
+      - {id: b-sync, text: "Which of our network synchronizers and jitter attenuators are in baseband units and routers?", why: "Our base."}
+      - {id: b-comp, text: "Which competitors do we meet in telecom timing (Microchip, Renesas, SiTime)?", why: "Shows the bar."}
+      - {id: b-backhaul, text: "Do we sell into microwave backhaul radios?", why: "A possible RF socket."}
+      - {id: b-roadmap, text: "Does our synchronizer roadmap cover the next ITU-T classes?", why: "Readiness keeps the socket."}
+  cellular/devices:
+    customer:
+      - {id: c-tiers, text: "Which device tiers do you build (flagship, mid, entry), and how does the RF content differ?", why: "RF content per tier drives our value per device."}
+      - {id: c-modem, text: "Which modem platforms do you use, and do you follow their RF reference design?", why: "Most phone sockets follow the modem vendor."}
+      - {id: c-cycle, text: "How long is your design cycle from RF selection to launch?", why: "Tells us when to engage."}
+      - {id: c-pain, text: "What is hardest in your RF design: band count, antenna space, battery life, certification?", why: "Points to integration or tuning features."}
+    developers:
+      - {id: d-ntn, text: "Will your phones and watches add satellite messaging, and on which bands?", why: "NTN adds an L/S-band path."}
+      - {id: d-fr3, text: "When do you expect FR3 bands in devices, and how many antennas?", why: "A new front end per band."}
+      - {id: d-tuning, text: "How do you handle antenna tuning across more bands in less space?", why: "Antenna tuners are a growing socket."}
+      - {id: d-uwb-wifi7, text: "Which short-range radios will be standard (Wi-Fi 7, UWB, Bluetooth LE Audio), and do you want them in one module?", why: "Module format decides our socket."}
+    bu:
+      - {id: b-content, text: "What is our RF content per phone by tier, and where are we losing it?", why: "Our base and trend."}
+      - {id: b-integration, text: "How do we answer the move to modem-vendor RF front ends?", why: "Modem vendors bundle RF."}
+      - {id: b-comp, text: "Which competitors win phone sockets now (Qualcomm RFFE, Murata, Maxscend, Vanchip)?", why: "Shows where price pressure comes from."}
+      - {id: b-wearables, text: "Do watches and tablets follow the phone sockets or need their own parts?", why: "A spin-off socket."}
+  cellular/fwa-iot:
+    customer:
+      - {id: c-products, text: "Which products do you build (5G home routers, hotspots, LTE-M / NB-IoT trackers, smart meters)?", why: "Each has its own front end."}
+      - {id: c-volume, text: "Roughly what volume range and price class do these products target?", why: "Sets the cost target for our parts."}
+      - {id: c-module, text: "Do you use modules or chip-down designs?", why: "Module makers choose the front end."}
+      - {id: c-pain, text: "What limits you: coverage indoors, battery life, certification by operators?", why: "Points to features."}
+    developers:
+      - {id: d-redcap, text: "Will your next products use 5G RedCap or eRedCap?", why: "Smaller front ends."}
+      - {id: d-ntn, text: "Do trackers need satellite (IoT-NTN) fallback?", why: "NTN front-end socket."}
+      - {id: d-fwa-power, text: "Do your FWA routers need higher output power (power class 1.5 or 2) for range?", why: "Higher power needs new PAs."}
+      - {id: d-wifi, text: "Which Wi-Fi standard goes with your FWA routers (Wi-Fi 7?), and how many streams?", why: "A second socket in the same box."}
+    bu:
+      - {id: b-sold, text: "Which of our parts sell into FWA routers and IoT modules today?", why: "Our base."}
+      - {id: b-ntn, text: "Is there an IoT-NTN front end in our plans?", why: "A growing socket."}
+      - {id: b-comp, text: "Which competitors hold IoT front-end sockets (Qualcomm, Chinese module makers' own)?", why: "Shows how open."}
+      - {id: b-bundle, text: "Could we bundle cellular and Wi-Fi front ends for FWA makers?", why: "A cross-sell idea."}
+  # ---- Industrial & energy ------------------------------------------------------------------------------------------
+  industrial:
+    reports: [hv-extra-wide-isolation, iso7821dww-isolation]
+    customer:
+      - {id: c-markets, text: "Which industrial markets grow fastest for you now (automation, drives, solar, storage, grid, robotics)?", why: "Sets where to focus across sub-systems."}
+      - {id: c-lifecycle, text: "How long must a part stay in supply for your products, and how do you handle obsolescence?", why: "Industrial lifecycles of 10–20 years favour long-life parts."}
+      - {id: c-standards, text: "Which safety and isolation standards drive your choices (IEC 61800-5-1, IEC 62109, UL 1577, IEC 60747-17)?", why: "Standards set isolation class and creepage."}
+    developers:
+      - {id: d-sic-gan, text: "How fast are SiC and GaN replacing silicon in your power stages, and at which voltages?", why: "Faster switching raises CMTI and protection needs."}
+      - {id: d-1500v, text: "Do you design for 1500 V DC (solar, storage) or higher, and what creepage does that need?", why: "1500 V pushes isolation packages wider."}
+      - {id: d-ethernet, text: "Are you moving to single-pair Ethernet, TSN or IO-Link down to the sensor?", why: "New field networks change isolated interfaces."}
+    bu:
+      - {id: b-today, text: "What do we sell into industrial today by function (isolators, gate drivers, isolated amplifiers, timing, RF)?", why: "Our base."}
+      - {id: b-channel, text: "How much of industrial goes through distribution, and which accounts do we serve directly?", why: "Industrial is a broad, distributed market."}
+      - {id: b-comp, text: "Which competitors do we meet most in industrial isolation (TI, ADI, Infineon, NVE, Chinese isolator makers)?", why: "Sets priorities and price levels."}
+  industrial/factory-automation:
+    customer:
+      - {id: c-products, text: "Which products do you build (PLC CPUs, I/O modules, remote I/O, safety controllers), and how many channels per module?", why: "Channel count multiplies isolated inputs and outputs."}
+      - {id: c-fieldbus, text: "Which fieldbuses do your products support (EtherCAT, PROFINET, IO-Link, Modbus), and which grows?", why: "Fieldbus choice sets interface and isolation parts."}
+      - {id: c-volume, text: "Roughly what volume range and lifecycle do your I/O modules have?", why: "Sets the value of a design-in."}
+      - {id: c-pain, text: "What is hardest in your I/O design: channel density, heat, surge immunity, diagnostics?", why: "Points to integrated isolated I/O parts."}
+    developers:
+      - {id: d-density, text: "Do you need more channels per module, and would a multi-channel isolated digital input help?", why: "Density drives integrated isolated input parts."}
+      - {id: d-spe, text: "Will single-pair Ethernet or Ethernet-APL reach your I/O and sensors?", why: "A new interface and isolation socket."}
+      - {id: d-config, text: "Do you want software-configurable I/O (one channel for analog or digital, in or out)?", why: "A trend that changes the I/O chip."}
+      - {id: d-safety, text: "Which functional safety level (SIL 2, SIL 3, PL d/e) must your next modules reach?", why: "Safety needs diagnostics in the isolators."}
+    bu:
+      - {id: b-sold, text: "Which of our isolated digital inputs, isolators and isolated power parts are in PLC and I/O makers today?", why: "Our base."}
+      - {id: b-iolink, text: "Is an IO-Link transceiver worth adding next to our isolated input families?", why: "An open question from the robotics deep dive."}
+      - {id: b-comp, text: "Which competitors hold I/O sockets (TI, ADI, ST, Infineon), and what decides?", why: "Shows the bar."}
+      - {id: b-ref, text: "Do we have reference designs for a complete isolated I/O module?", why: "PLC makers design from reference designs."}
+  industrial/motion:
+    customer:
+      - {id: c-range, text: "Which drives do you build by power range (servo under 5 kW, AC drives up to MW, steppers), and which grows?", why: "Power range sets gate drivers and sensing."}
+      - {id: c-integrated, text: "Are you moving to integrated motor drives (drive on the motor) or decentralised drives?", why: "Integrated drives need smaller, hotter parts."}
+      - {id: c-volume, text: "Roughly what volume range and product lifetime do your drive lines have?", why: "Value of a design-in."}
+      - {id: c-pain, text: "What causes field issues: gate driver failures, current-sense accuracy, EMC, encoder interfaces?", why: "Points to features."}
+    developers:
+      - {id: d-sic-gan, text: "Will your next drives use SiC or GaN, and what dv/dt must the isolation survive?", why: "High dv/dt needs high CMTI."}
+      - {id: d-sense, text: "How do you sense phase current (shunt with isolated modulator, Hall, current transformer), and what accuracy do you need?", why: "Isolated modulators are a direct fit."}
+      - {id: d-safe, text: "How do you implement safe torque off, and to which safety level?", why: "STO needs certified isolation paths."}
+      - {id: d-predictive, text: "Do you add condition monitoring (vibration, temperature, insulation) inside the drive?", why: "New sensing sockets."}
+    bu:
+      - {id: b-sold, text: "Which of our gate drivers and isolated amplifiers are in servo and AC drives today?", why: "Our base."}
+      - {id: b-modulator, text: "Do we offer an isolated delta-sigma modulator, or only isolated amplifiers?", why: "Modern drives prefer modulators."}
+      - {id: b-comp, text: "Which competitors hold drive sockets (TI, ADI, Infineon, Broadcom), and what decides?", why: "Shows the bar."}
+      - {id: b-motor, text: "Can our motor-control ICs serve small servo and stepper drives?", why: "A second socket in the same customers."}
+  industrial/solar-wind:
+    reports: [hv-extra-wide-isolation]
+    customer:
+      - {id: c-products, text: "Which inverters do you build (string, central, micro, hybrid with storage), and at which power?", why: "Inverter type sets isolation class and sensing."}
+      - {id: c-markets, text: "Which markets and grid codes matter most to you?", why: "Grid codes drive metering and protection."}
+      - {id: c-volume, text: "Roughly what volume range and price pressure do you see per inverter class?", why: "Solar is cost-driven."}
+      - {id: c-pain, text: "What fails most in the field: isolation, fans, capacitors, arc faults?", why: "Points to protection or sensing parts."}
+    developers:
+      - {id: d-1500v, text: "Are you moving to 1500 V DC strings and higher, and what isolation class and creepage do you design for?", why: "1500 V needs extra-wide isolation."}
+      - {id: d-sic, text: "Will SiC take over the boost and inverter stages, and at what frequency?", why: "SiC raises CMTI needs."}
+      - {id: d-afci, text: "How do you detect arc faults and residual current, and do you want more integrated parts for it?", why: "Arc and residual-current detection need sensing parts."}
+      - {id: d-rsd, text: "How do you implement rapid shutdown, and is it wired or wireless?", why: "Rapid shutdown adds a link per panel."}
+    bu:
+      - {id: b-sold, text: "Which of our isolators and gate drivers are in solar inverters today?", why: "Our base."}
+      - {id: b-wide, text: "Does our extra-wide isolation family meet 1500 V solar creepage?", why: "The report's case."}
+      - {id: b-comp, text: "Which competitors do we meet in solar (TI, Infineon, Chinese isolator makers), and on what?", why: "Price pressure from local makers."}
+      - {id: b-china, text: "How much of solar inverter design is in China, and do we compete there?", why: "Most inverters come from Chinese makers."}
+  industrial/storage-grid:
+    reports: [hv-extra-wide-isolation]
+    customer:
+      - {id: c-products, text: "Which storage and grid products do you build (PCS, bidirectional inverters, solid-state transformers, breakers)?", why: "Each needs different isolation and sensing."}
+      - {id: c-size, text: "Which power and voltage range do your systems cover?", why: "Sets isolation class."}
+      - {id: c-volume, text: "Roughly what volume range do you expect, and how fast is storage growing for you?", why: "Storage is one of the fastest-growing sockets."}
+      - {id: c-pain, text: "What is hardest: battery safety, grid compliance, efficiency, protection speed?", why: "Points to features."}
+    developers:
+      - {id: d-sst, text: "Do you plan solid-state transformers or solid-state breakers, and how fast must they switch off?", why: "New products with many isolated drivers."}
+      - {id: d-1500v, text: "Will your DC links move above 1500 V, and with which isolation?", why: "Wider isolation needs."}
+      - {id: d-grid-forming, text: "Do you need grid-forming control, and what does it change in sensing?", why: "Grid-forming inverters need fast, accurate sensing."}
+      - {id: d-wish, text: "Which part would make your power stage simpler?", why: "A direct line to features."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in storage and grid products today?", why: "Our base."}
+      - {id: b-ssr, text: "Do our isolated FET drivers fit solid-state breakers and relays?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold storage and grid sockets (TI, Infineon, ADI, Chinese isolator makers), and on what do they win?", why: "Storage is price-driven and largely built in China."}
+      - {id: b-auto, text: "Can our automotive battery isolation parts be reused in storage?", why: "Cross-segment reuse."}
+  industrial/power-isolation:
+    reports: [iso7821dww-isolation, hv-extra-wide-isolation]
+    customer:
+      - {id: c-uses, text: "Where do you use isolation most (gate drive, communication, sensing, bias power)?", why: "Shows which isolation function sells most."}
+      - {id: c-class, text: "Which isolation class and certificates do you need (basic, reinforced; UL, VDE, CQC)?", why: "Certificates decide which parts can be used."}
+      - {id: c-volume, text: "Roughly what volume range do you buy isolation in, and from how many suppliers?", why: "Second-source policy matters."}
+      - {id: c-pain, text: "What causes trouble: CMTI failures, EMI from isolated power, lifetime, package size?", why: "Points to features."}
+    developers:
+      - {id: d-integrated, text: "Would you use isolators with integrated isolated power (no separate transformer)?", why: "Integrated power is a growing request."}
+      - {id: d-wide, text: "Do you need wider packages (over 8 mm creepage) or higher working voltage?", why: "Sets package roadmap."}
+      - {id: d-cmti, text: "What CMTI do your next SiC and GaN stages need?", why: "Sets the next spec bar."}
+      - {id: d-dinrail, text: "Which DIN-rail or auxiliary supplies do you build, and which isolation do they use?", why: "Supplies are a socket for isolated flyback parts."}
+    bu:
+      - {id: b-sold, text: "What is our isolation share by product type, and where is it growing?", why: "Our base."}
+      - {id: b-roadmap, text: "What is planned for integrated isolated power and extra-wide packages?", why: "Roadmap fit."}
+      - {id: b-comp, text: "Which competitors are taking isolation share (TI, ADI, Chinese makers), and on what?", why: "Price pressure."}
+      - {id: b-cert, text: "Which certificates are pending for our newer isolation families?", why: "Certificates gate sockets."}
+  industrial/e-mobility:
+    customer:
+      - {id: c-products, text: "Which vehicles do you build or supply (light EVs, forklifts, rail, agricultural)?", why: "Each has its own voltage class."}
+      - {id: c-voltage, text: "Which battery voltages do you use (48–96 V, 400 V, rail DC links)?", why: "Sets drivers and isolation."}
+      - {id: c-volume, text: "Roughly what volume range and lifetime do these vehicles have?", why: "Value of a design-in."}
+      - {id: c-pain, text: "What is hardest: battery management, motor control, standards, ruggedness?", why: "Points to features."}
+    developers:
+      - {id: d-voltage, text: "Will your next platforms move to higher voltage to cut current?", why: "Changes the power stage."}
+      - {id: d-gan, text: "Would GaN help your 48–96 V drives?", why: "A growing trend."}
+      - {id: d-rail, text: "For rail converters, which isolation class and standards (EN 50155) apply?", why: "Rail has strict standards."}
+      - {id: d-wish, text: "Which part would simplify your drive or charger?", why: "A direct line to features."}
+    bu:
+      - {id: b-sold, text: "Which of our parts sell into these vehicles today?", why: "Our base."}
+      - {id: b-motor, text: "Do our motor-control ICs fit 48–72 V traction?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold light-EV, forklift and rail sockets (Infineon, TI, ST, Chinese MCU and driver makers)?", why: "Shows whether automotive-grade parts are a selling point here."}
+      - {id: b-reuse, text: "Can automotive-qualified parts be offered to these customers?", why: "Cross-segment reuse."}
+  industrial/robotics:
+    customer:
+      - {id: c-type, text: "Which robots do you build (industrial arms, cobots, mobile robots, humanoids), and which grows fastest?", why: "Robot type sets drives, sensing and links."}
+      - {id: c-axes, text: "How many axes per robot, and do you build the joint drives yourself?", why: "Axis count multiplies drive sockets."}
+      - {id: c-rules, text: "How do the Machinery Regulation and the AI Act change your design?", why: "Safety rules drive certified parts."}
+      - {id: c-pain, text: "What is hardest in the joint: size, heat, safety certification, cabling?", why: "Points to integration."}
+    developers:
+      - {id: d-joint, text: "Will you integrate the drive into the joint, and at which bus voltage (48 V)?", why: "Integrated joints need small, efficient parts."}
+      - {id: d-safety, text: "Which safety functions (STO, SS1, safe speed) do you need per axis, and to which level?", why: "Safety needs certified isolation."}
+      - {id: d-amr-links, text: "How will mobile robots connect (private 5G, Wi-Fi 7, UWB), and do you buy modules?", why: "An RF socket in robotics."}
+      - {id: d-humanoid, text: "What do humanoids need that today's arms do not?", why: "A new design class."}
+    bu:
+      - {id: b-sold, text: "Which European robot and servo makers already use our isolators or gate drivers?", why: "An open question from the robotics deep dive."}
+      - {id: b-uwb, text: "Can our UWB and Wi-Fi parts serve mobile robots?", why: "Cross-segment fit."}
+      - {id: b-comp, text: "Which competitors hold robot sockets (Infineon, TI, ADI)?", why: "Shows the bar."}
+      - {id: b-iolink, text: "Should we add IO-Link for end-of-arm tools?", why: "A gap in the portfolio."}
+  # ---- Aerospace & defense ------------------------------------------------------------------------------------------
+  aerospace:
+    customer:
+      - {id: c-programs, text: "Which system types do you build (radar, EW, SATCOM, tactical radios, test equipment), and which are growing?", why: "Sets the focus across the sub-systems."}
+      - {id: c-rules, text: "Which export and sourcing rules apply to the parts you use (ITAR, EAR, domestic-sourcing or trusted-supply rules)?", why: "Rules decide which of our parts and sites a programme can use."}
+      - {id: c-cots, text: "How much do you use commercial (COTS) parts with upscreening, versus military or space grade parts?", why: "COTS use opens sockets to our commercial RF and timing parts."}
+    developers:
+      - {id: d-digital, text: "How far are direct RF sampling and digital beamforming changing your RF front ends?", why: "Digital arrays move RF content from mixers and filters to wideband amplifiers and clocks."}
+      - {id: d-gan, text: "Which GaN power levels and frequencies will your next systems need?", why: "GaN is the core of A&D transmitters."}
+      - {id: d-swap, text: "How much does size, weight and power (SWaP) drive your next designs, and where would integrated modules help?", why: "SWaP pressure favours integrated front-end modules."}
+    bu:
+      - {id: b-today, text: "What do we sell into aerospace and defense today, and through which channels (direct, distribution, module makers)?", why: "Our base in the segment."}
+      - {id: b-rules, text: "Which of our products are suitable for defense use under our own policies and export classifications?", why: "Sets what we can offer before any customer visit."}
+      - {id: b-comp, text: "Which competitors do we meet most in A&D (ADI, MACOM, NXP, Wolfspeed RF, in-house fabs), and where do we win?", why: "Sets priorities across sub-systems."}
+  aerospace/radar:
+    customer:
+      - {id: c-types, text: "Which radars do you build (pulsed, FMCW, phased array; airborne, naval, ground, counter-drone), and in which bands?", why: "Band and radar type decide the T/R module content."}
+      - {id: c-elements, text: "Roughly what element-count range do your arrays have, and how often does a new array design start?", why: "Element count multiplies front-end sockets."}
+      - {id: c-sourcing, text: "Do you build T/R modules yourself, or buy them from module makers?", why: "Tells us whether to sell dies, packaged parts or nothing."}
+      - {id: c-pain, text: "What limits your arrays most: heat per element, cost per element, power supply, or supply security?", why: "Points to efficiency, integration or supply as the selling point."}
+    developers:
+      - {id: d-gan, text: "Which GaN output power and efficiency per element do you need next, and at which frequency?", why: "Sets the PA socket and process."}
+      - {id: d-beam, text: "Will your next array use analog, hybrid or fully digital beamforming?", why: "Digital beamforming replaces phase shifters with ADCs, clocks and wideband amplifiers."}
+      - {id: d-multi, text: "Do you plan multifunction apertures (radar, EW and communications in one array), and how wide must they be?", why: "Wider bandwidth changes PA, LNA and switch needs."}
+      - {id: d-limiter, text: "Which receive protection do you use (limiter plus LNA), and would an integrated limiter-LNA help?", why: "A common integration request in T/R modules."}
+      - {id: d-wish, text: "Which integrated part would help most: a front-end module per element, a beamformer IC, a tile with several channels?", why: "A direct line to a product idea."}
+    bu:
+      - {id: b-sold, text: "Which of our GaN and GaAs amplifiers, switches and LNAs are in radars today?", why: "Our base."}
+      - {id: b-foundry, text: "Do we offer GaN foundry services for radar makers, or only finished products?", why: "Sets the business model for this socket."}
+      - {id: b-comp, text: "Which competitors do we meet in radar front ends (Wolfspeed, MACOM, ADI, in-house fabs), and what decides?", why: "Shows whether performance, trust or price wins."}
+      - {id: b-rules, text: "Which export classifications apply to our radar-relevant parts, and which markets do they close?", why: "Rules gate sales before any design-in."}
+  aerospace/ew:
+    customer:
+      - {id: c-types, text: "Which EW systems do you build (wideband receivers, radar warning receivers, DRFM jammers), and in which frequency range?", why: "Sets bandwidth and power needs."}
+      - {id: c-platforms, text: "On which platforms do they fly or ride (aircraft, ships, ground vehicles, drones)?", why: "Platform sets size, weight and power."}
+      - {id: c-sourcing, text: "Do you buy RF modules and up/down-converters, or design them in-house?", why: "Tells us whether to sell parts or modules."}
+      - {id: c-pain, text: "What limits you most: instantaneous bandwidth, dynamic range, size or supply of wideband parts?", why: "Points to the feature that sells."}
+    developers:
+      - {id: d-bandwidth, text: "How wide must your next receivers go, both in instantaneous bandwidth and total frequency range?", why: "Sets the front-end architecture."}
+      - {id: d-digital, text: "Will direct RF sampling replace your down-converters, and what does that need from clocks and amplifiers?", why: "Direct sampling moves value to clocks and wideband gain blocks."}
+      - {id: d-power, text: "What jammer output power and bandwidth do you need from one amplifier?", why: "Sets the wideband GaN PA spec."}
+      - {id: d-drone, text: "How do counter-drone missions change your EW designs (bands, size, cost)?", why: "Counter-drone is the fastest-growing EW need and closer to commercial bands."}
+    bu:
+      - {id: b-sold, text: "Which of our wideband amplifiers, switches and limiters sell into EW today?", why: "Our base."}
+      - {id: b-policy, text: "Is EW, including jammers, within our product and export policy?", why: "Sets what we can offer at all."}
+      - {id: b-comp, text: "Which competitors hold EW sockets (ADI, MACOM, specialist module makers), and what decides?", why: "Shows whether bandwidth or integration wins."}
+      - {id: b-wideband, text: "Do we have wideband GaN amplifiers that cover jammer bands in one part?", why: "A possible direct fit."}
+  aerospace/satcom:
+    customer:
+      - {id: c-types, text: "Which SATCOM products do you build (flat-panel user terminals, gateways, payloads), and for which constellations (LEO, MEO, GEO)?", why: "Each has its own RF chain."}
+      - {id: c-bands, text: "Which bands do you use (L, S, Ku, Ka, Q/V), and which are growing?", why: "Sets the front ends and filters."}
+      - {id: c-volume, text: "Roughly what volume range of terminals do you plan, and at what price class?", why: "LEO terminals are a consumer-scale market with consumer prices."}
+      - {id: c-pain, text: "What limits you most: terminal cost, power use, heat in the panel, or supply?", why: "Points to integration and efficiency."}
+    developers:
+      - {id: d-arrays, text: "Will your terminals use flat-panel phased arrays, and in what element-count range?", why: "Element count multiplies front ends and beamformers."}
+      - {id: d-d2d, text: "Does direct-to-device (satellite to phone bands) change your product plans?", why: "Moves part of the market to 3GPP NTN and our cellular front ends."}
+      - {id: d-space, text: "Which radiation tolerance and lifetime do your payload parts need, and do you accept upscreened commercial parts for LEO?", why: "LEO payloads increasingly use commercial parts."}
+      - {id: d-buc, text: "What output power and linearity do your BUCs and gateway amplifiers need?", why: "Sets the GaN PA spec."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in SATCOM terminals, gateways and payloads today?", why: "Our base."}
+      - {id: b-ntn, text: "How do our 3GPP NTN front ends relate to SATCOM terminals, and can the dies be shared?", why: "Possible reuse across cellular and SATCOM."}
+      - {id: b-comp, text: "Which competitors hold terminal sockets (Anokiwave-type beamformer makers, ADI, in-house ASICs)?", why: "Shows how open the terminal socket is."}
+      - {id: b-space, text: "Do we offer radiation-tested or space-screened versions of any part?", why: "Gates payload sockets."}
+  aerospace/tactical-radio:
+    customer:
+      - {id: c-types, text: "Which radios do you build (land mobile radio, software-defined, public safety), and to which standards (P25, TETRA, DMR)?", why: "Standards set the bands and power."}
+      - {id: c-volume, text: "Roughly what volume range and service life do your radios have?", why: "Long service lives need long part supply."}
+      - {id: c-users, text: "Who are your users (police, fire, utilities, military), and how does that change the requirements?", why: "Sets ruggedness, grade and rules."}
+      - {id: c-pain, text: "What limits you most: range, battery life, interoperability between agencies, or size?", why: "Points to PA efficiency or wideband parts."}
+    developers:
+      - {id: d-broadband, text: "Will public-safety LTE / 5G (e.g. FirstNet band 14) replace or join your narrowband radios?", why: "Brings our cellular front ends into the radio."}
+      - {id: d-sdr, text: "How wideband is your next software-defined radio, and which transceiver does it use?", why: "Sets switches, filters and amplifiers around the transceiver."}
+      - {id: d-power, text: "What output power and efficiency do you need at the handheld and in the vehicle?", why: "Sets the PA."}
+      - {id: d-satellite, text: "Do you plan a satellite fallback (NTN or L-band) in the radio?", why: "Adds an NTN or L-band path."}
+    bu:
+      - {id: b-sold, text: "Which of our PAs, switches and filters sell into LMR and tactical radios?", why: "Our base."}
+      - {id: b-fit, text: "Can our cellular front ends serve public-safety LTE radios as they are?", why: "Cross-segment reuse."}
+      - {id: b-comp, text: "Which competitors hold radio sockets (ADI transceiver bundles, NXP, MACOM)?", why: "Transceiver vendors often bundle the RF around them."}
+      - {id: b-life, text: "Can we commit to the 10–15-year supply these radios need?", why: "A lifecycle gate."}
+  aerospace/test:
+    customer:
+      - {id: c-types, text: "Which instruments do you build (spectrum analyzers, VNAs, signal generators, radio testers), and to what frequency?", why: "Sets the RF and timing parts."}
+      - {id: c-volume, text: "Roughly what volume range and design cycle do your instruments have?", why: "Low volume, long life, high value per part."}
+      - {id: c-drivers, text: "Which test needs drive your next instruments (6G FR3, Wi-Fi 8, satellite, automotive radar)?", why: "Shows the next frequency and bandwidth needs."}
+      - {id: c-pain, text: "What limits your instruments: dynamic range, phase noise, switch repeatability or cost?", why: "Points to the part that differentiates."}
+    developers:
+      - {id: d-freq, text: "Which frequency range and analysis bandwidth will your next instruments need?", why: "Sets the front ends."}
+      - {id: d-clock, text: "What phase noise and reference-clock performance do you need, and which oscillators do you use?", why: "A direct fit for our low-jitter clocks and oscillators."}
+      - {id: d-switch, text: "Which switches and step attenuators limit your designs (repeatability, life, settling time)?", why: "RF control parts are a fit."}
+      - {id: d-wish, text: "Which part do you wish existed for your next instrument?", why: "Instrument makers often see needs early."}
+    bu:
+      - {id: b-sold, text: "Which of our parts sell into test equipment today?", why: "Our base."}
+      - {id: b-clock, text: "Are our low-jitter clocks designed into instruments, and which specs win there?", why: "A timing fit."}
+      - {id: b-comp, text: "Which competitors hold instrument sockets (ADI, in-house ICs at the instrument makers)?", why: "Large instrument makers design their own ICs."}
+      - {id: b-partner, text: "Do test-equipment makers help us characterise new parts, and could that be a joint reference design?", why: "A partnership angle."}
+  # ---- Consumer & wearables -----------------------------------------------------------------------------------------
+  consumer:
+    customer:
+      - {id: c-cycle, text: "How long is your cycle from part selection to launch, and how often do you refresh a product?", why: "Consumer cycles are short: the visit must come before part selection."}
+      - {id: c-sourcing, text: "Do you follow the chipset vendor's reference design for RF and power, or choose parts yourself?", why: "Tells us whether to sell to the chipset vendor or the device maker."}
+      - {id: c-price, text: "Which price tier do your products target, and how does that limit the parts you can use?", why: "Sets the cost target."}
+    developers:
+      - {id: d-radios, text: "Which radios will be standard in your next products (Wi-Fi 7, Bluetooth LE Audio, UWB, satellite messaging)?", why: "Sets the RF sockets per product."}
+      - {id: d-battery, text: "How do you trade battery life against features, and which part of the design drains most?", why: "Low-power parts win where battery decides."}
+      - {id: d-size, text: "Where does space limit you most, and would system-in-package modules help?", why: "Sets module versus discrete."}
+    bu:
+      - {id: b-today, text: "What do we sell into consumer products today, and to which kinds of customers (chipset vendors, module makers, brands)?", why: "Our base."}
+      - {id: b-modules, text: "How much of our consumer business goes through module makers?", why: "Sets the channel to work."}
+      - {id: b-comp, text: "Which competitors take consumer sockets from us (Qualcomm RFFE, Murata, Chinese vendors such as Maxscend and Vanchip), and on price or integration?", why: "Sets priorities."}
+  consumer/wearables-xr:
+    customer:
+      - {id: c-products, text: "Which wearables do you build (watches, rings, VR / MR headsets, AR glasses), and which grows fastest?", why: "Each has its own radio and power budget."}
+      - {id: c-volume, text: "Roughly what volume range and refresh cycle do these products have?", why: "Value and timing of a design-in."}
+      - {id: c-cellular, text: "Do your watches carry cellular and satellite, or only Bluetooth and Wi-Fi?", why: "Cellular adds a front end and an antenna tuner."}
+      - {id: c-pain, text: "What limits you most: battery life, antenna space, heat on the skin, or wireless latency?", why: "Points to low-power or integrated parts."}
+    developers:
+      - {id: d-latency, text: "What wireless latency and data rate do your headsets need, and over which link (Wi-Fi 7, 60 GHz, proprietary)?", why: "Untethered XR links are a new RF socket."}
+      - {id: d-uwb, text: "Will you use UWB for finding, access, or spatial tracking between devices?", why: "A UWB socket in wearables."}
+      - {id: d-power, text: "Which power parts limit you most (charger, PMIC, display bias)?", why: "Shows a power socket next to the RF."}
+      - {id: d-sensors, text: "Which health sensors will be standard next (temperature, blood pressure, glucose trends), and what front end do they need?", why: "Sensor front ends need low noise and low power."}
+    bu:
+      - {id: b-sold, text: "Which of our front ends and UWB chips are in watches and headsets today?", why: "Our base."}
+      - {id: b-uwb, text: "Is our UWB line (ex-Qorvo) designed into wearables, and what would win more?", why: "A natural fit."}
+      - {id: b-comp, text: "Which competitors win wearables sockets (Qualcomm, Murata modules, NXP UWB)?", why: "Shows whether module or chip wins."}
+      - {id: b-sip, text: "Do we offer system-in-package front ends small enough for watches and glasses?", why: "Space-limited designs need SiP."}
+  consumer/audio:
+    reports: [auto-wireless-audio]
+    customer:
+      - {id: c-products, text: "Which audio products do you build (earbuds, smart speakers, soundbars), and in which price tiers?", why: "Sets radio and power needs."}
+      - {id: c-le-audio, text: "Have you moved to Bluetooth LE Audio and Auracast, and when will most of your products have it?", why: "A transition that changes the radio and may add a front end."}
+      - {id: c-volume, text: "Roughly what volume range and refresh cycle do your audio lines have?", why: "Value and timing of a design-in."}
+      - {id: c-pain, text: "What causes most returns: battery life, connection drops, latency, or pairing?", why: "Points to front-end or clock features."}
+    developers:
+      - {id: d-range, text: "Do you need more range or output power for multi-room audio or Auracast broadcast?", why: "May justify a Bluetooth front end."}
+      - {id: d-wifi, text: "Will speakers and soundbars use Wi-Fi 6/7 for multi-room, and with how many antennas?", why: "A Wi-Fi front-end socket."}
+      - {id: d-uwb, text: "Would you use UWB for spatial audio or handover between devices?", why: "A UWB socket."}
+      - {id: d-sync, text: "How do you keep speakers in sync across rooms, and how accurate must it be?", why: "Audio sync is a timing socket."}
+    bu:
+      - {id: b-sold, text: "Which of our Bluetooth and Wi-Fi front ends are in audio products today?", why: "Our base."}
+      - {id: b-reuse, text: "Can our consumer audio wireless parts move into the car's wireless audio?", why: "The car wireless-audio report's link."}
+      - {id: b-comp, text: "Which competitors hold audio sockets (integrated SoCs without a front end, Murata modules)?", why: "Shows when a front end is needed at all."}
+      - {id: b-module, text: "Do audio makers buy modules or chips, and which module makers should we work with?", why: "Sets the channel."}
+  consumer/computing:
+    reports: [auto-charging-power]
+    customer:
+      - {id: c-products, text: "Which products do you build (notebooks, payment terminals, power banks, portable power stations)?", why: "Each has its own power and radio content."}
+      - {id: c-usbc, text: "Which USB-C power levels do you support (65 W, 140 W, 240 W extended power range)?", why: "Sets the USB power delivery sockets."}
+      - {id: c-volume, text: "Roughly what volume range and refresh cycle do these products have?", why: "Value and timing of a design-in."}
+      - {id: c-pain, text: "What limits you most: charging speed, heat, battery safety, or certification?", why: "Points to power or protection parts."}
+    developers:
+      - {id: d-gan, text: "Will GaN chargers and higher USB-C power change your power stage?", why: "Sets the power-stage socket."}
+      - {id: d-bidir, text: "Do your power stations need bidirectional or grid-tie inverters, and at which power?", why: "Brings isolation and gate drivers into a consumer product."}
+      - {id: d-wifi, text: "Which Wi-Fi and cellular will notebooks carry next (Wi-Fi 7, 5G modules)?", why: "RF sockets in the notebook."}
+      - {id: d-bms, text: "How do you monitor and protect the battery in power banks and power stations?", why: "BMS and protection sockets."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in notebooks, payment terminals and power products today?", why: "Our base."}
+      - {id: b-pd, text: "Is a USB-C power delivery controller or buck-boost on our roadmap?", why: "A gap noted in the charging report."}
+      - {id: b-comp, text: "Which competitors hold these power sockets (TI, Infineon, Chinese PD makers)?", why: "Price level to meet."}
+      - {id: b-isol, text: "Do portable power stations use our isolation or gate drivers?", why: "A possible fit at the grid-tie inverter."}
+  consumer/connectivity:
+    customer:
+      - {id: c-products, text: "Which connectivity chips or modules do you build (Wi-Fi / Bluetooth combo, UWB + BLE, IoT Wi-Fi)?", why: "Sets our front-end sockets."}
+      - {id: c-customers, text: "Which device types use your chips or modules most?", why: "Shows the end markets behind the socket."}
+      - {id: c-integration, text: "Do you integrate the PA and LNA on chip, or use external front ends, and for which tiers?", why: "External front ends are our socket."}
+      - {id: c-pain, text: "What limits your designs: range, coexistence with cellular, certification, or cost?", why: "Points to front-end or filter features."}
+    developers:
+      - {id: d-wifi8, text: "When do you plan Wi-Fi 8, and what front-end changes do you expect (linearity, power, bands)?", why: "Sets the next front-end spec."}
+      - {id: d-coex, text: "How will you handle coexistence between Wi-Fi, Bluetooth, UWB and cellular in one device?", why: "Filters and switches are our fit."}
+      - {id: d-power, text: "Which output power and efficiency do your next front ends need at 5 and 6 GHz?", why: "Sets the PA."}
+      - {id: d-module, text: "Would you buy complete front-end modules, or design discrete for cost?", why: "Sets the product format."}
+    bu:
+      - {id: b-sold, text: "Which chipset vendors use our Wi-Fi front ends in their reference designs?", why: "Our base."}
+      - {id: b-uwb, text: "How do our UWB chips and front ends combine in one offer?", why: "A cross-sell."}
+      - {id: b-comp, text: "Which competitors hold these sockets (Qualcomm integrated, Murata, Chinese vendors)?", why: "Shows the price and integration bar."}
+      - {id: b-roadmap, text: "Is our Wi-Fi 8 front-end roadmap on time for the chipset vendors?", why: "Front ends follow the chipset launch."}
+  # ---- Home & building ----------------------------------------------------------------------------------------------
+  home:
+    customer:
+      - {id: c-matter, text: "How far have you moved to Matter and Thread, and which radios do your devices carry?", why: "Matter sets the radio mix in the home."}
+      - {id: c-volume, text: "Roughly what volume range and service life do your home devices have?", why: "Value of a design-in."}
+      - {id: c-sourcing, text: "Do you design in-house or with an ODM, and who chooses the radio parts?", why: "Where the decision sits."}
+    developers:
+      - {id: d-power, text: "Which devices must run on batteries for years, and what drains the battery most?", why: "Low-power front ends and clocks win."}
+      - {id: d-wifi7, text: "When will home routers and gateways move to Wi-Fi 7 and then Wi-Fi 8?", why: "Sets the front-end cycle."}
+      - {id: d-security, text: "Which security rules (EU Cyber Resilience Act, US Cyber Trust Mark) change your hardware?", why: "New requirements can change the chip set."}
+    bu:
+      - {id: b-today, text: "What do we sell into home products today (Wi-Fi front ends, cable amplifiers, low-power RF)?", why: "Our base."}
+      - {id: b-channel, text: "Do we reach home-device makers directly, through chipset vendors or through ODMs?", why: "Sets the channel."}
+      - {id: b-comp, text: "Which competitors take home sockets from us, and on price or integration?", why: "Sets priorities."}
+  home/smart-home:
+    customer:
+      - {id: c-products, text: "Which smart-home devices do you build (thermostats, cameras, doorbells, locks, plugs, hubs)?", why: "Each has its own radios and power."}
+      - {id: c-radios, text: "Which radios does each device use (Wi-Fi, Thread, Zigbee, Bluetooth, sub-GHz)?", why: "Sets the front ends."}
+      - {id: c-volume, text: "Roughly what volume range does each device line reach?", why: "Value of a design-in."}
+      - {id: c-pain, text: "What causes most returns: connection drops, battery life, or setup?", why: "Points to range or low-power parts."}
+    developers:
+      - {id: d-range, text: "Do your locks and cameras need more range than the radio chip gives, and would a front-end module help?", why: "A front-end socket."}
+      - {id: d-uwb, text: "Will locks use UWB for hands-free entry (Aliro)?", why: "A UWB socket."}
+      - {id: d-sensing, text: "Will Wi-Fi sensing or radar replace motion sensors in your devices?", why: "New sensing changes the radio."}
+      - {id: d-power, text: "How are your devices powered (battery, mains, PoE), and what would you change?", why: "Power parts next to the radio."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in smart-home devices today?", why: "Our base."}
+      - {id: b-fem, text: "Do our low-power front-end modules fit Thread and Zigbee devices?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold these sockets (SoC vendors with integrated PAs, Chinese module makers)?", why: "Shows when a front end is still needed."}
+      - {id: b-uwb, text: "Is our UWB chip in smart locks, and could Aliro bring more?", why: "A cross-sell."}
+  home/broadband:
+    customer:
+      - {id: c-products, text: "Which broadband products do you build (Wi-Fi routers, mesh, fiber gateways, cable amplifiers)?", why: "Sets the RF content."}
+      - {id: c-operators, text: "Do you sell to operators or to retail, and how does that change the design?", why: "Operators set specs and certification."}
+      - {id: c-volume, text: "Roughly what volume range and refresh cycle do these products have?", why: "Value and timing of a design-in."}
+      - {id: c-pain, text: "What limits you most: coverage, heat, cost, or operator certification?", why: "Points to front-end features."}
+    developers:
+      - {id: d-wifi8, text: "When do you move to Wi-Fi 7 and Wi-Fi 8, and with how many streams per band?", why: "Front ends per stream."}
+      - {id: d-docsis, text: "Will DOCSIS 4.0 and 1.8 GHz cable plants change your amplifiers?", why: "A cable amplifier socket."}
+      - {id: d-pon, text: "Which PON standard comes next for you (XGS-PON, 25G or 50G PON)?", why: "Fiber gateway parts and clocks."}
+      - {id: d-fwa, text: "Do you combine 5G fixed wireless and Wi-Fi in one box?", why: "Two RF sockets in one product."}
+    bu:
+      - {id: b-sold, text: "Which of our Wi-Fi front ends and cable amplifiers are in broadband products today?", why: "Our base."}
+      - {id: b-catv, text: "Are our cable amplifiers ready for DOCSIS 4.0 at 1.8 GHz?", why: "Readiness."}
+      - {id: b-comp, text: "Which competitors hold these sockets (Qualcomm and Broadcom reference front ends, MaxLinear)?", why: "Chipset vendors decide most router sockets."}
+      - {id: b-bundle, text: "Can we bundle Wi-Fi front ends and cable amplifiers for gateway makers?", why: "A cross-sell."}
+  home/metering:
+    customer:
+      - {id: c-products, text: "Which meters do you build (electricity, gas, water), and for which markets?", why: "Each has its own links and power."}
+      - {id: c-links, text: "Which links do your meters use (sub-GHz mesh, NB-IoT, LTE-M, power-line)?", why: "Sets the front ends."}
+      - {id: c-life, text: "How long must a meter run in the field, and on battery for gas and water meters?", why: "Lifetime and battery set the parts."}
+      - {id: c-pain, text: "What causes trouble in the field: coverage in basements, battery life, or tamper detection?", why: "Points to front-end or sensing parts."}
+    developers:
+      - {id: d-cellular, text: "Will your next meters use NB-IoT or LTE-M instead of a private radio?", why: "A cellular front-end socket."}
+      - {id: d-isolation, text: "Which isolation do electricity meters need between the mains and the communication module?", why: "An isolation socket."}
+      - {id: d-sensing, text: "Which current sensing do you use (shunt, current transformer, Rogowski coil)?", why: "A sensing socket."}
+      - {id: d-ntn, text: "Would satellite IoT help remote meters, and at what cost per meter?", why: "An NTN socket."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in smart meters today?", why: "Our base."}
+      - {id: b-fem, text: "Do our sub-GHz front ends fit meter links and their range needs?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold meter sockets (TI, Silicon Labs, Renesas)?", why: "SoC vendors dominate."}
+      - {id: b-isol, text: "Do electricity meters use our isolators?", why: "A cross-sell."}
+  # ---- Medical ------------------------------------------------------------------------------------------------------
+  medical:
+    customer:
+      - {id: c-products, text: "Which device types do you build (imaging, monitoring, therapy, home care), and which grows?", why: "Sets the focus."}
+      - {id: c-rules, text: "Which approvals (FDA, EU MDR) and safety standards (IEC 60601) drive your part choice?", why: "Rules make part changes after approval costly."}
+      - {id: c-lifecycle, text: "How long must parts stay in supply, and what does a part change after approval cost you in time?", why: "Long lifecycles favour stable parts."}
+    developers:
+      - {id: d-wireless, text: "How fast are your devices becoming wireless and connected to the hospital network?", why: "RF sockets in medical."}
+      - {id: d-home, text: "Which devices move from hospital to home care, and what changes in the design?", why: "Smaller, battery-powered designs."}
+      - {id: d-isolation, text: "Which patient isolation levels (2 MOPP) do your designs need?", why: "An isolation socket."}
+    bu:
+      - {id: b-today, text: "What do we sell into medical today?", why: "Our base."}
+      - {id: b-policy, text: "Which of our parts may be used in medical devices under our policies (life-support or not)?", why: "Sets what we can offer."}
+      - {id: b-comp, text: "Which competitors hold medical sockets (TI, ADI), and do medical makers want a second source?", why: "Sets priorities."}
+  medical/imaging:
+    customer:
+      - {id: c-products, text: "Which imaging systems do you build (ultrasound, X-ray, CT, PET)?", why: "Sets channel count and power."}
+      - {id: c-portable, text: "How fast is portable or handheld ultrasound growing for you?", why: "Portable systems need low-power parts."}
+      - {id: c-volume, text: "Roughly what volume range and design cycle do these systems have?", why: "Value of a design-in."}
+      - {id: c-pain, text: "What limits you most: channel count, noise, heat in the probe, or cost?", why: "Points to the part that helps."}
+    developers:
+      - {id: d-channels, text: "How many channels will your next ultrasound have, and will beamforming move into the probe?", why: "Channel count multiplies parts."}
+      - {id: d-clock, text: "What clock jitter do your ADCs need, and how many clock outputs?", why: "A timing socket."}
+      - {id: d-hv, text: "Which high-voltage pulsers and isolation do you use?", why: "Isolation and drivers."}
+      - {id: d-wireless, text: "Will wireless probes become common, and over which link?", why: "An RF socket."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in imaging systems today?", why: "Our base."}
+      - {id: b-clock, text: "Do our low-jitter clocks fit ultrasound and CT data converters?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold imaging sockets (TI, ADI, Microchip)?", why: "Shows the bar."}
+      - {id: b-isol, text: "Do our isolators meet the medical isolation needs of imaging systems?", why: "A cross-sell."}
+  medical/monitoring:
+    customer:
+      - {id: c-products, text: "Which monitoring devices do you build (patient monitors, ECG, oximeters, blood pressure)?", why: "Sets the parts."}
+      - {id: c-wireless, text: "Which wireless links do they use (Wi-Fi, Bluetooth LE, cellular)?", why: "An RF socket."}
+      - {id: c-volume, text: "Roughly what volume range and design cycle do they have?", why: "Value of a design-in."}
+      - {id: c-pain, text: "What limits you most: battery life, connection reliability, isolation, or cost?", why: "Points to features."}
+    developers:
+      - {id: d-wearable, text: "Will monitoring move to wearable patches, and what battery life must they reach?", why: "Low-power radios."}
+      - {id: d-isolation, text: "Which patient isolation do you need, and how do you isolate the data link?", why: "An isolation socket."}
+      - {id: d-cellular, text: "Will home monitors connect directly over cellular (LTE-M, NB-IoT)?", why: "A cellular socket."}
+      - {id: d-wish, text: "Which part would simplify your next monitor?", why: "A direct line to features."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in monitoring devices today?", why: "Our base."}
+      - {id: b-ble, text: "Do our Bluetooth LE front ends fit medical wearables?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold monitoring sockets?", why: "Shows the bar."}
+      - {id: b-isol, text: "Do our isolators meet 2 MOPP for patient-connected parts?", why: "A cross-sell."}
+  medical/therapy:
+    customer:
+      - {id: c-products, text: "Which therapy devices do you build (infusion pumps, insulin pumps, CPAP)?", why: "Sets the parts."}
+      - {id: c-connected, text: "How are they connected (Bluetooth LE to a phone, Wi-Fi to the hospital)?", why: "An RF socket."}
+      - {id: c-volume, text: "Roughly what volume range and design cycle do they have?", why: "Value of a design-in."}
+      - {id: c-pain, text: "What limits you most: safety, battery, motor control, or connectivity?", why: "Points to features."}
+    developers:
+      - {id: d-motor, text: "Which motor control do your pumps and blowers use?", why: "A motor-control socket."}
+      - {id: d-security, text: "Which cybersecurity requirements change your radios?", why: "New requirements."}
+      - {id: d-closed-loop, text: "Will closed-loop therapy (pumps that follow a sensor) change your wireless links?", why: "Reliable low-power links."}
+      - {id: d-wish, text: "Which part would simplify your next therapy device?", why: "A direct line to features."}
+    bu:
+      - {id: b-sold, text: "Which of our parts are in therapy devices today?", why: "Our base."}
+      - {id: b-motor, text: "Do our motor-control ICs fit medical pumps and CPAP blowers?", why: "A direct fit."}
+      - {id: b-comp, text: "Which competitors hold therapy sockets?", why: "Shows the bar."}
+      - {id: b-policy, text: "Which medical device classes may our parts be used in?", why: "A policy gate."}

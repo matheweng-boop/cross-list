@@ -3,7 +3,7 @@
    the screen let through, without who answered. Every question keeps a visible answer box. #}
 {% macro answer_form(qa, action, key='', a=none, back='') %}
 <form method="post" action="{{ action }}" class="aq-form">
-  {% if key %}<input type="hidden" name="key" value="{{ key }}">{% endif %}{% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
+  {% if key %}<input type="hidden" name="key" value="{{ key }}">{% endif %}{% for k, v in (qa.hidden or {}).items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}{% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
   <p class="aq-warn small" role="note">{{ qa.warning }}</p>
   <label class="aq-l">{{ 'Answer' if not a else 'The answer' }}<textarea name="text" rows="3" maxlength="4000" required>{{ a.text if a }}</textarea></label>
   <label class="aq-l">Who answered <small class="muted">(optional: name, role or company)</small><input name="who" maxlength="200" value="{{ a.who if a }}" autocomplete="off"></label>
@@ -36,8 +36,8 @@
 {% macro qa_box(q, qa, back) %}{% set rows = qa.by_q.get(q.id, []) %}
 <div class="aq" id="i-{{ q.id }}">
   {% for a in rows %}{{ answer_card(a, qa, back) }}{% endfor %}
-  {% if rows %}<details class="aq-add"><summary class="small">Add another answer</summary>{{ answer_form(qa, '/business/reports/' ~ qa.slug ~ '/answers', q.id) }}</details>
-  {% else %}{{ answer_form(qa, '/business/reports/' ~ qa.slug ~ '/answers', q.id) }}{% endif %}
+  {% if rows %}<details class="aq-add"><summary class="small">Add another answer</summary>{{ answer_form(qa, qa.action or ('/business/reports/' ~ qa.slug ~ '/answers'), q.id) }}</details>
+  {% else %}{{ answer_form(qa, qa.action or ('/business/reports/' ~ qa.slug ~ '/answers'), q.id) }}{% endif %}
 </div>
 {% endmacro %}
 

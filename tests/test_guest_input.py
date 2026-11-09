@@ -104,6 +104,11 @@ def c_report_answer(o, s):  # an answer to a question to ask (2 Nov 2026): lands
                                                                          "who": "UWB BU", "sharing": "shared"}}
 
 
+def c_segment_answer(o, s):  # an answer to a segment question (9 Nov 2026): lands internal once approved
+    return "post", "/library/questions/automotive/answers", {"data": {"key": "c-what", "sub": "charging",
+                                                                      "text": "OBC and wallbox", "sharing": "shared"}}
+
+
 def c_report_ask(o, s):
     return "post", "/business/reports/filters-1-11ghz/ask", {"data": {"text": "Which ceramic filters?", "author": ""}}
 
@@ -274,7 +279,7 @@ def test_every_post_route_is_covered(client):
                   "/invite/{token}/verify"}  # fmt: skip
     covered = {"/site-feedback", "/feedback", "/requests", "/reviews/request", "/reviews/requests/{rid}",
                "/reviews/{slug}/react", "/library/{key}/react", "/business/reports/{slug}/react",
-               "/business/reports/{slug}/answers",
+               "/business/reports/{slug}/answers", "/library/questions/{system}/answers",
                "/business/reports/{slug}/ask", "/business/reports/questions/{qid}", "/blocks/area-request",
                "/api/blocks/feedback", "/api/blocks/designs", "/api/blocks/designs/{design_id}",
                "/blocks/{design_id}/delete", "/blocks/verify", "/api/broadcast/configs",

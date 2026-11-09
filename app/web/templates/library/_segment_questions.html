@@ -1,0 +1,23 @@
+{# Questions to ask per segment (owner, 9 Nov 2026; app/services/segment_questions.py): three tabs (Customer ·
+   Developers · Business unit), each question with the answer box of the report questions (business/_answers.html:
+   sharing switch, the reminder, earlier versions, guest rules). Folded by default; the tab bar is filled in by
+   /static/segment_questions.js (without JavaScript the three groups show one under the other).
+   qa: answers.page(); tabs: segment_questions.TABS; ask: segment_questions.ASK; reports: segment_questions.reports() #}
+{% from "business/_answers.html" import qa_box %}
+{% macro segment_section(qa, back, tabs, ask, reports=[], open=false, heading='Questions to ask') %}{% if qa.questions %}
+{% set n_ans = qa.by_q.values()|map('length')|sum %}
+<details class="sq-sec" id="questions-to-ask"{{ ' open' if open }}>
+  <summary><span class="sq-h">❓ {{ heading }}</span> <small class="muted">· {{ qa.questions|length }} questions{% if n_ans %} · {{ n_ans }} answer{{ 's' if n_ans != 1 }}{% endif %}</small></summary>
+  <p class="small muted">What to ask to understand the application and where it is going. Record each answer under its question. Answers stay internal (owner only) unless the owner marks one “Can be shared”; shareable answers feed the deep dive and the block diagram in the daily update.</p>
+  {% if reports %}<p class="small sq-reports"><b>More questions in the research:</b> {% for r in reports %}<a href="{{ r.href }}">{{ r.title|truncate(70) }}</a> <small class="muted">({{ r.n }})</small>{{ ' · ' if not loop.last }}{% endfor %}</p>{% endif %}
+  <div class="sq-scope" data-sq-scope>
+    <div class="sq-tabs" role="group" aria-label="Whom to ask" hidden>{% for key, title in qa.groups %}{% set n = qa.questions|selectattr('group', 'equalto', key)|list|length %}<button type="button" class="sq-tab" data-sq="{{ key }}" aria-pressed="false" aria-controls="sq-{{ key }}">{{ tabs[key] }} <small>{{ n }}</small></button>{% endfor %}</div>
+    {% for key, title in qa.groups %}{% set qs = qa.questions|selectattr('group', 'equalto', key)|list %}{% if qs %}
+    <section class="pc-box pc-q sq-panel" id="sq-{{ key }}" data-sq="{{ key }}" aria-label="{{ title }}">
+      <h3>{{ title }} <small class="muted">· ask {{ ask[key] }}</small></h3>
+      <ol>{% for q in qs %}
+        <li><span>{{ q.text }}</span>{% if q.ask %} <small class="muted">ask: {{ q.ask }}</small>{% endif %}{% if q.why %}<br><small class="muted">Why we ask: {{ q.why }}</small>{% endif %}
+          {{ qa_box(q, qa, back) }}</li>{% endfor %}</ol>
+    </section>{% endif %}{% endfor %}
+  </div>
+</details>{% endif %}{% endmacro %}

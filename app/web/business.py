@@ -276,6 +276,7 @@ def cross_sell(request: Request, co: str = "combined", system: str = "", sub: st
 
     if sel:  # the old picker sent "system" or "system:sub"
         system, _, sub = sel.partition(":")
+    sub = sy.resolve(system, sub) or sub  # a retired sub-system key lands on its new place (owner, 9 Nov 2026)
     aec_on = aec == "1" if aec in ("0", "1") else system == "automotive"
     template = int(template) if template.isdigit() else None
     if template is not None and sy.get(system) and template not in sy.selection(system, sub)["idx"]:

@@ -6,7 +6,7 @@
 {% if n %}<span class="dg-flag has" title="{{ n }} block diagram{{ 's' if n != 1 }} available">Block diagram ✓ ({{ n }})</span>{% else %}<span class="dg-flag none" title="No block diagram drawn for this yet">No diagram yet</span>{% endif %}
 {%- endmacro %}
 {% macro sub_card(s, x, n, deep, diagrams=none, customers=false) -%}
-<article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}" data-sub="{{ x.key }}">
+<article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}" data-sub="{{ x.key }}"{% if x.aliases %} data-aliases="{{ x.aliases|join(' ') }}"{% endif %}>
   <b class="sys-sub-title">{{ x.title }}</b>
   {% if x.elements %}<span class="sys-els small">{% for e in x.elements %}<span class="sys-el">{{ e }}</span>{% endfor %}</span>{% endif %}
   <div class="sys-btns">

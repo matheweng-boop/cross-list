@@ -717,7 +717,7 @@ def library_index(request: Request):
                            for x in s["subsystems"]]}
             for s in sy.systems()]  # fmt: skip
     for s in tree:
-        s["deep"] = [t for x in s["subs"] for t in x["deep"]]
+        s["deep"] = list({t["key"]: t for x in s["subs"] for t in x["deep"]}.values())  # one dive, several subs
         s["n"] = len({i for x in s["subs"] for i in x["idx"]})
     placed = {t["key"] for s in tree for t in s["deep"]}
     ctx = {"tree": tree, "topics": topics, "other": [t for t in topics if t["key"] not in placed],

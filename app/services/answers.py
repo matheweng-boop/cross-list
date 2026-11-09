@@ -221,8 +221,15 @@ def views(session: Session, rows: list[Answer], owner: bool) -> list[View]:
 
 
 def for_slug(session: Session, slug: str) -> list[Answer]:
+    """A page's answers; on a segment also those stored under a retired segment key whose question moved here (owner,
+    9 Nov 2026: Data center regrouped; the stored rows keep their old slug)."""
+    from app.services import segment_questions as sq
+
     purge(session)
-    return list(session.scalars(select(Answer).where(Answer.slug == slug).order_by(Answer.created_at, Answer.id)))
+    key = sq.key_of(slug)
+    olds = {sq.slug_of(k): k for k in sq.old_keys(key)} if key else {}
+    rows = session.scalars(select(Answer).where(Answer.slug.in_([slug, *olds])).order_by(Answer.created_at, Answer.id))
+    return [a for a in rows if a.slug == slug or sq.home_of(olds[a.slug], a.question) == key]
 
 
 def owner_view(request) -> bool:

@@ -152,8 +152,83 @@ systems:
           - "LED headlight ECU (boost / buck supply, LED string with switching driver, current and voltage sensing, leveling motors with tracking supply) (after Nisshinbo)"
   - key: datacenter
     title: "Data center"
-    summary: "Power into and through the rack, backup, compute and the network."
+    # owner, 9 Nov 2026: "Rework the Data Center applications into the following 4 categories: Front-End/Back-End
+    # Networking, Scale-up Switches, NICs/DPUs, Server and GPU/xPU Baseboard." The four come first; rack power, backup
+    # and cooling follow as the data center's infrastructure. The former "Timing and synchronization" sub-system was
+    # dissolved into the four (its deep dive dc_timing is linked from each); old keys stay as `aliases` so old links
+    # (?sub=timing, #sub-servers, /library/questions/datacenter/network) still land on the right sub-system.
+    summary: "Four application areas (front-end / back-end networking, scale-up switches, NICs / DPUs, server and GPU / xPU baseboards), then the infrastructure: rack power, backup and cooling."
     subsystems:
+      - key: networking
+        title: "Front-end / back-end networking"
+        summary: "Spine, leaf and scale-out / scale-across switches, DCI routers and the 800G to 1.6T and 3.2T optics between them."
+        aliases: [network, timing]
+        elements:
+          - "Spine / leaf switch (front-end)"
+          - "Scale-out AI fabric switch (back-end)"
+          - "DCI router (scale-across)"
+          - "Optical modules 800G / 1.6T / 3.2T"
+          - "Network synchronizer (SyncE / IEEE 1588 PTP)"
+          - "SerDes jitter attenuator (224G)"
+          - "PTP time card / grandmaster"
+        diagrams:
+          - "Spine / leaf and scale-out Ethernet switch clock tree, 64 x 800G (51.2T) to 1.6T and 3.2T ports (jitter attenuator or network synchronizer for the 312.5 MHz SerDes references, PCIe buffer, management clocks, 156.25 MHz references for co-packaged 3.2T modules) (after Celestica DS5000 OCP spec, OIF and Skyworks public material)"
+          - "Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)"
+          - "Data center interconnect (DCI) router for scale-across (1600ZR / 800ZR coherent pluggables up to 120 km, network synchronizer for SyncE and IEEE 1588 PTP with OCXO holdover, jitter attenuators and fanout) (after OIF and Skyworks public material)"
+          - "Optical transceiver module reference clock (400G / 800G / 1.6T pluggable or coherent module - PAM4 or coherent DSP clocked from a low-jitter XO or jitter attenuator) (after Skyworks public material)"
+          - "Data center PTP time card / grandmaster (OCP Time Card - GNSS timing receiver, atomic clock or OCXO holdover, FPGA bridge, PCIe PHC to the server, 1 PPS / 10 MHz outputs) (after OCP Time Appliances Project)"
+          - "Cell site gateway router (switch ASIC, 10G / 25G / 100G optical ports, IEEE 1588 / SyncE timing, N+1 PSU) (TI)"
+        topics: [dc_timing]
+        links:
+          - ["Clock planner", "/clocks"]
+      - key: scale-up
+        title: "Scale-up switches"
+        summary: "The switch trays that join the GPUs / xPUs of one rack or pod into one machine (NVLink-class or scale-up Ethernet)."
+        elements:
+          - "Scale-up switch ASIC (200G-class SerDes)"
+          - "SerDes reference clocks (jitter attenuator, fanout)"
+          - "Cable / backplane retimers"
+          - "Switch tray power (48-54 V to core)"
+        diagrams:
+          - "Scale-up switch tray for an AI rack (scale-up Ethernet or NVLink-class switch ASICs with 200G-class SerDes, SerDes reference clocks from a jitter attenuator and fanout, cable / backplane retimers, 48-54 V to core power) (after OCP SUE, OIF and Skyworks public material)"
+          - "Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)"
+        topics: [dc_timing]
+        links:
+          - ["Clock planner", "/clocks"]
+      - key: nic-dpu
+        title: "NICs / DPUs"
+        summary: "Network cards and data processing units between the server and the network: PCIe on one side, 400G / 800G Ethernet on the other."
+        elements:
+          - "SmartNIC / DPU (OCP NIC 3.0)"
+          - "PCIe REFCLK per host (SRIS with spread spectrum or common clock)"
+          - "Ethernet SerDes reference (156.25 / 312.5 MHz)"
+          - "Timing NIC (10 MHz + 1 PPS, PTP hardware clock)"
+        diagrams:
+          - "SmartNIC / DPU card (OCP NIC 3.0: PCIe Gen 5 / 6 host with a 100 MHz REFCLK per host, 400G / 800G Ethernet SerDes reference, timing NIC with 10 MHz + 1 PPS, Arm cores, memory and card power) (after OCP NIC 3.0, Marvell OCTEON and Skyworks public material)"
+        topics: [dc_timing]
+        links:
+          - ["Clock planner", "/clocks"]
+      - key: server-board
+        title: "Server and GPU / xPU baseboard"
+        summary: "Compute trays: the CPU host board, the GPU / xPU baseboard, their PCIe clock trees with spread spectrum, management and power."
+        aliases: [servers]
+        elements:
+          - "GPU / xPU baseboard (8 accelerators)"
+          - "Server CPU host board and DC-SCM"
+          - "PCIe Gen 6 / 7 clock generator with spread spectrum"
+          - "PCIe fanout buffers, XOs"
+          - "Processor voltage regulators"
+          - "Board management controller"
+        diagrams:
+          - "GPU / xPU baseboard clock tree (OCP UBB with 8 accelerator modules: host link in SRIS with spread spectrum, common-clock 100 MHz on the baseboard, local 156.25 / 312.5 MHz references for the 112G / 224G scale-up SerDes, PCIe switches and retimers) (after OCP OAI-UBB and Skyworks public material)"
+          - "Server CPU compute tray clock tree (dual-socket CPU host board with a DC-SCM management module: platform clock generator with down-spread, PCIe Gen 6 / 7 fanout buffers, XOs for the BMC, NC-SI and NIC) (after OCP DC-SCM 2.0 and Skyworks public material)"
+          - "AI / GPU server clock tree (100 MHz PCIe Gen 5 / 6 reference clocks from a clock generator and LP-HCSL fanout buffers to the CPU, GPUs, NICs and retimers, with spread spectrum) (after TI and Skyworks public material)"
+          - "Server motherboard (x86 CPU, PCH, BMC, VR power) (TI)"
+          - "AI compute tray power from the 48 / 54 V busbar to the GPU core (hot-swap / eFuse with PMBus, 48 V to 12 V or 6 V bus converter, multiphase regulators, vertical power delivery, hold-up) (after Infineon, OCP and NVIDIA)"
+        topics: [dc_timing]
+        links:
+          - ["Clock planner", "/clocks"]
+      # data center infrastructure (rack power, backup, cooling): after the four application areas
       - key: rack-power
         title: "Rack power"
         summary: "From the grid to the voltage the processors need."
@@ -181,41 +256,6 @@ systems:
           - "Bidirectional 3 kW telecom UPS power (-48 V bus <-> battery, 3-phase 4-switch buck-boost) (Renesas)"
           - "Energy storage system battery (multimodule, daisy chain) - rack BMS (TI)"
           - "Battery energy storage system, 1500 V DC (rack BMS, DC block and bidirectional three-level PCS to the MV transformer) (after TI, Wood Mackenzie and Skyworks public material)"
-      - key: servers
-        title: "Servers and compute"
-        summary: "The board: processor power, management controller."
-        elements:
-          - "Processor voltage regulators"
-          - "Board management controller"
-        diagrams:
-          - "Server motherboard (x86 CPU, PCH, BMC, VR power) (TI)"
-      - key: network
-        title: "Networking and Wi-Fi"
-        summary: "Enterprise access points and wired networking."
-        elements:
-          - "Enterprise Wi-Fi access point"
-          - "PoE powered devices"
-        diagrams:
-          - "Enterprise / premium Wi-Fi access point (Dragonwing NPro A8 Elite, Wi-Fi 8) (Qualcomm)"
-          - "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
-      - key: timing
-        title: "Timing and synchronization"
-        summary: "Clean clocks for PCIe and SerDes, and SyncE / PTP time across the AI cluster."
-        elements:
-          - "PCIe clock generator and fanout buffers"
-          - "Network synchronizer (SyncE / IEEE 1588 PTP)"
-          - "SerDes jitter attenuator"
-          - "Low-jitter XO for optical modules"
-          - "PTP time card / grandmaster"
-        diagrams:
-          - "AI / GPU server clock tree (100 MHz PCIe Gen 5 / 6 reference clocks from a clock generator and LP-HCSL fanout buffers to the CPU, GPUs, NICs and retimers, with spread spectrum) (after TI and Skyworks public material)"
-          - "Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)"
-          - "Optical transceiver module reference clock (400G / 800G / 1.6T pluggable or coherent module - PAM4 or coherent DSP clocked from a low-jitter XO or jitter attenuator) (after Skyworks public material)"
-          - "Data center PTP time card / grandmaster (OCP Time Card - GNSS timing receiver, atomic clock or OCXO holdover, FPGA bridge, PCIe PHC to the server, 1 PPS / 10 MHz outputs) (after OCP Time Appliances Project)"
-          - "Cell site gateway router (switch ASIC, 10G / 25G / 100G optical ports, IEEE 1588 / SyncE timing, N+1 PSU) (TI)"
-        topics: [dc_timing]
-        links:
-          - ["Clock planner", "/clocks"]
       # owner, 2 Nov 2026: "Also add cooling and HVAC to data centers"
       - key: cooling
         title: "Cooling and HVAC"
@@ -647,7 +687,7 @@ systems:
           - "UWB + Bluetooth LE module for anchors and tags (UWB transceiver with 38.4 MHz crystal and band-pass filters, BLE MCU with 32 MHz and 32 kHz crystals) (after Murata Type 2AB)"
   - key: home
     title: "Home & building"
-    summary: "Smart home devices, home Wi-Fi and broadband, and smart meters."
+    summary: "Smart home devices, home Wi-Fi and broadband, office and campus Wi-Fi, and smart meters."
     subsystems:
       - key: smart-home
         title: "Smart home devices"
@@ -682,6 +722,17 @@ systems:
           - "Fiber broadband gateway (XGS-PON + Wi-Fi 8, Dragonwing FiberPro A8 Elite IPQ96) (Qualcomm)"
           - "Wi-Fi 7 home router / broadband gateway with AI coprocessor and 10G PON (Dragonwing NPro A7 Elite IPQ5424) (Qualcomm)"
           - "CATV / HFC DOCSIS 4.0 line extender amplifier (1.8 GHz downstream, 5-680 MHz upstream, diplexed) (Mini-Circuits)"
+      # owner, 9 Nov 2026: the data center was reworked into four application areas; office and campus Wi-Fi (the
+      # former Data center > "Networking and Wi-Fi") moved here, where buildings are
+      - key: enterprise-wifi
+        title: "Enterprise Wi-Fi and campus networks"
+        summary: "Office and campus access points and the PoE switches that power them."
+        elements:
+          - "Enterprise Wi-Fi access point"
+          - "PoE powered devices"
+        diagrams:
+          - "Enterprise / premium Wi-Fi access point (Dragonwing NPro A8 Elite, Wi-Fi 8) (Qualcomm)"
+          - "WLAN / Wi-Fi access point (4x4 dual-band, PoE powered) (TI)"
       - key: metering
         title: "Smart meters"
         summary: "Electricity and gas meters with radio or power-line links."

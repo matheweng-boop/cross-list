@@ -1,0 +1,88 @@
+# Public data center reference designs and specifications (owner, 9 Nov 2026: "Pull Reference Designs for Data Centers
+# that are publicly available"), for the four data center application areas: front-end / back-end networking, scale-up
+# switches, NICs / DPUs, and server and GPU / xPU baseboards. Format and rules: README.md in this folder.
+# Collected 9 Nov 2026: robots.txt of each host read first (opencompute.org allows all with a 10 s crawl delay;
+# oiforum.com blocks only /wp-admin/), GET only, one request at a time, >= 10 s per host; the OCP document list came
+# from the public sitemap. Each PDF was read once with pdftotext (diagrams rendered locally where the clock tree is an
+# image). Functions are only the blocks each document shows or names; parts only where the document names them. The
+# Skyworks timing reference designs (Broadcom, Marvell ...) are in skyworks.yaml; TI's data center designs in ti.yaml.
+# Hosts not used: microchip.com and the other blocked hosts (data/library/sources.yaml).
+source: {vendor: "Data center public specifications (Open Compute Project, OIF)", pages: ["https://www.opencompute.org/ocp_document-sitemap.xml", "https://www.oiforum.com/technical-work/implementation-agreements-ias/"], collected: 2026-11-09, method: "OCP document sitemap and OIF implementation-agreement list; seven specifications read with pdftotext; the DS5000 clock topology page rendered and read"}
+designs:
+  - id: OCP-DS5000
+    title: "Celestica DS5000 64 x 800G (51.2T) leaf / spine Ethernet switch specification, with its clock topology"
+    url: "https://www.opencompute.org/documents/celestica-ds5000-64x800gb-switch-specification1-2-pdf/"
+    vendor: OCP
+    applications: [Data center switch, Leaf spine switch, Ethernet switch, Front-end networking, Scale-out networking]
+    markets: [Enterprise & data center, Communications equipment]
+    summary: "OCP specification of a 51.2 Tb/s, 64 x 800G OSFP switch on Broadcom Tomahawk 5 (Jan 2024). Clock topology: a TI LMK05318 from a 48 MHz crystal gives eight 312.5 MHz SerDes references; a Skyworks Si53108 fans the 100 MHz PCIe clock out to the switch, FPGA, I210 NIC and SSDs; Renesas 8SLVP1208 and 8T39S04 fanouts give 50 MHz core / timestamp references and 156.25 MHz management clocks; COM-E x86 CPU module, RunBMC (AST2620), 2+2 2 kW PSUs, 12 V busbar, 2+1 fans."
+    parts: [LMK05318, Si53108, 8SLVP1208, 8T39S04, PL138-48, AST2620, I210]
+    functions: [soc, serdes, jitter_attenuator, crystal_oscillator, pcie_buffer, clock_buffer, mcu, ethernet_phy]
+    documents:
+      design_guide: "https://www.opencompute.org/documents/celestica-ds5000-64x800gb-switch-specification1-2-pdf/"
+  - id: OCP-SUE
+    title: "Scale Up Ethernet (SUE) specification 1.0: scale-up switch network for up to 1024 XPUs"
+    url: "https://www.opencompute.org/documents/ocp-sue-spec-final-pdf-1/"
+    vendor: OCP
+    applications: [Scale-up switch, Scale-up network, AI accelerator interconnect, Ethernet switch]
+    markets: [Enterprise & data center]
+    summary: "Broadcom's OCP specification (Sep 2025) for a scale-up network over Ethernet switches: up to 1024 XPUs in a single switch hop, under 2 µs round trip, cables up to 10 m; each SUE instance 800G (1 x 800G, 2 x 400G, 4 x 200G) on 200G SerDes, scaling to 1.6T; the example gives each XPU twelve 800G instances into twelve 64-port switches."
+    parts: []
+    functions: [soc, serdes, ethernet_phy]
+    documents:
+      design_guide: "https://www.opencompute.org/documents/ocp-sue-spec-final-pdf-1/"
+  - id: OCP-NIC3
+    title: "OCP NIC 3.0 design specification r1.6: SmartNIC / DPU card form factors, PCIe REFCLK per host and timing NIC"
+    url: "https://www.opencompute.org/documents/ocp-nic-3-0-r1v60-20250410a-tn-no-cb-pdf/"
+    vendor: OCP
+    applications: [Network interface card, SmartNIC, DPU, Timing NIC, Server networking]
+    markets: [Enterprise & data center]
+    summary: "OCP specification (Apr 2025) for NIC / DPU mezzanine cards: SFF up to 80 W and DSFF up to 150 W, PCIe up to Gen 5 with Gen 6 informative limits, one 100 MHz PCIe REFCLK per host (up to 4 hosts on SFF, 8 REFCLKs on DSFF), NC-SI over RBT to the BMC (with an optional clock buffer), and a timing-NIC mode exchanging 10 MHz with an embedded or separate 1 PPS with the baseboard."
+    parts: []
+    functions: [ethernet_phy, soc, serdes, pcie_buffer, clock_buffer, jitter_attenuator]
+    documents:
+      design_guide: "https://www.opencompute.org/documents/ocp-nic-3-0-r1v60-20250410a-tn-no-cb-pdf/"
+  - id: OCP-OAI-UBB
+    title: "OAI Universal Baseboard (UBB) r2.0: GPU / xPU baseboard for 8 accelerator modules, clock architecture and power"
+    url: "https://www.opencompute.org/documents/oai-ubb-base-specification-r2-0-v1-0-20230919-pdf/"
+    vendor: OCP
+    applications: [GPU baseboard, Accelerator baseboard, AI server, Compute tray]
+    markets: [Enterprise & data center]
+    summary: "OCP Open Accelerator Infrastructure baseboard (Sep 2023): 8 OAM accelerators, up to eight x16 links each, host interface board with PCIe switches and retimers, 54 / 48 V input with a hot-swap controller per OAM (up to 1000 W each). Clocks: host to host-interface board in SRIS with spread spectrum, host-interface board to the baseboard in common clock (primary, AUX and downstream clocks), local clocks recommended on the OAM and expansion cards for the 112G SerDes; an FPGA converts the BMC interface for retimer management."
+    parts: []
+    functions: [soc, pcie_switch, redriver, clock_buffer, clock_generator, efuse_hotswap, mcu]
+    documents:
+      design_guide: "https://www.opencompute.org/documents/oai-ubb-base-specification-r2-0-v1-0-20230919-pdf/"
+  - id: OCP-DC-SCM2
+    title: "DC-SCM 2.0 specification: server BMC and root-of-trust card (DC-SCM) and its PCIe clocks from the host board"
+    url: "https://www.opencompute.org/documents/ocp-dc-scm-2-0-ver-1-0-pdf/"
+    vendor: OCP
+    applications: [Server motherboard, Server BMC card, Compute tray]
+    markets: [Enterprise & data center]
+    summary: "OCP specification of the data center secure control module that holds the BMC, BMC flash, TPM and root-of-trust processor apart from the host processor module (HPM). The HPM gives the SCM two 100 MHz PCIe clocks: one for the x4 endpoint (Gen 5), one fanned out through a clock buffer to the BMC and USB controller; all SCM endpoints in one clock domain, else separate-reference methods."
+    parts: []
+    functions: [mcu, secure_element, flash, clock_buffer, soc]
+    documents:
+      design_guide: "https://www.opencompute.org/documents/ocp-dc-scm-2-0-ver-1-0-pdf/"
+  - id: OIF-1600ZR
+    title: "OIF 1600ZR implementation agreement: coherent 1.6T pluggable for data center interconnect (DCI) up to 120 km"
+    url: "https://www.oiforum.com/wp-content/uploads/OIF-1600ZR-01.0.pdf"
+    vendor: OIF
+    applications: [Data center interconnect, DCI router, Coherent optical module, Optical transceiver]
+    markets: [Enterprise & data center, Communications equipment]
+    summary: "OIF implementation agreement (Sep 2026) for a 1.6 Tb/s coherent pluggable in a client-optics-size module, single-span amplified DWDM links up to 120 km for DCI; five data-path blocks from the host interface to the media interface, separate host-side and line-side clock domains, line rate within ±20 ppm."
+    parts: []
+    functions: [soc, serdes, optical_driver, optical_tia]
+    documents:
+      design_guide: "https://www.oiforum.com/wp-content/uploads/OIF-1600ZR-01.0.pdf"
+  - id: OIF-CPO-3.2T
+    title: "OIF 3.2 Tb/s co-packaged optics (CPO) module implementation agreement: 16 modules around a 51.2T switch, 156.25 MHz host reference clock"
+    url: "https://www.oiforum.com/wp-content/uploads/OIF-Co-Packaging-3.2T-Module-01.0.pdf"
+    vendor: OIF
+    applications: [Co-packaged optics, Optical transceiver, Data center switch, Ethernet switch]
+    markets: [Enterprise & data center, Communications equipment]
+    summary: "OIF implementation agreement (Mar 2023) for a 3.2 Tb/s co-packaged module (8 x 400GBASE-DR4 / FR4 optical, or copper cable attach), 16 per 51.2T switch; internal or external laser; SPI management. Reference clock from the host: 156.25 MHz only, ±100 ppm, AC-coupled, ≤220 fs RMS (12 kHz-20 MHz)."
+    parts: []
+    functions: [optical_driver, optical_tia, clock_buffer, soc]
+    documents:
+      design_guide: "https://www.oiforum.com/wp-content/uploads/OIF-Co-Packaging-3.2T-Module-01.0.pdf"

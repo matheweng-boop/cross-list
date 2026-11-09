@@ -22,7 +22,7 @@ def _fn(b) -> str:
 def test_cooling_is_a_data_center_sub_system_with_its_diagrams_and_deep_dive():
     dc = sy.get("datacenter")
     keys = [x["key"] for x in dc["subsystems"]]
-    assert "cooling" in keys and {"rack-power", "backup", "servers", "network"} <= set(keys)
+    assert "cooling" in keys and {"rack-power", "backup", "networking", "server-board"} <= set(keys)
     sub = sy.sub("datacenter", "cooling")
     assert sub["title"] == "Cooling and HVAC" and sub["elements"] and sub["topics"] == ["dc_cooling"]
     names = [blocks.templates()[i]["name"] for i in sub["idx"]]

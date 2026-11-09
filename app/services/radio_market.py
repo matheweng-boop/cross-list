@@ -74,7 +74,8 @@ def price(session: Session, mpn: str | None, block: str, vol: int) -> dict:
     if out["anchor"] and call:
         mid = {"low": lo, "high": hi}.get(call["verdict"], mid)
     basis = out["basis"] + (f"; owner call: {pm.CALLS[call['verdict']].lower()}" if call else "")
-    return {"ok": True, "low": lo, "target": mid, "high": hi, "basis": basis, "source": out["source"]}
+    one = out["scenarios"][0][1].get("single") if not out["anchor"] else None  # the single price at 1M
+    return {"ok": True, "low": lo, "target": mid, "high": hi, "basis": basis, "source": out["source"], "single": one}
 
 
 def _sum(rows: list[dict], layers: set[str]) -> dict:

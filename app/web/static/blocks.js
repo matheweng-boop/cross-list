@@ -216,11 +216,13 @@
         it.lx = (pa.x + pb.x) / 2; it.ly = Math.min(pa.y, pb.y) - 5;
       } else if (it.kind === "V" || it.kind === "U") {
         it.d = Math.abs(pa.x - pb.x) < 1 && it.kind === "V" ? `M${pa.x} ${pa.y}V${pb.y}` : `M${pa.x} ${pa.y}V${it.my}H${pb.x}V${pb.y}`;
-        it.lx = (pa.x + pb.x) / 2; it.ly = it.my - 4; it.room = Math.max(90, Math.abs(pb.x - pa.x) - 6);
+        it.lx = (pa.x + pb.x) / 2; it.room = Math.max(90, Math.abs(pb.x - pa.x) - 6);
+        it.ly = Math.max(it.my - 4, (it.gap ? it.gap[0] : -Infinity) + 12);  // never into the frame above the gap
       } else {
         it.d = `M${pa.x} ${pa.y}V${it.ya}H${it.cx}V${it.yb}H${pb.x}V${pb.y}`;
         // on the first horizontal run, in the gap between two rows (a label in the column gap ran under the frames)
-        it.lx = (pa.x + it.cx) / 2; it.ly = it.ya - 4; it.room = Math.max(90, Math.abs(it.cx - pa.x) - 6);
+        it.lx = (pa.x + it.cx) / 2; it.room = Math.max(90, Math.abs(it.cx - pa.x) - 6);
+        it.ly = Math.max(it.ya - 4, (it.gapA ? it.gapA[0] : -Infinity) + 12);
       }
     }
     return items;
@@ -257,7 +259,8 @@
     for (const it of R) if (it.label) {
       // a label over a short side-to-side link wraps to the gap between the frames, upwards from the line
       const room = it.kind === "H" ? Math.max(40, Math.abs(it.pb.x - it.pa.x) - 6) : it.room;
-      const ls = fitLines(it.label, room, 10, 400, 3);
+      // across a row gap (V, U, V5) one line only: wrapping upwards ran into the frame above (owner, 9 Nov 2026)
+      const ls = it.kind === "H" ? fitLines(it.label, room, 10, 400, 3) : fitLines(it.label, Math.max(room, 220), 10, 400, 1);
       parts.push(`<text class="link-label" x="${it.lx}" y="${it.ly - (ls.length - 1) * 11}" text-anchor="${it.lanchor || "middle"}"><title>${esc(it.label)}</title>` +
         ls.map((t, k) => `<tspan x="${it.lx}" dy="${k ? 11 : 0}">${esc(t)}</tspan>`).join("") + `</text>`);
     }

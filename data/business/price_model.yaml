@@ -36,6 +36,8 @@ validation:
   - {test: "DigiKey isolator curves past 1k (TI ISO7710, Skyworks Si8710, ADI ADuM110N; owner's screenshots, EUR): flat-curve rule from the prices up to 1k", parts: 9, mean_error_pct: 3.6, mean_abs_pct: 4.1, worst_pct: 8.3}
   - {test: "Same check: real DigiKey prices inside P10-P90 (flat-curve sd 0.035; misses from the cut-tape to reel step)", parts: 9, inside_pct: 78}
   - {test: "TI: 1k price from the 1-unit price with the other parts' ratio (leave one out)", parts: 55, mean_abs_pct: 5.3, worst_pct: 16.2}
+  - {test: "Owner's check, 9 Nov 2026 (an isolator and an isolated amplifier of ours, Price estimate page): real level about the midpoint of the band's low end and target. With the cost blend and maker scale below, the target of 11 list-price parts moved -2 to -11 % at 10k, 0 to -27 % at 100k and -1 to -33 % at 1M (our isolator and tuner about -9 / -21 / -23 %)", parts: 2, note: "owner's judgement from real prices; at 100k and 1M the target now sits somewhat below that midpoint for our parts: the owner's own price levels (Your price level form) correct a family from there"}
+  - {test: "Same day: gross margin 55-70 % (was a 40 % floor), hard floor at 55 %, maker scale tiers: on the same 11 list-price parts the cost floor holds 6 of the 33 rows (8 before), TI isolators and drivers in wide-body SOIC at 1M, where package and assembly are most of the unit cost", parts: 11, note: "est; TI at tier 1 (x0.70 on every cost line)"}
 # Public prices stop at 10,000 units: 100k and 1M rest on the distributor-to-direct factor and the cost floor,
 # which only the owner's calls and real prices can check.
 
@@ -50,6 +52,10 @@ monte_carlo: {draws: 2000, percentiles: [10, 50, 90]}
 # should sit between the old low and target and the high end came out too high, so 100k and 1M peak at their low end
 # with a lower ceiling. Tuned on GD3162, Si47962, Si47972, ISO7741 and ISO7710: target near the midpoint of the old low
 # and target (3-8 % above it), high 10-15 % lower, low 3-6 % lower (low and target move together through the slope).
+# Owner, 9 Nov 2026 (two parts on the Price estimate page): real prices sit about at the midpoint of the band's low end
+# and target again. Scaling these factors by 0.93 / 0.90 / 0.87 (that midpoint on 11 list-price parts) was tried
+# first; the same day the owner asked for a cost-based price blended in (`blend` below), which lowers 100k and 1M more
+# than that on its own, so the factors stay at their 21 Oct values and the blend does the moving.
 volumes:
   10000:   [0.55, 0.67]
   100000:  [0.50, 0.50, 0.62]
@@ -72,12 +78,87 @@ oem:
 # Our part priced from a competitor's (Price estimate page): a newer entrant usually sits at or a little below the
 # incumbent; the range is a starting point, changed per estimate.
 parity: [0.90, 1.00]
+# Owner, 9 Nov 2026: for isolators our parts sit well above the competitor's cross, so this default is wrong at least
+# there. Where the owner has entered price levels for both our part and its cross at the same volume (Your price level
+# form), the site uses the ratio ours / theirs per family (geometric mean of the pairs, +/- `parity_spread`) instead.
+# Those pairs stay in the site's database only and are shown to the owner only: a ratio to a public competitor price
+# would give away our own level, so no learned ratio is ever written into this file.
+parity_spread: 0.05
 
 margin:
-  floor: 0.40            # below this gross margin a supplier rarely goes: the floor of the band (the slider's default)
+  # Owner, 9 Nov 2026: "assume gross margin between 60-70 % most of the time", then, the same day, on all pricing
+  # feedback so far: "typically between 55-70 %". With no slider value each Monte Carlo draw takes its margin for the
+  # cost floor from the triangle `draw` (low / most likely / high); `default` is the margin shown and used for the
+  # unit cost the target price allows. The slider overrides both. (Before 9 Nov: a fixed 40 % floor, typical 45-65 %.)
+  default: 0.625
+  draw: [0.55, 0.625, 0.70]
   slider: [0.20, 0.85]   # range of the gross-margin slider on the price pages
-  typical: [0.45, 0.65]
-  min_band: 1.15         # the high end stays at least 15 % above the low end (where the floor holds both up)  # shown with the cost build-up (Skyworks reports about 45-50 %, analog peers 60 % and more)
+  typical: [0.55, 0.70]
+  min_band: 1.15         # the high end stays at least 15 % above the low end (where the floor holds both up)
+
+# Owner, 9 Nov 2026: "The price model has to scale according to die, lead frame and packaging." Every Monte Carlo
+# draw blends the market price (the distributor curve times the direct factor above) with a cost-based price (the
+# drawn unit cost / (1 - the drawn 55-70 % margin)): market weight w, cost 1 - w. Public prices stop near 10k, so the
+# band leans on the curve at 10k and on cost at 100k and 1M; a curve of fewer than `few_breaks` breaks counts half;
+# without any public curve the band is the cost-based price alone. The result never goes below the unit cost at the
+# floor margin (the low end of the typical range, 55 %). Weights are judgement (est).
+blend:
+  market_weight: {10000: 0.85, 100000: 0.6, 1000000: 0.45}
+  few_breaks: 3
+  few_breaks_factor: 0.5
+
+# Owner, 9 Nov 2026: "One weight factor is how much of a technology the company sells at volume (many parts at one
+# node -> more wafers -> better price breaks)." Every cost line (wafer, lead frame, mold, wire, assembly, test) is
+# multiplied by the maker's tier factor (est). A maker named below takes its tier for the reason given (public facts or
+# general knowledge, marked est); any other maker gets its tier from how many of its parts the site holds in families
+# of the same technology class (`breadth_tiers`: at least this many parts); an unknown maker the neutral tier.
+# Our own makers carry a generic reason only: never a node, a fab, a foundry or a site.
+scale:
+  tiers:
+    1: {factor: 0.70, label: "very large volume in this technology class"}
+    2: {factor: 0.85, label: "large volume in this technology class"}
+    3: {factor: 1.00, label: "medium volume"}
+    4: {factor: 1.10, label: "small volume"}
+  default_tier: 3
+  breadth_tiers: [[2, 300], [3, 30], [4, 0]]
+  own_makers: [Skyworks, Qorvo]
+  makers:
+    TI: {tier: 1, why: "own 300 mm analog fabs and the broadest analog portfolio (public, est)"}
+    Texas Instruments: {tier: 1, why: "own 300 mm analog fabs and the broadest analog portfolio (public, est)"}
+    Infineon: {tier: 1, why: "own 300 mm power fabs, the largest power semiconductor maker (public, est)"}
+    ADI: {tier: 2, why: "broad analog and isolation portfolio, own and foundry wafers (est)"}
+    Analog Devices: {tier: 2, why: "broad analog and isolation portfolio, own and foundry wafers (est)"}
+    NXP: {tier: 2, why: "large automotive volume (est)"}
+    STMicroelectronics: {tier: 2, why: "own fabs, large automotive and industrial volume (est)"}
+    Skyworks: {tier: 2, why: "large volume in this technology class"}
+    Qorvo: {tier: 2, why: "large volume in this technology class"}
+    Novosense: {tier: 3, why: "foundry wafers, growing isolation volume (est)"}
+    Mini-Circuits: {tier: 3, why: "foundry wafers, catalogue volumes (est)"}
+  # which families share a process (technology class); a family not listed is its own class
+  tech_class:
+    digital_isolator: isolation
+    gate_driver: isolation
+    gate_driver_smart: isolation
+    isolated_amplifier: isolation
+    rf_switch: rf_switch
+    antenna_switch: rf_switch
+    am_fm_tuner: rf_mixed_signal
+    radio_coprocessor: digital_radio
+    clock_generator: timing
+    jitter_attenuator: timing
+    oscillator: timing
+    buffer: timing
+    pmic: power
+    dc_dc: power
+    ldo: power
+
+# Owner, 9 Nov 2026: "The margin is assumed to be around 60 %, so then by definition the cost should be higher." Where
+# the owner's own price levels imply a margin above the range, the cost is too low, not the margin too high: on the
+# owner's view the site raises the family's cost lines so that a level sits at this margin (geometric mean over the
+# family's parts with levels, within `calibration_limits`). The factor is worked out from the site's database at each
+# request and never written here (it would give the levels away).
+calibration_margin: 0.60
+calibration_limits: [0.5, 4.0]
 
 calls:                   # the owner's calls on a part move its family's band
   step: 0.08             # each "low end" call x0.92, each "high end" call x1.08

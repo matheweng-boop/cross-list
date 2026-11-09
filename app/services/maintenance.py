@@ -89,7 +89,9 @@ def items(session: Session) -> list[dict]:
                 "affects": "Candidate coverage, gap lists, Gaps & new technology, Markets",
             }
         )
-    for r in session.scalars(select(DataReview)):
+    from app.services.price_model import LEVELS  # the owner's confidential price levels: not a review item
+
+    for r in session.scalars(select(DataReview).where(DataReview.dataset != LEVELS)):
         kind = "mapping" if r.dataset == "path" else "commercial" if r.dataset == "tam" else "evidence"
         if r.comment and any(w in r.comment.lower() for w in ("aec", "automotive", "qualif")):
             kind = "qualification"

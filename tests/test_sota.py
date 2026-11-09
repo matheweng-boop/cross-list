@@ -7,7 +7,6 @@ import pytest
 from openpyxl import load_workbook
 
 from app.matching.rules import load_all_rules
-from app.services import crosslist as cl
 from app.services import sota
 from app.web import nav
 from tests.conftest import ids
@@ -161,6 +160,7 @@ def test_the_page_per_category(client, session, sota_data):
                   "Timing"):  # fmt: skip
         assert f">{label}</a>" in r.text
     assert "Our gaps at a glance: " in r.text and sota.SCOPE_NOTE.replace("'", "&#39;") in r.text
+    assert 'class="p1m"' in r.text and "at 1M" in r.text  # owner, 9 Nov 2026: the single price at 1M a year
     for cat in ("digital_isolator", "gate_driver", "isolated_amplifier", "rf_switch", "timing"):
         page = client.get(f"/state-of-the-art?cat={cat}")
         assert page.status_code == 200 and 'class="sota-table"' in page.text, cat
@@ -190,7 +190,9 @@ def test_cross_a_list_folds_vs_best_and_the_excel_has_the_best_columns(client, s
     r = client.post("/cross-list.xlsx", data={"parts": "ISO7741DWR"})
     ws = load_workbook(io.BytesIO(r.content))["Cross list"]
     head = [c.value for c in ws[1]]
-    assert head == cl.EXPORT_HEADER and head[-4:] == ["Our best (key figures)", "Best in our data", "Verified",
-                                                      "Your comment"]  # fmt: skip
+    from app.services.export import CROSS_LIST_1M, cross_list_header
+
+    assert head == cross_list_header() and head[-7:] == ["Our best (key figures)", "Best in our data", "Verified",
+                                                         *CROSS_LIST_1M, "Your comment"]  # fmt: skip
     row = [c.value for c in ws[2]]
-    assert "Isolation" in row[-4] and "Data rate" in row[-3] and "(" in row[-3]
+    assert "Isolation" in row[-7] and "Data rate" in row[-6] and "(" in row[-6]

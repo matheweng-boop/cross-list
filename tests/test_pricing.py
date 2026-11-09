@@ -194,8 +194,8 @@ def test_not_enough_data_instead_of_blanks(client, session, lists):
     assert "—" not in b.split('id="pb-result"')[1] and "nan" not in b.split('id="pb-result"')[1].lower()
     from tests.conftest import ids
 
-    panel = client.get(f"/pricing/{ids(client, 'SI86S641EC-IS1')}/model").text  # no prices cached
-    assert panel.count("Not Enough Data") >= 1 + 3 * 3  # the note and low / target / high at 3 volumes
+    panel = client.get(f"/pricing/{ids(client, 'SI86S641EC-IS1')}/model").text  # no prices: a cost-only band
+    assert "No public price curve" in panel and "nan" not in panel.lower() and ">None<" not in panel
 
 
 def test_picking_a_part_fills_the_form(client, lists):

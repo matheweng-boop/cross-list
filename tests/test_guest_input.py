@@ -334,7 +334,8 @@ OWNER_ONLY = [("get", "/manage/overview"), ("get", "/manage/schedule"), ("get", 
               ("post", "/business/tam"), ("post", "/business/tam/review"), ("post", "/business/quality/answer"),
               ("post", "/requests/1"), ("post", "/blocks/feedback/1"), ("post", "/blocks/area-requests/1"),
               ("post", "/manage/verify/1"), ("post", "/manage/people/invite"), ("post", "/manage/guest-input/1"),
-              ("post", "/owner/passkeys/options")]  # fmt: skip
+              ("post", "/owner/passkeys/options"), ("post", "/pricing/level"),
+              ("post", "/pricing/level/delete")]  # fmt: skip
 
 
 @pytest.mark.parametrize("method,path", OWNER_ONLY)

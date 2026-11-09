@@ -136,7 +136,7 @@ def site_info(session: Session, mpn: str) -> dict:
     cfg, key = pm.config(), mpn.strip().upper()
     fam_of = cfg["function_family"]
     out = {"family": "", "package": "", "pins": 0, "automotive": False, "released": None, "units": None, "found": [],
-           "part": None}  # fmt: skip
+           "part": None, "maker": ""}  # fmt: skip
     hits = _db_parts(session, key) if key else []
     exact = next((p for p in hits if p.mpn.upper() == key), None)
     if hits:
@@ -155,6 +155,7 @@ def site_info(session: Session, mpn: str) -> dict:
                    package=pkg or "", pins=pins or 0, released=min(years) if years else None,
                    units=pm.units_of(part) if exact is not None else None,
                    found=["parts database" if exact is not None else f"parts database ({len(hits)} variants)"])
+        out["maker"] = part.manufacturer.name if exact is not None and part.manufacturer else ""
         if exact is not None and out["released"] is None and "-" in key:  # same datasheet as its sibling variants
             years = [y for y in map(released_year, _db_parts(session, key.split("-", 1)[0] + "-")) if y]
             out["released"] = min(years) if years else None
@@ -180,6 +181,7 @@ def site_info(session: Session, mpn: str) -> dict:
         ch = [int(v) for k, v in specs.items() if k in ("Forward Channels", "Reverse Channels") and str(v).isdigit()]
         out["units"] = out["units"] or (sum(ch) or None)
         out["found"].append(f"{row['manufacturer']} catalogue")
+        out["maker"] = out["maker"] or row.get("manufacturer") or ""
     return out
 
 
@@ -261,14 +263,15 @@ def _priced(session: Session, row: Row, info: dict, gm: float, fab: str) -> tupl
     pts, cur, source = got
     sp = spec(row, info)
     m = pm.estimate(session, sp["family"], pts, sp["package"], sp["pins"], sp["automotive"], row.mpn, cur, gm, fab,
-                    sp["units"])  # fmt: skip
+                    sp["units"], maker=info.get("maker") or "")  # fmt: skip
     return m, source
 
 
 def cost_ratio(row: Row, info: dict, anchor_cost: dict | None, gm: float, fab: str) -> float | None:
     """The part's unit cost over its sibling's (channels, tuners, package and family all count); None if unknown."""
     sp = spec(row, info)
-    mine = pm.cost(pm.part_ns(sp["family"], sp["package"], sp["pins"], sp["automotive"], row.mpn, sp["units"]), gm, fab)
+    part = pm.part_ns(sp["family"], sp["package"], sp["pins"], sp["automotive"], row.mpn, sp["units"])
+    mine = pm.cost(part, gm, fab, (anchor_cost or {}).get("maker_k", 1.0))  # a sibling: same maker, same scale
     if not mine or not anchor_cost:
         return None
     return mine["levels"]["mid"]["total"] / anchor_cost["levels"]["mid"]["total"]
@@ -325,7 +328,10 @@ def price_row(session: Session, row: Row, vol: int, gm: float, adj: float, sop: 
         rows = [{**r, "low": r["low"] * adj, "target": r["target"] * adj, "high": r["high"] * adj} for r in rows]
         at = next((r for r in rows if r["volume"] == vol), rows[-1])
         oem = pm.oem_path({"rows": rows}, sop, volume=at["volume"], released=released)
-        out["scenarios"].append((fab, {"at": at, "rows": rows, "oem": oem, "m": m}))
+        one = pm.single({"rows": rows, "cost": (m or {}).get("cost")})  # the single price at 1M (owner, 9 Nov 2026)
+        if one and (m or {}).get("cost") and out["anchor"]:  # a sibling's floor is not this part's: its band only
+            one = {**one, "price": next(r["target"] for r in rows if r["volume"] == 1000000), "floor": None}
+        out["scenarios"].append((fab, {"at": at, "rows": rows, "oem": oem, "m": m, "single": one}))
     return out
 
 
@@ -342,6 +348,9 @@ def solution(session: Session, rows: list[Row], vol: int, gm: float, adj: float,
                 y = years.setdefault(r["year"], {"year": r["year"], "phase": r["phase"], "low": 0.0, "high": 0.0})
                 y["low"] += q * r["low"]
                 y["high"] += q * r["high"]
+        ones = [(q, s["single"]) for q, s in ok if s.get("single")]
+        tot["single"] = sum(q * x["price"] for q, x in ones) if ones else None
+        tot["n_single"] = len(ones)
         totals.append((fab, {**tot, "oem": sorted(years.values(), key=lambda y: y["year"]), "n": len(ok)}))
     return {"parts": parts, "totals": totals, "missing": [p for p in parts if not p["scenarios"]]}
 

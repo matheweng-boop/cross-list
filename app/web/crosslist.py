@@ -48,7 +48,16 @@ def _ctx(request: Request, text: str, session: Session, sent: int | None = None,
             "lines": cl.export_lines, "kinds": cl.TYPE_KIND, "crossed": cl.crossed,
             "crossed_note": cl.CROSSED_NOTE,
             "p1": {f: cl.p1_labels(f) for f in families},
-            "p1_all": {f: cl.p1_labels(f) for f in load_all_rules()}}  # fmt: skip
+            "p1_all": {f: cl.p1_labels(f) for f in load_all_rules()},
+            "p1m": _singles(request, session)}  # fmt: skip
+
+
+def _singles(request: Request, session: Session):
+    """The single price at 1M a year per part (owner, 9 Nov 2026); the owner's levels only on the owner's view."""
+    from app.services import price_model
+    from app.web.routes import _owner_view
+
+    return price_model.Singles(session, _owner_view(request))
 
 
 @router.get("/cross-list", response_class=HTMLResponse)
@@ -131,7 +140,10 @@ def download(parts: str = Form(""), lights: str = Form(""), crossed: str = Form(
         rows = [r for r in rows if cl.crossed(r)]
     shown = ", ".join(x for x in (cl.LIGHTS.get(want, ""), "crossed parts" if crossed == "1" else "") if x)
     name = f"cross-list-{date.today():%Y-%m-%d}.xlsx"
-    body = export.cross_list_xlsx(rows, sm, over, cl.accuracy(), shown[:1].upper() + shown[1:])
+    from app.services import price_model
+
+    p1m = price_model.Singles(session, owner=False)  # public-data model only, never the owner's levels
+    body = export.cross_list_xlsx(rows, sm, over, cl.accuracy(), shown[:1].upper() + shown[1:], p1m)
     return Response(body, media_type=XLSX, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 

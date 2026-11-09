@@ -244,3 +244,69 @@ def test_levels_stay_out_of_shareables_and_exports(client, session, part):
                                                    for c in row if c is not None)
     for name, t in texts.items():
         assert mark not in t and "8.64" not in t and "SYNLEAKX" not in t, name
+
+
+def _level(client, page_mpn, part_id, price, whose="ours", cross="", volume="100000"):
+    html = client.get(f"/pricing/{part_id}/model").text
+    data = {"mpn": page_mpn, "family": "digital_isolator", "volume": volume, "price": price, "whose": whose,
+            "cross": cross, "bases": _bases(html), "back": f"/parts/{part_id}?price=open",
+            "unit_cost": re.search(r'name="unit_cost" value="([^"]*)"', html).group(1),
+            "maker": re.search(r'name="maker" value="([^"]*)"', html).group(1)}  # fmt: skip
+    assert client.post("/pricing/level", data=data, follow_redirects=False).status_code == 303
+
+
+def test_levels_raise_the_cost_per_maker_and_family(client, session, part):
+    """Owner, 9 Nov 2026: a level read at 60 % gross margin sets the cost; "different companies have different
+    costs": our levels calibrate our maker, the cross's level its maker, in that family only."""
+    cfg = pm.config()
+    assert cfg["calibration_margin"] == 0.60 and "correction" not in str(list(cfg))  # nothing calibrated on file
+    p, pq = _setup(client, session, part)  # SR8641 by SynRef (stands in for us)
+    plain = pm.model(session, p, pq, owner=True)
+    c0 = plain["model_cost"]
+    assert plain["correction"]["n"] == 0 and plain["scale"]["maker"] == "SynRef"
+    level = round(c0 * 5, 4)  # implies a cost of 2 x the model's at 60 %
+    _level(client, "SR8641", p.id, f"{level}")
+    m = pm.model(session, p, pq, owner=True)
+    assert m["correction"]["n"] == 1 and m["correction"]["k"] == pytest.approx(2.0, rel=1e-3)
+    implied = 1 - m["cost"]["levels"]["mid"]["total"] / level
+    assert implied == pytest.approx(0.60, abs=0.005)  # the level now sits at 60 % margin on the model's cost
+    assert "SynRef's cost raised ×2.00 from your price levels (1 part" in client.get(f"/pricing/{p.id}/model").text
+    # the family's other SynRef part rises too; another maker's part (SynGamma) does not
+    other = pm.model(session, part("SR8640N"), None, owner=True)
+    assert other["correction"]["k"] == pytest.approx(2.0, rel=1e-3) and other["correction"]["scope"] == "family"
+    gamma = pm.model(session, part("SC142"), None, owner=True)
+    assert gamma["correction"]["n"] == 0
+    # SynRef in another family: the weaker guide from other families
+    gd = pm.model(session, part("SR8233"), None, owner=True)
+    assert gd["correction"]["scope"] == "other families" and gd["correction"]["k"] == pytest.approx(2.0, rel=1e-3)
+    # the competitor's cross level calibrates the competitor: a different correction in the same family
+    _level(client, "SR8641", p.id, f"{round(c0 * 1.5, 4)}", whose="theirs", cross="SC141")
+    lv = pm.points(session)
+    sc141 = next(x for x in lv if x["key"] == "SC141")
+    assert sc141["maker"] == "SynGamma" and sc141["cost"] > 0
+    gamma = pm.model(session, part("SC142"), None, owner=True)
+    assert gamma["correction"]["n"] == 1 and gamma["correction"]["k"] != pytest.approx(2.0, rel=0.05)
+    assert gamma["cost"]["levels"]["mid"]["total"] != pytest.approx(other["cost"]["levels"]["mid"]["total"], rel=0.05)
+    # the differentiator: price gap = cost gap x margin gap, shown to the owner next to the parity
+    gap = pm.cost_gap(session, lv, "digital_isolator")
+    assert len(gap) == 1 and gap[0]["maker"] == "SynGamma" and gap[0]["ours"] == "SynRef"
+    g = gap[0]
+    assert g["price"] == pytest.approx(g["cost"] * g["margin_ratio"])
+    page = client.get(f"/pricing/{p.id}/model").text
+    assert "<b>SynRef vs SynGamma</b>" in page and "cost ours ≈" in page and "Price gap = cost gap × margin gap" in page
+    # guests and every non-owner model: the bottom-up cost, untouched
+    assert pm.model(session, p, pq)["cost"]["levels"]["mid"]["total"] == pytest.approx(c0)
+    assert pm.model(session, p, pq)["correction"]["n"] == 0
+
+
+def test_guests_never_get_the_cost_correction(owner, make_guest, session, part):
+    p, pq = _setup(owner, session, part)
+    html = owner.get(f"/pricing/{p.id}/model").text
+    c0 = float(re.search(r'name="unit_cost" value="([^"]*)"', html).group(1))
+    owner.post("/pricing/level", data={"mpn": "SR8641", "family": "digital_isolator", "volume": "100000",
+                                       "price": f"{c0 * 5:.4f}", "whose": "ours", "unit_cost": f"{c0}",
+                                       "maker": "SynRef"})  # fmt: skip
+    assert "cost raised" in owner.get(f"/pricing/{p.id}/model").text
+    guest, _ = make_guest()
+    g = guest.get(f"/pricing/{p.id}/model").text
+    assert "cost raised" not in g and "vs SynGamma" not in g and 'name="unit_cost"' not in g

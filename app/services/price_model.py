@@ -281,7 +281,7 @@ def family_factor(session: Session, family: str) -> tuple[float, int]:
 
 
 def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None = None,
-          fab: str | None = None, owner: bool = False) -> dict:  # fmt: skip
+          fab: str | None = None, owner: bool = False, only: int | None = None) -> dict:  # fmt: skip
     """The band per volume, the cost floor and everything they rest on; `missing` says what is not there. With
     `owner` (the owner is looking: never for guests, Shareables or exports) the owner's price levels apply too: the
     family factor rests on them when there are any, and a part's own level re-centres its band."""
@@ -295,9 +295,12 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
         source = f"{lp.get('source') or lp['maker'] + ' list price'} ({lp['retrieved']})"
     f = fit(pts)
     sc = scale_for(session, maker_of(part), part.family)
-    cb = cost(part, gm, fab, sc["factor"])
+    cb = cb0 = cost(part, gm, fab, sc["factor"])
     factor, n_calls = family_factor(session, part.family)
     levels = points(session) if owner else []
+    corr = cost_correction(levels, part.family, sc["maker"])
+    if corr["n"] and cb is not None:  # owner, 9 Nov 2026: "by definition the cost should be higher"
+        cb = cost(part, gm, fab, sc["factor"] * corr["k"])
     lv_factor, n_levels = level_factor(levels, part.family)
     if n_levels:  # owner, 9 Nov 2026: numeric levels say more than low / ok / high calls
         factor = lv_factor
@@ -306,7 +309,8 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
     cur = list_cur or ((getattr(pq, "currency", None) or "USD").upper() if pts else "USD")
     out = {"points": pts, "source": source, "fit": f, "cost": cb, "factor": factor, "n_calls": n_calls,
            "n_levels": n_levels, "levels": own_levels, "call": mine, "rows": [], "missing": [],
-           "converted_from": cur if cur != "USD" else None, "scale": sc,
+           "converted_from": cur if cur != "USD" else None, "scale": sc, "correction": corr,
+           "model_cost": cb0["levels"]["mid"]["total"] if cb0 else None,
            "gm": margin(gm)}  # fmt: skip
     if f is None and cb is None:
         out["missing"].append("no DigiKey price breaks cached and no public list price for this part yet")
@@ -321,6 +325,8 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
         mean, sd, rule = extension(f, part.family)
         out["extension"] = {"mean": mean, "sd": sd, "rule": rule}
     for vol, k in cfg["volumes"].items():
+        if only and int(vol) != only:
+            continue
         w = market_weight(int(vol), f) if cb else 1.0
         draws = simulate(part, f, cb, vol, k, factor, gm, w)
         lo, mid, hi = _percentiles(draws, cfg["monte_carlo"]["percentiles"])
@@ -328,7 +334,8 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
         sign = SIGN.get((mine or {}).get("verdict"), 0)
         target = lo if sign < 0 else hi if sign > 0 else mid
         dist = (f["p_end"] * (vol / f["q_end"]) ** mean if vol > f["q_end"] else f["p_end"]) if f else None
-        base = mid if factor == 1 else _percentiles(simulate(part, f, cb, vol, k, 1.0, gm, w), [50])[0]
+        # the model's own target (no calls, levels or cost correction): what a new level is compared with
+        base = mid if factor == 1 and cb is cb0 else _percentiles(simulate(part, f, cb0, vol, k, 1.0, gm, w), [50])[0]
         out["rows"].append({"volume": int(vol), "distributor": dist, "low": lo, "target": target, "high": hi,
                             "at_floor": lo <= floor * 1.02, "base": base, "weight": w,
                             "allowed_cost": target * (1 - margin(gm))})  # fmt: skip
@@ -592,7 +599,8 @@ def parse_level(text: str) -> tuple[float, float]:
 
 
 def record_level(session: Session, key: str, volume: int, text: str, whose: str, ours: str = "", cross: str = "",
-                 family: str = "", base: float | None = None, author: str = "") -> dict:
+                 family: str = "", base: float | None = None, author: str = "", unit_cost: float | None = None,
+                 maker: str = "") -> dict:
     """Store one price level; `base` is the model's own target for the part at that volume (no calls, no levels), so
     the family factor can compare the level with it later. Returns what was stored."""
     import json
@@ -607,7 +615,9 @@ def record_level(session: Session, key: str, volume: int, text: str, whose: str,
     lo, hi = parse_level(text)
     data = {"volume": int(volume), "low": lo, "high": hi, "whose": whose, "ours": ours.strip().upper()[:120],
             "cross": cross.strip().upper()[:120], "family": family if family in config()["families"] else "",
-            "base": base if base and base > 0 else None}  # fmt: skip
+            "base": base if base and base > 0 else None,
+            "cost": unit_cost if unit_cost and unit_cost > 0 else None,
+            "maker": (maker or "").strip()[:60]}  # fmt: skip
     session.add(DataReview(dataset=LEVELS, key=key, verdict="entered", comment=json.dumps(data),
                            author=author.strip()[:100] or None))  # fmt: skip
     session.commit()
@@ -646,6 +656,68 @@ def _geomean(xs: list[float]) -> float:
     return math.exp(sum(math.log(x) for x in xs) / len(xs))
 
 
+def cost_correction(levels: list[dict], family: str, maker: str = "") -> dict:
+    """Owner, 9 Nov 2026: "The margin is assumed to be around 60 %, so then by definition the cost should be higher"
+    and "different companies have different costs". Each level that carries the model's unit cost implies a cost of
+    level x (1 - calibration margin); the geometric mean of implied / model cost over the maker's levels in the family
+    (within the YAML limits) corrects every cost line of that maker's parts in the family. Without such levels: the
+    maker's levels in other families (weaker), else none (the maker's scale tier alone). Worked out from the owner's
+    levels at request time, for the owner's view only; never written to any file. {k, n, scope, margin}."""
+    cfg = config()
+    cm = cfg["calibration_margin"]
+    mk = (maker or "").lower()
+
+    def ratios(same_family: bool) -> list[float]:
+        return [p["mid"] * (1 - cm) / p["cost"] for p in levels
+                if p.get("cost") and (p.get("maker") or "").lower() == mk
+                and (p.get("family") == family) == same_family]  # fmt: skip
+
+    rs, scope = (ratios(True), "family") if mk else ([], "")
+    if mk and not rs:
+        rs, scope = ratios(False), "other families"
+    if not rs:
+        return {"k": 1.0, "n": 0, "scope": "", "margin": cm}
+    lo, hi = cfg["calibration_limits"]
+    return {"k": min(hi, max(lo, _geomean(rs))), "n": len(rs), "scope": scope, "margin": cm}
+
+
+def maker_of_level(session: Session, mpn: str) -> str:
+    """The maker of a part number someone typed: the parts database, else the public list prices; "" if unknown."""
+    from app.models import Manufacturer
+
+    key = (mpn or "").strip().upper()
+    if not key:
+        return ""
+    from sqlalchemy import func
+
+    name = session.scalar(select(Manufacturer.name).join(Part, Part.manufacturer_id == Manufacturer.id)
+                          .where(func.upper(Part.mpn) == key).limit(1))  # fmt: skip
+    return name or (list_prices().get(key) or {}).get("maker", "")
+
+
+def cost_gap(session: Session, levels: list[dict], family: str) -> list[dict]:
+    """The owner's differentiator view: per competitor maker with pairs in the family, our price vs theirs (learned
+    parity), our calibrated cost vs theirs (scale tier x the cost correction from the levels) and what is left for
+    the margin: price ratio = cost ratio x margin ratio, margin ratio = (1 - their margin) / (1 - our margin); our
+    margin is shown for their margin at the calibration margin. Owner only."""
+    cm = config()["calibration_margin"]
+    out = []
+    by_maker: dict[str, list[dict]] = {}
+    for p in pairs(levels):
+        if p["family"] == family:
+            by_maker.setdefault(p.get("cross_maker") or "", []).append(p)
+    for theirs, ps in by_maker.items():
+        ours = next((p.get("ours_maker") for p in ps if p.get("ours_maker")), "") or config()["scale"]["own_makers"][0]
+        k_o = scale_for(session, ours, family)["factor"] * cost_correction(levels, family, ours)["k"]
+        k_t = scale_for(session, theirs, family)["factor"] * cost_correction(levels, family, theirs)["k"]
+        price = _geomean([p["ratio"] for p in ps])
+        c = k_o / k_t
+        our_margin = 1 - c * (1 - cm) / price  # if their margin is the calibration margin
+        out.append({"maker": theirs or "competitor", "ours": ours, "price": price, "cost": c, "n": len(ps),
+                    "margin_ratio": price / c, "our_margin": our_margin, "their_margin": cm})  # fmt: skip
+    return out
+
+
 def level_factor(levels: list[dict], family: str) -> tuple[float, int]:
     """(multiplier, number of levels) for a family: the geometric mean of level / the model's own target over the
     family's levels that have one, within the calls' limits; (1.0, 0) without any."""
@@ -671,6 +743,7 @@ def pairs(levels: list[dict]) -> list[dict]:
             continue
         out[(ours["key"], theirs["key"], p["volume"])] = {
             "ours": ours["key"], "cross": theirs["key"], "volume": p["volume"],
+            "ours_maker": ours.get("maker") or "", "cross_maker": theirs.get("maker") or "",
             "family": ours.get("family") or theirs.get("family") or "", "ratio": ours["mid"] / theirs["mid"]}
     return list(out.values())
 

@@ -1039,6 +1039,9 @@ def _level_ctx(session: Session, mine: bool, m: dict | None, mpn: str, family: s
     return {"mpn": (mpn or "").strip(), "family": family, "next": back, "parity": par, "pairs": pairs,
             "own": [p for p in levels if key and (p["key"] == key or p.get("ours") == key or p.get("cross") == key)],
             "bases": ",".join(f"{r['volume']}:{r['base']:.6g}" for r in m["rows"] if r.get("base")),
+            "unit_cost": f"{m['model_cost']:.6g}" if m.get("model_cost") else "",
+            "maker": (m.get("scale") or {}).get("maker") or "",
+            "gap": price_model.cost_gap(session, levels, family),
             "ours": price_model.scaled(m, par["lo"], par["hi"]), "whose": price_model.WHOSE}  # fmt: skip
 
 
@@ -1182,7 +1185,8 @@ def _level_back(target: str) -> str:
 @router.post("/pricing/level")
 def price_level(mpn: str = Form(""), cross: str = Form(""), ourpn: str = Form(""), whose: str = Form("ours"),
                 volume: int = Form(100000), price: str = Form(""), family: str = Form(""), bases: str = Form(""),
-                back: str = Form(""), author: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
+                back: str = Form(""), author: str = Form(""), unit_cost: str = Form(""), maker: str = Form(""),
+                session: Session = Depends(get_session)):  # fmt: skip
     """The owner's price level (owner only: guests get 403, the values are confidential). `whose`: "ours" = the part
     on the page is ours; "theirs" = the level of its competitor cross, named in `cross`; "this_theirs" = the part on
     the page is a competitor's, and `ourpn` names our part that crosses it."""
@@ -1203,9 +1207,19 @@ def price_level(mpn: str = Form(""), cross: str = Form(""), ourpn: str = Form(""
                     base = float(b)
                 except ValueError:
                     base = None
+    # whose cost the level calibrates (owner, 9 Nov 2026: "different companies have different costs"): the maker of
+    # the priced part, and the model's unit cost of the page's part at that maker's scale (a cross is taken as the same
+    # die and package)
+    page_maker = maker.strip()[:60]
+    level_maker = page_maker if key == mpn else price_model.maker_of_level(session, key)
+    uc = float(unit_cost) if re.fullmatch(r"\d+(\.\d+)?(e-?\d+)?", unit_cost.strip()) else None
+    if uc and family in price_model.config()["families"] and level_maker != page_maker:
+        uc *= (price_model.scale_for(session, level_maker, family)["factor"]
+               / price_model.scale_for(session, page_maker, family)["factor"])  # fmt: skip
     url = _level_back(back)
     try:
-        price_model.record_level(session, key, volume, price, kind, ours, theirs, family, base, author)
+        price_model.record_level(session, key, volume, price, kind, ours, theirs, family, base, author, uc,
+                                 level_maker)  # fmt: skip
     except ValueError as e:
         sep = "&" if "?" in url else "?"
         return RedirectResponse(f"{url}{sep}level_error={quote(str(e))}#price-level", status_code=303)

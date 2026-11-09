@@ -152,6 +152,14 @@ scale:
     dc_dc: power
     ldo: power
 
+# Owner, 9 Nov 2026: "The margin is assumed to be around 60 %, so then by definition the cost should be higher." Where
+# the owner's own price levels imply a margin above the range, the cost is too low, not the margin too high: on the
+# owner's view the site raises the family's cost lines so that a level sits at this margin (geometric mean over the
+# family's parts with levels, within `calibration_limits`). The factor is worked out from the site's database at each
+# request and never written here (it would give the levels away).
+calibration_margin: 0.60
+calibration_limits: [0.5, 4.0]
+
 calls:                   # the owner's calls on a part move its family's band
   step: 0.08             # each "low end" call x0.92, each "high end" call x1.08
   limits: [0.6, 1.6]

@@ -9,6 +9,7 @@
 <p class="small">{% if par.learned %}Our parts sit at about <b>{{ '%.2f'|format(par.ratio) }} ×</b> the competitor's cross in this family, from {{ par.n }} pair{{ 's' if par.n != 1 }} you entered.
   {% else %}No pairs in this family yet (our part and its competitor cross at the same volume): the default parity of {{ (par.lo * 100)|round|int }}–{{ (par.hi * 100)|round|int }} % (our part vs the competitor's) applies.{% endif %}
   {% if estimate %}{% set o = level.ours|selectattr('volume', 'equalto', 100000)|first %}{% if o %}If this part is a competitor's, ours would sit at about {{ usd(o.low) }}–{{ usd(o.high) }} at 100,000 a year.{% endif %}{% endif %}</p>
+{% for g in level.gap %}<p class="small pm-gap"><b>{{ g.ours }} vs {{ g.maker }}</b> (from {{ g.n }} pair{{ 's' if g.n != 1 }} you entered): price ours ≈ {{ '%.2f'|format(g.price) }} × theirs; cost ours ≈ {{ '%.2f'|format(g.cost) }} × theirs (scale tier × your levels, each read at {{ (g.their_margin * 100)|round|int }} % gross margin). Price gap = cost gap × margin gap: the remaining ×{{ '%.2f'|format(g.margin_ratio) }} is margin, so ours sits at about {{ (g.our_margin * 100)|round|int }} % if theirs is at {{ (g.their_margin * 100)|round|int }} %.</p>{% endfor %}
 {% if level.own %}<div class="table-wrap"><table class="small pm-table pm-levels"><thead><tr><th scope="col">Part</th><th scope="col">Volume a year</th><th scope="col">Price</th><th scope="col">Entered</th><th scope="col"><span class="visually-hidden">Delete</span></th></tr></thead>
 <tbody>{% for p in level.own %}<tr><th scope="row">{{ p.key }} <small class="muted">· {{ level.whose[p.whose]|lower }}{% if p.whose == 'ours' and p.cross %} (cross {{ p.cross }}){% elif p.whose == 'theirs' and p.ours %} (cross of {{ p.ours }}){% endif %}</small></th>
   <td>{{ '{:,}'.format(p.volume) }}</td><td>{{ lvl(p) }}</td><td class="muted">{{ p.date.strftime('%d %b %Y') if p.date else '' }}</td>
@@ -17,6 +18,7 @@
 <form method="post" action="/pricing/level" class="pm-level-form">
   <input type="hidden" name="mpn" value="{{ level.mpn }}"><input type="hidden" name="family" value="{{ level.family }}">
   <input type="hidden" name="bases" value="{{ level.bases }}"><input type="hidden" name="back" value="{{ level.next }}">
+  <input type="hidden" name="unit_cost" value="{{ level.unit_cost }}"><input type="hidden" name="maker" value="{{ level.maker }}">
   <div class="pm-level-grid">
     <label>Volume a year <select name="volume">{% for v in cfg.volumes %}<option value="{{ v|int }}"{{ ' selected' if v|int == 100000 }}>{{ '{:,}'.format(v|int) }}</option>{% endfor %}</select></label>
     <label>Price in USD <input name="price" required inputmode="decimal" autocomplete="off" placeholder="e.g. 3.5, 0.71-0.76 or 0.7x"></label>

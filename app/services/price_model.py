@@ -345,6 +345,48 @@ def model(session: Session, part: Part, pq: PriceQuote | None, gm: float | None 
     return out
 
 
+_SINGLES: dict[tuple, dict | None] = {}
+
+
+class Singles:
+    """The single price at 1M a year for the parts of one page (owner, 9 Nov 2026: "1M price should appear everywhere
+    possible"): `Singles(session, owner)(part)` -> {price, floor, by_level} or None for a part without a model (no
+    cost family). Only the 1M volume is worked out; results are kept across requests until a quote, a call or a level
+    changes. With `owner` False (guests, Shareables, exports) the owner's levels never enter."""
+
+    def __init__(self, session: Session, owner: bool = False):
+        from sqlalchemy import func
+
+        self.session, self.owner = session, owner
+        self.rev = session.scalar(select(func.max(DataReview.id))) or 0
+
+    def __call__(self, part) -> dict | None:
+        if part is None or getattr(part, "family", None) not in config()["families"]:
+            return None
+        pq = None
+        if getattr(part, "id", None):
+            pq = self.session.scalar(select(PriceQuote).where(PriceQuote.part_id == part.id,
+                                                              PriceQuote.source == "digikey"))  # fmt: skip
+        key = (part.id, part.mpn, getattr(pq, "fetched_at", None), self.owner, self.rev, id(config()))
+        if key not in _SINGLES:
+            if len(_SINGLES) > 5000:
+                _SINGLES.clear()
+            _SINGLES[key] = model(self.session, part, pq, owner=self.owner, only=1000000).get("single")
+        return _SINGLES[key]
+
+
+def single_text(s: dict | None, short: bool = False) -> str:
+    """"≈ $0.236 at 1M" (with the floor unless `short`); "" without a price."""
+    if not s or not s.get("price"):
+        return ""
+
+    def usd(x: float) -> str:
+        return f"${x:.3f}" if x < 1 else f"${x:.2f}"
+
+    floor = f" · floor {usd(s['floor'])}" if s.get("floor") and not short else ""
+    return f"≈ {usd(s['price'])} at 1M{floor}"
+
+
 def single(m: dict) -> dict | None:
     """One price per part at 1M a year (owner, 9 Nov 2026: "a single price estimate at 1 million pieces, the floor for
     example"): the band's target at 1M, never below the cost floor at the lowest typical margin; the owner's own

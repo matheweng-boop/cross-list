@@ -29,6 +29,7 @@
     <td class="{{ 'sota-best' if f.key in m.best }}"{% if f.key in m.best %} data-best="1"{% endif %}>{% if c %}
       {{ sota.fmt(c.value, f) }}{% if c.table %}<span class="sota-mark" title="Not read in a datasheet: {{ c.where }}">{{ mark }}</span>{% endif %}
       <small><a href="/parts/{{ c.part_id }}">{{ c.mpn }}</a>{% if c.others %} and {{ c.others }} other{{ 's' if c.others != 1 }}{% endif %}</small>
+      {% set s1 = p1m(c.part_id) %}{% if s1 %}<small class="p1m" title="Model price of {{ c.mpn }} at 1,000,000 a year (estimate)">{{ p1m_text(s1, true) }}</small>{% endif %}
       <small class="sota-src" title="{{ c.source }}">{{ c.where }}</small>
     {% else %}<span class="muted">–</span>{% endif %}</td>
     {% else %}

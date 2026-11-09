@@ -158,6 +158,30 @@ def test_price_level_entered_on_a_phone(page):
     assert "Set by your price level" not in page.locator(".pm-single").inner_text()
 
 
+def test_single_price_at_1m_on_a_phone(page):
+    """Worker P, 9 Nov 2026 ("1M price should appear everywhere possible"): the part page's results, Cross a list,
+    State of the art and the solution builder show it at 390 px without sideways scrolling. Synthetic parts."""
+    page.set_viewport_size(PHONE)
+    go(page, "/find?q=SR8641")
+    assert page.locator("table.results .p1m").count() >= 1
+    assert "at 1M" in page.locator("table.results .p1m").first.inner_text()
+    assert overflow(page) <= 1
+    go(page, "/cross-list")
+    page.locator("#cx-parts").fill("SC141\nSD4100")
+    with page.expect_navigation():
+        page.get_by_role("button", name="Cross all").click()
+    assert page.locator(".cx-table .p1m").count() >= 2 and overflow(page) <= 1
+    go(page, "/state-of-the-art")
+    assert overflow(page) <= 1
+    go(page, "/pricing/builder")
+    form = page.locator("form").filter(has=page.locator("input[name=mpn]")).first
+    form.locator("input[name=mpn]").first.fill("SR8641")
+    form.locator("textarea[name=breaks]").first.fill("1000 1.25\n2500 1.05")
+    with page.expect_navigation():
+        form.locator("button[name=do][value=price], button[type=submit]").first.click()
+    assert "System at 1M a year" in page.content() and overflow(page) <= 1
+
+
 def test_price_estimate_with_every_number_blank(page):
     go(page, "/pricing/estimate")
     form = page.locator("form.pe-form")

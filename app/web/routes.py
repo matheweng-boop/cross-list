@@ -69,6 +69,7 @@ templates.env.globals.update(
     family_titles=lambda: {k: v.title for k, v in load_all_rules().items()},
     pricing_enabled=pricing.enabled,
     has_list_price=price_model.has_list_price,
+    p1m_text=price_model.single_text,  # the single price at 1M a year (owner, 9 Nov 2026)
     qty_label=pricing.qty_label,
     site_locked=lambda: bool(get_settings().site_password),
     signed_in=principal,
@@ -478,6 +479,7 @@ def part_detail(
 
     part = _part_or_404(session, part_id)
     ctx = _part_context(session, part, hide_eol, company, scope, type, dev, grade, all, supply(vdd))
+    ctx["p1m"] = price_model.Singles(session, _owner_view(request))
     return templates.TemplateResponse(request, "part.html", ctx)
 
 
@@ -543,7 +545,8 @@ def results_download(
     if grade in GRADE_LABELS:
         rows = [(r, v) for r, v in rows if grade_of(r.candidate) == grade]
     if fmt == "xlsx":
-        return _download(export.results_xlsx(part, rows), f"replacements_{part.mpn}.xlsx", XLSX)
+        p1m = price_model.Singles(session, owner=False)  # public-data model only, never the owner's levels
+        return _download(export.results_xlsx(part, rows, p1m), f"replacements_{part.mpn}.xlsx", XLSX)
     if fmt == "csv":
         return _download(export.results_csv(rows), f"replacements_{part.mpn}.csv", "text/csv")
     raise HTTPException(404, "Unknown format")

@@ -147,8 +147,18 @@ def _result_cells(r: CrossResult, v) -> list[str]:
     ]
 
 
-def results_xlsx(reference, rows) -> bytes:
-    """The part page's result table: one row per candidate with its drop-in verdict."""
+P1M_NOTE = "Model price at 1M a year (USD, est; public data only)"
+
+
+def _p1m(p1m, part):
+    """The single price at 1M a year of a part as a number, "" without a model (owner, 9 Nov 2026)."""
+    s = p1m(part) if p1m is not None and part is not None else None
+    return round(s["price"], 4) if s and s.get("price") else ""
+
+
+def results_xlsx(reference, rows, p1m=None) -> bytes:
+    """The part page's result table: one row per candidate with its drop-in verdict (and, with `p1m`, the model
+    price at 1M a year, public data only)."""
     wb = Workbook()
     ws = wb.active
     ws.title = "Replacements"
@@ -163,11 +173,11 @@ def results_xlsx(reference, rows) -> bytes:
     if reference.is_synthetic:
         ws.append([SYNTHETIC_NOTE])
     ws.append([])
-    ws.append(RESULT_HEADER)
+    ws.append(RESULT_HEADER + ([P1M_NOTE] if p1m else []))
     for cell in ws[ws.max_row]:
         cell.font = BOLD
     for r, v in rows:
-        ws.append(_result_cells(r, v))
+        ws.append(_result_cells(r, v) + ([_p1m(p1m, r.candidate)] if p1m else []))
         ws.cell(ws.max_row, 3).fill = VERDICT_FILLS[v.category]
     _autosize(ws)
     buf = io.BytesIO()
@@ -194,28 +204,46 @@ CROSS_LIST_WIDTHS = {"#": 5, "Your part": 20, "Maker": 14, "Status": 11, "Light"
                      "Your comment": 30}  # fmt: skip
 
 
-def cross_list_xlsx(rows, summary: dict, over: int = 0, accuracy: dict | None = None, shown: str = "") -> bytes:
+# owner, 9 Nov 2026: the single price at 1M a year, before the owner's own comment column (which stays last)
+CROSS_LIST_1M = ["Your part at 1M (USD, model est)", "Drop-in at 1M (USD, model est)",
+                 "Functional fit at 1M (USD, model est)"]  # fmt: skip
+
+
+def cross_list_header(with_1m: bool = True) -> list[str]:
+    from app.services.crosslist import EXPORT_HEADER
+
+    return [*EXPORT_HEADER[:-1], *CROSS_LIST_1M, EXPORT_HEADER[-1]] if with_1m else list(EXPORT_HEADER)
+
+
+def cross_list_xlsx(rows, summary: dict, over: int = 0, accuracy: dict | None = None, shown: str = "",
+                    p1m=None) -> bytes:  # fmt: skip
     from app.services.crosslist import EXPORT_HEADER, MAX_LINES, PRECHECK_NOTE, export_lines, today
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Cross list"
-    ws.append(EXPORT_HEADER)
+    extra = CROSS_LIST_1M if p1m else []
+    header = cross_list_header(bool(p1m))
+    ws.append(header)
     for cell in ws[1]:
         cell.font = BOLD
         cell.alignment = Alignment(wrap_text=True, vertical="top")
     light_col = EXPORT_HEADER.index("Light") + 1
     wrap = {i + 1 for i, h in enumerate(EXPORT_HEADER)
             if "comment" in h.lower() or h.startswith("Checked") or "best" in h.lower()}
-    for line in (x for r in rows for x in export_lines(r)):
+    lines = [(line, r, i) for r in rows for i, line in enumerate(export_lines(r))]
+    for line, r, i in lines:
+        if extra:
+            parts = (r.part, r.drop_in and r.drop_in.part, r.functional and r.functional.part)
+            line = [*line[:-1], *([_p1m(p1m, p) for p in parts] if i == 0 else ["", "", ""]), line[-1]]
         ws.append(line)
         n = ws.max_row
         ws.cell(n, light_col).fill = LIGHT_FILLS[ws.cell(n, light_col).value]
-        for c in range(1, len(EXPORT_HEADER) + 1):
+        for c in range(1, len(header) + 1):
             ws.cell(n, c).alignment = Alignment(wrap_text=c in wrap, vertical="top")
     ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:{get_column_letter(len(EXPORT_HEADER))}{ws.max_row}"
-    for i, h in enumerate(EXPORT_HEADER, 1):
+    ws.auto_filter.ref = f"A1:{get_column_letter(len(header))}{ws.max_row}"
+    for i, h in enumerate(header, 1):
         ws.column_dimensions[get_column_letter(i)].width = CROSS_LIST_WIDTHS.get(h, 14)
 
     sm = wb.create_sheet("Summary")

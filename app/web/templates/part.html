@@ -55,7 +55,7 @@
 </div>
 </details>
 {% if pricing_enabled() or has_list_price(part.mpn) %}<details id="price-model" class="pm"{% if request.query_params.get('price') %} open{% endif %} hx-get="/pricing/{{ part.id }}/model{% if request.query_params.get('level_error') %}?level_error={{ request.query_params.get('level_error')|urlencode }}{% endif %}" hx-target="find .pm-body" hx-trigger="{{ 'load' if request.query_params.get('price') else 'toggle once' }}">
-<summary>Price vs volume <span class="small muted">· rough band at 10k, 100k and 1M a year (estimate)</span></summary>
+<summary>Price vs volume <span class="small muted">· rough band at 10k, 100k and 1M a year (estimate){% set s1 = p1m(part) if p1m is defined else none %}{% if s1 %} · <b class="p1m">{{ p1m_text(s1, true) }}</b>{% endif %}</span></summary>
 <div class="pm-body"><p class="small muted"><span class="spinner" aria-hidden="true"></span> Working out the band…</p></div>
 </details>{% endif %}
 
@@ -140,7 +140,7 @@
         {% elif rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}
         {% if c.id in verified_ids %}<span class="badge ok" title="A person confirmed this pair">✓ Verified</span>{% endif %}
-        <br><small class="muted">{{ c.manufacturer.name|vendor }}</small>
+        <br><small class="muted">{{ c.manufacturer.name|vendor }}</small>{% set s1 = p1m(c) if p1m is defined else none %}{% if s1 %} <small class="p1m" title="Model price at 1,000,000 a year (estimate), never below the cost floor">{{ p1m_text(s1, true) }}</small>{% endif %}
         {% if rank is not none %}<br><small class="rank-reason">{{ rank_reason(r, v) }}</small>{% endif %}
         {% set nvar = alts_for(c)|length + out_variants(c)|length + pkg_options(c)|length %}
         <br><button type="button" class="detail-toggle" aria-expanded="false" aria-controls="d-{{ c.id }}"><span class="dt-arrow" aria-hidden="true">▸</span> {{ 'Show details & ' ~ nvar ~ ' variant' ~ ('s' if nvar != 1 else '') if nvar else 'Details' }}</button></td>

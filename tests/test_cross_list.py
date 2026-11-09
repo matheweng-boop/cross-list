@@ -13,7 +13,7 @@ from app.db import get_engine
 from app.matching.engine import WORSE, Diff, Fit
 from app.models import DataReview, ExternalSubmission
 from app.services import crosslist as cl
-from app.services import inbox
+from app.services import export, inbox
 from app.services.seed import load_file
 from tests.conftest import ROOT
 
@@ -179,7 +179,8 @@ def test_excel_download_mirrors_the_table(client):
     wb = load_workbook(io.BytesIO(r.content))
     ws = wb["Cross list"]
     values = [[c.value for c in row] for row in ws.iter_rows()]
-    assert values[0] == cl.EXPORT_HEADER and ws["A1"].font.bold and ws.freeze_panes == "A2" and ws.auto_filter.ref
+    assert values[0] == export.cross_list_header() and ws["A1"].font.bold
+    assert ws.freeze_panes == "A2" and ws.auto_filter.ref
     body = values[1:]
     assert [v[1] for v in body] == ["SC141 ×2", "SD4100", "SC142", "ZZZ999"]
     assert [v[4] for v in body] == ["Amber", "Amber", "Red", "Red"]
@@ -418,7 +419,7 @@ def test_other_family_row_on_the_page_and_in_the_excel(client, isolators):
     r = client.post("/cross-list.xlsx", data={"parts": "NSI8321N1-Q1SPR\nISO6760QDWRQ1"})
     ws = load_workbook(io.BytesIO(r.content))["Cross list"]
     vals = [[c.value for c in row] for row in ws.iter_rows()]
-    assert vals[0] == cl.EXPORT_HEADER and "Other family option" not in vals[0]
+    assert vals[0] == export.cross_list_header() and "Other family option" not in vals[0]
     assert [v[0] for v in vals[1:]] == [1, cl.OTHER_LINE, 2, cl.OTHER_LINE]
     assert vals[2][9] == "SI8621EC-AS" and vals[2][5] is None and vals[4][5].startswith("SI86")
     assert ws.cell(3, 5).fill.fgColor.rgb[-6:] == "FFEB9C"  # the part's amber light on its other-family line

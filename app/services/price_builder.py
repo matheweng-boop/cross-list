@@ -328,7 +328,10 @@ def price_row(session: Session, row: Row, vol: int, gm: float, adj: float, sop: 
         rows = [{**r, "low": r["low"] * adj, "target": r["target"] * adj, "high": r["high"] * adj} for r in rows]
         at = next((r for r in rows if r["volume"] == vol), rows[-1])
         oem = pm.oem_path({"rows": rows}, sop, volume=at["volume"], released=released)
-        out["scenarios"].append((fab, {"at": at, "rows": rows, "oem": oem, "m": m}))
+        one = pm.single({"rows": rows, "cost": (m or {}).get("cost")})  # the single price at 1M (owner, 9 Nov 2026)
+        if one and (m or {}).get("cost") and out["anchor"]:  # a sibling's floor is not this part's: its band only
+            one = {**one, "price": next(r["target"] for r in rows if r["volume"] == 1000000), "floor": None}
+        out["scenarios"].append((fab, {"at": at, "rows": rows, "oem": oem, "m": m, "single": one}))
     return out
 
 
@@ -345,6 +348,9 @@ def solution(session: Session, rows: list[Row], vol: int, gm: float, adj: float,
                 y = years.setdefault(r["year"], {"year": r["year"], "phase": r["phase"], "low": 0.0, "high": 0.0})
                 y["low"] += q * r["low"]
                 y["high"] += q * r["high"]
+        ones = [(q, s["single"]) for q, s in ok if s.get("single")]
+        tot["single"] = sum(q * x["price"] for q, x in ones) if ones else None
+        tot["n_single"] = len(ones)
         totals.append((fab, {**tot, "oem": sorted(years.values(), key=lambda y: y["year"]), "n": len(ok)}))
     return {"parts": parts, "totals": totals, "missing": [p for p in parts if not p["scenarios"]]}
 

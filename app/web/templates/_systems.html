@@ -5,7 +5,7 @@
 {% macro diagram_flag(n) -%}
 {% if n %}<span class="dg-flag has" title="{{ n }} block diagram{{ 's' if n != 1 }} available">Block diagram ✓ ({{ n }})</span>{% else %}<span class="dg-flag none" title="No block diagram drawn for this yet">No diagram yet</span>{% endif %}
 {%- endmacro %}
-{% macro sub_card(s, x, n, deep, diagrams=none) -%}
+{% macro sub_card(s, x, n, deep, diagrams=none, customers=false) -%}
 <article class="sys-sub" id="card-{{ s.key }}-{{ x.key }}" data-sub="{{ x.key }}">
   <b class="sys-sub-title">{{ x.title }}</b>
   {% if x.elements %}<span class="sys-els small">{% for e in x.elements %}<span class="sys-el">{{ e }}</span>{% endfor %}</span>{% endif %}
@@ -16,6 +16,7 @@
     {%- elif n %}<a class="sys-btn sys-btn-dg" href="/blocks?system={{ s.key }}&amp;sub={{ x.key }}#sub-{{ x.key }}">▦ See the {{ n }} block diagrams</a>
     {%- else %}{{ diagram_flag(0) }}{% endif %}
   </div>
+  {% if customers %}{% from "_possible_customers.html" import pc_box %}{{ pc_box(possible_customers.for_sub(s.key, x.key), x.title, "pc-" ~ s.key ~ "-" ~ x.key) }}{% endif %}
   {% if x.links %}<small class="sys-also">Also:{% for label, href in x.links %}<a href="{{ href }}">{{ label }}</a>{{ ' · ' if not loop.last }}{% endfor %}</small>{% endif %}
 </article>
 {%- endmacro %}

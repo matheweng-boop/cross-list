@@ -18,7 +18,8 @@
   <summary><span class="sys-name">{{ s.title }}</span> <small class="muted">· {{ s.subs|length }} sub-systems · {{ s.n }} block diagram{{ 's' if s.n != 1 }}{% if s.deep %} · {{ s.deep|length }} deep dive{{ 's' if s.deep|length != 1 }}{% endif %}</small></summary>
   <div class="sys-body">
   <p class="small muted">{{ s.summary }} <a href="/blocks?system={{ s.key }}#diagrams-{{ s.key }}">All {{ s.title }} block diagrams</a></p>
-  <div class="sys-grid">{% for x in s.subs %}{{ sub_card(s, x, x.idx|length, x.deep, x.diagrams) }}{% endfor %}</div>
+  <div class="sys-grid">{% for x in s.subs %}{{ sub_card(s, x, x.idx|length, x.deep, x.diagrams, customers=true) }}{% endfor %}</div>
+  {% from "_possible_customers.html" import pc_box %}{{ pc_box(possible_customers.for_system(s.key), "all of " ~ s.title, "pc-" ~ s.key) }}
   {% if s.deep %}<h3 class="small muted">Deep dives in {{ s.title }}</h3><div class="lib-grid">{% for t in s.deep %}{{ topic_card(t) }}{% endfor %}</div>{% endif %}
   </div>
 </details>

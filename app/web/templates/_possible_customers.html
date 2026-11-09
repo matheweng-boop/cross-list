@@ -1,0 +1,28 @@
+{#- Possible customers per region (owner, 9 Nov 2026): companies that publicly build the systems, each with its line
+   and source link; folded. g: possible_customers.for_sub() / for_system(). Public company names only (Markets &
+   customers shows them to guests too); kept out of the Shareable reports. -#}
+{% macro pc_box(g, label, id) -%}
+{% if g and (g.n or g.few) %}
+<details class="pc-box" id="{{ id }}">
+  <summary><span class="pc-sum">Possible customers</span> <small class="muted">· {{ label }} · {% for r, v in g.regions.items() %}{{ r }} {{ v|length + g.more[r]|length }}{{ ' · ' if not loop.last }}{% endfor %}</small></summary>
+  <p class="small muted pc-note">{{ g.note }} By region: headquarters plus the regions the company's own public pages show; a company in several regions is listed in each.</p>
+  {% if g.few %}<p class="small muted">{{ g.few }}</p>{% endif %}
+  <div class="pc-regions">
+  {% for r, v in g.regions.items() %}
+    <section class="pc-region" aria-label="{{ r }}">
+      <h4 class="pc-rh">{{ r }} <small class="muted">{{ v|length + g.more[r]|length }}</small></h4>
+      {% if v %}<ul class="pc-list">{% for c in v %}
+        <li><b>{{ c.name }}</b>{% if c.type %} <small class="muted">· {{ c.type }}</small>{% endif %}
+          {% if c.note %}<br><span class="small">{{ c.note }}</span>{% endif %}
+          {% if c.regions|length > 1 or c.where %}<br><small class="muted">{% if c.regions|length > 1 %}In {{ c.regions|join(', ') }}{{ ': ' if c.where }}{% endif %}{{ c.where }}{% for s in c.presence %} <a href="{{ s.url }}" target="_blank" rel="noopener">({{ s.type }}, read {{ s.date }})</a>{% endfor %}</small>{% endif %}
+          <br><small class="pc-src">{% for s in c.sources %}<a href="{{ s.url }}" target="_blank" rel="noopener" title="{{ s.title }}">source</a> <span class="muted">{{ s.type }}, read {{ s.date }}</span>{{ ' · ' if not loop.last }}{% endfor %}</small></li>
+      {% endfor %}</ul>{% else %}<p class="small muted">Few public sources so far.</p>{% endif %}
+      {% if g.more[r] %}<p class="small muted">Also: {{ g.more[r]|join(', ') }}</p>{% endif %}
+    </section>
+  {% endfor %}
+  </div>
+  {% if g.unplaced %}<p class="small muted pc-unplaced"><b>Region not checked yet:</b> {% for c in g.unplaced %}{{ c.name }} ({% if c.note %}{{ c.note }}, {% endif %}{% for s in c.sources %}<a href="{{ s.url }}" target="_blank" rel="noopener">source</a> {{ s.type }}, read {{ s.date }}{{ '; ' if not loop.last }}{% endfor %}){{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+  <p class="small muted">More companies per market: <a href="/business/customers">Markets &amp; customers › Customers</a>.</p>
+</details>
+{% endif %}
+{%- endmacro %}

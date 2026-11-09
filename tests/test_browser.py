@@ -1687,3 +1687,57 @@ def test_shareable_row_downloads_an_animated_powerpoint(page):
     assert dl.value.suggested_filename == "skyworks-qorvo-uwb-animated.pptx"
     with open(dl.value.path(), "rb") as f:
         assert f.read(2) == b"PK"
+
+
+# --- Products > State of the art and "vs best" on crosses (owner, 8 Nov 2026; worker V) ----------------------------
+# The live server has the demo parts only, so the page shows them, marked as demo data.
+def test_state_of_the_art_page_and_chips(page):
+    """The menu entry opens the page; category and sub-type chips switch the table; best values are marked green and
+    link their part (iPad upright; 390 px checked after the test)."""
+    page.set_viewport_size({"width": 820, "height": 1180})
+    go(page, "/")
+    with page.expect_navigation():
+        page.locator('a[href="/state-of-the-art"]').first.click()
+    expect(page.locator("main h1")).to_have_text("State of the art")
+    expect(page.locator(".sota-table tbody tr").first).to_be_visible()
+    expect(page.locator(".sota-gaps")).to_contain_text("Our gaps at a glance:")
+    expect(page.locator(".sota-table td.sota-best").first).to_be_visible()
+    with page.expect_navigation():
+        page.locator(".sota-chip", has_text="Isolated gate drivers").click()
+    expect(page.locator('.sota-chip[aria-current="page"]')).to_have_text("Isolated gate drivers")
+    subs = page.locator('[aria-label="Sub-type"] .sota-chip')
+    assert subs.count() >= 2
+    label = subs.nth(1).inner_text().rsplit(" ", 1)[0]
+    with page.expect_navigation():
+        subs.nth(1).click()
+    expect(page.locator('.sota-chip[aria-current="true"]')).to_contain_text(label)
+    with page.expect_navigation():
+        page.locator(".sota-table td a").first.click()
+    assert "/parts/" in page.url
+
+
+def test_part_page_and_cross_a_list_fold_vs_best(page):
+    """A competitor part's best cross shows a folded "vs best": tap to open the table and its reading; Cross a list
+    has the same fold per result, inside the narrow table (390 px checked after the test)."""
+    go(page, "/find?q=SC141")
+    page.locator(".detail-toggle").first.click()  # the result's details, where "vs best" sits
+    fold = page.locator("tr.detail-row:not([hidden]) details.sota-vs").first
+    expect(fold).to_be_visible()
+    expect(fold.locator("table")).to_be_hidden()  # folded by default
+    fold.locator("summary").click()
+    expect(fold.locator("table")).to_be_visible()
+    expect(fold).to_contain_text("Best in our data")
+    expect(fold).to_contain_text("Reading: The offered part")
+    go(page, "/cross-list")
+    page.locator("#cx-parts").fill("SC141\nSD4100")
+    page.get_by_role("button", name="Cross all").click()
+    page.wait_for_load_state("load")
+    row = page.locator("tr.cx-row", has_text="SC141").first
+    fold = row.locator("details.sota-vs").first
+    expect(fold.locator("table")).to_be_hidden()
+    fold.locator("summary").click()
+    expect(fold.locator("table")).to_be_visible()
+    expect(fold.locator(".sota-tag").first).to_be_visible()
+    page.set_viewport_size(PHONE)  # opened, the fold scrolls inside its own box: the table does not widen the page
+    page.wait_for_timeout(200)
+    assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll with vs best open on a phone"

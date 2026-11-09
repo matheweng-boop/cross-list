@@ -11,6 +11,8 @@ NAV = (
         ("Cross a list", "/cross-list", "Paste many part numbers: drop-in and best fit for each, in your order"),
         ("Part knowledge", "/reviews", "A part explained: how it works, datasheet, key values, app notes; request one"),
         ("Compare", "/compare", "Parameter table for any list of parts"),
+        # owner, 8 Nov 2026: "what is the best of the best in technology that each company ... has to offer"
+        ("State of the art", "/state-of-the-art", "The best each maker offers per key figure, by part category"),
         ("Price estimate", "/pricing/estimate", "Rough price band at volume from a few distributor prices"),
         ("Solution price builder", "/pricing/builder", "Price several parts or a whole radio or block diagram"),
         # owner, 2 Nov 2026 (item 18): "something similar to ClockBuilder Pro", in the browser
@@ -102,6 +104,7 @@ PLACES = {
     "/pricing/": ("products", "/"),
     "/parts": ("products", "/"),  # owner, 24 Oct 2026: Browse products off the menu (too long); reachable by link
     "/compare": ("products", "/compare"),
+    "/state-of-the-art": ("products", "/state-of-the-art"),
     "/clocks": ("products", "/clocks"),
     "/portfolio": ("systems", "/blocks/cross-sell"),  # owner, 25 Oct 2026: the portfolio is a Cross-sell tab
     "/broadcast": ("systems", "/blocks"),  # owner, 23 Oct 2026: Radio & audio is the Car radio application

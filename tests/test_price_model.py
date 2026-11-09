@@ -46,10 +46,12 @@ def test_band_floor_and_calls(client, session, part, real):
     assert client.post(f"/pricing/{p.id}/call", data={"verdict": "cheap"}).status_code == 400
 
 
-def test_no_quote_says_what_is_missing(client, real):
+def test_no_quote_gives_a_cost_only_band(client, real):
+    """Owner, 9 Nov 2026: without a public curve the band is the cost-based price alone (was "Not Enough Data")."""
     pid = ids(client, "SI86S641EC-IS1")
     html = client.get(f"/pricing/{pid}/model").text
-    assert "Not Enough Data</b> to model yet" in html
+    assert "No public price curve for this part" in html and "at 1M / year" in html
+    assert "Not Enough Data</b>" not in html
     assert 'id="price-model"' not in client.get(f"/parts/{pid}").text  # no DigiKey and no list price: no panel
 
 
@@ -156,7 +158,7 @@ def test_gross_margin_slider(client, session, part, real):
     low, high = pm.model(session, p, None, 0.30), pm.model(session, p, None, 0.70)
     assert low["gm"] == 0.30 and high["gm"] == 0.70 and high["cost"]["floor"] > low["cost"]["floor"]
     assert all(h["allowed_cost"] < lo["allowed_cost"] for h, lo in zip(high["rows"], low["rows"], strict=True))
-    assert pm.margin(0.99) == pm.config()["margin"]["slider"][1] and pm.margin(None) == pm.config()["margin"]["floor"]
+    assert pm.margin(0.99) == pm.config()["margin"]["slider"][1] and pm.margin(None) == pm.config()["margin"]["default"]
     html = client.get(f"/pricing/{p.id}/model?gm=55").text
     assert 'type="range" name="gm"' in html and "At 55 % gross margin" in html
     est = client.get("/pricing/estimate", params={"family": "gate_driver", "breaks": GD3162, "gm": 60}).text

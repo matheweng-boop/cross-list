@@ -39,7 +39,8 @@ def datasets() -> dict[str, tuple[str, dict]]:
 def summary(session: Session) -> dict[tuple[str, str], dict]:
     """Verdict counts and the latest comments per (dataset, key)."""
     out: dict[tuple[str, str], dict] = defaultdict(lambda: {"correct": 0, "wrong": 0, "unsure": 0, "comments": []})
-    for r in session.scalars(select(DataReview).order_by(DataReview.created_at)):
+    for r in session.scalars(select(DataReview).where(DataReview.dataset != "price_point")  # confidential levels
+                             .order_by(DataReview.created_at)):  # fmt: skip
         e = out[(r.dataset, r.key)]
         e[r.verdict] = e.get(r.verdict, 0) + 1
         if r.comment:

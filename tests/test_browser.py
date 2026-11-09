@@ -133,6 +133,31 @@ def test_price_estimate_picks_a_part_override_and_estimate(page):
     assert page.locator("form.pe-form select[name=family]").input_value() == value
 
 
+def test_price_level_entered_on_a_phone(page):
+    """Worker P, 9 Nov 2026: the owner enters a price level on the Price estimate page at 390 px; the band and the
+    single price at 1M follow it, and it can be deleted. Synthetic part and invented price."""
+    page.set_viewport_size(PHONE)
+    go(page, "/pricing/estimate?name=SYN-PL-1&family=digital_isolator&bq=1000&bp=1.20&bq=2500&bp=1.05")
+    assert "at 1M / year" in page.locator(".pm-single").inner_text()
+    form = page.locator("form.pm-level-form")
+    form.scroll_into_view_if_needed()
+    form.locator("select[name=volume]").select_option("1000000")
+    form.locator("input[name=price]").fill("0.7x")
+    form.locator("input[name=whose][value=ours]").check()
+    with page.expect_navigation():
+        form.get_by_role("button", name="Save price level").click()
+    assert page.url.endswith("#price-level")
+    assert "Set by your price level" in page.locator(".pm-single").inner_text()
+    assert page.locator(".pm-set").count() >= 1
+    row = page.locator("table.pm-levels tbody tr").first
+    assert "SYN-PL-1" in row.inner_text() and "$0.700–$0.790" in row.inner_text()
+    assert overflow(page) <= 1
+    with page.expect_navigation():
+        row.get_by_role("button", name=re.compile("Delete")).click()
+    assert page.locator("table.pm-levels").count() == 0
+    assert "Set by your price level" not in page.locator(".pm-single").inner_text()
+
+
 def test_price_estimate_with_every_number_blank(page):
     go(page, "/pricing/estimate")
     form = page.locator("form.pe-form")

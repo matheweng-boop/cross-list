@@ -992,7 +992,7 @@ def pricing_line(
 
 
 @router.get("/pricing/{part_id}/model", response_class=HTMLResponse)
-def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
+def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0, level_error: str = "",
                       session: Session = Depends(get_session)):  # fmt: skip
     """Rough price band at 10k / 100k / 1M a year from the cached DigiKey breaks and a cost floor (estimate). Every
     wafer-source scenario is worked out; the reader switches between them in the browser only."""
@@ -1004,8 +1004,9 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
         session.rollback()
         pq = pricing.quote_for(session, part, fetch=False)
     scenarios = []
+    mine = _owner_view(request)
     for fab in price_model.fab_scenarios():
-        m = price_model.model(session, part, pq, gm / 100 if gm else None, fab)
+        m = price_model.model(session, part, pq, gm / 100 if gm else None, fab, owner=mine)
         m["oem"] = price_model.oem_path(
             m, sop if 2020 <= sop <= 2050 else None, released=part.release_date.year if part.release_date else None
         )
@@ -1013,7 +1014,32 @@ def price_model_panel(request: Request, part_id: int, sop: int = 0, gm: int = 0,
     ctx = {"part": part, "m": scenarios[0][1], "scenarios": scenarios, "calls": price_model.CALLS,
            "cfg": price_model.config(),
            "symbol": "$"}  # fmt: skip  # every model price is in USD
+    ctx["level"] = _level_ctx(session, mine, scenarios[0][1], part.mpn, part.family, f"/parts/{part.id}?price=open")
+    ctx["level_error"] = level_error.strip()[:200]
     return templates.TemplateResponse(request, "_price_model.html", ctx)
+
+
+def _owner_view(request: Request) -> bool:
+    """The owner is looking (or the site runs without sign-in): the owner's confidential price levels may be shown and
+    used. Never for a guest."""
+    from app.auth.session import principal
+
+    who = principal(request)
+    return who is None or not who.is_guest
+
+
+def _level_ctx(session: Session, mine: bool, m: dict | None, mpn: str, family: str, back: str) -> dict | None:
+    """The "Your price level" form and what the owner's levels do on this page; None for anyone but the owner."""
+    if not mine or not m or not m.get("rows"):
+        return None
+    levels = price_model.points(session)
+    key = (mpn or "").strip().upper()
+    par = price_model.parity(levels, family)
+    pairs = [p for p in price_model.pairs(levels) if p["family"] == family]
+    return {"mpn": (mpn or "").strip(), "family": family, "next": back, "parity": par, "pairs": pairs,
+            "own": [p for p in levels if key and (p["key"] == key or p.get("ours") == key or p.get("cross") == key)],
+            "bases": ",".join(f"{r['volume']}:{r['base']:.6g}" for r in m["rows"] if r.get("base")),
+            "ours": price_model.scaled(m, par["lo"], par["hi"]), "whose": price_model.WHOSE}  # fmt: skip
 
 
 def _whole(text: str) -> int:
@@ -1029,7 +1055,8 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
                    automotive: bool = False, name: str = "", currency: str = "USD",
                    sop: str = "", gm: str = "",
                    released: str = "", bq: list[str] = Query([]), bp: list[str] = Query([]), override: str = "",
-                   price_saved: str = "", session: Session = Depends(get_session)):  # fmt: skip
+                   price_saved: str = "", level_error: str = "",
+                   session: Session = Depends(get_session)):  # fmt: skip
     """A rough price band for any part from a few pasted distributor price breaks (same model as the part pages).
     A part number the site knows sets the family, package, pins and channels; otherwise they are entered freely.
     Several orderable variants of the part number are offered to pick from. SOP defaults to the year of the
@@ -1061,9 +1088,10 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     sop = sop if 1980 <= sop <= 2050 else cfg["oem"]["default_sop"]
     released = released if 1980 <= released <= 2050 else None
     scenarios = []
+    mine = _owner_view(request)
     for fab in price_model.fab_scenarios() if (family and pts) else []:
         m = price_model.estimate(session, family, pts, package, pins, automotive, name or "estimate", currency,
-                                 gm_f, fab, units or None)  # fmt: skip
+                                 gm_f, fab, units or None, owner=mine, maker=known.get("maker") or "")  # fmt: skip
         m["oem"] = price_model.oem_path(m, sop, released=released)
         m["name"] = name.strip()[:60]
         scenarios.append((fab, m))
@@ -1077,6 +1105,10 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
            "symbol": "$", "estimate": True, "part": None,
            "calls": price_model.CALLS}  # fmt: skip
     ctx |= _required_prices(request, session, price_saved)
+    keep = [(k, v) for k, v in request.query_params.multi_items() if k not in ("ours", "level_error", "price_saved")]
+    back = "/pricing/estimate?" + urllib.parse.urlencode(keep)
+    ctx["level"] = _level_ctx(session, mine, m, name, family, back) if name.strip() else None
+    ctx["level_error"] = level_error.strip()[:200]
     return templates.TemplateResponse(request, "price_estimate.html", ctx)
 
 
@@ -1138,6 +1170,54 @@ def price_model_call(part_id: int, verdict: str = Form(...), comment: str = Form
     except ValueError as e:
         raise HTTPException(400, "Unknown call") from e
     return RedirectResponse(f"/parts/{part.id}?price=open#price-model", status_code=303)
+
+
+def _level_back(target: str) -> str:
+    """Where a price-level form goes back to: a part page or the estimate page only."""
+    target = (target or "").strip()
+    ok = target.startswith(("/parts/", "/pricing/estimate")) and "//" not in target and "\\" not in target
+    return (target if ok else "/pricing/estimate")[:6000]
+
+
+@router.post("/pricing/level")
+def price_level(mpn: str = Form(""), cross: str = Form(""), ourpn: str = Form(""), whose: str = Form("ours"),
+                volume: int = Form(100000), price: str = Form(""), family: str = Form(""), bases: str = Form(""),
+                back: str = Form(""), author: str = Form(""), session: Session = Depends(get_session)):  # fmt: skip
+    """The owner's price level (owner only: guests get 403, the values are confidential). `whose`: "ours" = the part
+    on the page is ours; "theirs" = the level of its competitor cross, named in `cross`; "this_theirs" = the part on
+    the page is a competitor's, and `ourpn` names our part that crosses it."""
+    from urllib.parse import quote
+
+    if whose == "this_theirs":
+        key, kind, ours, theirs = mpn, "theirs", ourpn, mpn
+    elif whose == "theirs":
+        key, kind, ours, theirs = cross, "theirs", mpn, cross
+    else:
+        key, kind, ours, theirs = mpn, "ours", mpn, cross
+    base = None
+    if key == mpn:  # the model's own target for the page's part at that volume, sent with the form (owner only)
+        for item in bases.split(","):
+            v, _, b = item.partition(":")
+            if v.strip() == str(volume):
+                try:
+                    base = float(b)
+                except ValueError:
+                    base = None
+    url = _level_back(back)
+    try:
+        price_model.record_level(session, key, volume, price, kind, ours, theirs, family, base, author)
+    except ValueError as e:
+        sep = "&" if "?" in url else "?"
+        return RedirectResponse(f"{url}{sep}level_error={quote(str(e))}#price-level", status_code=303)
+    return RedirectResponse(f"{url}#price-level", status_code=303)
+
+
+@router.post("/pricing/level/delete")
+def price_level_delete(key: str = Form(...), volume: int = Form(...), back: str = Form(""), author: str = Form(""),
+                       session: Session = Depends(get_session)):  # fmt: skip
+    """Take one of the owner's price levels out (the history is kept)."""
+    price_model.delete_level(session, key, volume, author)
+    return RedirectResponse(f"{_level_back(back)}#price-level", status_code=303)
 
 
 @router.get("/suggest", response_class=HTMLResponse)

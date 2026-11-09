@@ -1,0 +1,32 @@
+{# The owner's price levels (owner, 9 Nov 2026), inside the price panel of a part page and the Price estimate page.
+   Owner only: `level` is None for guests. The numbers are confidential: never in a Shareable, an export or the repo. #}
+{% macro usd(x) %}${{ '%.3f'|format(x) if x < 1 else '%.2f'|format(x) }}{% endmacro %}
+{% macro lvl(p) %}{{ usd(p.low) }}{% if p.high != p.low %}–{{ usd(p.high) }}{% endif %}{% endmacro %}
+{% if level %}<section id="price-level" class="pm-level">
+<h3 class="pm-h">Your price level <small class="muted">· only you see this</small></h3>
+{% if level_error %}<p class="uc-error small">Not saved: {{ level_error }}.</p>{% endif %}
+{% set par = level.parity %}
+<p class="small">{% if par.learned %}Our parts sit at about <b>{{ '%.2f'|format(par.ratio) }} ×</b> the competitor's cross in this family, from {{ par.n }} pair{{ 's' if par.n != 1 }} you entered.
+  {% else %}No pairs in this family yet (our part and its competitor cross at the same volume): the default parity of {{ (par.lo * 100)|round|int }}–{{ (par.hi * 100)|round|int }} % (our part vs the competitor's) applies.{% endif %}
+  {% if estimate %}{% set o = level.ours|selectattr('volume', 'equalto', 100000)|first %}{% if o %}If this part is a competitor's, ours would sit at about {{ usd(o.low) }}–{{ usd(o.high) }} at 100,000 a year.{% endif %}{% endif %}</p>
+{% if level.own %}<div class="table-wrap"><table class="small pm-table pm-levels"><thead><tr><th scope="col">Part</th><th scope="col">Volume a year</th><th scope="col">Price</th><th scope="col">Entered</th><th scope="col"><span class="visually-hidden">Delete</span></th></tr></thead>
+<tbody>{% for p in level.own %}<tr><th scope="row">{{ p.key }} <small class="muted">· {{ level.whose[p.whose]|lower }}{% if p.whose == 'ours' and p.cross %} (cross {{ p.cross }}){% elif p.whose == 'theirs' and p.ours %} (cross of {{ p.ours }}){% endif %}</small></th>
+  <td>{{ '{:,}'.format(p.volume) }}</td><td>{{ lvl(p) }}</td><td class="muted">{{ p.date.strftime('%d %b %Y') if p.date else '' }}</td>
+  <td><form method="post" action="/pricing/level/delete"><input type="hidden" name="key" value="{{ p.key }}"><input type="hidden" name="volume" value="{{ p.volume }}"><input type="hidden" name="back" value="{{ level.next }}">
+    <button class="small-btn outline" aria-label="Delete the level of {{ p.key }} at {{ '{:,}'.format(p.volume) }}">Delete</button></form></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+<form method="post" action="/pricing/level" class="pm-level-form">
+  <input type="hidden" name="mpn" value="{{ level.mpn }}"><input type="hidden" name="family" value="{{ level.family }}">
+  <input type="hidden" name="bases" value="{{ level.bases }}"><input type="hidden" name="back" value="{{ level.next }}">
+  <div class="pm-level-grid">
+    <label>Volume a year <select name="volume">{% for v in cfg.volumes %}<option value="{{ v|int }}"{{ ' selected' if v|int == 100000 }}>{{ '{:,}'.format(v|int) }}</option>{% endfor %}</select></label>
+    <label>Price in USD <input name="price" required inputmode="decimal" autocomplete="off" placeholder="e.g. 3.5, 0.71-0.76 or 0.7x"></label>
+  </div>
+  <fieldset class="pm-whose"><legend class="small">The price is for</legend>
+    <label><input type="radio" name="whose" value="ours" checked> {{ level.mpn }} <small class="muted">(our part)</small></label>
+    <label><input type="radio" name="whose" value="theirs"> its competitor cross: <input name="cross" class="pm-cross" autocomplete="off" placeholder="its part number" aria-label="Competitor cross part number"></label>
+    <label><input type="radio" name="whose" value="this_theirs"> {{ level.mpn }}, a competitor's part; our cross: <input name="ourpn" class="pm-cross" autocomplete="off" placeholder="our part number" aria-label="Our part number"></label>
+  </fieldset>
+  <button type="submit" class="small-btn">Save price level</button>
+  <small class="muted">Kept in this site's database only, seen by you only (never in Shareables, exports or the repository). A level re-centres this part's band; levels on several parts set the family; our part and its cross at the same volume teach the parity.</small>
+</form>
+</section>{% endif %}

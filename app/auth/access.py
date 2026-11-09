@@ -25,7 +25,8 @@ OWNER_ACTIONS = ("/manage", "/owner", "/business/tam", "/business/quality", "/bu
                  "/shareable/technology-overview/edit", "/shareable/synergies/edit",
                "/shareable/automotive/edit", "/shareable/presentation/save",
                "/shareable/presentation/delete", "/reference-designs/feedback",
-               "/cross-list/feedback", "/cross-list/lookup")  # fmt: skip
+               "/cross-list/feedback", "/cross-list/lookup",
+               "/pricing/level")  # fmt: skip  # the owner's confidential price levels (9 Nov 2026)
 
 
 def is_open(path: str) -> bool:

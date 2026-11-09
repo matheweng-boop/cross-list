@@ -136,7 +136,7 @@ def site_info(session: Session, mpn: str) -> dict:
     cfg, key = pm.config(), mpn.strip().upper()
     fam_of = cfg["function_family"]
     out = {"family": "", "package": "", "pins": 0, "automotive": False, "released": None, "units": None, "found": [],
-           "part": None}  # fmt: skip
+           "part": None, "maker": ""}  # fmt: skip
     hits = _db_parts(session, key) if key else []
     exact = next((p for p in hits if p.mpn.upper() == key), None)
     if hits:
@@ -155,6 +155,7 @@ def site_info(session: Session, mpn: str) -> dict:
                    package=pkg or "", pins=pins or 0, released=min(years) if years else None,
                    units=pm.units_of(part) if exact is not None else None,
                    found=["parts database" if exact is not None else f"parts database ({len(hits)} variants)"])
+        out["maker"] = part.manufacturer.name if exact is not None and part.manufacturer else ""
         if exact is not None and out["released"] is None and "-" in key:  # same datasheet as its sibling variants
             years = [y for y in map(released_year, _db_parts(session, key.split("-", 1)[0] + "-")) if y]
             out["released"] = min(years) if years else None
@@ -180,6 +181,7 @@ def site_info(session: Session, mpn: str) -> dict:
         ch = [int(v) for k, v in specs.items() if k in ("Forward Channels", "Reverse Channels") and str(v).isdigit()]
         out["units"] = out["units"] or (sum(ch) or None)
         out["found"].append(f"{row['manufacturer']} catalogue")
+        out["maker"] = out["maker"] or row.get("manufacturer") or ""
     return out
 
 
@@ -261,14 +263,15 @@ def _priced(session: Session, row: Row, info: dict, gm: float, fab: str) -> tupl
     pts, cur, source = got
     sp = spec(row, info)
     m = pm.estimate(session, sp["family"], pts, sp["package"], sp["pins"], sp["automotive"], row.mpn, cur, gm, fab,
-                    sp["units"])  # fmt: skip
+                    sp["units"], maker=info.get("maker") or "")  # fmt: skip
     return m, source
 
 
 def cost_ratio(row: Row, info: dict, anchor_cost: dict | None, gm: float, fab: str) -> float | None:
     """The part's unit cost over its sibling's (channels, tuners, package and family all count); None if unknown."""
     sp = spec(row, info)
-    mine = pm.cost(pm.part_ns(sp["family"], sp["package"], sp["pins"], sp["automotive"], row.mpn, sp["units"]), gm, fab)
+    part = pm.part_ns(sp["family"], sp["package"], sp["pins"], sp["automotive"], row.mpn, sp["units"])
+    mine = pm.cost(part, gm, fab, (anchor_cost or {}).get("maker_k", 1.0))  # a sibling: same maker, same scale
     if not mine or not anchor_cost:
         return None
     return mine["levels"]["mid"]["total"] / anchor_cost["levels"]["mid"]["total"]

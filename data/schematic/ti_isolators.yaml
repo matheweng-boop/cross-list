@@ -6043,3 +6043,127 @@ datasheets:
   notes: 'Integrated DC-DC converter: VCC (GND1) is the only input supply; VISO (GND2) is generated internally. Detailed Design
     Procedure: the device requires only external bypass capacitors to operate. Input supply must have an appropriate current
     rating for the load. No pull-ups, series resistors or filters stated.'
+- datasheet: iso7730-q1.pdf
+  doc: ISO773x-Q1 High-Speed, Robust-EMC Reinforced Triple-Channel Digital Isolators, SLLSEU3F (revised October 2024)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.25
+    - 5.5
+    page: 7
+    quote: Supply voltage 2.25 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.25
+    - 5.5
+    page: 7
+    quote: Supply voltage 2.25 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: bypass capacitor at each supply pin (VCC1/VCC2 in the datasheet), placed as close to the supply pins as possible
+    page: 34
+    quote: a 0.1-μF bypass capacitor is recommended at the input and output supply pins
+  pin_rules:
+  - pins: ^EN2$
+    rule: side-2 outputs enabled when EN2 is high or open; high impedance when EN2 is low
+    page: 4
+    quote: Output enable 2. Output pins on side 2 are enabled when EN2 is high or
+  - pins: ^NC$
+    rule: not connected
+    page: 5
+    quote: NC 6, 7, 11 6, 11 — Not connected
+  notes: 'Datasheet pins VCC1/VCC2 map to VDD1/VDD2; GND1 is the ground for VCC1 and GND2 for VCC2. Detailed Design Procedure: the device
+    only requires/needs two external bypass capacitors to operate. Design Parameters table also lists 0.1 µF decoupling between VCC1
+    and GND1 and from VCC2 to GND2. No other external components (pull-ups, series resistors, filters) are stated; no handling of unused
+    inputs is stated (function tables only give the default output for an open input). Layout Guidelines give PCB stack-up advice only.'
+- datasheet: iso7731-q1.pdf
+  doc: ISO773x-Q1 High-Speed, Robust-EMC Reinforced Triple-Channel Digital Isolators, SLLSEU3F (revised October 2024)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 2.25
+    - 5.5
+    page: 7
+    quote: Supply voltage 2.25 5.5 V
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 2.25
+    - 5.5
+    page: 7
+    quote: Supply voltage 2.25 5.5 V
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    pins: ^VDD[12]$
+    to: GND
+    series: false
+    required: true
+    note: bypass capacitor at each supply pin (VCC1/VCC2 in the datasheet), placed as close to the supply pins as possible
+    page: 34
+    quote: a 0.1-μF bypass capacitor is recommended at the input and output supply pins
+  pin_rules:
+  - pins: ^EN1$
+    rule: side-1 outputs enabled when EN1 is high or open; high impedance when EN1 is low
+    page: 4
+    quote: Output enable 1. Output pins on side 1 are enabled when EN1 is high or
+  - pins: ^EN2$
+    rule: side-2 outputs enabled when EN2 is high or open; high impedance when EN2 is low
+    page: 4
+    quote: Output enable 2. Output pins on side 2 are enabled when EN2 is high or
+  - pins: ^NC$
+    rule: not connected
+    page: 5
+    quote: NC 6, 7, 11 6, 11 — Not connected
+  notes: 'Datasheet pins VCC1/VCC2 map to VDD1/VDD2; GND1 is the ground for VCC1 and GND2 for VCC2. Detailed Design Procedure: the device
+    only requires/needs two external bypass capacitors to operate. Design Parameters table also lists 0.1 µF decoupling between VCC1
+    and GND1 and from VCC2 to GND2. No other external components (pull-ups, series resistors, filters) are stated; no handling of unused
+    inputs is stated (function tables only give the default output for an open input). Layout Guidelines give PCB stack-up advice only.'
+- datasheet: iso6721.pdf
+  doc: ISO672x General Purpose Basic Dual-Channel Digital Isolators with Robust EMC, SLLSFJ0F (revised February 2023)
+  supplies:
+  - pin: VDD1
+    ground: GND1
+    range_v:
+    - 1.71
+    - 5.5
+    quote: The supply voltage range is from 1.71 V to 5.5 V for both supplies
+    page: 29
+  - pin: VDD2
+    ground: GND2
+    range_v:
+    - 1.71
+    - 5.5
+    quote: The supply voltage range is from 1.71 V to 5.5 V for both supplies
+    page: 29
+  components:
+  - kind: capacitor
+    value: 0.1 µF
+    to: GND
+    series: false
+    required: true
+    pins: ^VDD1$
+    note: 'VCC1 to GND1; datasheet: only two external bypass capacitors are required'
+    quote: Decoupling capacitor between V and GND1 0.1 µF
+    page: 31
+  - kind: capacitor
+    value: 0.1 µF
+    to: GND
+    series: false
+    required: true
+    pins: ^VDD2$
+    note: 'VCC2 to GND2; datasheet: only two external bypass capacitors are required'
+    quote: Decoupling capacitor from V and GND2 0.1 µF
+    page: 31
+  pin_rules: []
+  notes: Datasheet VCC1/VCC2 mapped to VDD1/VDD2; GND1 is the return for VCC1 and GND2 for VCC2. Only external components stated are
+    the 0.1 uF bypass capacitors on each supply; no pull-ups, series resistors or filters stated. No enable or special pins. Handling
+    of unused inputs not stated. Recommended operating ranges are 1.71-1.89 V and 2.25-5.5 V per side (range_v shows the overall span).

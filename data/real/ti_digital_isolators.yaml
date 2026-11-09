@@ -7243,7 +7243,7 @@ parts:
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
     integrated_power: none
-    default_output: high
+    default_output: low
     data_rate_mbps: 50.0
     data_rate_low_vdd: [[1.89, 25]]
     pwd_ns: 7.0
@@ -7270,7 +7270,7 @@ parts:
     channel_config: 6/0
   param_sources:
     integrated_power: TI product table
-    default_output: TI product table
+    default_output: "iso6760l.pdf function table (VCCI unpowered, VCCO powered: output low; interlock); corrected 10 Nov 2026, the TI product table said high"
     data_rate_mbps: 'iso6760l.pdf p.5 (data rate DR 0–50 Mbps, recommended operating conditions; VCC = 2.25–5.5 V; 25 Mbps at VCC = 1.71–1.89 V)'
     data_rate_low_vdd: 'iso6760l.pdf p.5 (25 Mbps at 1.71-1.89 V; recommended operating conditions)'
     pwd_ns: TI product table
@@ -10085,7 +10085,7 @@ parts:
   family: digital_isolator
   description: 'ISO6721: 2-channel, 1/1, digital isolator with 50Mbps and 1.8V logic support'
   package: SOIC-8 (D)
-  pinout: []
+  pinout: [VDD1, OUTA, INB, GND1, GND2, OUTB, INA, VDD2]
   datasheet: iso6721.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso6721.pdf
   product_url: https://www.ti.com/product/ISO6721
@@ -10097,6 +10097,7 @@ parts:
     revision_date: *id109
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: none
     integrated_power: none
     default_output: high
     data_rate_mbps: 50.0
@@ -10124,6 +10125,7 @@ parts:
     isolation_class: basic
     channel_config: 1/1
   param_sources:
+    pinout: same pin diagram as ISO6721-Q1 (ISO6721 data sheet, D package)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso6721.pdf p.6 (data rate DR 0–50 Mbps, recommended operating conditions; max)'
@@ -10146,7 +10148,7 @@ parts:
   family: digital_isolator
   description: 'ISO6721: 2-channel, 1/1, digital isolator with 50Mbps and 1.8V logic support'
   package: SOIC-8 (D)
-  pinout: []
+  pinout: [VDD1, OUTA, INB, GND1, GND2, OUTB, INA, VDD2]
   datasheet: iso6721.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso6721.pdf
   product_url: https://www.ti.com/product/ISO6721
@@ -10158,6 +10160,7 @@ parts:
     revision_date: *id109
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: none
     integrated_power: none
     default_output: low
     data_rate_mbps: 50.0
@@ -10180,6 +10183,7 @@ parts:
     isolation_class: basic
     channel_config: 1/1
   param_sources:
+    pinout: same pin diagram as ISO6721-Q1 (ISO6721 data sheet, D package)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso6721.pdf p.6 (data rate DR 0–50 Mbps, recommended operating conditions; max)'
@@ -16360,7 +16364,7 @@ parts:
   family: digital_isolator
   description: 'ISO7730-Q1: Automotive, reinforced 3-channel, 3/0, digital isolator'
   package: SOIC-16 (DW)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, INC, NC, NC, GND1, GND2, EN2, NC, OUTC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7730-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7730-q1.pdf
   product_url: https://www.ti.com/product/ISO7730-Q1
@@ -16372,6 +16376,7 @@ parts:
     revision_date: *id180
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN2 active-high
     integrated_power: none
     default_output: high
     data_rate_mbps: 100.0
@@ -16399,6 +16404,7 @@ parts:
     isolation_class: reinforced
     channel_config: 3/0
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-1 (DW and DBQ, same pinout as ISO7730)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7730-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16421,7 +16427,7 @@ parts:
   family: digital_isolator
   description: 'ISO7730-Q1: Automotive, reinforced 3-channel, 3/0, digital isolator'
   package: SOIC-16 (DW)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, INC, NC, NC, GND1, GND2, EN2, NC, OUTC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7730-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7730-q1.pdf
   product_url: https://www.ti.com/product/ISO7730-Q1
@@ -16433,6 +16439,7 @@ parts:
     revision_date: *id180
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN2 active-high
     integrated_power: none
     default_output: low
     data_rate_mbps: 100.0
@@ -16455,6 +16462,7 @@ parts:
     isolation_class: reinforced
     channel_config: 3/0
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-1 (DW and DBQ, same pinout as ISO7730)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7730-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16477,7 +16485,7 @@ parts:
   family: digital_isolator
   description: 'ISO7730-Q1: Automotive, reinforced 3-channel, 3/0, digital isolator'
   package: SSOP-16 (DBQ)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, INC, NC, NC, GND1, GND2, EN2, NC, OUTC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7730-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7730-q1.pdf
   product_url: https://www.ti.com/product/ISO7730-Q1
@@ -16489,6 +16497,7 @@ parts:
     revision_date: *id180
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN2 active-high
     integrated_power: none
     default_output: high
     data_rate_mbps: 100.0
@@ -16511,6 +16520,7 @@ parts:
     isolation_class: reinforced
     channel_config: 3/0
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-1 (DW and DBQ, same pinout as ISO7730)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7730-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16533,7 +16543,7 @@ parts:
   family: digital_isolator
   description: 'ISO7730-Q1: Automotive, reinforced 3-channel, 3/0, digital isolator'
   package: SSOP-16 (DBQ)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, INC, NC, NC, GND1, GND2, EN2, NC, OUTC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7730-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7730-q1.pdf
   product_url: https://www.ti.com/product/ISO7730-Q1
@@ -16545,6 +16555,7 @@ parts:
     revision_date: *id180
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN2 active-high
     integrated_power: none
     default_output: low
     data_rate_mbps: 100.0
@@ -16567,6 +16578,7 @@ parts:
     isolation_class: reinforced
     channel_config: 3/0
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-1 (DW and DBQ, same pinout as ISO7730)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7730-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16589,7 +16601,7 @@ parts:
   family: digital_isolator
   description: 'ISO7731-Q1: Automotive, reinforced 3-channel, 2/1, digital isolator'
   package: SOIC-16 (DW)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, OUTC, NC, EN1, GND1, GND2, EN2, NC, INC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7731-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7731-q1.pdf
   product_url: https://www.ti.com/product/ISO7731-Q1
@@ -16601,6 +16613,7 @@ parts:
     revision_date: *id183
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN1+EN2 active-high
     integrated_power: none
     default_output: high
     data_rate_mbps: 100.0
@@ -16628,6 +16641,7 @@ parts:
     isolation_class: reinforced
     channel_config: 2/1
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-2 (DW and DBQ, same pinout as ISO7731)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7731-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16650,7 +16664,7 @@ parts:
   family: digital_isolator
   description: 'ISO7731-Q1: Automotive, reinforced 3-channel, 2/1, digital isolator'
   package: SOIC-16 (DW)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, OUTC, NC, EN1, GND1, GND2, EN2, NC, INC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7731-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7731-q1.pdf
   product_url: https://www.ti.com/product/ISO7731-Q1
@@ -16662,6 +16676,7 @@ parts:
     revision_date: *id183
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN1+EN2 active-high
     integrated_power: none
     default_output: low
     data_rate_mbps: 100.0
@@ -16684,6 +16699,7 @@ parts:
     isolation_class: reinforced
     channel_config: 2/1
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-2 (DW and DBQ, same pinout as ISO7731)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7731-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16706,7 +16722,7 @@ parts:
   family: digital_isolator
   description: 'ISO7731-Q1: Automotive, reinforced 3-channel, 2/1, digital isolator'
   package: SSOP-16 (DBQ)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, OUTC, NC, EN1, GND1, GND2, EN2, NC, INC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7731-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7731-q1.pdf
   product_url: https://www.ti.com/product/ISO7731-Q1
@@ -16718,6 +16734,7 @@ parts:
     revision_date: *id183
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN1+EN2 active-high
     integrated_power: none
     default_output: high
     data_rate_mbps: 100.0
@@ -16740,6 +16757,7 @@ parts:
     isolation_class: reinforced
     channel_config: 2/1
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-2 (DW and DBQ, same pinout as ISO7731)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7731-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'
@@ -16762,7 +16780,7 @@ parts:
   family: digital_isolator
   description: 'ISO7731-Q1: Automotive, reinforced 3-channel, 2/1, digital isolator'
   package: SSOP-16 (DBQ)
-  pinout: []
+  pinout: [VDD1, GND1, INA, INB, OUTC, NC, EN1, GND1, GND2, EN2, NC, INC, OUTB, OUTA, GND2, VDD2]
   datasheet: iso7731-q1.pdf
   datasheet_url: https://www.ti.com/lit/ds/symlink/iso7731-q1.pdf
   product_url: https://www.ti.com/product/ISO7731-Q1
@@ -16774,6 +16792,7 @@ parts:
     revision_date: *id183
     source: 'TI product status: ACTIVE; release date = first datasheet issue'
   params:
+    enable_pins: EN1+EN2 active-high
     integrated_power: none
     default_output: low
     data_rate_mbps: 100.0
@@ -16796,6 +16815,7 @@ parts:
     isolation_class: reinforced
     channel_config: 2/1
   param_sources:
+    pinout: iso7730-q1.pdf Figure 4-2 (DW and DBQ, same pinout as ISO7731)
     integrated_power: TI product table
     default_output: inferred from TI part-number convention
     data_rate_mbps: 'iso7731-q1.pdf p.7 (data rate DR 0–100 Mbps, recommended operating conditions; 100 Mbps is the maximum specified data rate, although higher data rates are possible (table note))'

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import part_badges, diff_table, unofficial_mark, unofficial_footnote %}
+{% from "_macros.html" import part_badges, diff_table, unofficial_mark, unofficial_footnote, sky_check %}
 {% from "reviews/_parts.html" import part_reviews %}
 {% from "_refs.html" import used_in with context %}
 {% set uk = unofficial_keys(part) %}
@@ -135,7 +135,7 @@
     <tr class="rank-divider"><td colspan="{{ ncol }}">Other options ({{ n_rest }})</td></tr>{% endif %}
     <tr class="result-row cross-{{ v.category }}{{ ' ranked rank-' ~ rank if rank is not none }}" data-detail="d-{{ c.id }}" id="row-{{ c.id }}">
       <td><input type="checkbox" name="pick" value="{{ c.id }}" aria-label="Compare {{ c.mpn }}">
-        <a href="/parts/{{ c.id }}" class="cand-link"><b>{{ c.mpn }}</b></a>
+        <a href="/parts/{{ c.id }}" class="cand-link"><b>{{ c.mpn }}</b></a>{% if not part.is_reference %}{{ sky_check(part.mpn, c.mpn) }}{% endif %}
         {% if c.id in other_fam %}<span class="badge rank-badge rank-other" title="The other Skyworks isolator family (Si86 / Si86S)">{{ other_fam[c.id] }}</span>
         {% elif rank is not none %}<span class="badge rank-badge rank-{{ rank }}">{{ 'Best' if rank == 0 else 'Next best' }} {{ category_short[v.category]|lower if v.category != 'fff' else 'drop-in' }}</span>{% endif %}
         {% if notes %}<span class="badge note-badge" title="{{ notes[0].title }}">Engineer note</span>{% endif %}

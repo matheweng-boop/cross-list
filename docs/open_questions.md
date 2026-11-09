@@ -25,6 +25,12 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    A cross typed by part number is costed as the same die and package as our part at the cross maker's scale: good
    enough, or enter cross levels from the competitor part's own page?
 
+7. **Skyworks cross reference (10 Nov 2026; docs/cross_reference_check_2026-11-10.md).** When several of our parts
+   tie, prefer the standard Si86S6xx as the official table does (today the closest values win: Si86SL, Si86xx T
+   grade)? Who should hear about the 27 official rows the datasheets contradict? Official match type in the Excel
+   download? Import the missing parts (Si8642EB-AS, Si8663BD-AS; ADuM1201/1301/3401, UCC5350L-Q1, CDCE9xx) next run?
+   Cross a list rows are about 110 px wider than a phone with real data (the "vs best" table): fix next run.
+
 ## Settled (owner, 9 Nov 2026)
 
 - Questions to ask: at the bottom of each sub-system (Block diagram library with a sub-system picked, deep dives),

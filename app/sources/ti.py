@@ -95,6 +95,17 @@ def _one(values: list[str] | None, scale: float = 1.0) -> float | None:
         return None
 
 
+# Default outputs the TI product table states wrongly, read from the datasheet (Skyworks cross reference check,
+# 10 Nov 2026): the interlocked ISO6760L outputs low when its input side is unpowered.
+DEFAULT_FROM_DATASHEET = {
+    "ISO6760L": (
+        "low",
+        "iso6760l.pdf function table (VCCI unpowered, VCCO powered: output low; interlock); corrected "
+        "10 Nov 2026, the TI product table said high",
+    ),
+}
+
+
 def default_output_from_opn(opn: str, gpn: str) -> str | None:
     """TI convention: an "F" right after the device number (in the device name, as in
     ISO7641FC, or in the orderable number, as in ISO6440FDWR) means default-low output."""
@@ -272,6 +283,8 @@ def build(family: str = "digital_isolator", log=print, previous: Path | None = O
             default_src = "TI product table"
             if default is None or "," in str(default):
                 default, default_src = default_output_from_opn(opn, gpn), "inferred from TI part-number convention"
+            if gpn in DEFAULT_FROM_DATASHEET:  # the product table is wrong for these (10 Nov 2026)
+                default, default_src = DEFAULT_FROM_DATASHEET[gpn]
             key = (pkg_name, default)
             if key in seen:
                 continue  # tape-and-reel / green-package duplicates

@@ -36,6 +36,7 @@ from app.services import (
     price_builder,
     price_model,
     pricing,
+    skyworks_xref,
     sota,
     text,
     vocab,
@@ -102,6 +103,8 @@ def _is_new(part: Part) -> bool:
 
 
 templates.env.globals["is_new"] = _is_new
+# a check mark behind our part when Skyworks' own cross reference lists the pair (owner, 10 Nov 2026)
+templates.env.globals["sky_xref"] = skyworks_xref.mark
 
 PASSKEY_NUDGE_COOKIE = "crosslist_pk_nudge"
 
@@ -1074,6 +1077,14 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
     known = price_builder.site_info(session, name.strip()) if name.strip() else {}
     variants = price_builder.variants(session, name) if name.strip() else []
     rows = [(q.strip(), p.strip()) for q, p in zip(bq, bp, strict=False) if q.strip() or p.strip()]
+    # owner, 10 Nov 2026: "Save the pricing information I paste in from DigiKey, otherwise I have to repaste it":
+    # prices saved for this part number fill the form when none are pasted (saving: /business/tam/prices, owner only)
+    saved = price_model.entered(session).get(name.strip().upper()) if name.strip() else None
+    loaded = None
+    if saved and not breaks.strip() and not rows:
+        breaks = "\n".join(f"{q} {p:g}" for q, p in saved["breaks"])
+        currency = saved.get("currency") or currency
+        loaded = saved
     pasted = breaks
     breaks = "\n".join([breaks.strip(), *(f"{q} {p}" for q, p in rows if q and p)]).strip()
     if override:  # owner, 23 Oct 2026: the part data fills and locks the form; overriding it is the second option
@@ -1108,7 +1119,8 @@ def price_estimate(request: Request, family: str = "", breaks: str = "", package
            "f": {"family": family, "breaks": breaks, "package": package, "pins": pins or "",
                  "automotive": automotive, "name": name, "currency": currency, "sop": sop, "gm": round(gm_f * 100),
                  "released": released or "", "override": override},
-           "symbol": "$", "estimate": True, "part": None,
+           "symbol": "$", "estimate": True, "part": None, "loaded": loaded, "can_save": _owner_view(request),
+           "saved_text": "\n".join(f"{q} {p:g}" for q, p in saved["breaks"]) if saved else "",
            "calls": price_model.CALLS}  # fmt: skip
     ctx |= _required_prices(request, session, price_saved)
     keep = [(k, v) for k, v in request.query_params.multi_items() if k not in ("ours", "level_error", "price_saved")]

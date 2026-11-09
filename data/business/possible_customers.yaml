@@ -41,6 +41,8 @@ sources:
   fira_members: {title: "FiRa Consortium: members", url: "https://www.firaconsortium.org/about/members", date: 2026-11-09, type: association list}
   ocp_bbu: {title: "Open Compute Project: Open Rack V3 BBU module specification 1.4", url: "https://www.opencompute.org/documents/open-rack-v3-bbu-module-spec-1-4-pdf/", date: 2026-11-09, type: industry specification}
   ocp_deschutes: {title: "Open Compute Project: Project Deschutes (coolant distribution unit) specification 1.0", url: "https://www.opencompute.org/documents/ocp-specification-deschutes-v1-0-pdf/", date: 2026-11-02, type: industry specification}
+  ocp_nic3: {title: "Open Compute Project: OCP NIC 3.0 specification r1.6 (acknowledgements)", url: "https://www.opencompute.org/documents/ocp-nic-3-0-r1v60-20250410a-tn-no-cb-pdf/", date: 2026-11-09, type: industry specification}
+  ocp_sue: {title: "Open Compute Project: Scale Up Ethernet (SUE) specification 1.0", url: "https://www.opencompute.org/documents/ocp-sue-spec-final-pdf-1/", date: 2026-11-09, type: industry specification}
   ocp_cooling: {title: "Open Compute Project: Cooling Environments project", url: "https://www.opencompute.org/projects/cooling-environments/", date: 2026-11-02, type: industry specification}
   bosch_research: {title: "Bosch: research locations", url: "https://www.bosch.com/research/about-bosch-research/research-locations/", date: 2026-11-09, type: company page}
   mobis_intro: {title: "Hyundai Mobis: company introduction 2026", url: "https://www.mobis.com/resources/pdf/2026_MOBIS_EN.pdf", date: 2026-11-09, type: company page}
@@ -118,12 +120,23 @@ subsystems:
     extra:
       - {name: "Delta Electronics", type: ODM/EMS, note: "co-author of the Open Rack V3 battery backup unit specification", sources: [ocp_bbu]}
       - {name: "Meta", type: Operator/infrastructure, note: "author of the Open Rack V3 battery backup unit specification", sources: [ocp_bbu]}
-  datacenter/servers:
-    segments: [server]
-  datacenter/network:
+  # owner, 9 Nov 2026: Data center regrouped into four application areas (former servers / network / timing)
+  datacenter/networking:
     segments: [network_switch, optical_module]
-  datacenter/timing:
-    segments: [network_switch, server, optical_module]
+  datacenter/scale-up:
+    segments: [network_switch]
+    few_sources: "Few public sources for scale-up switch tray makers yet: the companies here build Ethernet switches or wrote the OCP Scale Up Ethernet specification (read 9 Nov 2026), which names no tray maker."
+    extra:
+      - {name: "Broadcom", type: Module maker, note: "author of the OCP Scale Up Ethernet (SUE) specification", sources: [ocp_sue]}
+  datacenter/nic-dpu:
+    few_sources: "Few public sources for NIC and DPU makers yet: the companies here contributed to the OCP NIC 3.0 specification (read 9 Nov 2026); a later run checks which of them build cards."
+    extra:
+      - {name: "NVIDIA", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+      - {name: "Broadcom", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+      - {name: "Intel", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+      - {name: "Marvell", type: Module maker, note: "contributor to the OCP NIC 3.0 specification", sources: [ocp_nic3]}
+  datacenter/server-board:
+    segments: [server]
   datacenter/cooling:
     few_sources: "Few public sources so far: cooling makers come from the OCP cooling specifications; more in a later run."
     extra:
@@ -195,6 +208,8 @@ subsystems:
     segments: [security_camera_smart_home, building_automation, home_appliances]
   home/broadband:
     segments: [broadband_gateway, wifi_access_point]
+  home/enterprise-wifi:
+    segments: [wifi_access_point]
   home/metering:
     segments: [smart_meter]
   medical/imaging:

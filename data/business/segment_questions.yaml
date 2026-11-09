@@ -177,6 +177,7 @@ segments:
       - {id: c-ai-share, text: "What share of your new capacity is AI racks, and what rack power range do you build for now and in two to three years?", why: "Rack power (tens of kW now, hundreds of kW next) drives every power, cooling and timing socket."}
       - {id: c-ocp, text: "Do you follow Open Compute Project specifications (ORv3, Mt Diablo, Deschutes), or your own designs?", why: "OCP specs are public and tell us the sockets; own designs need direct contact."}
       - {id: c-sourcing, text: "Who chooses the power, timing and isolation parts: you, the ODM, or the power-shelf and server makers?", why: "Tells us whom to call for each socket."}
+      - {id: c-origin, text: "Do you ask for parts made outside China and Taiwan, for which steps (wafer, assembly, test), and from when?", why: "Owner, 9 Nov 2026: a non-China, non-Taiwan supply strategy; tells us which sockets it decides."}
     developers:
       - {id: d-800v, text: "When do you expect 800 V DC (or ±400 V) distribution in your halls, and what changes first: the power shelf, the sidecar or the busway?", why: "800 V DC moves isolation, protection and conversion into the rack."}
       - {id: d-liquid, text: "How fast is liquid cooling replacing air in your halls, and what does that do to fans, pumps and sensing?", why: "Cooling electronics follow the move to liquid."}
@@ -185,6 +186,7 @@ segments:
       - {id: b-today, text: "What do we sell into data centers today, by function (timing, isolation, power, Wi-Fi), and through which kinds of customers?", why: "Our base in the segment."}
       - {id: b-roadmap, text: "Which of our roadmaps target AI data centers explicitly (224G clocks, 800 V isolation, eFuses)?", why: "Shows where the roadmap already points."}
       - {id: b-comp, text: "Which competitors do we meet most in data centers (TI, ADI, Infineon, Renesas, SiTime), and where do we win?", why: "Sets the priorities across sub-systems."}
+      - {id: b-origin, text: "What may we tell customers, in general terms, about supplying our data center timing and isolation parts outside China and Taiwan, and is a second supply route qualified for the main families?", why: "Owner, 9 Nov 2026: answers the non-China, non-Taiwan supply question without naming sites."}
   datacenter/rack-power:
     reports: [hv-extra-wide-isolation, auto-hv-hot-swap]
     customer:
@@ -219,54 +221,80 @@ segments:
       - {id: b-bms, text: "Is there a BMS front end or isolated cell-monitor link we could offer, or only the isolation around it?", why: "Decides whether we sell the core or the periphery."}
       - {id: b-comp, text: "Which competitors hold BBU sockets (TI, ADI, Infineon, ST)?", why: "Shows how open the socket is."}
       - {id: b-reuse, text: "Can parts qualified for automotive BMS be offered to BBU makers with no extra work?", why: "Finds a quick reuse."}
-  datacenter/servers:
+  # owner, 9 Nov 2026: Data center regrouped into four application areas. The former timing questions moved to
+  # networking (and d-pcie7 to the server board), the former servers questions to server-board, the former Wi-Fi
+  # "network" questions to home/enterprise-wifi; ids kept, so earlier answers follow them (`moved` at the end).
+  datacenter/networking:
     customer:
-      - {id: c-platform, text: "Which server platforms do you build (general compute, AI training, AI inference), and how often does a new generation start?", why: "Platform cadence sets the design-in window."}
-      - {id: c-odm, text: "Who designs the boards: you, an ODM, or the processor vendor's reference design?", why: "Most board sockets follow the reference design."}
-      - {id: c-bmc, text: "What does your board management controller watch and control, and what would you like it to see that it cannot?", why: "Management needs drive telemetry and sensing parts."}
-      - {id: c-pain, text: "What is hardest on the board today: power density, heat, signal integrity at PCIe Gen 6 or reliability?", why: "Points to the part that helps."}
-    developers:
-      - {id: d-vr, text: "How much current will the next processor or accelerator draw, and will power move to vertical delivery under the chip?", why: "Vertical power delivery changes the regulator and sensing sockets."}
-      - {id: d-pcie7, text: "When do you move to PCIe Gen 7 and CXL, and what does that change for clocks and retimers?", why: "Gen 7 tightens clock jitter and adds retimers."}
-      - {id: d-48v, text: "Will 48 V reach the board directly, and which converters will you use to the core?", why: "48 V on the board changes protection and conversion."}
-      - {id: d-security, text: "Which hardware security and monitoring (root of trust, tamper detection) will be required on the board?", why: "New board functions mean new sockets."}
-    bu:
-      - {id: b-clock, text: "Which of our PCIe clocks and buffers are in server reference designs, and for which processor vendors?", why: "Reference designs decide clock sockets."}
-      - {id: b-gen7, text: "Are our clocks and buffers specified for PCIe Gen 7 jitter limits?", why: "Gen 7 readiness keeps the socket."}
-      - {id: b-comp, text: "Which competitors hold server clock and power sockets (Renesas, TI, SiTime, MPS, Infineon)?", why: "Shows where we stand."}
-      - {id: b-isol, text: "Is there any isolation need on the server board (48 V input, sensors) that our parts meet?", why: "Finds a second socket next to timing."}
-  datacenter/network:
-    customer:
-      - {id: c-ap, text: "Which Wi-Fi standard and roughly what access-point density do you deploy in offices and campuses?", why: "Enterprise AP volumes and standard choose the front end."}
-      - {id: c-poe, text: "Which PoE power class do your access points and devices need, and is it rising?", why: "Higher PoE classes change the powered-device design."}
-      - {id: c-refresh, text: "How often do you refresh access points and switches, and what triggers a refresh?", why: "Refresh cycle drives volume timing."}
-      - {id: c-pain, text: "What causes the most trouble in your wireless network: coverage, interference, power budget or management?", why: "Points to front-end or power features."}
-    developers:
-      - {id: d-wifi7, text: "When do you move to Wi-Fi 7 with 320 MHz channels and multi-link operation, and to Wi-Fi 8 after that?", why: "Each step needs new front ends and filters."}
-      - {id: d-6ghz, text: "How will you use 6 GHz: indoor only, standard power with AFC, or outdoor?", why: "Standard power with AFC needs higher output and linearity."}
-      - {id: d-coex, text: "How many radios share one access point (2.4, 5, 6 GHz, BLE, IoT), and what filtering do you need between them?", why: "Tri-band APs depend on sharp 5/6 GHz filters."}
-      - {id: d-poe, text: "Will access points need more than 60 W PoE, and how do you design the powered-device side?", why: "PoE powered-device design is a power and isolation socket."}
-    bu:
-      - {id: b-fem, text: "Which of our Wi-Fi front ends and filters are in enterprise access points today?", why: "Our base."}
-      - {id: b-wifi8, text: "Is our Wi-Fi 7 and Wi-Fi 8 front-end roadmap aligned with the enterprise chipset vendors' timing?", why: "Front ends follow the chipset reference designs."}
-      - {id: b-comp, text: "Which competitors do we meet in enterprise Wi-Fi (Qualcomm RFFE, Broadcom integrated, Murata)?", why: "Shows how open the sockets are."}
-      - {id: b-filter, text: "Do our 5/6 GHz coexistence filters win in tri-band APs, and what decides?", why: "Filters are often where we differentiate."}
-  datacenter/timing:
-    customer:
-      - {id: c-sockets, text: "Which equipment do you design that needs reference clocks (servers, switches, NICs, optical modules, time cards)?", why: "Each type has its own clock socket and jitter limit."}
+      - {id: c-tiers, text: "Which network tiers do you build or buy: front-end leaf and spine, back-end scale-out AI fabric, scale-across links between halls or sites?", why: "Each tier has its own switch class, port speed and timing needs."}
+      - {id: c-sockets, text: "Which equipment do you design that needs reference clocks (switches, routers, NICs, optical modules, time cards)?", why: "Each type has its own clock socket and jitter limit."}
       - {id: c-time, text: "Do you run PTP or SyncE in your back-end AI fabric, and why (telemetry, congestion control, scheduling)?", why: "The reason for precise time decides the accuracy needed."}
       - {id: c-sourcing, text: "Do you select clocks yourself or follow the switch and NIC vendors' reference designs?", why: "Tells us whom to approach."}
       - {id: c-pain, text: "What causes clock trouble today: jitter margin at 112G/224G, supply, board space or field failures?", why: "Points to the product to offer."}
     developers:
       - {id: d-224g, text: "What reference-clock jitter will your 224G and 448G SerDes need, and with which filter mask?", why: "Limits below 35 fs set the next oscillator spec."}
-      - {id: d-pcie7, text: "When do you need PCIe Gen 7 clocks and buffers, and how many outputs per board?", why: "Gen 7 tightens jitter and adds outputs."}
+      - {id: d-ports, text: "When do your ports move from 800G to 1.6T and 3.2T, and in pluggable, linear-drive or co-packaged optics?", why: "Each step changes how many reference clocks a switch needs and where they sit."}
       - {id: d-cpo, text: "Does co-packaged optics change your clocking (one reference for the switch package instead of one per module)?", why: "Could remove or reshape the optical-module clock socket."}
+      - {id: d-dci, text: "For scale-across links between halls or sites, which reach and optics do you plan (800ZR, 1600ZR), and do those routers carry SyncE and PTP?", why: "DCI routers need network synchronizers with holdover as well as clean SerDes clocks."}
       - {id: d-holdover, text: "What holdover and accuracy do you need when GNSS is lost in a time card or grandmaster?", why: "Sets oscillator class (TCXO, OCXO) and synchronizer features."}
     bu:
       - {id: b-ref, text: "In which switch, NIC and optical-module reference designs are our clocks recommended today?", why: "Reference designs decide most of these sockets."}
       - {id: b-roadmap, text: "Is our oscillator roadmap ahead of the 224G/448G jitter limits, and when?", why: "Being first on the next limit wins the socket."}
+      - {id: b-baw, text: "Which of our clocks use our own BAW reference today (SKY69002), and could the same reference move into clock generators and jitter attenuators for switches?", why: "A crystal-free clock tree is a feature competitors already promote."}
       - {id: b-comp, text: "Which competitors do we meet in data-center timing (Renesas, SiTime, TI, Microchip), and what decides?", why: "Shows where we lead or lag."}
       - {id: b-ptp, text: "Do we offer PTP / SyncE synchronizers for AI back-end fabrics, and is any customer asking?", why: "A new socket in AI clusters."}
+  datacenter/scale-up:
+    customer:
+      - {id: c-fabric, text: "Which scale-up fabric do you build or plan (NVLink-class, scale-up Ethernet, UALink), and how many accelerators share one scale-up domain?", why: "The fabric and domain size set the number of switch trays and SerDes lanes per rack."}
+      - {id: c-tray, text: "Who designs your scale-up switch trays: you, an ODM, or the switch-silicon vendor's reference design?", why: "Tells us whom to call for the clock and power sockets."}
+      - {id: c-cable, text: "Do your scale-up links run over copper cables, backplanes or optics, and over what length?", why: "Copper reach decides whether retimers sit on every link."}
+      - {id: c-pain, text: "What limits your scale-up trays today: power, heat, link errors, cable reach or serviceability?", why: "Points to the part that helps."}
+    developers:
+      - {id: d-serdes, text: "Which SerDes rate will your next scale-up switch use (100G, 200G, 400G per lane), and what reference-clock jitter does its vendor ask for?", why: "Sets the jitter attenuator and fanout spec for the tray."}
+      - {id: d-refs, text: "How many reference clocks does one tray need (per switch ASIC, per retimer), and do you distribute one clean source or use local clocks?", why: "Decides between one jitter attenuator with fanout and several local XOs."}
+      - {id: d-optics, text: "When do you expect optics (co-packaged or linear drive) inside the scale-up domain?", why: "Optics add 156.25 MHz module references and change the tray."}
+      - {id: d-power, text: "How is the tray powered (48-54 V busbar, 12 V), and which protection and telemetry does it need?", why: "Hot-swap, eFuse and isolated telemetry sockets."}
+    bu:
+      - {id: b-ref, text: "Are our jitter attenuators and buffers in any scale-up switch reference design, and for which switch silicon?", why: "Reference designs decide these sockets."}
+      - {id: b-224g, text: "Which of our parts meet the 224G-class reference limits (below 35 fs with a 4 MHz high-pass filter) with margin?", why: "The qualifying parts for scale-up trays."}
+      - {id: b-comp, text: "Which competitors hold clock sockets in scale-up trays today, and on what?", why: "Shows how open the socket is."}
+      - {id: b-power, text: "Do we have eFuse, hot-swap or isolated telemetry parts that fit a 48-54 V switch tray?", why: "A second socket on the same tray, next to the clocks."}
+  datacenter/nic-dpu:
+    customer:
+      - {id: c-cards, text: "Which NICs and DPUs do you build or buy (OCP NIC 3.0, PCIe add-in, mezzanine), and at which port speeds (200G, 400G, 800G)?", why: "Form factor and speed set the clock sockets on each card."}
+      - {id: c-role, text: "Which roles do the cards play: front-end NIC, back-end AI NIC, storage, security offload, timing NIC?", why: "A timing NIC needs a network synchronizer; a plain NIC a generator and XOs."}
+      - {id: c-hosts, text: "Does a card serve one host or several (multi-host), and over PCIe Gen 5 or Gen 6?", why: "Each host brings its own 100 MHz REFCLK and clock domain."}
+      - {id: c-pain, text: "What causes the most trouble on the cards: power and heat in the slot, link errors, clocking across hosts, or supply?", why: "Points to the part that helps."}
+    developers:
+      - {id: d-sris, text: "Do your cards run PCIe in common clock or SRIS with spread spectrum, and does that change with Gen 6 and Gen 7?", why: "SRIS needs a local PCIe clock with spread spectrum on the card."}
+      - {id: d-ptp, text: "Will your cards keep precise time (PTP hardware clock, 10 MHz and 1 PPS in or out), and to what accuracy?", why: "Timing NICs are a socket for synchronizers and better oscillators."}
+      - {id: d-serdes, text: "Which Ethernet SerDes reference (156.25 / 312.5 MHz) and jitter does your NIC or DPU vendor ask for at 112G and 224G?", why: "Sets the XO or jitter-attenuator spec."}
+      - {id: d-power, text: "How much power will the next card draw (up to 80 W or 150 W in OCP NIC 3.0), and which rails and monitoring?", why: "Card power drives regulators and protection."}
+    bu:
+      - {id: b-ref, text: "Are our clocks in the NIC and DPU vendors' reference designs (for example SKY62101 next to a DPU), and for which families?", why: "Most card sockets follow the silicon vendor."}
+      - {id: b-timing-nic, text: "Do we have a complete timing-NIC clock tree (synchronizer, XO, buffer) to offer, and which customers ask for it?", why: "A growing socket in AI back-end fabrics."}
+      - {id: b-comp, text: "Which competitors hold NIC and DPU clock sockets (Renesas, SiTime, TI), and what decides?", why: "Shows where we stand."}
+      - {id: b-ssc, text: "Which of our PCIe clock generators spread cleanly for SRIS on a card (Si5332, SKY62101), and is that in our NIC collateral?", why: "Cards on separate references need a local spread-spectrum clock."}
+  datacenter/server-board:
+    customer:
+      - {id: c-platform, text: "Which server platforms do you build (general compute, AI training, AI inference), and how often does a new generation start?", why: "Platform cadence sets the design-in window."}
+      - {id: c-trays, text: "How are your compute trays split: CPU host board, GPU / xPU baseboard, NICs and DPUs, management module (DC-SCM)?", why: "Each board is a separate clock tree and often a separate designer."}
+      - {id: c-odm, text: "Who designs the boards: you, an ODM, or the processor vendor's reference design?", why: "Most board sockets follow the reference design."}
+      - {id: c-bmc, text: "What does your board management controller watch and control, and what would you like it to see that it cannot?", why: "Management needs drive telemetry and sensing parts."}
+      - {id: c-pain, text: "What is hardest on the board today: power density, heat, signal integrity at PCIe Gen 6 or reliability?", why: "Points to the part that helps."}
+    developers:
+      - {id: d-ssc, text: "Where do you use spread-spectrum clocking in the tray (host link in SRIS, CPU, GPU baseboard), and which spread do you allow?", why: "Spread spectrum needs clock generators that spread cleanly and buffers that pass it."}
+      - {id: d-vr, text: "How much current will the next processor or accelerator draw, and will power move to vertical delivery under the chip?", why: "Vertical power delivery changes the regulator and sensing sockets."}
+      - {id: d-pcie7, text: "When do you move to PCIe Gen 7 and CXL, and what does that change for clocks, buffers and retimers?", why: "Gen 7 tightens clock jitter and adds retimers."}
+      - {id: d-local, text: "On the GPU / xPU baseboard, do the accelerators take one common clock or local references for their 112G / 224G SerDes?", why: "Local references mean one XO or clock per accelerator."}
+      - {id: d-48v, text: "Will 48 V reach the board directly, and which converters will you use to the core?", why: "48 V on the board changes protection and conversion."}
+      - {id: d-security, text: "Which hardware security and monitoring (root of trust, tamper detection) will be required on the board?", why: "New board functions mean new sockets."}
+    bu:
+      - {id: b-clock, text: "Which of our PCIe clocks and buffers are in server reference designs, and for which processor vendors?", why: "Reference designs decide clock sockets."}
+      - {id: b-gen7, text: "Are our clocks and buffers specified for PCIe Gen 7 jitter limits?", why: "Gen 7 readiness keeps the socket."}
+      - {id: b-tray, text: "Can we offer the whole compute-tray clock set (PCIe buffers, XOs, clock generator with spread spectrum) as one package?", why: "Customers ask for one supplier per tray."}
+      - {id: b-comp, text: "Which competitors hold server clock and power sockets (Renesas, TI, SiTime, MPS, Infineon)?", why: "Shows where we stand."}
+      - {id: b-isol, text: "Is there any isolation need on the server board (48 V input, sensors) that our parts meet?", why: "Finds a second socket next to timing."}
   datacenter/cooling:
     customer:
       - {id: c-mix, text: "What is your mix of air and liquid cooling today, and what will it be for new AI halls?", why: "The mix decides which drives and sensors grow."}
@@ -840,6 +868,23 @@ segments:
       - {id: b-catv, text: "Are our cable amplifiers ready for DOCSIS 4.0 at 1.8 GHz?", why: "Readiness."}
       - {id: b-comp, text: "Which competitors hold these sockets (Qualcomm and Broadcom reference front ends, MaxLinear)?", why: "Chipset vendors decide most router sockets."}
       - {id: b-bundle, text: "Can we bundle Wi-Fi front ends and cable amplifiers for gateway makers?", why: "A cross-sell."}
+  # former datacenter/network (owner, 9 Nov 2026: office and campus Wi-Fi moved to Home & building)
+  home/enterprise-wifi:
+    customer:
+      - {id: c-ap, text: "Which Wi-Fi standard and roughly what access-point density do you deploy in offices and campuses?", why: "Enterprise AP volumes and standard choose the front end."}
+      - {id: c-poe, text: "Which PoE power class do your access points and devices need, and is it rising?", why: "Higher PoE classes change the powered-device design."}
+      - {id: c-refresh, text: "How often do you refresh access points and switches, and what triggers a refresh?", why: "Refresh cycle drives volume timing."}
+      - {id: c-pain, text: "What causes the most trouble in your wireless network: coverage, interference, power budget or management?", why: "Points to front-end or power features."}
+    developers:
+      - {id: d-wifi7, text: "When do you move to Wi-Fi 7 with 320 MHz channels and multi-link operation, and to Wi-Fi 8 after that?", why: "Each step needs new front ends and filters."}
+      - {id: d-6ghz, text: "How will you use 6 GHz: indoor only, standard power with AFC, or outdoor?", why: "Standard power with AFC needs higher output and linearity."}
+      - {id: d-coex, text: "How many radios share one access point (2.4, 5, 6 GHz, BLE, IoT), and what filtering do you need between them?", why: "Tri-band APs depend on sharp 5/6 GHz filters."}
+      - {id: d-poe, text: "Will access points need more than 60 W PoE, and how do you design the powered-device side?", why: "PoE powered-device design is a power and isolation socket."}
+    bu:
+      - {id: b-fem, text: "Which of our Wi-Fi front ends and filters are in enterprise access points today?", why: "Our base."}
+      - {id: b-wifi8, text: "Is our Wi-Fi 7 and Wi-Fi 8 front-end roadmap aligned with the enterprise chipset vendors' timing?", why: "Front ends follow the chipset reference designs."}
+      - {id: b-comp, text: "Which competitors do we meet in enterprise Wi-Fi (Qualcomm RFFE, Broadcom integrated, Murata)?", why: "Shows how open the sockets are."}
+      - {id: b-filter, text: "Do our 5/6 GHz coexistence filters win in tri-band APs, and what decides?", why: "Filters are often where we differentiate."}
   home/metering:
     customer:
       - {id: c-products, text: "Which meters do you build (electricity, gas, water), and for which markets?", why: "Each has its own links and power."}
@@ -918,3 +963,9 @@ segments:
       - {id: b-motor, text: "Do our motor-control ICs fit medical pumps and CPAP blowers?", why: "A direct fit."}
       - {id: b-comp, text: "Which competitors hold therapy sockets?", why: "Shows the bar."}
       - {id: b-policy, text: "Which medical device classes may our parts be used in?", why: "A policy gate."}
+# Retired segment keys (owner, 9 Nov 2026: Data center regrouped into four application areas). Answers stay stored
+# under the old key; each shows on the first segment listed here that has its question id.
+moved:
+  datacenter/timing: [datacenter/networking, datacenter/server-board]
+  datacenter/servers: [datacenter/server-board]
+  datacenter/network: [home/enterprise-wifi]

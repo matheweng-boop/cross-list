@@ -1657,20 +1657,41 @@ def test_clock_planner_preset_parts_plan_save_reopen(page):
 
 
 def test_data_center_shows_timing_sub_system_deep_dive_and_diagrams(page):
-    """Owner, 2 Nov 2026: timing solutions in the data center: the Data center system has a "Timing and
-    synchronization" sub-system with its deep dive (which links the Clock planner) and its block diagrams."""
+    """Owner, 2 Nov 2026: timing solutions in the data center; 9 Nov 2026: Data center in the owner's four application
+    areas, each linking the timing deep dive (which links the Clock planner); old timing links still land."""
     go(page, "/library#sys-datacenter")
-    card = page.locator("#card-datacenter-timing")
+    cards = page.locator("details#sys-datacenter .sys-sub")
+    expect(cards.nth(0)).to_contain_text("Front-end / back-end networking")
+    expect(cards.nth(1)).to_contain_text("Scale-up switches")
+    expect(cards.nth(2)).to_contain_text("NICs / DPUs")
+    expect(cards.nth(3)).to_contain_text("Server and GPU / xPU baseboard")
+    card = page.locator("#card-datacenter-networking")
     expect(card).to_be_visible()
-    expect(card).to_contain_text("Timing and synchronization")
     with page.expect_navigation():
-        card.locator("a.sys-btn-deep").click()
+        card.locator('a.sys-btn-deep[href="/library/dc_timing"]').click()
     assert page.url.endswith("/library/dc_timing")
     expect(page.locator("main h1")).to_contain_text("Timing in the AI data center")
     expect(page.locator('main a[href="/clocks"]').first).to_be_visible()
-    go(page, "/blocks?system=datacenter&sub=timing#sub-timing")
+    go(page, "/blocks?system=datacenter&sub=timing#sub-timing")  # a retired key: redirected to networking
+    assert "sub=networking" in page.url
     expect(page.locator("details#area-datacenter[open]")).to_have_count(1)
-    expect(page.locator("main")).to_contain_text("AI / GPU server clock tree")
+    expect(page.locator("#sub-networking")).to_be_in_viewport()
+    expect(page.locator("main")).to_contain_text("Spine / leaf and scale-out Ethernet switch clock tree")
+    go(page, "/library#card-datacenter-servers")  # a retired card anchor opens the card that took it over
+    expect(page.locator("#card-datacenter-server-board")).to_be_in_viewport()
+
+
+def test_data_center_four_areas_on_a_phone(page):
+    """Owner, 9 Nov 2026: the new Data center layout in the Block diagram library fits a 390 px phone, and each new
+    area lists its diagrams."""
+    page.set_viewport_size(PHONE)
+    for sub, text in (("scale-up", "Scale-up switch tray"), ("nic-dpu", "SmartNIC / DPU card"),
+                      ("server-board", "GPU / xPU baseboard clock tree")):  # fmt: skip
+        go(page, f"/blocks?system=datacenter&sub={sub}#sub-{sub}")
+        expect(page.locator(f"#sub-{sub}")).to_be_in_viewport()
+        expect(page.locator("main")).to_contain_text(text)
+    go(page, "/blocks/cross-sell?system=datacenter&sub=nic-dpu")
+    expect(page.locator("main")).to_contain_text("NICs / DPUs")
 
 
 def test_data_center_shows_cooling_and_hvac(page):

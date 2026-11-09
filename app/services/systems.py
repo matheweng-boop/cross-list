@@ -48,6 +48,22 @@ def sub(system: str, key: str) -> dict | None:
     return next((x for x in s["subsystems"] if x["key"] == key), None) if s else None
 
 
+def resolve(system: str, key: str) -> str:
+    """The current key of a sub-system: `key` itself, or the sub-system that lists it under `aliases` (a key retired
+    when sub-systems were regrouped, e.g. Data center "timing" and "servers", owner 9 Nov 2026), so old links still
+    land; "" when neither."""
+    if sub(system, key):
+        return key
+    s = get(system)
+    return next((x["key"] for x in s["subsystems"] if key and key in (x.get("aliases") or [])), "") if s else ""
+
+
+def aliases() -> dict[str, str]:
+    """Retired sub-system keys -> current ones, as "<system>/<old>" -> "<system>/<new>"."""
+    return {f"{s['key']}/{a}": f"{s['key']}/{x['key']}" for s in systems() for x in s["subsystems"]
+            for a in x.get("aliases") or []}  # fmt: skip
+
+
 def assigned() -> set[int]:
     return {i for s in systems() for x in s["subsystems"] for i in x["idx"]}
 

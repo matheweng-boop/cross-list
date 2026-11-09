@@ -98,8 +98,8 @@ def test_deep_dive_shows_its_sub_system_questions_folded_at_the_bottom(client):
     before, sec = page.split('id="questions-to-ask"', 1)
     assert "<details" in before[-60:] and sec.startswith(">")
     assert before.index('id="refs"') < len(before) and 'href="#questions-to-ask"' in before
-    assert _q("datacenter/timing")["text"] in sec
-    assert "/library/questions/datacenter/timing" in sec
+    assert _q("datacenter/networking")["text"] in sec  # dc_timing sits first in networking
+    assert "/library/questions/datacenter/networking" in sec
     assert "<h2" not in sec.split("</details>")[-1]  # nothing after it but the "all questions" link
 
 
@@ -233,7 +233,7 @@ def test_internal_segment_answers_are_in_no_shareable(client, session):
 # ---- the overview ----------------------------------------------------------------------------------------------------
 def test_answers_overview_filters_by_segment(client, session):
     a1 = _add(client, KEY, _q()["id"], "SEG-OV charging one")
-    _add(client, "datacenter/timing", _q("datacenter/timing")["id"], "SEG-OV timing one", sharing="shared")
+    _add(client, "datacenter/networking", _q("datacenter/networking")["id"], "SEG-OV timing one", sharing="shared")
     _add(client, KEY, _q(group="bu")["id"], "SEG-OV charging bu")
     all_ = html.unescape(client.get("/manage/answers").text)
     assert "SEG-OV charging one" in all_ and "SEG-OV timing one" in all_
@@ -261,3 +261,26 @@ def test_report_answers_keep_their_keys_and_pages(client, session):
     assert (a.slug, a.question) == ("filters-1-11ghz", "q-bu-passband")
     page = html.unescape(client.get("/business/reports/filters-1-11ghz").text)
     assert 'action="/business/reports/filters-1-11ghz/answers"' in page and 'name="sub"' not in page
+
+
+# ---- owner, 9 Nov 2026: Data center regrouped; answers stored under a retired segment key follow their question ----
+def test_answers_under_a_retired_segment_key_show_where_their_question_went(client, session):
+    assert sq.moved()["datacenter/timing"][0] == "datacenter/networking"
+    for old, new in sq.moved().items():
+        assert sq.segment(old) is None and all(sq.segment(k) for k in new)
+    assert {q["id"] for q in sq.questions("datacenter/server-board")} >= {"c-platform", "d-pcie7", "b-gen7"}
+    assert {q["id"] for q in sq.questions("home/enterprise-wifi")} >= {"c-ap", "d-wifi7", "b-fem"}
+    for key in ("datacenter/scale-up", "datacenter/nic-dpu"):  # new sets in the same three groups
+        assert {q["group"] for q in sq.questions(key)} == {"customer", "developers", "bu"}
+    assert any("China and Taiwan" in q["text"] for q in sq.questions("datacenter"))
+    session.add_all([Answer(slug="seg:datacenter/timing", question="d-224g", text="SEG-MOVED-224G"),
+                     Answer(slug="seg:datacenter/timing", question="d-pcie7", text="SEG-MOVED-GEN7"),
+                     Answer(slug="seg:datacenter/network", question="c-ap", text="SEG-MOVED-AP")])  # fmt: skip
+    session.commit()
+    assert sq.home_of("datacenter/timing", "d-224g") == "datacenter/networking"
+    assert sq.home_of("datacenter/timing", "d-pcie7") == "datacenter/server-board"
+    net = client.get("/library/questions/datacenter/networking").text
+    assert "SEG-MOVED-224G" in net and "SEG-MOVED-GEN7" not in net
+    assert "SEG-MOVED-GEN7" in client.get("/library/questions/datacenter/server-board").text
+    assert "SEG-MOVED-AP" in client.get("/library/questions/home/enterprise-wifi").text
+    assert sq.title("seg:datacenter/timing") == "Data center › Front-end / back-end networking"

@@ -30,8 +30,28 @@ ASK = {"customer": "the customer (product, purchasing or system team)",
 
 
 @lru_cache
+def _raw() -> dict:
+    return (yamlio.load(FILE.read_text()) or {}) if FILE.exists() else {}
+
+
 def _file() -> dict:
-    return (yamlio.load(FILE.read_text()) or {}).get("segments") or {} if FILE.exists() else {}
+    return _raw().get("segments") or {}
+
+
+def moved() -> dict[str, list[str]]:
+    """Retired segment keys -> the segments their questions moved to (owner, 9 Nov 2026: Data center regrouped).
+    Answers stay stored under the old slug; each shows on the first listed segment that has its question id."""
+    return {k: list(v or []) for k, v in (_raw().get("moved") or {}).items()}
+
+
+def home_of(old: str, qid: str) -> str:
+    """The segment an answer stored under a retired key belongs to now ("" when its question is gone)."""
+    return next((k for k in moved().get(old, []) if any(q["id"] == qid for q in questions(k))), "")
+
+
+def old_keys(key: str) -> list[str]:
+    """Retired segment keys whose questions moved (partly) into `key`."""
+    return [old for old, new in moved().items() if key in new]
 
 
 def is_segment(slug: str) -> bool:
@@ -67,13 +87,17 @@ def segment(key: str) -> dict | None:
     return next((s for s in segments() if s["key"] == key), None)
 
 
+def _current(key: str) -> str:
+    return key if segment(key) else next(iter(moved().get(key) or []), key)
+
+
 def title(slug_or_key: str) -> str:
-    s = segment(key_of(slug_or_key) or slug_or_key)
+    s = segment(_current(key_of(slug_or_key) or slug_or_key))
     return s["title"] if s else slug_or_key
 
 
 def href(slug: str) -> str:
-    s = segment(key_of(slug))
+    s = segment(_current(key_of(slug)))
     return s["href"] if s else "/library"
 
 

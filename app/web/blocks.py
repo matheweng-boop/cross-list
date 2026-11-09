@@ -23,6 +23,15 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
           session: Session = Depends(get_session)):  # fmt: skip
     """Block diagram library: reference architectures with facets for end market and source; architectures that may
     describe the same application are flagged as possible variants (never merged)."""
+    from urllib.parse import urlencode
+
+    from app.services import systems as sy
+
+    old = request.query_params.get("sub", "")
+    new = sy.resolve(request.query_params.get("system", ""), old) if old else ""
+    if new and new != old:  # a retired sub-system key (owner, 9 Nov 2026: Data center regrouped): its new place
+        q = {**request.query_params, "sub": new}
+        return RedirectResponse(f"/blocks?{urlencode(q)}#sub-{new}", status_code=301)
     designs = session.scalars(select(BlockDiagram).order_by(BlockDiagram.updated_at.desc())).all()
     groups = blocks.template_cards(session)
     allcards = [c for _, items in groups for c in items]
@@ -42,7 +51,6 @@ def index(request: Request, market: str = "", source: str = "", variants: bool =
 
     shown = {c["i"]: c for _, v in cards for c in v}
     from app.services import library
-    from app.services import systems as sy
 
     topics = {t["key"]: t for t in library.topics()}
     system = request.query_params.get("system", "")

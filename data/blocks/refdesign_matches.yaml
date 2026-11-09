@@ -9615,22 +9615,29 @@ diagrams:
   anchors: []
 - name: Server motherboard (x86 CPU, PCH, BMC, VR power) (TI)
   key: server-motherboard-x86-cpu-pch-bmc-vr-power-ti
-  n: 1
+  n: 2
   designs:
+  - OCP:OCP-DC-SCM2
   - TI:PMP23475.1
   functions:
+    mcu: 2
     amplifier: 1
+    clock_buffer: 1
     digital_isolator: 1
+    flash: 1
     gate_driver: 1
     isolated_dcdc: 1
-    mcu: 1
     pol_ldo: 1
     power_fets: 1
+    secure_element: 1
+    soc: 1
     voltage_reference: 1
   confirmed:
   - power_fets
+  - soc
   - voltage_reference
   - mcu
+  - clock_buffer
   - amplifier
   suggested: []
   anchors:
@@ -18531,35 +18538,70 @@ diagrams:
 - name: AI / GPU server clock tree (100 MHz PCIe Gen 5 / 6 reference clocks from a clock generator and LP-HCSL fanout buffers
     to the CPU, GPUs, NICs and retimers, with spread spectrum) (after TI and Skyworks public material)
   key: ai-gpu-server-clock-tree-100-mhz-pcie-gen-5-6-reference-clocks-from-a-clock-gene
-  n: 0
-  designs: []
-  functions: {}
-  confirmed: []
+  n: 1
+  designs:
+  - OCP:OCP-OAI-UBB
+  functions:
+    clock_buffer: 1
+    clock_generator: 1
+    efuse_hotswap: 1
+    mcu: 1
+    pcie_switch: 1
+    redriver: 1
+    soc: 1
+  confirmed:
+  - clock_generator
+  - soc
+  - pcie_switch
+  - redriver
+  - mcu
   suggested: []
   anchors: []
 - name: Data center Ethernet switch timing (network synchronizer for SyncE and IEEE 1588 PTP, jitter attenuator for the 112G
     / 224G SerDes reference clocks, TCXO / OCXO and crystal) (after Skyworks public material)
   key: data-center-ethernet-switch-timing-network-synchronizer-for-synce-and-ieee-1588-
-  n: 1
+  n: 2
   designs:
+  - OCP:OCP-DS5000
   - Skyworks:SKY-RD-TIMING-BROADCOM
   functions:
-    clock_buffer: 1
+    clock_buffer: 2
+    jitter_attenuator: 2
     clock_generator: 1
-    jitter_attenuator: 1
+    crystal_oscillator: 1
+    ethernet_phy: 1
+    mcu: 1
+    pcie_buffer: 1
+    serdes: 1
+    soc: 1
   confirmed:
+  - soc
+  - serdes
   - jitter_attenuator
+  - crystal_oscillator
   - clock_buffer
   - clock_generator
+  - pcie_buffer
   suggested: []
   anchors: []
 - name: Optical transceiver module reference clock (400G / 800G / 1.6T pluggable or coherent module - PAM4 or coherent DSP
     clocked from a low-jitter XO or jitter attenuator) (after Skyworks public material)
   key: optical-transceiver-module-reference-clock-400g-800g-1-6t-pluggable-or-coherent-
-  n: 0
-  designs: []
-  functions: {}
-  confirmed: []
+  n: 2
+  designs:
+  - OIF:OIF-1600ZR
+  - OIF:OIF-CPO-3.2T
+  functions:
+    optical_driver: 2
+    optical_tia: 2
+    soc: 2
+    clock_buffer: 1
+    serdes: 1
+  confirmed:
+  - soc
+  - serdes
+  - optical_driver
+  - optical_tia
   suggested: []
   anchors: []
 - name: Data center PTP time card / grandmaster (OCP Time Card - GNSS timing receiver, atomic clock or OCXO holdover, FPGA
@@ -18577,6 +18619,130 @@ diagrams:
   confirmed:
   - crystal_oscillator
   - jitter_attenuator
+  - clock_buffer
+  suggested: []
+  anchors: []
+- name: Spine / leaf and scale-out Ethernet switch clock tree, 64 x 800G (51.2T) to 1.6T and 3.2T ports (jitter attenuator
+    or network synchronizer for the 312.5 MHz SerDes references, PCIe buffer, management clocks, 156.25 MHz references for
+    co-packaged 3.2T modules) (after Celestica DS5000 OCP spec, OIF and Skyworks public material)
+  key: spine-leaf-and-scale-out-ethernet-switch-clock-tree-64-x-800g-51-2t-to-1-6t-and-
+  n: 1
+  designs:
+  - OCP:OCP-DS5000
+  functions:
+    clock_buffer: 1
+    crystal_oscillator: 1
+    ethernet_phy: 1
+    jitter_attenuator: 1
+    mcu: 1
+    pcie_buffer: 1
+    serdes: 1
+    soc: 1
+  confirmed:
+  - soc
+  - serdes
+  - jitter_attenuator
+  - crystal_oscillator
+  - clock_buffer
+  - pcie_buffer
+  - mcu
+  suggested: []
+  anchors: []
+- name: Scale-up switch tray for an AI rack (scale-up Ethernet or NVLink-class switch ASICs with 200G-class SerDes, SerDes
+    reference clocks from a jitter attenuator and fanout, cable / backplane retimers, 48-54 V to core power) (after OCP SUE,
+    OIF and Skyworks public material)
+  key: scale-up-switch-tray-for-an-ai-rack-scale-up-ethernet-or-nvlink-class-switch-asi
+  n: 0
+  designs: []
+  functions: {}
+  confirmed: []
+  suggested: []
+  anchors: []
+- name: Data center interconnect (DCI) router for scale-across (1600ZR / 800ZR coherent pluggables up to 120 km, network synchronizer
+    for SyncE and IEEE 1588 PTP with OCXO holdover, jitter attenuators and fanout) (after OIF and Skyworks public material)
+  key: data-center-interconnect-dci-router-for-scale-across-1600zr-800zr-coherent-plugg
+  n: 1
+  designs:
+  - OIF:OIF-1600ZR
+  functions:
+    optical_driver: 1
+    optical_tia: 1
+    serdes: 1
+    soc: 1
+  confirmed:
+  - soc
+  - serdes
+  suggested: []
+  anchors: []
+- name: 'SmartNIC / DPU card (OCP NIC 3.0: PCIe Gen 5 / 6 host with a 100 MHz REFCLK per host, 400G / 800G Ethernet SerDes
+    reference, timing NIC with 10 MHz + 1 PPS, Arm cores, memory and card power) (after OCP NIC 3.0, Marvell OCTEON and Skyworks
+    public material)'
+  key: smartnic-dpu-card-ocp-nic-3-0-pcie-gen-5-6-host-with-a-100-mhz-refclk-per-host-4
+  n: 1
+  designs:
+  - OCP:OCP-NIC3
+  functions:
+    clock_buffer: 1
+    ethernet_phy: 1
+    jitter_attenuator: 1
+    pcie_buffer: 1
+    serdes: 1
+    soc: 1
+  confirmed:
+  - pcie_buffer
+  - soc
+  - serdes
+  - jitter_attenuator
+  suggested: []
+  anchors: []
+- name: 'GPU / xPU baseboard clock tree (OCP UBB with 8 accelerator modules: host link in SRIS with spread spectrum, common-clock
+    100 MHz on the baseboard, local 156.25 / 312.5 MHz references for the 112G / 224G scale-up SerDes, PCIe switches and retimers)
+    (after OCP OAI-UBB and Skyworks public material)'
+  key: gpu-xpu-baseboard-clock-tree-ocp-ubb-with-8-accelerator-modules-host-link-in-sri
+  n: 1
+  designs:
+  - OCP:OCP-OAI-UBB
+  functions:
+    clock_buffer: 1
+    clock_generator: 1
+    efuse_hotswap: 1
+    mcu: 1
+    pcie_switch: 1
+    redriver: 1
+    soc: 1
+  confirmed:
+  - soc
+  - clock_generator
+  - pcie_switch
+  - redriver
+  - mcu
+  - efuse_hotswap
+  suggested: []
+  anchors: []
+- name: 'Server CPU compute tray clock tree (dual-socket CPU host board with a DC-SCM management module: platform clock generator
+    with down-spread, PCIe Gen 6 / 7 fanout buffers, XOs for the BMC, NC-SI and NIC) (after OCP DC-SCM 2.0 and Skyworks public
+    material)'
+  key: server-cpu-compute-tray-clock-tree-dual-socket-cpu-host-board-with-a-dc-scm-mana
+  n: 2
+  designs:
+  - OCP:OCP-OAI-UBB
+  - OCP:OCP-DC-SCM2
+  functions:
+    clock_buffer: 2
+    mcu: 2
+    soc: 2
+    clock_generator: 1
+    efuse_hotswap: 1
+    flash: 1
+    pcie_switch: 1
+    redriver: 1
+    secure_element: 1
+  confirmed:
+  - clock_generator
+  - soc
+  - redriver
+  - mcu
+  - secure_element
   - clock_buffer
   suggested: []
   anchors: []
@@ -19229,8 +19395,9 @@ diagrams:
 - name: AI compute tray power from the 48 / 54 V busbar to the GPU core (hot-swap / eFuse with PMBus, 48 V to 12 V or 6 V
     bus converter, multiphase regulators, vertical power delivery, hold-up) (after Infineon, OCP and NVIDIA)
   key: ai-compute-tray-power-from-the-48-54-v-busbar-to-the-gpu-core-hot-swap-efuse-wit
-  n: 19
+  n: 20
   designs:
+  - OCP:OCP-OAI-UBB
   - TI:PMP11399.1
   - TI:PMP22510.1
   - TI:PMP23069.1
@@ -19255,8 +19422,8 @@ diagrams:
     pol_ldo: 18
     amplifier: 12
     half_bridge_driver: 12
+    mcu: 11
     digital_isolator: 10
-    mcu: 10
     acdc_controller: 9
     voltage_reference: 9
     wide_vin_buck: 8
@@ -19264,18 +19431,23 @@ diagrams:
     temperature_sensor: 6
     isolated_dcdc: 5
     current_sensor: 4
-    efuse_hotswap: 3
+    efuse_hotswap: 4
     reverse_polarity: 3
     isolated_amplifier: 2
     can_transceiver: 1
+    clock_buffer: 1
+    clock_generator: 1
     display_driver: 1
     env_sensor: 1
     hall_switch: 1
     isolated_digital_input: 1
     load_switch: 1
+    pcie_switch: 1
     pmic: 1
+    redriver: 1
     relay_driver: 1
     sequencer: 1
+    soc: 1
     supervisor: 1
     tvs_esd: 1
     voltage_translator: 1

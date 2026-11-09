@@ -110,6 +110,11 @@ def segment_questions_system(request: Request, system: str, session: Session = D
 @router.get("/library/questions/{system}/{sub}", response_class=HTMLResponse)
 def segment_questions_sub(request: Request, system: str, sub: str, session: Session = Depends(get_session)):
     """A sub-system's Questions to ask: customer, developers and business unit, each with its answer box."""
+    from app.services import systems as sy
+
+    new = sy.resolve(system, sub)
+    if new and new != sub:  # a retired sub-system key (owner, 9 Nov 2026: Data center regrouped)
+        return RedirectResponse(f"/library/questions/{system}/{new}", status_code=301)
     return _segment_page(request, session, f"{system}/{sub}")
 
 

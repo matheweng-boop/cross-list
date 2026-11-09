@@ -45,6 +45,7 @@ from app.services import (
 from app.services import idea_requests as ir
 from app.services import opportunity as op
 from app.services import portfolio as pf
+from app.services import possible_customers as pcust
 from app.services import priority as priority
 from app.services import reports as rp
 from app.services import rf_coverage as rf
@@ -55,6 +56,7 @@ from app.web.urls import local_path
 router = APIRouter()
 templates.env.globals["bo_status_help"] = op.STATUS_HELP
 templates.env.globals["bo_help"] = op.explanations
+templates.env.globals["possible_customers"] = pcust  # owner, 9 Nov 2026: per sub-system and region
 
 
 def _ctx(session: Session, co: str, scope: str = "all") -> dict:

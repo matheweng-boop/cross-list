@@ -211,17 +211,17 @@ def test_systems_library_systems_open_and_close(page):
     auto = page.locator("details#sys-automotive")
     card = auto.locator(".sys-sub").first
     expect(card).to_be_hidden()
-    auto.locator("summary").click()
+    auto.locator("> summary").click()
     expect(card).to_be_visible()
     expect(auto.locator(".lib-card").first).to_be_visible()  # its deep dives
-    auto.locator("summary").click()
+    auto.locator("> summary").click()
     expect(card).to_be_hidden()
     button = page.locator('.sys-pick a[href="#sys-drones"]')
     button.click()
     drones = page.locator("details#sys-drones")
     expect(page.locator("details#sys-drones[open]")).to_have_count(1)
-    expect(drones.locator("summary")).to_be_in_viewport()
-    drones.locator("summary").click()  # closed again, then the same button (same hash) opens it once more
+    expect(drones.locator("> summary")).to_be_in_viewport()
+    drones.locator("> summary").click()  # closed again, then the same button (same hash) opens it once more
     expect(page.locator("details#sys-drones[open]")).to_have_count(0)
     button.click()
     expect(page.locator("details#sys-drones[open]")).to_have_count(1)
@@ -1809,3 +1809,19 @@ def test_part_page_and_cross_a_list_fold_vs_best(page):
     page.set_viewport_size(PHONE)  # opened, the fold scrolls inside its own box: the table does not widen the page
     page.wait_for_timeout(200)
     assert overflow(page) <= 1, f"{overflow(page)} px sideways scroll with vs best open on a phone"
+
+
+def test_systems_library_possible_customers_by_region(page):
+    """Owner, 9 Nov 2026: each sub-system card (and each system) has a folded "Possible customers" section with
+    Americas, EMEA and Asia, each company with its line and source link (390 px checked after the test)."""
+    go(page, "/library#sys-automotive")
+    box = page.locator("details#pc-automotive-car-access")
+    expect(box.locator(".pc-region").first).to_be_hidden()  # folded
+    box.locator("summary").click()
+    for r in ("Americas", "EMEA", "Asia"):
+        expect(box.locator(f'.pc-region[aria-label="{r}"] li').first).to_be_visible()
+    expect(box.locator(".pc-src a").first).to_be_visible()
+    expect(box.locator(".pc-note")).to_contain_text("not a customer list")
+    whole = page.locator("details#pc-automotive")
+    whole.locator("summary").click()
+    expect(whole.locator('.pc-region[aria-label="EMEA"] li').first).to_be_visible()

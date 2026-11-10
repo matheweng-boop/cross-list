@@ -1,0 +1,303 @@
+# Preliminary case: the SKY4680x automotive audio DSP (owner, 10 Nov 2026: "Today Skyworks announced an audio DSP
+# processor, SKY48 - make one [research + business case] for that, especially the use cases, where to apply it, and
+# where to hunt"). The part Skyworks publishes is the SKY4680x family (SKY46801 / SKY46802 / SKY46803); no part named
+# "SKY48" was found. Layout and rules: _template.yaml. Every figure and link: auto-audio-dsp.background.html.
+# conf: high = primary document read; med = trade press or advocacy body; low = snippet, general knowledge or analyst
+# PR. "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+gist: "SKY4680x is our first standalone car audio DSP; hunt amplifier and head-unit sockets first and sell it with our tuners, clocks and front ends (est)."
+abstract:
+  - "SKY4680x: one, two or three DSP cores, on-chip SRAM without DRAM, I2S, flash boot, optional MCU, third-party audio IP; for car amplifiers and head units."
+  - "TI sells the closest parts (AM2754-Q1, AM62D-Q1, $25–33 at 1k); ADI SHARC with A2B leads premium amplifiers; cockpit SoCs absorb the low end."
+  - "Decide to pursue external amplifiers and radio head units first, with a tuner + DSP + clock set; watch sound zones and noise cancellation; drop consumer for now."
+title: "SKY4680x automotive audio DSP: where to use it, where to hunt, and what to sell with it"
+fn: audio_codec
+headline: f-sky4680x
+library: []
+question: >-
+  Skyworks announced the SKY4680x automotive audio DSP (one, two or three cores) for car amplifiers and head units.
+  Where does it fit (in-cabin audio, sound zones, noise cancellation, engine sound, voice, consumer and pro audio),
+  against ADI SHARC, TI, NXP, Qualcomm and Tensilica-based SoCs, which sockets and companies should we hunt first,
+  and which of our other parts sell with it?
+updated: 2026-11-10
+brief:
+  - "SKY4680x is Skyworks' first standalone automotive audio DSP: one, two or three DSP cores with on-chip SRAM (no external DRAM), I2S connectivity, fast boot from flash, an optional customer-programmable MCU, support for third-party audio IP and Skyworks' own edge-AI audio algorithms, and a graphical tuning tool with planned Audio Weaver support; it sits next to our automotive tuners and digital radio coprocessors."
+  - "Our weak points: no public figure yet for MIPS, channel count, sample rates, package or AEC-Q100; no wired audio bus of our own (A2B is ADI's) and no audio amplifier or codec; TI's AM2754-Q1 makes the same no-DRAM pitch with 80 GFLOPS, 10.75 MB SRAM and AEC-Q100 at $28–33 (1k list), and cockpit SoCs keep absorbing basic audio processing."
+  - "Proposal: pursue external amplifiers and radio head units first with a tuner + SKY4680x + clock set at about $4–11 per DSP by core count (est), watch sound zones and road-noise cancellation until latency and interfaces are public, and drop consumer and pro audio for now."
+
+customer_benefit:
+  for: "Car-audio amplifier makers and head-unit Tier-1s (Harman, Alps Alpine, Denso Ten, Pioneer, Bosch type); OEM audio teams"
+  summary: "One scalable DSP family with on-chip memory and a graphical tool replaces a DRAM-based audio processor or a fixed-function DSP, so one amplifier design covers entry, mid and premium trims."
+  today: "Entry: the tuner's built-in audio DSP (e.g. our Si479xx with HiFi2-EP) or the cockpit SoC's DSP. Mid and premium: a separate amplifier with ADI SHARC-class DSPs (often two or more, with external memory) or a TI AM275x / AM62D-class processor, an A2B or I2S/TDM link from the head unit, 8 to more than 20 channels of class-D amplifiers."
+  with_us: "SKY4680x (one, two or three cores, pin choice not stated) in the amplifier or head unit, SRAM on chip so no DRAM, boot from flash, optional on-chip MCU for amplifier control; tuning in Skyworks' graphical tool and Audio Weaver (planned); next to our Si479xx tuners, Si469xx coprocessors and Si5332-AM clocks."
+  gains:
+    - {id: cb-dram, kind: parts, gain: "No external DRAM for the audio processor", how: "Integrated on-chip SRAM (Skyworks video)", measure: "1 DRAM -> 0 (est), and no DRAM supply risk", conf: high}
+    - {id: cb-scale, kind: scaling, gain: "One amplifier design from entry to premium", how: "One-, two- and three-core variants of one family and one tool", measure: "3 core options (Skyworks page); pin compatibility not stated", conf: med}
+    - {id: cb-mcu, kind: parts, gain: "Amplifier control without a separate MCU", how: "Optional customer-programmable MCU on chip", measure: "1 MCU -> 0 where it is enough (est)", conf: med}
+    - {id: cb-sw, kind: software, gain: "Existing tuning work carries over", how: "Third-party audio IP and own algorithms run on it; Audio Weaver support planned", measure: "not stated", conf: med}
+    - {id: cb-source, kind: sourcing, gain: "Radio, audio DSP and clock from one supplier", how: "SKY4680x next to our tuners, coprocessors and automotive clocks", measure: "3 suppliers -> 1 for these blocks (est)", conf: low}
+  gives_up:
+    - "Code and tuning written for ADI SHARC or TI C7x must be ported; Audio Weaver support is planned, not stated as available"
+    - "Interfaces beyond I2S (TDM, A2B, Ethernet AVB, USB) are not stated; an A2B transceiver or a TDM bridge may still be needed"
+
+position:
+  advantages:
+    - {id: a-nodram, text: "On-chip SRAM, no external DRAM: lower BOM and no DRAM supply risk (Skyworks video); TI AM62D-Q1 needs LPDDR4", vs: "TI AM62D-Q1; DRAM-based SoCs", conf: high}
+    - {id: a-scale, text: "One family in one-, two- and three-core versions for entry to premium audio", vs: "ADI SHARC (several part lines); TI AM275x (dual or quad R5F, one or two C7x)", conf: med}
+    - {id: a-radio, text: "Sits next to our automotive tuners (Si479xx) and digital radio coprocessors (Si469xx): one supplier for radio and audio processing in the head unit", vs: "NXP (radio + audio SoCs), ST", conf: high}
+    - {id: a-open, text: "Open to third-party audio IP and customer algorithms, plus Skyworks' own edge-AI audio algorithms", vs: "Fixed-function audio DSPs", conf: med}
+    - {id: a-tool, text: "Graphical configuration tool with a block library; Audio Weaver support planned (the common tool of amplifier makers)", vs: "Proprietary tool flows", conf: med}
+  disadvantages:
+    - {id: d-specs, text: "No public MIPS, channel count, sample rates, package, power or AEC-Q100 statement yet; amplifier makers compare GFLOPS and memory first", vs: "TI AM2754-Q1 (80 GFLOPS, 10.75 MB SRAM, AEC-Q100, list prices public)", offset: "Publish a product brief with these figures and the grade (feature f-docs)", conf: high}
+    - {id: d-a2b, text: "No wired audio bus: A2B (ADI) links microphones, accelerometers and amplifiers in many premium cars; only I2S is stated for SKY4680x", vs: "ADI SHARC + A2B", offset: "Support TDM and an A2B transceiver on I2S/TDM in the reference design (f-tdm)", conf: med}
+    - {id: d-soc, text: "Cockpit SoCs (Qualcomm, NXP, MediaTek, TI) and audio-tuner SoCs carry DSPs and absorb entry audio", vs: "Qualcomm, NXP, TI", offset: "Aim at external amplifiers and premium head units, where the SoC's DSP is not enough or not owned by the audio team", conf: med}
+    - {id: d-new, text: "New entrant with no automotive audio DSP track record; amplifier makers keep DSP families for many years", vs: "ADI, TI", offset: "Start with the radio head-unit customers we know; long-term supply statement", conf: med}
+    - {id: d-amp, text: "No automotive audio amplifier or codec of our own to complete the chain", vs: "TI (TAS6xxx-Q1 amplifiers), ST, NXP", offset: "Partner reference designs; Si824x gate drivers only for high-power pro amplifiers", conf: high}
+  diff_good:
+    - {id: g-sram, text: "Memory on chip at one, two or three cores: the BOM saving rises with trim level instead of adding a DRAM at the top", conf: med}
+    - {id: g-set, text: "Radio + audio DSP + clock + 2.4 GHz front ends from one supplier for a head unit", conf: med}
+  diff_bad:
+    - {id: b-noband, text: "Public facts are thin: every comparison today rests on Skyworks' page and video only", conf: high}
+    - {id: b-old, text: "Our tuners' built-in audio DSP is an older HiFi2-EP; buyers may see SKY4680x as unproven next to it", conf: low}
+
+architecture:
+  columns: [Skyworks SKY4680x, "TI AM2754-Q1 / AM62D-Q1", "ADI SHARC + A2B", "Cockpit SoC (Qualcomm, NXP, MediaTek)"]
+  rows:
+    - ["Built as", "Standalone audio DSP: 1, 2 or 3 DSP cores, on-chip SRAM, optional MCU", "AM2754-Q1: 1–2 C7x DSP + 2–4 R5F, 10.75 MB SRAM; AM62D-Q1: C7x + A53 + R5F with LPDDR4", "SHARC DSPs with external memory; A2B transceivers for the audio bus (general knowledge, not read)", "DSP inside the SoC that also runs the display and apps"]
+    - ["Where it sits", "Amplifier or head unit", "Amplifier, head unit, central audio", "Amplifier; A2B to microphones, sensors and headrests", "Cockpit or head unit"]
+    - ["Audio links", "I2S (stated); TDM, A2B, AVB not stated", "5x / 3x McASP (TDM, I2S, S/PDIF), Ethernet TSN", "A2B, TDM", "TDM, Ethernet AVB"]
+    - ["Grade", "Not stated (automotive by name)", "AEC-Q100, –40 to 125 °C", "Automotive (not read)", "Automotive"]
+    - ["Fit with the architecture trend", "Good where audio stays a separate amplifier or zone; weak if audio moves into the central computer", "Good: wide range, Ethernet for zonal", "Strong in premium amplifiers and noise cancellation", "Strong for entry audio; premium audio often stays separate"]
+  note: "TI from its AM2754-Q1 and AM62D-Q1 product pages (read 10 Nov 2026). ADI from general knowledge (analog.com not requested). NXP and Qualcomm sites not requested; their column is general knowledge (low). Our library diagram: Car radio tuner system."
+
+market_now:
+  - {figure: "SKY4680x", value: "One-, two- and three-core automotive audio DSP; six base OPNs (GE / GC) plus reel versions", source: "Skyworks SKY4680x product page and product video (read 10 Nov 2026)", conf: high}
+  - {figure: "Closest public competitor", value: "TI AM2754-Q1: 80 GFLOPS, 10.75 MB SRAM, AEC-Q100, 361-pin FCCSP, $28.43–33.23 (1k list); AM62D-Q1: 40 GFLOPS C7x + A53, LPDDR4, $25.41–27.83 (1k list)", source: "TI product pages (read 10 Nov 2026)", conf: high}
+  - {figure: "Vehicles built", value: "96.4 M vehicles of all types in 2025", source: "OICA, as recorded in the BizDev TAM topics", conf: med}
+  - {figure: "Dedicated audio DSP sockets", value: "About 30–50 M a year (external amplifiers and head units with a separate DSP) (est)", source: "Our estimate: 96.4 M vehicles × 30–50 % with a DSP outside the cockpit SoC or tuner", conf: low}
+  - {figure: "Market value (dedicated audio DSPs)", value: "About $0.2–0.5 B a year (est)", source: "30–50 M sockets × $6–10 average contract price (est); no analyst figure read", conf: low}
+
+outlook:
+  - {id: o-channels, text: "Channel counts keep rising (sound zones, headrest speakers, Dolby Atmos-style immersive audio), so premium amplifiers need more DSP, not less (est)", basis: "Skyworks' video (immersive audio); TI's AM275 Dolby Atmos 7.1.4 demo listed on its page", conf: med}
+  - {id: o-central, text: "Entry audio moves into the cockpit SoC or central computer; dedicated audio DSPs concentrate in amplifiers and zones (est)", basis: "Our radio-tuner-next case (audio DSP moving to the central computer); cockpit SoCs carry DSPs", conf: low}
+  - {id: o-rnc, text: "Road-noise cancellation and in-car communication spread from premium to mid trims, needing low-latency sensor inputs (est)", basis: "Harman lists HALOsonic on its car site; general knowledge", conf: low}
+  - {id: o-ai, text: "AI audio (voice separation, personalization) becomes a selection criterion; DSPs with NPU or matrix accelerators gain (est)", basis: "TI C7x with matrix accelerator; Skyworks' edge-AI audio algorithms", conf: low}
+  - {id: o-nodram, text: "Amplifier makers prefer SRAM-only DSPs to avoid DRAM cost and supply risk (est)", basis: "Both Skyworks (SKY4680x) and TI (AM275x) pitch on-chip memory", conf: med}
+
+features:
+  - {id: f-sky4680x, feature: "SKY4680x one-, two- and three-core family as published", benefit: "Entry to premium amplifier and head-unit audio from one family", distance: 0, why: "Announced; part numbers listed on the Skyworks page"}
+  - {id: f-docs, feature: "Public product brief: GFLOPS / MIPS, channels, sample rates, interfaces, package, power, AEC-Q100 grade, functional-safety notes", benefit: "Lets amplifier makers compare with TI and ADI; our site rule cannot mark it automotive without it", distance: 1, why: "Documentation only"}
+  - {id: f-aw, feature: "Audio Weaver support released, plus a library of car-audio blocks (sound zones, RNC, ICC, EV sound)", benefit: "Tuning engineers keep their tool and work", distance: 1, why: "Planned per Skyworks' video; software work"}
+  - {id: f-set, feature: "Head-unit set: Si479xx tuner + Si469xx coprocessor + SKY4680x + Si5332-AM clock, one reference design", benefit: "One supplier for radio and audio processing; faster design-in", distance: 2, why: "Existing parts; new reference design"}
+  - {id: f-amp, feature: "Amplifier reference design with a partner class-D amplifier, TDM and an A2B or Ethernet AVB input", benefit: "Answers the missing wired audio bus and amplifier", distance: 2, why: "Reference design with third-party parts; depends on SKY4680x's TDM support (not stated)"}
+  - {id: f-tdm, feature: "TDM and multi-lane audio ports, or an A2B / Ethernet AVB bridge", benefit: "Feeds microphones and accelerometers for noise cancellation and many speaker channels", distance: 3, why: "Only I2S is stated; if missing it needs a new chip (est)"}
+  - {id: f-lowlat, feature: "Low-latency path for road-noise cancellation (sensor to speaker in a few ms)", benefit: "Enters the RNC socket now held by SHARC + A2B", distance: 3, why: "Latency not stated; may need hardware changes (est)"}
+  - {id: f-consumer, feature: "Commercial-grade version for soundbars and pro audio", benefit: "Volume outside the car", distance: 1, why: "Same die (est); but cost and channel needs differ"}
+
+product:
+  name: "SKY4680x (SKY46801 / SKY46802 / SKY46803) with a head-unit set and an amplifier reference design"
+  spec:
+    - ["Reuses", "SKY4680x as published; Si479xx tuners, Si469xx coprocessors, Si5332-AM clocks, ACT4751 automotive regulator, QPF4239Q / SKYA21040 2.4 GHz front ends"]
+    - ["New", "Product brief with performance and grade; Audio Weaver release; head-unit set and amplifier reference design"]
+    - ["Outputs", "Multichannel I2S to class-D amplifiers (channel count not stated)"]
+    - ["Replaces", "A DRAM-based audio processor or a second DSP in the amplifier; the separate amplifier MCU where the on-chip MCU is enough"]
+    - ["Answers", "TI AM2754-Q1 / AM62D-Q1 and ADI SHARC in amplifiers; cockpit-SoC audio in head units"]
+    - ["Delivery (est)", "Brief and Audio Weaver: months. Head-unit set: 6–12 months. TDM / A2B or low-latency changes: a new chip, 2–3 years"]
+
+prices:
+  method: "Anchors are TI's 1k list prices for its automotive audio processors (bigger devices with Arm cores) → value of what SKY4680x replaces (a DSP plus DRAM, or a second DSP) → a range per core count. Assumption: automotive contract prices are 30–50 % below 1k list prices; SKY4680x has no public price. All prices are est."
+  anchors:
+    - {part: "TI AM2754-Q1 (1–2 C7x DSP, 2–4 R5F, 10.75 MB SRAM)", price: "$28.43–33.23", qty: "1k (TI list)"}
+    - {part: "TI AM62D-Q1 (C7x DSP + A53 + R5F, LPDDR4)", price: "$25.41–27.83", qty: "1k (TI list)"}
+    - {part: "Skyworks SKY4680x", price: "not public", qty: "—"}
+    - {part: "ADI SHARC automotive DSPs", price: "not read", qty: "—"}
+  items:
+    - {id: p-1core, item: "SKY46801 (one core)", entry: 3.5, target: 4.5, premium: 5.5, basis: "Entry amplifiers and head units; must undercut the cockpit SoC's free DSP by saving DRAM or a second chip (est)"}
+    - {id: p-2core, item: "SKY46802 (two cores)", entry: 6.0, target: 7.5, premium: 9.0, basis: "Mid amplifiers; below a SHARC + memory pair (est)"}
+    - {id: p-3core, item: "SKY46803 (three cores)", entry: 9.0, target: 11.0, premium: 13.0, basis: "Premium; about half of TI AM2754-Q1's contract price, which has more DSP power (est)"}
+    - {id: p-set, item: "Head-unit set (tuner + coprocessor + SKY4680x + clock)", entry: 14.0, target: 17.0, premium: 20.0, basis: "Sum of the parts at contract prices less a bundle discount (est)"}
+volumes:
+  - {label: "One-core, 3 M a year (entry amplifiers and radio head units, about 6–10 % of sockets)", units: 3000000, price: p-1core}
+  - {label: "Two-core, 1.5 M a year (mid amplifiers)", units: 1500000, price: p-2core}
+  - {label: "Three-core, 0.5 M a year (premium amplifiers)", units: 500000, price: p-3core}
+  - {label: "Head-unit set, 1 M a year", units: 1000000, price: p-set}
+
+attach:
+  - {id: t-tuner, lever: "Offer SKY4680x with Si479xx tuners and Si469xx coprocessors to every head-unit maker that already uses our radio parts", effort: low}
+  - {id: t-clock, lever: "Add Si5332-AM automotive clocks (audio master clocks) and the ACT4751 regulator to the amplifier reference design", effort: low}
+  - {id: t-rf, lever: "Same head unit: QPF4239Q / SKYA21040 2.4 GHz front ends and coexistence filters for Bluetooth and Wi-Fi audio (see the wireless car audio report)", effort: low}
+  - {id: t-ul2x, lever: "Rear-seat gaming and headphones: the UL2X low-latency wireless audio link feeds the same audio chain (see the UL2X case)", effort: med}
+  - {id: t-aw, lever: "Join the Audio Weaver ecosystem and publish car-audio blocks so tuning houses can start without us", effort: med}
+
+risks:
+  - "Audio processing moves into the cockpit SoC or central computer faster than expected; the standalone socket shrinks to premium amplifiers."
+  - "Performance, channels, latency and grade are not public; if SKY4680x has fewer GFLOPS than TI or ADI, it stays in entry and mid amplifiers."
+  - "No A2B or TDM stated: road-noise cancellation and many-channel premium systems may be out of reach without a bridge."
+  - "Amplifier makers keep DSP families for years; switching costs (code, tuning, tools) are high."
+  - "TI prices aggressively and offers Ethernet TSN and AEC-Q100 with public figures today."
+  - "Unknown from public data: SKY4680x price, MIPS, package, power, AEC-Q100 status and the edge-AI algorithms' names."
+
+questions:
+  bu:
+    - {id: q-bu-specs, text: "What are SKY4680x's GFLOPS or MIPS per core, SRAM size, channel count, sample rates, package, power and AEC-Q100 grade, and can we publish them?", why: "Every comparison with TI AM2754-Q1 and ADI SHARC needs them (d-specs)"}
+    - {id: q-bu-if, text: "Besides I2S: does SKY4680x support TDM, multi-lane ports, S/PDIF, A2B or Ethernet AVB, and what sensor-to-speaker latency does it reach?", why: "Decides the noise-cancellation and premium sockets (f-tdm, f-lowlat)"}
+    - {id: q-bu-grades, text: "What do the GE and GC suffixes mean (temperature grade or package), and what is the reel suffix R?", why: "Our site rule marks a part automotive only when the grade is stated"}
+    - {id: q-bu-aw, text: "When is Audio Weaver support released, and which edge-AI audio algorithms (names) come with it?", why: "Tuning houses and amplifier makers choose by tool (f-aw)"}
+    - {id: q-bu-price, text: "Target prices per core count and the bundle with tuners and clocks?", why: "p-1core to p-set are estimates"}
+  customer:
+    - {id: q-c-dsp, text: "Which DSP do you use in your amplifiers and head units today, how many per system, and with external memory or not?", who: "Amplifier and head-unit Tier-1 audio teams", why: "Sizes the DRAM and second-DSP saving (cb-dram)"}
+    - {id: q-c-bus, text: "Do your next amplifiers take audio over A2B, TDM or Ethernet AVB, and how many microphone and accelerometer inputs does noise cancellation need?", who: "OEM audio and NVH teams", why: "Decides whether SKY4680x needs a bus bridge (d-a2b)"}
+    - {id: q-c-central, text: "Will audio processing stay in a separate amplifier or move into the central computer in your next platform?", who: "OEM E/E architecture team", why: "The main risk to the socket (o-central)"}
+    - {id: q-c-tool, text: "Which tuning tool and third-party audio IP do you use, and what would it take to port it?", who: "Amplifier makers and tuning houses", why: "Switching cost (d-new)"}
+
+diagram:
+  note: "A head unit with our radio parts feeding an external amplifier with SKY4680x; in entry cars SKY4680x can sit in the head unit itself. Interfaces beyond I2S are not stated; the A2B and Ethernet links are drawn as the customer's choice."
+  groups:
+    - id: hu
+      label: Head unit
+      col: 0
+      row: 0
+      blocks:
+        - {fn: am_fm_tuner, label: "Tuner", who: ours, part: "Si479xx"}
+        - {fn: digital_radio_demod, label: "Digital radio", who: ours, part: "Si469xx"}
+        - {fn: soc, label: "Cockpit SoC", who: other}
+        - {fn: wifi_fem, label: "2.4 GHz front end", who: ours, part: "QPF4239Q / SKYA21040"}
+    - id: amp
+      label: External amplifier
+      col: 1
+      row: 0
+      w: 2
+      blocks:
+        - {fn: audio_codec, label: "Audio DSP", who: proposed, part: "SKY4680x (1, 2 or 3 cores)"}
+        - {fn: flash, label: "Boot flash", who: other}
+        - {fn: clock_generator, label: "Audio clock", who: ours, part: "Si5332-AM"}
+        - {fn: audio_amp, label: "Class-D amplifiers", who: other}
+        - {fn: wide_vin_buck, label: "Regulator", who: ours, part: "ACT4751"}
+    - id: sens
+      label: Microphones and sensors
+      col: 0
+      row: 1
+      blocks:
+        - {fn: audio_codec, label: "Microphones / accelerometers", who: customer, part: "For voice, ICC and noise cancellation"}
+    - id: spk
+      label: Speakers
+      col: 3
+      row: 0
+      blocks:
+        - {fn: audio_amp, label: "Door, headrest and roof speakers", who: customer}
+  links:
+    - [hu, amp, "I2S / TDM, A2B or Ethernet AVB"]
+    - [sens, amp, "A2B or TDM"]
+    - [amp, spk, "speaker wires"]
+
+depth:
+  title: "In depth: what SKY4680x is, where to apply it and where to hunt"
+  date: 2026-11-10
+  intro: "The owner asked for the use cases, where to apply the part and where to hunt. Order (the research layout): what Skyworks publishes, the parts that sell with it (adjacent first), the use cases, the ranked hunting list, companies that publicly build these systems per region, competitors and the market. Short answer (est): hunt car amplifiers and radio head units first, with our tuners and clocks; sound zones and noise cancellation wait for the interface and latency figures; consumer and pro audio are not a target yet."
+  tables:
+    - id: product
+      title: "SKY4680x: what Skyworks publishes"
+      columns: [Item, "Public fact", "Source"]
+      rows:
+        - ["Name", "SKY4680x Automotive Audio DSP; family members SKY46801, SKY46802, SKY46803. No part named SKY48 found", "Product page"]
+        - ["Part numbers", "SKY46801A1GE1AM, SKY46802A1GE1AM, SKY46803A1GE1AM, SKY46801A1GC1AM, SKY46802A1GC1AM, SKY46803A1GC1AM, and the same with R (reel, est)", "Product page"]
+        - ["Cores", "One-, two- and three-core DSP variants; core type and clock not found", "Product page and video"]
+        - ["Memory", "Integrated on-chip SRAM, no external DRAM needed; size not found", "Video"]
+        - ["Interfaces", "Extensive I2S connectivity; TDM, A2B, USB, Ethernet: not found", "Video; page says extensive digital audio connectivity"]
+        - ["Control and boot", "Fast boot from flash; optional customer-programmable MCU", "Video"]
+        - ["Software", "Third-party audio IP and customer algorithms; Skyworks' edge-AI audio algorithms; graphical configuration tool with a block library; Audio Weaver support planned", "Video"]
+        - ["Use", "Takes a two-channel source to many independently processed output channels: sound enhancement, speaker optimization, voice processing, immersive audio", "Video"]
+        - ["Target markets", "Automotive amplifier and infotainment (head unit) applications; joins our tuners and digital radio coprocessors", "Page and video"]
+        - ["MIPS, channels, sample rates, package, power, AEC-Q100", "Not found (product table loads by script; no brief found)", "—"]
+        - ["Announcement", "Not on Skyworks' new product announcements page (latest Oct 2026) or the PR Newswire feed on 10 Nov; product video dated 2 Nov 2026", "Background notes"]
+      note: "Page, video captions and part list read 10 Nov 2026 (background 1). The GE / GC suffixes may be temperature grades or packages (est, question q-bu-grades). The site marks a part automotive only when the grade is stated, so SKY4680x is not marked AEC-Q here."
+    - id: attach
+      title: "Adjacent: our parts that sit in the same systems"
+      columns: [Our part, "Where it sits next to SKY4680x", "Grade (site rule)", "Sell with it (est)"]
+      rows:
+        - ["Si479xx automotive tuners (Si4790x–Si4798x)", "Head unit or tuner box; Si4797x / Si4798x even carry an audio DSP subsystem (HiFi2-EP)", "Automotive", "First: the same customers buy radio and audio processing"]
+        - ["Si469xx digital radio coprocessors", "Head unit (HD Radio, DAB, DRM)", "Automotive", "First, with the tuner"]
+        - ["Si5332-AM clock generator", "Audio master clock and SoC clocks in amplifier and head unit", "Automotive (AEC-Q)", "Every amplifier design"]
+        - ["ACT4751 regulator", "Supply rails for DSP, MCU and USB in the head unit or amplifier", "Automotive", "Reference design"]
+        - ["QPF4239Q, SKYA21040, coexistence filters", "Bluetooth / Wi-Fi audio in the head unit (see the wireless car audio report)", "Automotive (AEC-Q)", "Same head unit"]
+        - ["UL2X low-latency wireless audio (SKY7636x)", "Rear-seat gaming and headphones feeding the audio chain (see the UL2X case)", "Consumer grade today", "Later, after an automotive version"]
+        - ["Si824x class-D audio gate drivers", "High-power class-D stages (pro and home audio)", "Not automotive", "Pro / consumer only"]
+      note: "Grades from the BizDev catalogue with the site's AEC-Q rule. We have no automotive audio amplifier, codec or A2B transceiver; those come from partners."
+    - id: where
+      title: "Use cases: where to apply it"
+      columns: [Use case, "What the DSP does", "Needs (est)", "Who does it today", "Fit for SKY4680x (est)"]
+      rows:
+        - ["External car amplifier (premium and mid audio)", "EQ, crossovers, delay, surround and immersive upmix for 8–24+ channels", "Several GFLOPS, many I2S/TDM outputs, 48 kHz, low noise; automotive grade", "ADI SHARC, TI AM275x / AM62D; Tier-1 amplifier makers", "Good: the target Skyworks names; 2- and 3-core"]
+        - ["Head unit audio post-processing", "Volume, loudness, EQ, chimes and mixing next to the tuner", "1 core; I2S; cost-driven", "Tuner audio subsystems (ours, NXP), cockpit SoC DSPs", "Good: with our tuners; 1-core"]
+        - ["Sound zones and headrest speakers", "Per-seat filters and cross-talk cancellation", "More channels and cores; low latency", "ADI SHARC, TI; premium amplifiers", "Medium: needs 3 cores and many outputs; not stated"]
+        - ["Road and active noise cancellation (RNC / ANC)", "Accelerometer and microphone inputs to anti-noise in a few ms", "Total loop about 2–4 ms; A2B or TDM inputs", "ADI SHARC + A2B; Harman HALOsonic", "Weak until latency and inputs are public"]
+        - ["EV sound: engine sound and AVAS", "Sound synthesis inside (ESE) and outside (AVAS, required for quiet EVs)", "Small DSP; AVAS often an MCU + amplifier", "MCU + amplifier (our library AVAS diagram)", "Medium inside (ESE in the amplifier); weak for AVAS boxes"]
+        - ["Voice and in-car communication (ICC)", "Echo cancellation, beamforming, seat-to-seat voice", "Microphone arrays, low latency", "Cockpit SoC, SHARC", "Medium: edge-AI algorithms help; inputs not stated"]
+        - ["Soundbars and smart speakers", "Upmix, room correction, virtual surround", "Cost far below automotive; HDMI / Wi-Fi SoC already has DSP", "Qualcomm MAPX, MediaTek, Cirrus Logic, TI", "Weak: no consumer grade stated"]
+        - ["Headsets, TWS, gaming audio", "ANC and voice in a Bluetooth or 2.4 GHz SoC", "Ultra-low power; DSP inside the radio SoC", "Qualcomm, Airoha, Bestechnic; our SKY7636x for UL2X", "None: the radio SoC does it"]
+        - ["Conferencing and pro audio", "Echo cancellation, mixing, matrices", "Many channels, Dante / AVB networks", "ADI SHARC, TI, FPGAs", "Weak: niche, network audio needed"]
+      note: "Needs are our estimates from general knowledge and the wireless car audio report (noise-cancellation loop budget 2–4 ms). AVAS from our library diagram (after Nisshinbo)."
+    - id: hunt
+      title: "Where to hunt: sockets ranked (fit × size × access)"
+      columns: [Rank, "Socket", "Fit (1–3)", "Size (1–3, est)", "Access (1–3)", "Score (fit × size × access)"]
+      rows:
+        - ["1", "Radio head units of our tuner customers (entry and mid audio)", "3: one core and I2S are enough", "3: most new cars have a head unit", "3: our tuner and coprocessor customers", "27"]
+        - ["2", "External amplifiers, mid trims (8–12 channels)", "3: the target Skyworks names", "2: about 15–25 M a year (est)", "2: Tier-1 amplifier makers; we are a new supplier", "12"]
+        - ["3", "Engine sound enhancement inside the amplifier (EVs)", "2: small DSP load; an add-on to rank 2", "2: grows with EVs", "2: same amplifier makers", "8"]
+        - ["4", "External amplifiers, premium and immersive (16+ channels)", "2: three cores; figures not public", "2: few units, high value", "1: SHARC incumbency", "4"]
+        - ["5", "Consumer and pro audio (soundbars, conferencing)", "1: no consumer grade or price stated", "3: large but cheap", "1: other channels and suppliers", "3"]
+        - ["6", "Sound zones and headrest audio", "2: needs many outputs (not stated)", "1: premium only today", "1: premium amplifier makers", "2"]
+        - ["7", "Road-noise cancellation", "1: latency and A2B / TDM inputs not stated", "2: spreading to mid trims (est)", "1: ADI + A2B incumbency", "2"]
+      note: "Each factor 1 (low) to 3 (high), our estimate; the score is their product (27 at most). Consumer ranks above sound zones on size alone, but without a consumer grade it is not a target yet."
+    - id: who
+      title: "Companies that publicly build these systems, by region"
+      columns: [Region, "Company", "Publicly builds", "Source (read)"]
+      rows:
+        - ["Americas", "Harman (Samsung)", "Branded car audio, car audio products, HALOsonic (noise and engine sound), digital cockpits", "car.harman.com (10 Nov 2026); digital cockpit page (Markets & customers)"]
+        - ["Americas, EMEA, Asia", "Bosch", "Infotainment and cockpit computers", "bosch-mobility.com infotainment (Markets & customers)"]
+        - ["Asia, Americas, EMEA", "Hyundai Mobis", "Infotainment", "Mobis company introduction (Markets & customers)"]
+        - ["EMEA", "AUMOVIO (former Continental Automotive)", "Infotainment and cockpit computers", "aumovio.com cockpit HPC (Markets & customers)"]
+        - ["EMEA", "Burmester", "High-end audio with an Automotive Audio line", "burmester.de (10 Nov 2026)"]
+        - ["Asia", "Alps Alpine", "Head units and car audio", "alpsalpine.com (Markets & customers)"]
+        - ["Asia", "Denso Ten", "Car audio and navigation", "denso-ten.com (Markets & customers)"]
+        - ["Asia", "Pioneer", "Car audio and head units", "global.pioneer (Markets & customers)"]
+      note: "Possible customers only: companies that publicly build these systems, never a customer list and never a claim that they are our customers. Sources pulled by the site's runs, each with its link and date in the background notes. Visteon, Desay SV, Panasonic Automotive Systems and LG Electronics are listed on Markets & customers without a checked source, so they are left out here."
+    - id: rivals
+      title: "Competitors (public sources)"
+      columns: [Company, "Parts", "Public facts", "What it means for us (est)"]
+      rows:
+        - ["TI", "AM2754-Q1; AM62D-Q1", "AM2754-Q1: 1–2 C7x DSP up to 80 GFLOPS, 2–4 R5F, 10.75 MB SRAM, 5x McASP, hardware ASRC, Ethernet, AEC-Q100, $28.43–33.23 (1k). AM62D-Q1: 40 GFLOPS C7x with matrix accelerator, quad A53, LPDDR4, 3x McASP, Ethernet TSN, AEC-Q100, $25.41–27.83 (1k); Dolby Atmos 7.1.4 demo", "The benchmark: same no-DRAM pitch, public figures and prices; we need our figures out"]
+        - ["Analog Devices", "SHARC DSPs, A2B transceivers", "Not read (analog.com not requested); general knowledge: the long-time premium amplifier and noise-cancellation DSP with its own audio bus", "Incumbent in premium; win where A2B is not needed or bridge to it"]
+        - ["NXP", "Audio and radio SoCs (e.g. SAF9xxx), cockpit processors", "Not read (nxp.com not requested); our radio-tuner-next case notes an audio DSP in NXP's SAF9800", "Competes in the head unit with radio + audio in one chip"]
+        - ["Qualcomm, MediaTek", "Cockpit SoCs with audio DSPs", "Not read (www.qualcomm.com not requested); general knowledge", "Absorb entry audio; amplifiers stay separate"]
+        - ["Cadence (Tensilica HiFi)", "DSP IP inside many SoCs", "Our own tuners' audio subsystem uses HiFi2-EP (catalogue data)", "Core type of SKY4680x not public"]
+        - ["Cirrus Logic", "Audio DSPs and codecs", "General knowledge: focus on phones and PCs", "Little overlap in cars"]
+      note: "Only TI was read in this run; the rest is general knowledge or earlier BizDev data, marked low."
+    - id: market
+      title: "Market and sockets"
+      columns: [Item, "Value", "Basis"]
+      rows:
+        - ["Vehicles built", "96.4 M in 2025", "OICA, as recorded in the BizDev TAM topics (med)"]
+        - ["Cars with a DSP outside the cockpit SoC or tuner", "30–50 % (est)", "Our estimate: external amplifiers in mid and premium trims plus head units with their own audio DSP"]
+        - ["Dedicated audio DSP sockets", "About 30–50 M a year (est)", "96.4 M × 30–50 %"]
+        - ["Average contract price", "$6–10 (est)", "Between our 1-core and 3-core estimates; TI 1k list $25–33 for larger parts"]
+        - ["Market value", "About $0.2–0.5 B a year (est)", "Sockets × price; no analyst figure read (low)"]
+        - ["Our scenarios", "1-core 3 M, 2-core 1.5 M, 3-core 0.5 M, set 1 M a year", "About 10–15 % of sockets in total (est)"]
+      note: "No public analyst figure for automotive audio DSPs was read; these are our estimates, low confidence."
+  points_title: "Next step"
+  points:
+    - "BU: publish the SKY4680x figures (GFLOPS, SRAM, channels, interfaces, latency, package, AEC-Q100) and the meaning of the GE / GC suffixes."
+    - "FAE: offer SKY4680x with Si479xx / Si469xx and Si5332-AM to the head-unit customers of our radio parts (hunt rank 1)."
+    - "Amplifier makers (Harman, Alps Alpine, Denso Ten, Pioneer type): which DSP, how many, memory and bus (questions q-c-dsp, q-c-bus)."
+  thread: "Hunt radio head units and mid amplifiers first with our tuners and clocks; premium, sound zones and noise cancellation wait for public figures."
+
+thread:
+  benefit: "No DRAM and one family from entry to premium is the gain to sell; both rest on Skyworks' own video."
+  position: "Radio + audio from one supplier is our edge; missing public figures and no wired audio bus are the gaps."
+  market: "About 30–50 M dedicated audio DSP sockets a year (est); TI shows the price level with public figures."
+  outlook: "More channels and immersive audio favor separate amplifiers; entry audio moves into the cockpit SoC."
+  features: "A product brief and Audio Weaver (distance 1) come before reference designs; TDM or A2B may need a new chip."
+  product: "Sell SKY4680x as published with a head-unit set; the amplifier reference design follows."
+  asp: "$4–11 per DSP by core count (est), about half of TI's 1k list for larger parts."
+  attach: "Tuners and clocks first; 2.4 GHz front ends and later UL2X in the same car."
+  questions: "Performance, interfaces and grade (q-bu-specs, q-bu-if) are needed now."
+  risks: "If audio moves into the central computer, only premium amplifiers remain, where ADI is strongest."

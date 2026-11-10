@@ -31,6 +31,24 @@ remove what is settled. Kept on the owner's request, 21 Oct 2026.
    download? Import the missing parts (Si8642EB-AS, Si8663BD-AS; ADuM1201/1301/3401, UCC5350L-Q1, CDCE9xx) next run?
    Cross a list rows are about 110 px wider than a phone with real data (the "vs best" table): fix next run.
 
+8. **UL2X in cars (10 Nov 2026; case auto-ul2x-audio).** "Watch" rather than "pursue" right? For the audio business
+   unit: can the hub and client chips run at -40 to 85 °C and what would AEC-Q100 Grade 3 cost; clients and microphone
+   channels per hub; encryption; coexistence data against Wi-Fi, Bluetooth and LTE bands 40/41; prices; a Tier-1 contact
+   for personal-zone units and a Chinese OEM accessory team (karaoke / headphone kit).
+9. **SKY4680x audio DSP (10 Nov 2026; case auto-audio-dsp).** Publishable figures (GFLOPS, SRAM, channels, sample rates,
+   TDM / A2B, latency, package, power, AEC-Q100)? Meaning of the GE / GC suffixes? Audio Weaver release and names of
+   the edge-AI audio algorithms? Target prices per core count and as a set with the tuners? Where the announcement
+   text is (GlobeNewswire / investor site, which we do not read)? Add SKY4680x to the catalogue?
+10. **Tuner deck (10 Nov 2026).** "Noise cancellation" read as reception noise in the radio (interference canceller,
+   diversity, soft mute, blending), not road / active noise cancellation: right? Check the "impulse noise" wording on
+   slide 6.
+
+## Settled (owner, 10 Nov 2026)
+
+- Tuner deck: no date on the cover; private Shareable sub-category, owner only; no product numbers.
+- Skyworks cross reference: a plain check mark behind our part when the pair is in the official table.
+- Pasted distributor prices are saved per part number.
+
 ## Settled (owner, 9 Nov 2026)
 
 - Questions to ask: at the bottom of each sub-system (Block diagram library with a sub-system picked, deep dives),

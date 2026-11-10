@@ -1,0 +1,325 @@
+# Preliminary case: Skyworks UL2X low-latency wireless gaming audio in the car.
+# Layout and rules: _template.yaml. Figures and links: the case's background notes (auto-ul2x-audio.background.html).
+# conf: high = primary document read; med = trade press or advocacy body; low = search snippet or analyst PR.
+# "est" = our estimate. distance: see DISTANCE in app/services/prelim.py (0 today ... 4 new technology).
+gist: "UL2X beats Bluetooth on latency and sync for car headphones, microphones and controllers, but the car volume is small; watch it, probe with accessories (est)."
+abstract:
+  - "UL2X (SKY76360 hub, SKY76361 client) links up to 8 uncompressed channels at 2.4 GHz in under 8–9 ms, clients in sync to 1 µs."
+  - "In cars it fits passenger headphones, karaoke microphones and game controllers; Bluetooth LE Audio (about 30 ms) is the default link, and the parts are 0–70 °C."
+  - "Decide whether to test demand with accessory kits and a Tier-1 before paying for AEC-Q100 qualification."
+title: "Skyworks UL2X low-latency wireless audio in the car: passenger headphones, karaoke microphones and game controllers"
+fn: wireless_audio_soc
+headline: f-auto
+library: [roof_coexistence]
+question: >-
+  Should Skyworks take its UL2X wireless gaming audio link (SKY76360-22 arbiter, SKY76361 clients: 2.4 GHz, under
+  8–9 ms fixed latency, up to 8 uncompressed channels) into cars for rear-seat headphones, personal audio zones,
+  wireless karaoke microphones and game controllers, against Bluetooth LE Audio / Auracast combo chips and Tier-1
+  proprietary units, and what would an automotive version need?
+updated: 2026-11-10
+brief:
+  - "Our position: UL2X is a working consumer link that does what car passengers' headphones, microphones and controllers need better than Bluetooth: fixed latency under 8–9 ms against about 30 ms for LE Audio gaming, several clients in sync to 1 µs, and 2.4 GHz front ends, filters and clocks of ours that are automotive today."
+  - "Our weak points: it is proprietary (a passenger's own earbuds will not hear it), the parts are 0–70 °C with no automotive version, carmakers follow the phone and Bluetooth, and the car volume we can see is small: about 1–3 M hub sockets a year by 2030 (est)."
+  - "Proposal: watch, with two cheap probes: today's consumer parts in OEM accessory kits (karaoke microphones, rear-seat headphones, controllers with a USB receiver) and one rear-seat Tier-1 evaluation; qualify an automotive arbiter (about $3.5–6, est) only when a Tier-1 commits."
+
+customer_benefit:
+  for: "Rear-seat entertainment and cabin audio Tier-1; OEM infotainment teams (China karaoke and gaming features)"
+  summary: "One low-latency hub in the rear-seat unit or head unit serves several headphones, wireless microphones and game controllers at a fixed latency, instead of a Bluetooth pairing per device or a separate receiver per accessory."
+  today: "Rear-seat screens pair Bluetooth Classic headphones one by one (one OEM manual allows two Bluetooth devices at a time) or use infrared headphones; karaoke microphones bring their own 2.4 GHz receiver in the USB port; game controllers pair over Bluetooth or the passengers' phones act as controllers over the network; HARMAN builds its own wireless audio unit for personal zones."
+  with_us: "A UL2X arbiter (automotive version, or a consumer USB receiver at first) next to the rear-seat or head-unit SoC, with our 2.4 GHz front end and coexistence filter, serves up to 8 audio channels to headphones in sync, takes microphone and controller data back with about 1 ms for controls, and leaves Bluetooth for the passengers' own phones and earbuds."
+  gains:
+    - {id: cb-lat, kind: performance, gain: "Fixed audio latency under 8–9 ms instead of about 30 ms (LE Audio gaming) or 100–200 ms (Bluetooth Classic, est)", how: "UL2X fixed-latency link, uncompressed audio", measure: "≈30 ms → <9 ms (Bluetooth SIG GMAP example; Skyworks summary)", conf: med}
+    - {id: cb-sync, kind: scaling, gain: "Several headphones and microphones on one hub, in sync", how: "Up to 8 channels; clients synchronized to under 1 µs", measure: "2 Bluetooth devices at a time (one OEM manual, snippet) → several clients per hub (number not stated)", conf: low}
+    - {id: cb-one, kind: parts, gain: "One radio for headphones, microphones and controllers", how: "Audio link plus a ~1 ms HID data link on the same system", measure: "2–3 separate receivers or pairings → 1 hub (est)", conf: low}
+    - {id: cb-sing, kind: performance, gain: "Karaoke without an audible echo between voice and speakers", how: "Microphone audio reaches the car audio in a few milliseconds", measure: "not stated (no latency published for car karaoke kits)", conf: low}
+    - {id: cb-fe, kind: sourcing, gain: "Radio, front end, coexistence filter and clock from one supplier", how: "UL2X with QPF4239Q, QPQ2254Q, switches and Si5332-AM", measure: "4–5 parts from one supplier (est)", conf: low}
+  gives_up:
+    - "Passengers' own earbuds and phones cannot join the UL2X link; Bluetooth stays for them"
+    - "OEM-supplied headphones or microphones carry our client chip, so the OEM must sell or bundle them"
+
+position:
+  advantages:
+    - {id: a-lat, text: "Fixed latency under 8–9 ms and a ~1 ms control link, against about 30 ms or less for an LE Audio gaming link and 12–28 ms for consumer 2.4 GHz gaming dongles", vs: "Bluetooth LE Audio (Infineon, NXP, Qualcomm), consumer 2.4 GHz chips", conf: med}
+    - {id: a-sync, text: "Clients synchronized to under 1 µs, up to 8 uncompressed channels, 40 kHz audio bandwidth, up to 138 dB dynamic range: several headphones and speakers play together", vs: "Bluetooth Classic, LE Audio", conf: high}
+    - {id: a-ship, text: "In production for gaming headsets, controllers and earbuds today: firmware, evaluation kits and field experience exist", vs: "Bluetooth HDT (draft; first chips from Actions with Ceva IP)", conf: med}
+    - {id: a-fe, text: "Our automotive 2.4 GHz FEM, switch + LNA, coexistence BAW and clocks surround it; the product summary already draws an external switch and PA", vs: "Combo chips with on-chip PA and LNA", conf: high}
+  disadvantages:
+    - {id: d-prop, text: "Proprietary: phones and passengers' own earbuds speak Bluetooth, so UL2X serves only OEM-supplied headphones, microphones and controllers", vs: "Bluetooth LE Audio / Auracast", offset: "Keep Bluetooth for own devices; position UL2X for the OEM's own accessories and karaoke", conf: high}
+    - {id: d-temp, text: "0–70 °C commercial parts; no automotive grade, PPAP or AEC-Q100 data", vs: "Infineon CYW89310 (−40 to 85 °C), NXP AW300 (AEC-Q100 Grade 2/3)", offset: "Start with accessories outside the car's fixed electronics; qualify the arbiter only on a Tier-1 commitment (f-auto)", conf: high}
+    - {id: d-demand, text: "No carmaker or Tier-1 uses UL2X in a car (public sources); in-car gaming platforms use phones as controllers", vs: "AirConsole (VW, Porsche, Audi, BMW), Bluetooth controllers", offset: "Karaoke and multi-headphone zones first; gaming as a later add-on", conf: med}
+    - {id: d-tier1, text: "Tier-1s build their own: HARMAN's Ready StreamShare uses a proprietary wireless audio unit for up to 5 users with Bluetooth", vs: "HARMAN", offset: "Offer UL2X as the radio inside such units (q-c-wau)", conf: high}
+    - {id: d-hdt, text: "Bluetooth is closing the gap: High Data Throughput (about 7.5 Mbps, lossless, lower latency) and LE in the 5/6 GHz bands are in work", vs: "Bluetooth SIG, Ceva, Actions", offset: "Lead on fixed latency and sync, which HDT does not publish; watch the HDT adoption", conf: low}
+  diff_good:
+    - {id: g-gaming, text: "Built for gaming: fixed latency, synchronized clients and a 1 ms HID link in one system; no Bluetooth chip offers all three (public data)", conf: med}
+    - {id: g-portfolio, text: "Link chip plus automotive 2.4 GHz front end, coexistence BAW, antenna switch and clock from one company", conf: med}
+  diff_bad:
+    - {id: b-nobt, text: "No Bluetooth LE Audio chip of our own to make a dual-mode client, so own earbuds and our link never meet", conf: high}
+    - {id: b-security, text: "Link encryption and pairing are not described publicly; cars need ISO/SAE 21434 and UN R155 evidence", conf: low}
+
+architecture:
+  columns: ["UL2X hub (us)", "Bluetooth LE Audio / Auracast combo (Infineon, NXP, Qualcomm)", "Tier-1 proprietary unit (HARMAN WAU)", "Infrared (legacy rear seat)"]
+  rows:
+    - ["Built as", "Arbiter SoC + 2.4 GHz FEM + filter next to the rear-seat or head-unit SoC; clients in OEM headphones, microphones, controllers", "Wi-Fi + Bluetooth combo in the head unit; on-chip PA and LNA", "Wireless audio unit with Bluetooth, on A2B / CAN / Ethernet", "IR emitter in the screen; IR headphones"]
+    - ["Latency", "Under 8–9 ms fixed; controls ~1 ms", "About 30 ms or less (GMAP example); Classic 100–200 ms (est)", "'Ultra-low-latency' (no figure)", "Low (est)"]
+    - ["Users", "Up to 8 channels; clients in sync to 1 µs", "Several streams; Auracast to any number", "Up to 5 users", "Two channels typical (est)"]
+    - ["Own earbuds", "No", "Yes", "Yes (Bluetooth)", "No"]
+    - ["Automotive grade", "No (0–70 °C)", "Yes", "Yes (Tier-1 product)", "Yes"]
+  note: "From the block-diagram library diagram 'In-car low-latency wireless audio' (added with this case), the Skyworks SKY76360-22 / SKY76361 product summaries, the Bluetooth SIG LC3 white paper, the Infineon CYW89310 page and the HARMAN Ready StreamShare page. Infrared from accessory listings (snippets)."
+
+depth:
+  title: "In depth: what UL2X is, what pairs with it, and where it fits in the car"
+  date: 2026-11-10
+  intro: "The owner asked for a full research and business case on UL2X in cars. Short answer (est): the technology fits passenger headphones, karaoke microphones and game controllers better than Bluetooth, and our automotive front ends, filters and clocks pair with it; but the parts are consumer grade, proprietary, and the car volume we can see is small. Watch, and test demand with accessories and one Tier-1 before any qualification money."
+  tables:
+    - id: what
+      title: "What UL2X is (Skyworks public pages)"
+      columns: [Item, "Public figure", "Source", "What it means in a car (est)"]
+      rows:
+        - ["Parts", "SKY76360-22 arbiter (hub: USB and I2S), SKY76361-32 client (88-pin aQFN 7 × 7 mm) and SKY76361-52 client (67-ball WLCSP 2.775 × 2.775 mm); evaluation boards SKY76360-22REK1, SKY76361-32NEK2", "Product summaries 207282A, 207283A (27 Oct 2025)", "Hub on the car side, clients in headphones, microphones, controllers"]
+        - ["Band and rate", "2.4 GHz ISM; 3 / 6 Mbps over the air", "Product summaries", "Shares 2.4 GHz with Bluetooth, Wi-Fi and the phones in the cabin"]
+        - ["Latency", "Low, fixed: under 8 ms (Wireless Gaming web page, Nov 2026), under 9 ms (product summaries); HID data link about 1 ms", "skyworksinc.com Wireless Gaming page; product summaries", "Lip sync and game sound without lag; karaoke without echo"]
+        - ["Audio quality", "Uncompressed; up to 8 channels; up to 40 kHz audio bandwidth; up to 138 dB dynamic range, link SNR to 140 dB; I2S up to 24-bit / 96 kHz", "Product summaries", "Better than any car needs for headphones (est)"]
+        - ["Topology", "One arbiter, several clients; audio 'inherently synchronized' between clients to under 1 µs; number of clients per arbiter not stated ('different numbers of clients')", "Product summaries", "One hub per rear row or per car"]
+        - ["Range", "30 m indoor line of sight", "Product summaries", "A cabin is 2–5 m; seats and bodies shadow the signal (est)"]
+        - ["Coexistence", "'Robust interference rejection and excellent coexistence with other 2.4 GHz applications (such as Wi-Fi)'; the mechanism ('cognitive') is not described", "Product summaries", "Must be tested with the car's Wi-Fi hotspot, Bluetooth and LTE band 40/41"]
+        - ["Client extras", "Configurable audio processing unit (equalization, dynamic range control, feathering, mixing); I2S and PDM microphone inputs; 32-bit RISC; USB, SPI, I2C, UART", "SKY76361 summary", "A headphone or microphone needs few extra parts"]
+        - ["External parts", "24 MHz crystal, flash, an RF DPDT switch and PA (drawn as Skyworks products in the summary's diagram)", "Product summaries", "Attach for our FEM and switch"]
+        - ["Grade", "Commercial 0 to 70 °C", "Product summaries", "Not for the car's fixed electronics without a new qualification"]
+        - ["Uses today", "Gaming headphones, TWS earbuds, speakers, wireless gaming and hand-held controllers, musical instruments", "Wireless Gaming web page", "Consumer volume pays the die (est)"]
+        - ["Not found publicly", "Maximum number of clients, microphone back-channel count, encryption and pairing method, power figures, prices, automotive plans; the older SKY76361-31/-51 summary link now returns an error page", "Our search, 10 Nov 2026", "Questions for the business unit"]
+      note: "Skyworks pages read 10 Nov 2026 (Wireless Gaming page and SKY76360-22 product page); product summaries read 28 Oct 2026 and reused from the cache. The web page and the summaries differ on latency (8 vs 9 ms); both are quoted."
+    - id: adjacent
+      title: "Adjacent products and technologies: what of ours pairs with it in the car"
+      columns: [Block, "Our part", "Grade", "Why it pairs"]
+      rows:
+        - ["2.4 GHz front end at the hub", "QPF4239Q 2.4 GHz FEM; SKYA21040 switch + LNA", "AEC-Q", "The arbiter drives an external switch and PA; range through seats and bodies"]
+        - ["Coexistence filter", "QPQ2254Q 2.4 GHz BAW", "AEC-Q", "Keeps LTE band 40/41 from the telematics unit out of the 2.4 GHz link"]
+        - ["Antenna switch", "SKY5A2108, QPC8019Q", "AEC-Q", "Two antennas (headliner and seatback) for diversity in the cabin (est)"]
+        - ["Clock", "Si5332-AM clock generator", "AEC-Q", "Shared reference for the hub and the audio DSP; audio-rate outputs not in our data"]
+        - ["Hub power", "ACT4751 wide-input buck", "AEC-Q", "12 V supply for a rear-seat hub module"]
+        - ["Client side (headphones, microphones)", "SKY76361-52 client; QM42655 / RF6525 Bluetooth FEMs; SKY76206 class-D amplifier", "Consumer", "Accessories need no automotive grade (est)"]
+        - ["5 GHz alternative", "SKY76303-21 (5.15–5.25 and 5.725–5.825 GHz, up to 5 receivers, under 20 ms)", "Consumer", "Avoids a crowded 2.4 GHz cabin; slower than UL2X"]
+        - ["Head-unit audio path", "Si479xx automotive tuners with audio processing", "AEC-Q", "The same infotainment customers buy them (radio report)"]
+        - ["Cabin radio neighbors", "QPF5100Q UWB (keys, child presence); car Wi-Fi FEMs", "AEC-Q", "Same cabin, same coexistence plan; one supplier for the cabin radios (est)"]
+      note: "Grades from the site's AEC-Q rule (catalogue). No Bluetooth LE Audio chip, no automotive headphone amplifier or codec of ours."
+    - id: uses
+      title: "Car use cases, ranked (est)"
+      columns: [Use case, "What it needs", "Today", "UL2X fit", "Evidence and volume", "Rank (est)"]
+      rows:
+        - ["Rear-seat and passenger headphones for screens and games", "Lip sync, game sound without lag, 2–4 headphones, battery life", "Bluetooth Classic or infrared headphones", "Good: fixed latency, clients in sync; only for OEM-supplied headphones", "Ford, Lincoln, Chrysler and Tesla rear systems use wireless or Bluetooth headphones (snippets); rear screens in a minority of cars", "1"]
+        - ["Personal audio zones and shared listening", "Each passenger their own stream, switch to group listening, driver announcements", "HARMAN Ready StreamShare: proprietary wireless audio unit, up to 5 users with Bluetooth", "Good as the radio inside such a unit", "HARMAN page (read): 'ultra-low-latency streaming'; no OEM named", "2"]
+        - ["Wireless karaoke microphones", "Voice to the speakers in a few ms, two microphones, charging case", "Accessory microphones with their own receiver (Tesla in China; NIO, BYD, XPeng, Weltmeister)", "Very good: PDM input on the client, low fixed latency; consumer grade is enough", "Tesla's two-mic kit (about $188) sold out in under an hour (2022, The Drive); mostly China", "3"]
+        - ["Game controllers and in-car gaming", "Controls in about 1 ms, game sound in sync", "Phones as controllers (AirConsole: VW MY2027, Porsche, Audi, BMW); Bluetooth Classic controllers (Tesla)", "Technically best (1 ms HID); little demand for a dedicated controller", "VW: six MY2027 models, parked only, $149 a year (read); GeForce NOW deals 2023 (snippet)", "4"]
+        - ["Wireless rear, headrest or subwoofer speakers", "Many channels in sync; power", "Wired (A2B or analog); headrest speakers in concepts", "Sync fits; but a speaker still needs a power wire", "Concepts only (Dirac, KEF and Lotus, snippets)", "5"]
+        - ["Driver and passenger call headsets", "Works with the phone", "Bluetooth hands-free from the phone", "Poor: phones speak Bluetooth", "No evidence of demand", "6 (drop)"]
+        - ["Noise cancellation, chimes", "Under 2–4 ms loop; functional safety", "Wired A2B", "No", "See the wireless audio report", "— (no)"]
+      note: "Rank = fit × volume × evidence (our judgement). Headphones and zones come first because they need several users in sync, where Bluetooth is weakest; karaoke is third only because it is mostly China."
+    - id: other
+      title: "Other opportunities (outside the passenger car)"
+      columns: [Where, "What", "Grade needed (est)", "Comment (est)"]
+      rows:
+        - ["Coaches, buses and trains", "Per-seat headphones for films and guides", "Industrial or consumer", "Auracast is the natural fit for passengers' own earbuds; UL2X only for supplied headsets"]
+        - ["Motorcycles and helmets", "Rider-to-passenger talk and music", "Consumer", "Low latency helps talk; Bluetooth mesh intercoms lead today"]
+        - ["Car accessories sold by OEMs", "Karaoke microphones, rear headphones, controllers with a USB receiver", "Consumer", "The fastest route: no change to the car's electronics"]
+        - ["Gaming headsets and controllers (today)", "Its home market", "Consumer", "Pays the die; the car is an add-on"]
+      note: "Our judgement from the use cases; no market figures were looked for here."
+    - id: links
+      title: "How the links compare (latency, users)"
+      columns: [Link, "Latency", "Users and sync", "In cars", "Source"]
+      rows:
+        - ["Skyworks UL2X (SKY76360 / 76361)", "Under 8–9 ms fixed; HID ~1 ms", "Up to 8 channels; clients in sync to 1 µs", "Not found", "Skyworks (read)"]
+        - ["Bluetooth Classic (A2DP)", "About 100–200 ms (est)", "One stream per link; two devices at a time in one OEM manual", "Every head unit", "Our estimate; Tesla manual (snippet)"]
+        - ["Bluetooth LE Audio (LC3, gaming profile)", "Total system delay close to 30 ms or less in the GMAP example; LC3 frames 7.5 or 10 ms", "Several synchronized streams", "Automotive chips exist (Infineon CYW89310, NXP AW300); no production car found", "Bluetooth SIG LC3 white paper (read)"]
+        - ["Auracast broadcast", "Similar to LE Audio; broadcast example about 86 ms (ST wiki, snippet)", "Any number of listeners", "Barrot modules for Chinese cabins; no production car found", "Bluetooth SIG blog (read Oct 2026)"]
+        - ["Bluetooth High Data Throughput (HDT)", "'Lower latency' (no figure)", "Up to about 7.5 Mbps; lossless and multichannel", "No; first consumer chips (Actions ATS296X with Ceva IP)", "Trade press (snippets)"]
+        - ["Consumer 2.4 GHz gaming dongles (other chips)", "About 12–28 ms; one vendor note about 17 ms", "Usually one headset", "No", "Buying guides, vendor note (snippets)"]
+        - ["HARMAN wireless audio unit", "'Ultra-low-latency' (no figure)", "Up to 5 users with Bluetooth", "Offered to OEMs (Jan 2026)", "HARMAN page (read)"]
+        - ["Infrared", "Low (est)", "Two channels typical (est)", "Older rear-seat systems", "Accessory listings (snippets)"]
+        - ["Wired A2B", "Under 50 µs", "Many channels", "Standard for microphones and amplifiers", "ADI (snippet)"]
+      note: "Bluetooth latency depends on the stack and buffers; the SIG figure is an example calculation, not a measurement in a car."
+    - id: market
+      title: "Market sizing: units × content (est)"
+      columns: [Item, "Value", "Basis"]
+      rows:
+        - ["Light-vehicle production", "92.1 M (2026), 97.2 M (2030)", "S&P Global Mobility (reused from earlier cases), high"]
+        - ["Cars with rear screens or a passenger gaming feature by 2030", "About 6–10 M a year (est)", "China MPVs and SUVs, US three-row SUVs and minivans; no public unit count found; analysts value rear-seat infotainment at $3.8–7.1 B for 2025 but disagree (snippets)"]
+        - ["Of those with OEM-supplied wireless headphones or zones", "About 30–50 % (est): 2–5 M cars", "Judgement; many leave headphones to the passenger's own Bluetooth"]
+        - ["UL2X share of those sockets", "10–30 % (est): 0.2–1.5 M hubs", "Bluetooth LE Audio is the default; UL2X wins where sync and latency decide"]
+        - ["Karaoke microphone kits (mostly China)", "0.5–1 M kits a year (est, low)", "No public unit count; several Chinese brands and Tesla sell kits"]
+        - ["Content per car", "Hub $3.5–6 (automotive) or $2–3.2 (consumer receiver) + 2 clients at $1.5–2.8 + FEM $0.6–1.0 (est)", "No public UL2X price; consumer Wi-Fi FEM anchor about $1.65 at 4k"]
+        - ["Revenue scenario 2030", "About $5–15 M a year (est)", "0.2–1.5 M hubs × about $8 content plus 0.5–1 M karaoke kits × about $6"]
+      note: "A small market next to Bluetooth (in about 87 % of new cars, snippet). The numbers are scenarios, not forecasts."
+    - id: needs
+      title: "What Skyworks would need for the car"
+      columns: [Requirement, "Why", "Where UL2X stands", "Effort (est)"]
+      rows:
+        - ["AEC-Q100 Grade 3 (−40 to 85 °C), Grade 2 for a hub near the roof", "Rear-seat and head-unit electronics", "0–70 °C; die capability not public", "Qualification of the existing die if it holds at temperature; 12–24 months (est)"]
+        - ["PPAP, IATF 16949 supply and 10–15 years of supply", "Every automotive part", "Consumer supply chain", "Automotive flow for one package (est)"]
+        - ["Automotive package", "Board-level reliability, inspection", "88-pin aQFN and WLCSP", "QFN with wettable flanks for the hub (est)"]
+        - ["Coexistence in the cabin", "Car Wi-Fi hotspot, Bluetooth, phones, LTE band 40/41, UWB keys", "'Excellent coexistence' claimed; no car data", "Test with QPQ2254Q and the car's Wi-Fi; reference design"]
+        - ["Antenna placement", "Seats and bodies shadow 2.4 GHz", "30 m indoor range", "Two antennas with a switch (headliner and seatback, est)"]
+        - ["Cyber-security", "ISO/SAE 21434 and UN R155 for anything connected to the car", "Encryption and pairing not described publicly", "Firmware and documents; a question for the business unit"]
+        - ["EMC and radio approvals", "CISPR 25 in the car; ETSI EN 300 328 and FCC part 15 for 2.4 GHz", "Consumer approvals assumed (not stated)", "Measurements on the reference design"]
+        - ["Software", "Car SoC drivers (Android Automotive, Linux), over-the-air updates", "USB and I2S host interfaces", "Driver and audio routing package (est)"]
+        - ["Functional safety", "Not needed for entertainment (QM)", "—", "None"]
+      note: "Requirements from the earlier automotive cases (Wi-Fi 7 FEM, UWB) and the wireless audio report; effort figures are our judgement."
+  points_title: "Next step"
+  points:
+    - "Audio BU: can the SKY76360 / 76361 dies run at −40 to 85 °C, how many clients and microphone channels does one arbiter serve, and is the link encrypted (q-bu-temp, q-bu-clients, q-bu-sec)."
+    - "One rear-seat or cabin-audio Tier-1 (for example the team behind HARMAN's wireless audio unit): which radio sits in their unit and what latency they need (q-c-wau)."
+    - "One Chinese OEM accessory team: would a UL2X karaoke kit or headphone kit with a USB receiver sell, at what latency and price (q-c-karaoke)."
+  thread: "UL2X fits headphones, karaoke and controllers better than Bluetooth, but only for OEM-supplied accessories; test demand before qualifying a part."
+
+market_now:
+  - {figure: "UL2X link", value: "2.4 GHz, 3/6 Mbps, up to 8 uncompressed channels, under 8–9 ms fixed latency, clients in sync to 1 µs, HID ~1 ms, 30 m; 0–70 °C", source: "Skyworks Wireless Gaming page (read 10 Nov 2026) and SKY76360-22 / SKY76361 product summaries", conf: high}
+  - {figure: "LE Audio gaming latency", value: "Total system delay close to 30 ms or less in the GMAP example (FB stereo game audio plus voice back)", source: "Bluetooth SIG, LC3 performance white paper v1, Jun 2023 (read)", conf: high}
+  - {figure: "Tier-1 personal audio zones", value: "HARMAN Ready StreamShare: proprietary wireless audio unit, up to 5 users with Bluetooth, 'ultra-low-latency streaming', driver headrest audio, works with A2B, CAN / Ethernet and Android 14+", source: "HARMAN product page (read 10 Nov 2026)", conf: high}
+  - {figure: "In-car gaming", value: "VW of America: AirConsole on six MY2027 models, phones as controllers, parked only, In-Vehicle Premium $149 a year; AirConsole at BMW, VW, Audi, Porsche, Škoda, Tata", source: "The Next Web, 23 Sep 2026 (read)", conf: med}
+  - {figure: "In-car karaoke", value: "NIO karaoke app (10 million songs); BYD, Weltmeister and XPeng microphones; Tesla two-mic kit about $188, sold out in under an hour", source: "The Drive, 2022 (read)", conf: med}
+  - {figure: "Rear-seat headphones", value: "Ford and Lincoln list Bluetooth headphones; Tesla rear screen pairs Bluetooth Classic headphones; older systems infrared", source: "Accessory pages and owner's manual (snippets)", conf: low}
+  - {figure: "Light-vehicle production", value: "92.1 M (2026), 97.2 M (2030)", source: "S&P Global Mobility (from earlier cases)", conf: high}
+  - {figure: "Rear-seat infotainment value", value: "$3.8–7.1 B for 2025 (analysts disagree; no unit counts)", source: "Analyst pages (snippets)", conf: low}
+
+outlook:
+  - {id: o-bt, text: "Bluetooth LE Audio becomes the default car link for passengers' own earbuds by 2028–2030; UL2X stays a niche for supplied accessories (est)", basis: "Automotive LE Audio chips exist; phones ship LE Audio; no Auracast car found yet", conf: med}
+  - {id: o-hdt, text: "Bluetooth HDT and 5/6 GHz LE narrow UL2X's quality lead from about 2028; fixed latency and sync remain its edge (est)", basis: "SIG roadmap (8 Mbps, 5/6 GHz); Actions / Ceva HDT chips; no HDT latency figure", conf: low}
+  - {id: o-zones, text: "Personal audio zones spread in premium and Chinese cars; Tier-1s build proprietary units, a socket for a low-latency radio (est)", basis: "HARMAN Ready StreamShare (Jan 2026)", conf: med}
+  - {id: o-karaoke, text: "Karaoke stays a China feature sold as accessories; latency matters more there than anywhere else in the car (est)", basis: "The Drive 2022; NIO wireless microphone design award 2024 (snippet)", conf: low}
+  - {id: o-gaming, text: "In-car gaming grows as a paid service but uses phones and cloud streaming, so dedicated controllers stay rare (est)", basis: "VW AirConsole 2026; GeForce NOW deals 2023", conf: med}
+
+features:
+  - {id: f-acc, feature: "Today's SKY76360 / SKY76361 in OEM accessory kits: karaoke microphones, rear headphones and controllers with a USB receiver", benefit: "Tests demand with no change to the car", distance: 0, why: "Consumer parts as they are; accessories need no automotive grade (est)"}
+  - {id: f-ref, feature: "Cabin reference design: one arbiter, 4 headphones, 2 microphones, 2 controllers; coexistence tested with car Wi-Fi, Bluetooth and LTE band 40/41", benefit: "Answers the coexistence and latency questions with data", distance: 1, why: "Firmware profile, test report and a board from existing parts"}
+  - {id: f-sec, feature: "Link encryption, secure pairing and ISO/SAE 21434 documents", benefit: "Lets a Tier-1 connect it to the car", distance: 1, why: "Firmware and documents if the radio supports it (not stated)"}
+  - {id: f-auto, feature: "Automotive arbiter: SKY76360 die in an AEC-Q100 Grade 3 package with PPAP", benefit: "Puts the hub inside the rear-seat unit or head unit", distance: 2, why: "Existing die, new package and qualification"}
+  - {id: f-hub, feature: "Hub module reference: arbiter + QPF4239Q + QPQ2254Q + antenna switch + Si5332-AM", benefit: "One drop-in radio for Tier-1 audio units", distance: 2, why: "Module and reference design from existing parts"}
+  - {id: f-5g, feature: "5 GHz UL2X (SKY76303 radio with the UL2X latency)", benefit: "Leaves the crowded 2.4 GHz cabin", distance: 3, why: "New chip from existing technology"}
+  - {id: f-dual, feature: "Dual-mode client: UL2X plus Bluetooth LE Audio", benefit: "One headphone works with the car and the passenger's phone", distance: 4, why: "No Bluetooth LE Audio stack or chip of our own; not recommended alone"}
+
+product:
+  name: "UL2X car kit: accessory receiver now, automotive arbiter later"
+  spec:
+    - ["Functions", "Passenger headphones in sync, personal zones, karaoke microphones, game controllers"]
+    - ["Modes", "Accessory kit with a USB receiver (consumer parts), or an automotive arbiter inside the rear-seat unit or head unit"]
+    - ["Outputs", "I2S or USB audio to the car's audio DSP; HID data to the SoC"]
+    - ["Reuses", "SKY76360-22 and SKY76361-32/-52 dies and firmware; QPF4239Q, QPQ2254Q, SKY5A2108, Si5332-AM, ACT4751"]
+    - ["New", "Automotive package and qualification, cabin reference design, security documents"]
+    - ["Replaces", "Bluetooth Classic or infrared headphone links in rear-seat systems; separate karaoke receivers"]
+    - ["Answers", "Infineon CYW89310, NXP AW300, Qualcomm combos with LE Audio; HARMAN's own unit; consumer 2.4 GHz dongle chips"]
+    - ["Delivery (est)", "Accessory kit: now · Reference design: 6–9 months · Automotive arbiter: 18–24 months after a commitment"]
+
+prices:
+  method: "No public price for UL2X parts. Ranges are our judgement from the value of the function (a two-microphone kit retails at about $188; consumer Wi-Fi FEMs about $1.65 at 4k) and an automotive premium of 30–50 % over consumer. Contract prices assumed 30–50 % below list. Enter real ASPs to replace the estimates."
+  anchors:
+    - {part: "Skyworks SKY76360-22 / SKY76361 (UL2X)", price: "not stated", qty: "—"}
+    - {part: "Tesla two-microphone karaoke kit (retail)", price: "about $188", qty: "retail, 2022"}
+    - {part: "Skyworks SKY85747-11 (consumer 5 GHz Wi-Fi FEM)", price: "$2.56 · ≈$1.65", qty: "100 · 4,000+ (from the Wi-Fi 7 case)"}
+    - {part: "Infineon CYW89310 / NXP AW300 (automotive Bluetooth LE Audio)", price: "not stated", qty: "—"}
+  items:
+    - {id: p-arb, item: "Automotive UL2X arbiter (AEC-Q100 Grade 3)", entry: 3.5, target: 4.5, premium: 6.0, basis: "Consumer arbiter value plus 30–50 % automotive premium; must stay near an automotive Bluetooth chip (price not public)"}
+    - {id: p-rx, item: "Consumer arbiter in an accessory USB receiver", entry: 2.0, target: 2.5, premium: 3.2, basis: "Consumer gaming dongle value (judgement)"}
+    - {id: p-client, item: "UL2X client (headphone, microphone, controller)", entry: 1.5, target: 2.0, premium: 2.8, basis: "Consumer gaming headset client (judgement)"}
+    - {id: p-fem, item: "Automotive 2.4 GHz FEM at the hub (QPF4239Q)", entry: 0.6, target: 0.8, premium: 1.0, basis: "Consumer Wi-Fi FEM ≈$1.65 at 4k; 2.4 GHz single band is simpler (judgement)"}
+
+volumes:
+  - {label: "Automotive arbiter, 0.5 M hubs a year (2030)", units: 500000, price: p-arb}
+  - {label: "Clients in OEM headphones, 2 per hub (1 M)", units: 1000000, price: p-client}
+  - {label: "Karaoke kits, 0.5 M receivers a year", units: 500000, price: p-rx}
+  - {label: "Karaoke microphones, 2 per kit (1 M)", units: 1000000, price: p-client}
+  - {label: "2.4 GHz FEM at the hub, 0.5 M", units: 500000, price: p-fem}
+
+attach:
+  - {id: t-kit, lever: "Accessory kits with Chinese OEMs' accessory teams (karaoke, headphones) on consumer parts", effort: low}
+  - {id: t-tier1, lever: "Offer UL2X as the radio inside Tier-1 wireless audio units for personal zones", effort: med}
+  - {id: t-fe, lever: "Sell the hub front end, filter and clock with every arbiter", effort: low}
+  - {id: t-gaming, lever: "Bundle a controller reference with in-car gaming platforms (cloud or console streaming)", effort: med}
+
+risks:
+  - "Carmakers stay with Bluetooth only, because phones and earbuds speak it; a proprietary link needs our client in every headphone."
+  - "Bluetooth HDT and LE Audio improvements close the latency and quality gap before an automotive UL2X ships."
+  - "The dies may not hold at −40 to 85 °C; qualification then means a redesign."
+  - "Small volume: about $5–15 M a year by 2030 (est) may not pay for automotive qualification and support."
+  - "Cyber-security evidence (encryption, pairing) is unknown from public data."
+  - "Unknown from public data: client count per arbiter, power, prices, the radio inside HARMAN's unit, rear-screen unit counts."
+
+questions:
+  bu:
+    - {id: q-bu-temp, text: "Can the SKY76360 and SKY76361 dies run at −40 to 85 °C (AEC-Q100 Grade 3), and what would qualification cost and take?", why: "The parts are 0–70 °C (d-temp); decides f-auto"}
+    - {id: q-bu-clients, text: "How many clients, headphones and microphone back channels does one arbiter serve at once, and at what latency?", why: "Not stated publicly; sizes one hub per row or per car"}
+    - {id: q-bu-sec, text: "Is the UL2X link encrypted, and how are clients paired?", why: "Cars need ISO/SAE 21434 and UN R155 evidence (b-security)"}
+    - {id: q-bu-coex, text: "What coexistence data exists with Wi-Fi and Bluetooth at short range, and with LTE band 40/41?", why: "The cabin is crowded at 2.4 GHz; claimed, not measured in a car"}
+    - {id: q-bu-cost, text: "What are the arbiter and client ASPs today, and would an automotive arbiter at $3.5–6 keep the business worth it?", why: "No public price; the case's prices are estimates"}
+  customer:
+    - {id: q-c-wau, text: "Which radio carries audio in your personal-zone or rear-seat unit, and what latency and number of users do you need?", who: "Cabin-audio Tier-1 (wireless audio unit team)", why: "HARMAN builds its own unit (d-tier1); the socket for us is the radio inside"}
+    - {id: q-c-head, text: "Do you supply wireless headphones with rear screens, which link do they use, and would sync and latency under 10 ms matter to you?", who: "OEM rear-seat entertainment team", why: "Sets the headphone volume (rank 1) and whether a proprietary link is acceptable"}
+    - {id: q-c-karaoke, text: "Would a karaoke microphone kit with a few-millisecond link sell, and at what price and latency?", who: "Chinese OEM accessory team", why: "Fastest route with consumer parts (f-acc)"}
+    - {id: q-c-game, text: "Will your in-car gaming support dedicated controllers or only phones and Bluetooth?", who: "OEM digital services / gaming team", why: "Decides whether the 1 ms controller link has a socket (o-gaming)"}
+
+diagram:
+  note: "A car with rear screens: a UL2X hub in the rear-seat unit or head unit, with our automotive 2.4 GHz front end, coexistence filter, antenna switch and clock, serves OEM headphones, karaoke microphones and game controllers; Bluetooth LE Audio stays for passengers' own phones and earbuds, and the cabin speakers stay wired."
+  groups:
+    - id: hub
+      label: Rear-seat / head-unit audio hub
+      col: 0
+      row: 0
+      blocks:
+        - {fn: soc, label: "Rear-seat / head-unit SoC", who: customer}
+        - {fn: wireless_audio_soc, label: "UL2X arbiter (automotive)", who: proposed, part: "SKY76360 die, AEC-Q100 Grade 3 (concept)"}
+        - {fn: wifi_fem, label: "2.4 GHz FEM", who: ours, part: "QPF4239Q"}
+        - {fn: filter_saw_baw, label: "Coexistence BAW", who: ours, part: "QPQ2254Q"}
+        - {fn: antenna_switch, label: "Antenna switch", who: ours, part: "SKY5A2108"}
+        - {fn: clock_generator, label: "Clock", who: ours, part: "Si5332-AM"}
+        - {fn: wide_vin_buck, label: "12 V buck", who: ours, part: "ACT4751"}
+    - id: phones
+      label: OEM headphones (2–4)
+      col: 1
+      row: 0
+      blocks:
+        - {fn: wireless_audio_soc, label: "UL2X client", who: ours, part: "SKY76361-52"}
+        - {fn: audio_codec, label: "Headphone DAC / amplifier", who: other}
+        - {fn: battery_charger, label: "Charger", who: other}
+    - id: mics
+      label: Karaoke microphones
+      col: 2
+      row: 0
+      blocks:
+        - {fn: wireless_audio_soc, label: "UL2X client (PDM mic in)", who: ours, part: "SKY76361-52"}
+        - {fn: battery_charger, label: "Charger", who: other}
+    - id: pads
+      label: Game controllers
+      col: 2
+      row: 1
+      blocks:
+        - {fn: wireless_audio_soc, label: "UL2X client (1 ms HID)", who: ours, part: "SKY76361-32"}
+    - id: bt
+      label: Bluetooth / Wi-Fi combo (own phones and earbuds)
+      col: 1
+      row: 1
+      blocks:
+        - {fn: soc, label: "Bluetooth LE Audio / Wi-Fi combo", who: other}
+        - {fn: wifi_fem, label: "Wi-Fi FEM", who: ours, part: "QPF4239Q class"}
+    - id: cabin
+      label: Cabin audio (wired)
+      col: 0
+      row: 1
+      blocks:
+        - {fn: audio_codec, label: "Audio DSP, amplifier, A2B", who: customer}
+        - {fn: external_block, label: "Speakers, headrest speakers", who: customer}
+  links:
+    - [hub, phones, "UL2X audio, < 9 ms, in sync"]
+    - [mics, hub, "voice, few ms"]
+    - [pads, hub, "controls, ~1 ms"]
+    - [hub, cabin, "I2S / USB audio"]
+    - [bt, hub, "phone audio"]
+
+thread:
+  benefit: The gain is latency and sync for several OEM-supplied devices; passengers' own earbuds stay on Bluetooth.
+  position: Our link is better than Bluetooth for gaming-grade audio but proprietary and not automotive grade.
+  market: Demand signals are real (zones, karaoke, gaming) but none uses a dedicated low-latency link yet.
+  outlook: Bluetooth stays the default; UL2X can hold a niche for supplied accessories if it moves before HDT matures.
+  features: The distance-0 accessory kit tests demand at no cost; the automotive arbiter waits for a commitment.
+  product: Lead with accessory kits and a reference design, not with a qualified car part.
+  asp: Content of about $8 per car (est) on 0.2–1.5 M hubs is small; it pays only with the front end attached.
+  attach: Front end, filter and clock with every hub keep the case alive even if UL2X itself stays small.
+  questions: Die temperature, client count and link security are the needed-now questions for the business unit.
+  risks: If Tier-1s and OEMs answer Bluetooth only, drop the automotive arbiter and keep the accessory route.

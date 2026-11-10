@@ -147,6 +147,74 @@ pairs:
     reason: "In the AVAS sound unit the Qorvo buck makes the rail for the Skyworks-side audio amplifier; a supply link only."
     source: "Library diagram: Acoustic vehicle alerting system (AVAS), Power management to Audio amplifier (DC/DC)"
     weak: true
+  "antenna_switch + filter_saw_baw":
+    reason: "In the in-car wireless audio hub the Skyworks switch routes the 2.4 GHz link and the Qorvo acoustic filter keeps it clear of the car's Wi-Fi, Bluetooth and LTE bands: one 2.4 GHz front end from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), antenna switch to coexistence filter"
+  "antenna_switch + wifi_fem":
+    reason: "The Skyworks switch and the Qorvo Wi-Fi front end share the cabin's 2.4 GHz band in the wireless audio hub: one coexistence-tuned front end from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), antenna switch next to the Wi-Fi front end"
+  "clock_generator + filter_saw_baw":
+    reason: "The audio hub's clock and its coexistence filter come from one supplier for the whole 2.4 GHz audio link."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), clock to the radio and its filter"
+  "clock_generator + wifi_fem":
+    reason: "Reference clock and Wi-Fi front end of the same hub from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), clock to the radio next to the Wi-Fi front end"
+  "wireless_audio_soc + battery_charger":
+    reason: "The wireless headphone or microphone and its battery charger from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), client battery charging"
+  "wireless_audio_soc + wide_vin_buck":
+    reason: "The wireless audio hub and the converter that powers it from the car supply from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), 12 V supply to the hub"
+  "antenna_switch + wide_vin_buck":
+    reason: "The wireless audio hub's 2.4 GHz switch and the converter that powers the hub from the car supply from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), 12 V supply to the hub and its front end"
+    weak: true
+  "clock_generator + wide_vin_buck":
+    reason: "The audio hub's reference clock and the converter that powers it from the car supply from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), clock and 12 V supply of the hub"
+    weak: true
+  "clock_generator + battery_charger":
+    reason: "Clock and battery charging of a wireless headphone or microphone from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), client clock and battery charging"
+    weak: true
+  "antenna_switch + battery_charger":
+    reason: "The 2.4 GHz switch and the battery charger of a wireless client from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), client front end and battery charging"
+    weak: true
+  "wireless_audio_soc + filter_saw_baw":
+    reason: "Wireless audio chip and the filter that keeps its 2.4 GHz link clear of the car's Wi-Fi, Bluetooth and LTE bands from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), audio radio to its coexistence filter"
+  "wireless_audio_soc + wifi_fem":
+    reason: "Wireless audio link and the cabin's Wi-Fi front end: coexistence designed in by one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), audio radio next to the Wi-Fi front end"
+  "audio_amp + wifi_fem":
+    reason: "Audio amplifier and Wi-Fi front end of the same rear-seat audio hub from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), amplifier next to the Wi-Fi front end"
+    weak: true
+  "audio_amp + filter_saw_baw":
+    reason: "Audio amplifier and the 2.4 GHz coexistence filter of the same hub from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), amplifier and coexistence filter"
+    weak: true
+  "audio_amp + battery_charger":
+    reason: "Amplifier and battery charging of a wireless headphone or speaker from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), client amplifier and battery charging"
+    weak: true
+  "audio_codec + wifi_fem":
+    reason: "Audio codec and Wi-Fi front end of the same hub from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), codec next to the Wi-Fi front end"
+    weak: true
+  "audio_codec + filter_saw_baw":
+    reason: "Audio codec and the coexistence filter of the same hub from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), codec and coexistence filter"
+    weak: true
+  "audio_codec + wide_vin_buck":
+    reason: "Audio codec and the converter that powers the hub from the car supply from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), codec and 12 V supply"
+    weak: true
+  "audio_codec + battery_charger":
+    reason: "Codec and battery charging of a wireless headphone or microphone from one supplier."
+    source: "Library diagram: In-car low-latency wireless audio (rear-seat hub), client codec and battery charging"
+    weak: true
   "single_chip_radio + lna":
     reason: "The Qorvo LNA is the active-antenna amplifier feeding RF into the Skyworks single-chip radio receiver."
     source: "Library diagram: Automotive connected radio / entry infotainment, RF amplifier (active antenna LNA) to Radio chipset"

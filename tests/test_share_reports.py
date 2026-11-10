@@ -240,7 +240,7 @@ def test_menu_has_one_shareable_entry_and_no_report_items():
     hrefs = [i[1] for _, _, items in nav.NAV for i in items]
     assert not {"Skyworks + Qorvo synergies", "Automotive", "Technology overview", "Presentation builder"} & set(labels)
     # owner, 6 Nov 2026: the PowerPoint templates are the one other Shareable item
-    assert [h for h in hrefs if h.startswith("/shareable/")] == ["/shareable/templates"]
+    assert [h for h in hrefs if h.startswith("/shareable/")] == ["/shareable/templates", "/shareable/private"]
     assert next(s for s in nav.NAV if s[0] == "shareable")[2][0] == (
         "Reports", "/shareable", "Pick reports, preview them and save one PDF")
     for path in ("/shareable/technology-overview", SYN, AUTO, PACK, "/shareable/presentation",

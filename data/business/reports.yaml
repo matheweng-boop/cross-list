@@ -287,7 +287,7 @@ reports:
     feasibility_why: "Front ends and filters are automotive today; the audio link chips exist but are consumer grade (0–70 °C) and need an automotive version"
     date: 2026-10-28
     status: draft
-    see_also: [auto-wifi-antenna, radio-auto-fit, auto-clock-tree]
+    see_also: [auto-wifi-antenna, radio-auto-fit, auto-clock-tree, auto-ul2x-audio]
     question: "Can you do a preliminary research report on topic wireless audio in a car? Should Skyworks + Qorvo build a
       wireless car audio offer, and with which parts first?"
     summary: >-
@@ -324,6 +324,7 @@ reports:
     - what: Ask whether the SKY76360/76361 (2.4 GHz) and SKY76303 (5 GHz) dies can be qualified to AEC-Q100 Grade 3 and at what cost and time
       who: Audio BU
       why: Decides whether our strongest differentiator, an audio link under 9 ms with clients in sync to 1 µs, can enter the car side at all.
+      case: auto-ul2x-audio
     - what: Offer QPF4239Q, SKYA21040, QPQ2254Q and SKY5A2108 as one 2.4 GHz audio-hub front-end set to a head-unit or rear-seat entertainment maker
       who: Our FAE with a Tier-1 infotainment team
       why: These parts are automotive today and attach to every Bluetooth or Wi-Fi audio hub, whatever link wins.
@@ -373,6 +374,98 @@ reports:
       href: /library/roof_coexistence
     - label: 'Library: automotive UWB'
       href: /library/auto_uwb
+  - slug: auto-ul2x-audio
+    title: "Skyworks UL2X low-latency wireless audio in the car: passenger headphones, karaoke microphones and game controllers"
+    kind: idea
+    area: Automotive connectivity
+    app_type: Automotive
+    feasibility: 2
+    feasibility_why: "Today's consumer UL2X parts serve accessory kits as they are; the hub inside the car needs the existing die in an AEC-Q100 Grade 3 package with PPAP"
+    date: 2026-11-10
+    status: draft
+    see_also: [auto-wireless-audio, auto-wifi7-fem, auto-clock-tree]
+    question: "Skyworks has UL2X in Audio Gaming for Wireless Audio Gaming. Can you do a full research and business case for this in cars?"
+    summary: >-
+      Business case with research from the owner's request of 10 Nov 2026. UL2X is Skyworks' 2.4 GHz wireless gaming
+      link: the SKY76360-22 arbiter (hub, USB and I2S) and SKY76361-32/-52 clients carry up to 8 uncompressed audio
+      channels at a fixed latency under 8–9 ms, with clients in sync to under 1 µs and a ~1 ms control link, 30 m
+      indoors, 0–70 °C. In the car it fits passenger headphones for rear screens and games, personal audio zones,
+      karaoke microphones (China) and game controllers, better than Bluetooth LE Audio (about 30 ms in the SIG's gaming
+      example). But it is proprietary (own earbuds cannot join), consumer grade, and no carmaker uses it; in-car gaming
+      uses phones as controllers, and HARMAN builds its own wireless audio unit. Our automotive 2.4 GHz FEM, coexistence
+      BAW, switches and clocks pair with it. Market: about 0.2–1.5 M hubs plus 0.5–1 M karaoke kits a year by 2030,
+      about $5–15 M a year (est). Recommendation: watch; probe with accessory kits and one Tier-1 before qualifying.
+    tags: [UL2X, SKY76360, SKY76361, wireless gaming, low latency, rear-seat headphones, personal audio zones, karaoke,
+      game controllers, in-car gaming, Bluetooth LE Audio, GMAP, Auracast, HDT, AEC-Q100, coexistence, QPF4239Q, QPQ2254Q]
+    sources: "Skyworks Wireless Gaming and SKY76360-22 pages (read 10 Nov 2026) and the SKY76360 / SKY76361 / SKY76303
+      product summaries (cache); Bluetooth SIG LC3 white paper, HARMAN Ready StreamShare, The Next Web (VW AirConsole) and
+      The Drive (in-car karaoke), read 10 Nov 2026; the wireless audio report's sources; search snippets for Tesla, Ford,
+      Stellantis, NVIDIA, NIO, HDT and market estimates; every figure in the background notes"
+    decision: Should Skyworks take its UL2X low-latency wireless audio link into cars, and qualify an automotive version?
+    answer:
+      text: 'Watch, not yet pursue (est). UL2X fits passenger headphones, karaoke microphones and controllers better than
+        Bluetooth, but only for OEM-supplied accessories, and the car volume we can see is small (about $5–15 M a year by
+        2030). Test demand with consumer accessory kits and one Tier-1 first; qualify an automotive arbiter only on a
+        commitment.'
+      conf: low
+    needed_now:
+    - 'Audio BU: can the SKY76360 / 76361 dies run at −40 to 85 °C, how many clients does one arbiter serve, and is the link encrypted?'
+    - 'One cabin-audio Tier-1: which radio is in their personal-zone or rear-seat unit, and what latency they need'
+    - 'One Chinese OEM accessory team: would a low-latency karaoke or headphone kit with a USB receiver sell'
+    say_externally: Cars are adding passenger headphones, personal audio zones, karaoke and gaming, where a few
+      milliseconds of delay and several listeners in sync matter. Skyworks sells a low-latency wireless audio link for
+      gaming headsets and controllers, and automotive 2.4 GHz front ends, filters and clocks. We would like to learn how
+      many wireless headphones, microphones or controllers you plan per car and what latency they need.
+    next_steps:
+    - what: Ask about die temperature (−40 to 85 °C), clients per arbiter, microphone channels and link encryption for SKY76360 / SKY76361
+      who: Audio BU
+      why: Decides whether an automotive arbiter is a qualification of today's die (feasibility 2) or a new chip.
+    - what: Ask which radio carries audio in their personal-zone or rear-seat unit, and offer UL2X plus our 2.4 GHz front end as that radio
+      who: Our FAE with a cabin-audio Tier-1
+      why: HARMAN-type units are the one socket where a proprietary low-latency link is already accepted.
+    - what: Offer a karaoke and headphone accessory kit on today's consumer parts with a USB receiver
+      who: A Chinese OEM accessory team, through our FAE
+      why: Tests real demand and latency needs at no qualification cost before any automotive spend.
+    bu_opener:
+      question: Cars are adding passenger headphones, personal audio zones, karaoke and gaming. Our UL2X link does fixed
+        latency under 9 ms with clients in sync to 1 µs, which Bluetooth LE Audio (about 30 ms) does not. Should we offer it
+        to carmakers and Tier-1s, first as accessory kits and later as an automotive arbiter, against Bluetooth combo chips
+        and HARMAN's own wireless audio unit?
+      pros:
+      - Fixed latency under 8–9 ms, ~1 ms controls and clients in sync to 1 µs, shipping in gaming headsets today
+      - Our automotive 2.4 GHz FEM, coexistence BAW, switches and clocks attach to every hub
+      - Accessory kits can use today's consumer parts without automotive qualification
+      cons:
+      - Proprietary: passengers' own earbuds and phones speak Bluetooth
+      - 0–70 °C parts, no automotive data, encryption not described publicly
+      - Small, unproven car volume; in-car gaming uses phones as controllers
+      vs: Infineon, NXP, Qualcomm (Bluetooth LE Audio), HARMAN (own unit), Actions and Ceva (Bluetooth HDT), consumer 2.4 GHz dongle chips
+    learn:
+    - age: 5
+      text: Children in the back seat want to hear their game or film in their own headphones, right when it happens on the screen, without wires.
+    - age: 10
+      text: Wireless headphones get their sound by radio. If the sound arrives late, the game feels slow and the singer
+        hears an echo. Our UL2X radio sends sound in less than a hundredth of a second to several headphones at once.
+    - age: 15
+      text: UL2X has a hub chip (SKY76360) and client chips (SKY76361) at 2.4 GHz. It carries up to 8 channels of
+        uncompressed audio with a fixed delay under 8–9 ms and keeps all clients in time to under a millionth of a second.
+        Bluetooth LE Audio needs about 30 ms in its gaming example, but works with everyone's phone and earbuds.
+    - age: 20
+      text: The owner asked for a full research and business case on UL2X in cars. It builds on the wireless audio report.
+        The fitting uses are rear-seat headphones, personal audio zones (HARMAN sells a unit), karaoke microphones in Chinese
+        cars and game controllers; in-car gaming today uses phones as controllers.
+    - age: 25
+      text: 'Competitors: Bluetooth LE Audio combo chips (Infineon CYW89310, NXP AW300, Qualcomm), Bluetooth HDT (Actions
+        with Ceva IP), HARMAN''s proprietary wireless audio unit and consumer 2.4 GHz dongle chips. For the car we would need
+        AEC-Q100 Grade 3, PPAP, cabin coexistence data, antenna placement and ISO/SAE 21434 evidence. Market about $5–15 M a
+        year by 2030 (est): watch, and probe with accessories.'
+    learn_links:
+    - label: Wi-Fi FEMs and tri-band APs
+      href: /rf-notes#wifi_fem_and_triband_ap
+    - label: 'Library: roof and smart-antenna coexistence'
+      href: /library/roof_coexistence
+    - label: Automotive grade
+      href: /engineering/qualification
   - slug: radio-auto-fit
     gist: "Around our automotive tuners, 11 part groups are car-ready, 6 need work, 6 only lack AEC-Q; audio, interfaces and protection stay gaps."
     abstract:
@@ -1890,5 +1983,96 @@ reports:
       href: /rf-notes#acoustic_filters_duplexers
     - label: 'Interactive: dBm, the power ladder'
       href: /visuals#dbm
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost
+  - slug: auto-audio-dsp
+    title: "SKY4680x automotive audio DSP: use cases, where to apply it, where to hunt and what to sell with it"
+    kind: idea
+    area: Broadcast radio
+    app_type: Car radio
+    feasibility: 1
+    feasibility_why: "The part exists (SKY4680x, one to three cores); the work is go-to-market: a product brief with figures and grade, Audio Weaver, reference designs"
+    date: 2026-11-10
+    status: draft
+    see_also: [radio-tuner-next, auto-wireless-audio, radio-auto-fit]
+    question: "Today Skyworks announced an audio DSP processor, SKY48 - make one [research + business case] for that, especially
+      the use cases, where to apply it, and where to hunt."
+    summary: >-
+      Research and business case on the owner's request of 10 Nov 2026. The part Skyworks publishes is the SKY4680x
+      automotive audio DSP (SKY46801 / 46802 / 46803: one, two or three DSP cores), for car amplifiers and head units: on-chip
+      SRAM without external DRAM, I2S, fast boot from flash, an optional customer-programmable MCU, third-party audio IP and
+      Skyworks' edge-AI audio algorithms, a graphical tuning tool with Audio Weaver support planned. MIPS, channels, sample
+      rates, package, power and AEC-Q100 are not public yet. TI's AM2754-Q1 (80 GFLOPS, 10.75 MB SRAM, AEC-Q100, $28–33 at 1k)
+      and AM62D-Q1 are the closest public rivals; ADI SHARC with A2B leads premium amplifiers and noise cancellation. Hunt
+      list: radio head units of our tuner customers, mid amplifiers and engine sound first; premium, sound zones and road-noise
+      cancellation later; consumer and pro audio not yet. Sell it with Si479xx tuners, Si469xx coprocessors, Si5332-AM clocks
+      and our 2.4 GHz front ends (est); see also the UL2X case.
+    tags: [audio DSP, SKY4680x, SKY46801, SKY46802, SKY46803, car amplifier, head unit, sound zones, road noise cancellation,
+      engine sound, AVAS, in-car communication, Audio Weaver, A2B, SHARC, AM2754-Q1, AM62D-Q1, Si479xx, Si469xx, Si5332-AM,
+      possible customers]
+    sources: "Skyworks SKY4680x product page, Automotive Audio DSP page, new product announcements page and the SKY4680x product video captions; TI AM2754-Q1 and AM62D-Q1 product pages; Harman car and Burmester home pages (all read 10 Nov 2026); BizDev catalogue, Markets & customers and earlier reports; every figure in the background notes"
+    decision: Should we hunt car amplifier and head-unit sockets with SKY4680x now, and which sockets, companies and companion
+      parts come first?
+    answer:
+      text: 'Yes for radio head units and mid amplifiers, sold with our tuners, coprocessors and clocks; watch premium, sound
+        zones and road-noise cancellation until the figures, interfaces and grade are public; drop consumer and pro audio for
+        now (est).'
+      conf: low
+    needed_now:
+    - 'BU: SKY4680x performance, SRAM, channels, interfaces (TDM, A2B), latency, package and AEC-Q100 grade, and permission to publish them'
+    - 'One amplifier maker and one head-unit customer of our tuners, through our FAE: which DSP and memory today, and which audio bus next'
+    - 'BU: Audio Weaver release date and the names of the edge-AI audio algorithms'
+    say_externally: Skyworks now offers the SKY4680x automotive audio DSP family in one-, two- and three-core versions for
+      amplifiers and head units, with on-chip memory and room for your own or third-party audio software. It sits next to our
+      automotive tuners and digital radio coprocessors. We would like to learn which audio processing you plan for your next
+      amplifiers and head units, and which audio links they will use.
+    next_steps:
+    - what: Ask for the SKY4680x figures (GFLOPS, SRAM, channels, TDM / A2B, latency, package, AEC-Q100) and the meaning of the GE / GC suffixes
+      who: Audio and radio BU
+      why: Every comparison with TI AM2754-Q1 and ADI SHARC needs them, and the site marks a part automotive only with a stated grade.
+    - what: Offer SKY4680x with Si479xx tuners, Si469xx coprocessors and Si5332-AM clocks to the head-unit customers of our radio parts
+      who: Our FAE
+      why: Hunt rank 1 in the case; the customers already know our radio parts, so access is easiest there.
+    - what: Ask which DSP, memory and audio bus their next amplifiers use, and whether audio stays outside the central computer
+      who: Amplifier maker or head-unit Tier-1 audio team
+      why: Sizes the DRAM saving and tells whether premium and noise-cancellation sockets are reachable without A2B.
+    bu_opener:
+      question: Skyworks has announced the SKY4680x automotive audio DSP (one to three cores, on-chip SRAM, I2S, optional MCU,
+        third-party audio IP). TI sells the closest parts with public figures (AM2754-Q1, 80 GFLOPS, AEC-Q100, $28–33 at 1k) and
+        ADI SHARC with A2B leads premium amplifiers. Which figures, interfaces and grade can we publish, and should we lead
+        with radio head units and mid amplifiers, sold with our tuners and clocks?
+      pros:
+      - No external DRAM and one family from entry to premium
+      - Sits next to our automotive tuners, digital radio coprocessors, clocks and 2.4 GHz front ends in the same head unit
+      - Open to third-party audio IP and Audio Weaver (planned)
+      cons:
+      - No public MIPS, channels, interfaces, package or AEC-Q100 statement yet
+      - No wired audio bus (A2B is ADI's), no automotive audio amplifier or codec of our own
+      - Cockpit SoCs absorb entry audio; amplifier makers rarely switch DSP families
+      vs: TI AM2754-Q1 / AM62D-Q1; ADI SHARC + A2B; NXP; Qualcomm and MediaTek cockpit SoCs
+    learn:
+    - age: 5
+      text: A car has many speakers. A small computer chip makes the music sound good in every seat, like a sound mixer.
+    - age: 10
+      text: The radio or phone sends two channels (left and right). An audio DSP turns them into many channels, one for each
+        speaker, and changes each so the sound is clear and fills the car. It can also make engine sounds for quiet electric cars.
+    - age: 15
+      text: 'An audio DSP runs filters, delays and mixing at 48,000 samples a second per channel. Cars use it for equalizing,
+        surround sound, quiet zones per seat, cancelling road noise with microphones and accelerometers, and clear phone calls.
+        It needs enough processing power, memory, audio ports (I2S, TDM, A2B) and an automotive grade.'
+    - age: 20
+      text: Skyworks announced SKY4680x for car amplifiers and head units, with one, two or three cores and memory on chip,
+        so no DRAM is needed. The owner asked where to use it and whom to approach. The best first targets are the head units
+        that already use our radio tuners, and mid-range amplifiers.
+    - age: 25
+      text: 'TI AM2754-Q1 (80 GFLOPS, 10.75 MB SRAM, AEC-Q100, $28–33 at 1k) and AM62D-Q1 set the public bar; ADI SHARC with its
+        A2B bus leads premium amplifiers and road-noise cancellation; cockpit SoCs take entry audio. SKY4680x lacks public
+        figures and a wired audio bus. Plan: publish figures and grade, hunt head units and mid amplifiers with our tuners and
+        clocks, and keep consumer audio out for now.'
+    learn_links:
+    - label: Automotive grade
+      href: /engineering/qualification
+    - label: Wi-Fi FEMs and tri-band APs
+      href: /rf-notes#wifi_fem_and_triband_ap
     - label: 'Library: what an IC costs'
       href: /library/semiconductor_cost

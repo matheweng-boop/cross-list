@@ -20,6 +20,7 @@ from app.services import share_explain as sx
 from app.services import share_pdf as spdf
 from app.services import share_reports as sr
 from app.services import tech_overview_edit as te
+from app.services import tuner_deck as td
 from app.services.text import round_count
 from app.web.presentation import _logo_bytes
 from app.web.routes import templates
@@ -333,6 +334,26 @@ def pptx_templates(request: Request):
     static downloads (made by scripts/build_pptx_template.py), with the slide list and how to change colours."""
     files = [(k, name, line, pt.URL_DIR + pt.FILES[k], pt.swatches(k)) for k, (name, line, _) in pt.PALETTES.items()]
     return templates.TemplateResponse(request, "shareable/templates.html", {"files": files, "slides": pt.SLIDES})
+
+
+@router.get("/shareable/private", response_class=HTMLResponse)
+def shareable_private(request: Request):
+    """Private · only for you (owner, 10 Nov 2026: "a sub-category that shows that this is private shareable material,
+    only for my use"): ready-made decks for the owner. Owner only (app/auth/access.py); guests get 403 and no menu
+    entry."""
+    if signed_in_owner(request) is None:
+        raise HTTPException(403, "Only the owner can open this page.")
+    decks = [(td.DECK_TITLE, "/shareable/private/" + td.FILENAME, td.OUTLINE)]
+    return templates.TemplateResponse(request, "shareable/private.html", {"decks": decks})
+
+
+@router.get("/shareable/private/" + td.FILENAME)
+def shareable_private_tuner_deck(request: Request):
+    """The Skyworks tuner portfolio deck (owner, 10 Nov 2026), built on request (app/services/tuner_deck.py), never
+    stored under static/: only the owner may download it."""
+    if signed_in_owner(request) is None:
+        raise HTTPException(403, "Only the owner can download this file.")
+    return _download(td.cached(), td.MEDIA_TYPE, td.FILENAME)
 
 
 @router.get("/shareable/{slug}/explain", response_class=HTMLResponse)

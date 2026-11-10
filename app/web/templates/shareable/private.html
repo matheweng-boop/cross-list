@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Private · only for you</h1>
+<p class="subtitle">Material for your own use; not listed for guests.</p>
+{# owner, 10 Nov 2026: owner-only sub-category of Shareable (app/auth/access.py); files are built on request, never under static/ #}
+<section class="pt-files" aria-label="Private downloads">
+  {% for name, href, outline in decks %}
+  <article class="pt-file priv-deck">
+    <h2>{{ name }} <span class="muted small">animated</span></h2>
+    <p class="small">High-level, public facts only, no part numbers: {{ outline | length }} slides with Morph and build-up animations, speaker notes on every slide.</p>
+    <ol class="small priv-outline">{% for s in outline %}<li>{{ s }}</li>{% endfor %}</ol>
+    <a role="button" class="priv-dl" href="{{ href }}" download>Download Skyworks tuner portfolio (animated) (.pptx)</a>
+  </article>
+  {% endfor %}
+</section>
+<p class="small muted">Morph works in PowerPoint 2019 and later, Microsoft 365 on Windows and Mac, the iPad and the web; older versions show a fade instead.</p>
+{% endblock %}

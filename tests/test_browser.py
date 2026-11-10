@@ -2024,3 +2024,20 @@ def test_skyworks_cross_reference_check_mark(chromium, live_server, client, real
     assert overflow(page) == with_mark  # (the results table scrolls; this rendered copy is wider, with or without it)
     assert not errors
     phone.close()
+
+
+def test_private_shareable_downloads_the_tuner_deck(page):
+    """Shareable > Private · only for you (owner, 10 Nov 2026): the owner's menu entry opens the page and the tuner
+    portfolio deck downloads as a PowerPoint file (guests: tests/test_tuner_deck.py)."""
+    go(page, "/shareable")
+    page.locator("nav.sub-nav a", has_text="Private · only for you").click()
+    expect(page).to_have_url(re.compile(r"/shareable/private$"))
+    expect(page.locator("main h1")).to_have_text("Private · only for you")
+    btn = page.get_by_role("button", name="Download Skyworks tuner portfolio (animated) (.pptx)")
+    expect(btn).to_be_visible()
+    r = page.request.get(btn.get_attribute("href"))
+    assert r.status == 200
+    assert r.headers["content-type"] == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    with page.expect_download() as dl:
+        btn.click()
+    assert dl.value.suggested_filename == "skyworks-tuner-portfolio.pptx"

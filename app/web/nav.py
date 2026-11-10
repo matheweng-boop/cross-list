@@ -57,6 +57,8 @@ NAV = (
         ("Reports", "/shareable", "Pick reports, preview them and save one PDF"),
         # owner, 6 Nov 2026: animated PowerPoint templates (Morph, zoom, moving diagrams) to download and fill in
         ("PowerPoint templates", "/shareable/templates", "Animated slides to fill in: Morph, zooms, moving diagrams"),
+        # owner, 10 Nov 2026: private shareable material for the owner's own use; owner only, so hidden from guests
+        ("Private · only for you", "/shareable/private", "Material for your own use; not listed for guests"),
     )),
 )  # fmt: skip
 
@@ -177,6 +179,7 @@ PLACES = {
     "/shareable/automotive": ("shareable", "/shareable"),
     "/shareable/pack": ("shareable", "/shareable"),
     "/shareable/presentation": ("shareable", "/shareable"),
+    "/shareable/private": ("shareable", "/shareable/private"),
     "/shareable": ("shareable", "/shareable"),
 }
 

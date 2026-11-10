@@ -1892,3 +1892,96 @@ reports:
       href: /visuals#dbm
     - label: 'Library: what an IC costs'
       href: /library/semiconductor_cost
+  - slug: auto-audio-dsp
+    title: "SKY4680x automotive audio DSP: use cases, where to apply it, where to hunt and what to sell with it"
+    kind: idea
+    area: Broadcast radio
+    app_type: Car radio
+    feasibility: 1
+    feasibility_why: "The part exists (SKY4680x, one to three cores); the work is go-to-market: a product brief with figures and grade, Audio Weaver, reference designs"
+    date: 2026-11-10
+    status: draft
+    see_also: [radio-tuner-next, auto-wireless-audio, radio-auto-fit]
+    question: "Today Skyworks announced an audio DSP processor, SKY48 - make one [research + business case] for that, especially
+      the use cases, where to apply it, and where to hunt."
+    summary: >-
+      Research and business case on the owner's request of 10 Nov 2026. The part Skyworks publishes is the SKY4680x
+      automotive audio DSP (SKY46801 / 46802 / 46803: one, two or three DSP cores), for car amplifiers and head units: on-chip
+      SRAM without external DRAM, I2S, fast boot from flash, an optional customer-programmable MCU, third-party audio IP and
+      Skyworks' edge-AI audio algorithms, a graphical tuning tool with Audio Weaver support planned. MIPS, channels, sample
+      rates, package, power and AEC-Q100 are not public yet. TI's AM2754-Q1 (80 GFLOPS, 10.75 MB SRAM, AEC-Q100, $28–33 at 1k)
+      and AM62D-Q1 are the closest public rivals; ADI SHARC with A2B leads premium amplifiers and noise cancellation. Hunt
+      list: radio head units of our tuner customers, mid amplifiers and engine sound first; premium, sound zones and road-noise
+      cancellation later; consumer and pro audio not yet. Sell it with Si479xx tuners, Si469xx coprocessors, Si5332-AM clocks
+      and our 2.4 GHz front ends (est); see also the UL2X case.
+    tags: [audio DSP, SKY4680x, SKY46801, SKY46802, SKY46803, car amplifier, head unit, sound zones, road noise cancellation,
+      engine sound, AVAS, in-car communication, Audio Weaver, A2B, SHARC, AM2754-Q1, AM62D-Q1, Si479xx, Si469xx, Si5332-AM,
+      possible customers]
+    sources: "Skyworks SKY4680x product page, Automotive Audio DSP page, new product announcements page and the SKY4680x product video captions; TI AM2754-Q1 and AM62D-Q1 product pages; Harman car and Burmester home pages (all read 10 Nov 2026); BizDev catalogue, Markets & customers and earlier reports; every figure in the background notes"
+    decision: Should we hunt car amplifier and head-unit sockets with SKY4680x now, and which sockets, companies and companion
+      parts come first?
+    answer:
+      text: 'Yes for radio head units and mid amplifiers, sold with our tuners, coprocessors and clocks; watch premium, sound
+        zones and road-noise cancellation until the figures, interfaces and grade are public; drop consumer and pro audio for
+        now (est).'
+      conf: low
+    needed_now:
+    - 'BU: SKY4680x performance, SRAM, channels, interfaces (TDM, A2B), latency, package and AEC-Q100 grade, and permission to publish them'
+    - 'One amplifier maker and one head-unit customer of our tuners, through our FAE: which DSP and memory today, and which audio bus next'
+    - 'BU: Audio Weaver release date and the names of the edge-AI audio algorithms'
+    say_externally: Skyworks now offers the SKY4680x automotive audio DSP family in one-, two- and three-core versions for
+      amplifiers and head units, with on-chip memory and room for your own or third-party audio software. It sits next to our
+      automotive tuners and digital radio coprocessors. We would like to learn which audio processing you plan for your next
+      amplifiers and head units, and which audio links they will use.
+    next_steps:
+    - what: Ask for the SKY4680x figures (GFLOPS, SRAM, channels, TDM / A2B, latency, package, AEC-Q100) and the meaning of the GE / GC suffixes
+      who: Audio and radio BU
+      why: Every comparison with TI AM2754-Q1 and ADI SHARC needs them, and the site marks a part automotive only with a stated grade.
+    - what: Offer SKY4680x with Si479xx tuners, Si469xx coprocessors and Si5332-AM clocks to the head-unit customers of our radio parts
+      who: Our FAE
+      why: Hunt rank 1 in the case; the customers already know our radio parts, so access is easiest there.
+    - what: Ask which DSP, memory and audio bus their next amplifiers use, and whether audio stays outside the central computer
+      who: Amplifier maker or head-unit Tier-1 audio team
+      why: Sizes the DRAM saving and tells whether premium and noise-cancellation sockets are reachable without A2B.
+    bu_opener:
+      question: Skyworks has announced the SKY4680x automotive audio DSP (one to three cores, on-chip SRAM, I2S, optional MCU,
+        third-party audio IP). TI sells the closest parts with public figures (AM2754-Q1, 80 GFLOPS, AEC-Q100, $28–33 at 1k) and
+        ADI SHARC with A2B leads premium amplifiers. Which figures, interfaces and grade can we publish, and should we lead
+        with radio head units and mid amplifiers, sold with our tuners and clocks?
+      pros:
+      - No external DRAM and one family from entry to premium
+      - Sits next to our automotive tuners, digital radio coprocessors, clocks and 2.4 GHz front ends in the same head unit
+      - Open to third-party audio IP and Audio Weaver (planned)
+      cons:
+      - No public MIPS, channels, interfaces, package or AEC-Q100 statement yet
+      - No wired audio bus (A2B is ADI's), no automotive audio amplifier or codec of our own
+      - Cockpit SoCs absorb entry audio; amplifier makers rarely switch DSP families
+      vs: TI AM2754-Q1 / AM62D-Q1; ADI SHARC + A2B; NXP; Qualcomm and MediaTek cockpit SoCs
+    learn:
+    - age: 5
+      text: A car has many speakers. A small computer chip makes the music sound good in every seat, like a sound mixer.
+    - age: 10
+      text: The radio or phone sends two channels (left and right). An audio DSP turns them into many channels, one for each
+        speaker, and changes each so the sound is clear and fills the car. It can also make engine sounds for quiet electric cars.
+    - age: 15
+      text: 'An audio DSP runs filters, delays and mixing at 48,000 samples a second per channel. Cars use it for equalizing,
+        surround sound, quiet zones per seat, cancelling road noise with microphones and accelerometers, and clear phone calls.
+        It needs enough processing power, memory, audio ports (I2S, TDM, A2B) and an automotive grade.'
+    - age: 20
+      text: Skyworks announced SKY4680x for car amplifiers and head units, with one, two or three cores and memory on chip,
+        so no DRAM is needed. The owner asked where to use it and whom to approach. The best first targets are the head units
+        that already use our radio tuners, and mid-range amplifiers.
+    - age: 25
+      text: 'TI AM2754-Q1 (80 GFLOPS, 10.75 MB SRAM, AEC-Q100, $28–33 at 1k) and AM62D-Q1 set the public bar; ADI SHARC with its
+        A2B bus leads premium amplifiers and road-noise cancellation; cockpit SoCs take entry audio. SKY4680x lacks public
+        figures and a wired audio bus. Plan: publish figures and grade, hunt head units and mid amplifiers with our tuners and
+        clocks, and keep consumer audio out for now.'
+    learn_links:
+    - label: Automotive grade
+      href: /engineering/qualification
+    - label: Tuners & demodulators
+      href: /broadcast
+    - label: Radio configurations
+      href: /broadcast/configurations
+    - label: 'Library: what an IC costs'
+      href: /library/semiconductor_cost

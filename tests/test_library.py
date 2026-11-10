@@ -274,7 +274,7 @@ def test_menu_tree_23_oct():
     # owner, 24 Oct 2026: a section for shareable content, after Engineering knowledge, with its own landing page
     assert list(menu)[-2:] == ["knowledge", "shareable"]
     # owner, 25 Oct 2026: one page for the reports; 6 Nov 2026: the PowerPoint templates beside it
-    assert menu["shareable"] == ["Reports", "PowerPoint templates"]
+    assert menu["shareable"] == ["Reports", "PowerPoint templates", "Private · only for you"]
     assert nav.HOMES == {"shareable": "/shareable"}
     manage = [i[0] for i in nav.UTILITY[2]]
     # owner, 25 Oct 2026: To confirm first; 26 Oct 2026: Data flow after Schedule

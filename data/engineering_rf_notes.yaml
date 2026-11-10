@@ -1793,6 +1793,64 @@ topics:
     url: https://demonstrations.wolfram.com/AnalogModulation/
   - title: Wolfram Demonstrations - Power content of frequency and phase modulation
     url: https://demonstrations.wolfram.com/PowerContentOfFrequencyModulationAndPhaseModulation/
+- id: phys_stereo_separation
+  title: FM stereo separation - how left and right stay apart
+  category: physics
+  from: BizDev (textbook physics; Skyworks datasheets for the figures)
+  summary: FM stereo is sent as a sum and a difference. The mono part (L+R) sits at 0-15 kHz so mono radios still
+    work; the difference (L-R) rides on a suppressed 38 kHz sub-carrier, and a 19 kHz pilot tells the receiver it is
+    stereo and gives it the phase to rebuild the 38 kHz. The receiver adds and subtracts the two to get L and R back.
+    Stereo separation is how well that works - how much of the left channel leaks into the right (and back), in dB.
+    Anything that upsets the balance of the two parts lowers it - a gain difference between L+R and L-R, filters with
+    uneven delay across the MPX band, multipath, and (much less) a 38 kHz phase error. Weak signals are the other limit - the L-R part brings far more noise
+    than mono, so receivers blend smoothly from stereo to mono as the signal fades and give up separation to keep the
+    sound quiet.
+  equations:
+  - 'Multiplex (MPX) baseband: m(t) = (L+R) + (L-R) sin(2 pi 38 kHz t) + p sin(2 pi 19 kHz t), pilot about 9 % of
+    the deviation'
+  - 'Recovery: L = [(L+R) + (L-R)] / 2, R = [(L+R) - (L-R)] / 2'
+  - 'Separation (dB) = 20 log10 (wanted channel / leaked signal in the other channel), e.g. L driven, R measured'
+  - 'Gain mismatch e between L+R and L-R alone: separation ~ 20 log10 (2 / e); a 2 % mismatch limits it to about
+    40 dB (est)'
+  - 'Phase difference phi between the L+R and L-R audio paths (uneven filter delay): separation ~ 20 log10 (2 / phi[rad]);
+    1 degree gives about 41 dB, 3 degrees about 32 dB (est)'
+  - 'A 38 kHz regeneration phase error theta only scales L-R by cos(theta): separation ~ 20 log10 (2 / (1 - cos theta)),
+    still above 60 dB at 3 degrees (est), so the audio-path delay matters more'
+  why:
+  - kind: robust
+    text: A car radio moves through weak and multipath reception all the time; a well-tuned stereo blend keeps the
+      sound clean instead of hissing, while full separation is kept wherever the signal allows it.
+  - kind: design
+    text: Separation in a datasheet is measured with a strong, clean signal; in the car what the listener hears is set
+      by the blend rules (signal strength, signal-to-noise, multipath), so compare blend behaviour, not just the dB.
+  - kind: bom
+    text: Tuners with stereo decoding and blend on chip need no separate MPX decoder or audio processor for it.
+  families: [tuners]
+  parts:
+  - {label: Skyworks broadcast tuners (Si47xx), q: Si47}
+  notes: [receiver_architectures, sensitivity_noise_floor]
+  key_points:
+  - Typical receiver figures are in the 30-45 dB range with a strong signal (for example 34 dB minimum, 42 dB typical
+    in the Si4730/31 datasheet); about 20-25 dB already sounds like full stereo to most listeners (est).
+  - The L-R channel brings much more noise than mono (its noise sits higher in the MPX band, where FM noise rises), so
+    stereo needs roughly 20 dB more signal than mono for the same quiet sound (est) - the reason for the stereo blend.
+  - Blend from stereo to mono as the signal weakens; better blends use signal strength, signal-to-noise and multipath
+    together, not signal strength alone (Si4730/31 datasheet).
+  - Multipath (reflections) hits the L-R part hardest because it sits highest in the MPX band; in the city a radio
+    blends to mono even with a strong signal.
+  - 'Measure it the standard way: drive one channel only (1 kHz), full deviation with the pilot on, read the other
+    channel; de-emphasis (50 us Europe, 75 us US) must match on both sides or the high frequencies lose separation.'
+  - The same idea applies to an FM transmitter (the Si4710/11 datasheet gives 35 dB typical); the broadcast chain sets
+    the ceiling before the receiver.
+  visuals: [mod]
+  sources:
+  - title: OpenStax University Physics Vol. 2 - 16.5 The electromagnetic spectrum (AM and FM radio bands)
+    url: https://openstax.org/books/university-physics-volume-2/pages/16-5-the-electromagnetic-spectrum
+  - title: Skyworks Si4730/31/34/35-D60 AM/FM radio receiver data sheet (stereo separation, stereo blend)
+    url: https://www.skyworksinc.com/-/media/SkyWorks/SL/documents/public/data-sheets/Si4730-31-34-35-D60.pdf
+  try:
+  - title: Wolfram Demonstrations - Analog modulation (AM, FM, PM)
+    url: https://demonstrations.wolfram.com/AnalogModulation/
 - id: phys_phase_noise_jitter
   title: Phase noise and jitter - two views of an imperfect clock
   category: physics

@@ -16881,3 +16881,35 @@
   - {id: bus_v, question: Intermediate bus, choices: [12 V, 6 V], source: IFX-APP-IBC; NVIDIA-800VDC-ECO}
   - {id: ibc_type, question: Bus converter, choices: [fixed-ratio switched capacitor, LLC (unregulated), regulated buck]}
   - {id: vpd, question: Regulator placement, choices: [lateral (beside the processor), vertical (under the processor)], source: IFX-VPD}
+- name: In-car low-latency wireless audio (rear-seat hub, passenger headphones, karaoke microphones, game controllers; Bluetooth for own devices) (after Skyworks and HARMAN public material)
+  category: Automotive systems
+  note: >-
+    Drawn in BizDev for the UL2X case (auto-ul2x-audio, 10 Nov 2026) from public material: Skyworks SKY76360-22 arbiter
+    and SKY76361 client product summaries (2.4 GHz, up to 8 uncompressed channels, fixed latency under 8-9 ms, clients
+    in sync to under 1 µs, HID about 1 ms; the arbiter drives an external RF switch and PA), the Skyworks Wireless Gaming
+    page, HARMAN Ready StreamShare (a wireless audio unit for up to 5 users with Bluetooth, on A2B / CAN / Ethernet) and
+    the Bluetooth SIG LC3 white paper (LE Audio gaming delay about 30 ms). A hub in the rear-seat unit or head unit serves
+    OEM-supplied headphones, wireless microphones and controllers; passengers' own phones and earbuds stay on Bluetooth;
+    the cabin speakers, microphones for calls and noise cancellation stay wired (A2B). No carmaker uses a UL2X hub yet:
+    the diagram is a concept for the case.
+  sources:
+  - {doc: SKY76360-PS, title: 'SKY76360-22 Cognitive Wireless Gaming Arbiter SoC, product summary 207282A', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Product-Summary/SKY76360-22_207282A_PS.pdf'}
+  - {doc: SKY76361-PS, title: 'SKY76361-32/-52 Cognitive Wireless Gaming Client SoC, product summary 207283A', url: 'https://www.skyworksinc.com/-/media/SkyWorks/Documents/Products/Product-Summary/SKY76361-32_52_207283A_PS.pdf'}
+  - {doc: SKY-WGAMING, title: 'Skyworks Audio and Radio > Wireless Gaming', url: 'https://www.skyworksinc.com/Products/Audio-and-Radio/Wireless-Gaming'}
+  - {doc: HARMAN-RSS, title: 'HARMAN Ready StreamShare (personal audio zones)', url: 'https://car.harman.com/experiences/ready-streamshare'}
+  groups:
+  - {id: hub, label: 'Rear-seat / head-unit audio hub (low-latency arbiter, 2.4 GHz front end, coexistence filter)', col: 0, row: 0, blocks: [soc, {fn: wireless_audio_soc, label: Low-latency arbiter}, {fn: wifi_fem, label: 2.4 GHz FEM}, {fn: filter_saw_baw, label: Coexistence BAW (LTE band 40/41)}, antenna_switch, clock_generator, wide_vin_buck]}
+  - {id: phones, label: 'Passenger headphones (2-4, OEM-supplied accessories)', col: 1, row: 0, blocks: [{fn: wireless_audio_soc, label: Audio client}, audio_codec, battery_charger]}
+  - {id: mics, label: 'Wireless microphones (karaoke)', col: 2, row: 0, blocks: [{fn: wireless_audio_soc, label: Audio client with microphone input}, battery_charger]}
+  - {id: pads, label: 'Game controllers (about 1 ms control link)', col: 2, row: 1, blocks: [{fn: wireless_audio_soc, label: Audio / HID client}]}
+  - {id: bt, label: 'Bluetooth LE Audio / Wi-Fi combo (passengers own phones and earbuds)', col: 1, row: 1, blocks: [{fn: soc, label: Bluetooth / Wi-Fi combo}, wifi_fem]}
+  - {id: cabin, label: 'Cabin audio, wired (DSP, amplifiers, speakers, headrest speakers, A2B)', col: 0, row: 1, blocks: [audio_codec, audio_amp, {fn: external_block, label: Speakers}]}
+  links:
+  - [hub, phones, 'audio under 9 ms, clients in sync']
+  - [mics, hub, voice]
+  - [pads, hub, controls]
+  - [hub, cabin, I2S / USB audio]
+  - [bt, hub, phone audio]
+  questions:
+  - {id: link, question: Link to the passengers' headphones, choices: [Bluetooth LE Audio, proprietary low-latency 2.4 GHz, infrared], source: SKY76360-PS; HARMAN-RSS}
+  - {id: hub_place, question: Where the hub sits, choices: [head unit, rear-seat unit, separate wireless audio unit], source: HARMAN-RSS}
